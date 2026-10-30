@@ -1,4 +1,5 @@
 import {MATERIALS,DIES,PUNCHES,EXAMPLE,normalized,profile,bounds,development,stage,orientedForMachine,getTooling,selfIntersects,clamp,finite} from './engine.js';
+import {drawIndustrialMachine} from './machine-visual.js';
 import {registerCatalogue} from './catalog.js';
 registerCatalogue(DIES,PUNCHES);
 const $=id=>document.getElementById(id);
@@ -109,47 +110,11 @@ function drawProfile(id,fractions,labels=false){
  if(!labels)text(ctx,'PIEZA EN PROCESO',14,23,'#8095a4',11);
 }
 function drawMachine(){
- const can=canvas2d('machineCanvas');if(!can)return;const {ctx,w,h}=can,st=stage(piece,sim.time),t=piece.thickness,{die,punch}=getTooling(piece);
- drawGrid(ctx,w,h,35);
- const total=piece.flanges.reduce((a,b)=>a+b,0),sc=Math.min((w*.85)/(total+80),h/230,2.6)*machineView.zoom;
- const originX=w*.49+machineView.panX,originY=h*.58+machineView.panY;
- const P=(x,y)=>({x:originX+x*sc,y:originY-y*sc});
- const rectWorld=(x1,y1,x2,y2,fill,stroke)=>{const a=P(x1,y2),b=P(x2,y1);roundRect(ctx,a.x,a.y,b.x-a.x,b.y-a.y,Math.min(5,sc*2),fill,stroke);};
- // Mesa inferior y portamatriz.
- rectWorld(-125,-90,125,-36,'#8a9bab','#617b8a');
- rectWorld(-110,-37,110,-29,'#647f91');
- rectWorld(-75,-29,75,-20,'#516d7f');
- // Matriz perfil V: línea superior y cavidad abiertas en V.
- const v=die.opening,depth=Math.min(23,v*.48);
- const diePath=[P(-50,0),P(-v/2,0),P(0,-depth),P(v/2,0),P(50,0),P(50,-19),P(-50,-19)];
- ctx.beginPath();diePath.forEach((pt,i)=>i?ctx.lineTo(pt.x,pt.y):ctx.moveTo(pt.x,pt.y));ctx.closePath();ctx.fillStyle='#526979';ctx.fill();ctx.strokeStyle='#334b5b';ctx.lineWidth=1.4;ctx.stroke();
- // Tope en la parte trasera (derecha de perfil).
- rectWorld(72,-11,78,15,'#dc9a45','#b67e31');rectWorld(78,-11,111,-5,'#e6b670','#ba8a47');
- // Punzón parametrizado (se desplaza en Y); el extremo baja hasta tocar la chapa.
- const tip=t+63*(1-st.press);
- const halfTip=Math.max(.5,punch.tip/2),halfShoulder=21;
- // Punzón de perfil distinto según tipo; geometría aproximada hasta
- // cargar los polígonos acotados del catálogo técnico.
- let outline;
- if(punch.type==='cabra'){
-   outline=[[-25,83],[18,83],[18,68],[-2,68],[-2,51],[19,51],[19,36],[9,36],[4,13],[halfTip,0],[-halfTip,0],[-7,13],[-24,37],[-25,57]];
- }else if(punch.angle<=45){
-   outline=[[-halfShoulder,83],[halfShoulder,83],[halfShoulder,36],[halfTip,0],[-halfTip,0],[-halfShoulder,36]];
- }else{
-   outline=[[-halfShoulder,83],[halfShoulder,83],[halfShoulder,52],[halfTip,0],[-halfTip,0],[-halfShoulder,52]];
- }
- const punchPoly=outline.map(([x,y])=>P(x,tip+y));
- ctx.beginPath();punchPoly.forEach((pt,i)=>i?ctx.lineTo(pt.x,pt.y):ctx.moveTo(pt.x,pt.y));ctx.closePath();ctx.fillStyle='#8ea1af';ctx.strokeStyle='#4f667a';ctx.lineWidth=1.4;ctx.fill();ctx.stroke();
- rectWorld(-80,tip+83,80,tip+92,'#6c8798');
- rectWorld(-111,tip+92,111,tip+111,'#c0cdd7','#7b91a0');
- const coords=orientedForMachine(piece,st.fractions,st.activeBend).map(pt=>P(pt.x,pt.y+t/2));
- line(ctx,coords,'#d3e7f2',Math.max(5,t*sc+3));line(ctx,coords,'#2687c8',Math.max(2,t*sc));
- const pp=P(0,t/2);ctx.beginPath();ctx.arc(pp.x,pp.y,3.5,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();ctx.strokeStyle='#1874aa';ctx.stroke();
- text(ctx,'TRANCHA / PUNZÓN',12,21,'#667f90',11);text(ctx,'MATRIZ '+die.name,12,h-40,'#667f90',11);
- text(ctx,'TOPE',Math.min(w-32,P(80,0).x),P(80,18).y-7,'#a8783c',10,'center');
- text(ctx,'Pliegue '+(st.activeBend+1)+' · '+(piece.angles[st.activeBend]>0?'+':'')+piece.angles[st.activeBend]+'°',w-13,22,'#1576ae',12,'right');
- text(ctx,'Vista geométrica · no controla la máquina',w/2,h-12,'#94a8b6',10,'center');
+ const can=canvas2d('machineCanvas');
+ if(!can)return;
+ drawIndustrialMachine(can.ctx,can.w,can.h,piece,sim,machineView);
 }
+
 function drawScene(){
  const can=canvas2d('sceneCanvas');if(!can)return;const {ctx,w,h}=can;drawGrid(ctx,w,h,36);
  const st=stage(piece,sim.time),pts=profile(piece,st.fractions).points,b=bounds(pts),midX=(b.minX+b.maxX)/2,midY=(b.minY+b.maxY)/2;
@@ -198,7 +163,33 @@ function renderSimulationText(){
  $('stepText').textContent='Golpe '+st.finished+'/'+st.count;
  $('foldedCount').textContent=st.finished+' de '+st.count+' pliegues';
  $('timeline').value=Math.round(1000*st.time/st.duration);
- const root=$('simSequence');root.replaceChildren(...piece.order.map((bend,i)=>{const el=document.createElement('div');el.className='op'+(st.fractions[bend]>=1?' done':i===st.activeOperation?' current':'');const l=document.createElement('span');l.textContent=(i+1)+'. Pliegue '+(bend+1);const r=document.createElement('small');r.textContent=(piece.angles[bend]>0?'+':'')+piece.angles[bend]+'°';el.append(l,r);return el;}));
+ const root=$('simSequence');
+ const key=JSON.stringify({order:piece.order,angles:piece.angles,flanges:piece.flanges});
+ if(root.dataset.key!==key){
+   root.dataset.key=key;
+   root.replaceChildren(...piece.order.map((bend,i)=>{
+     const el=document.createElement('button');
+     el.type='button';el.className='op';el.dataset.step=String(i);
+     el.setAttribute('aria-label','Ver golpe '+(i+1)+' · pliegue '+(bend+1));
+     const n=document.createElement('span');n.className='op-num';n.textContent=String(i+1);
+     const visual=document.createElement('span');visual.className='op-preview';
+     const angle=piece.angles[bend];
+     visual.innerHTML='<svg viewBox="0 0 70 52" aria-hidden="true" focusable="false"><defs><linearGradient id="pgrad'+i+'" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e8f6ff"/><stop offset=".45" stop-color="#7897ae"/><stop offset="1" stop-color="#3f566b"/></linearGradient></defs><path d="'+(angle<0?'M8 13 L8 40 L61 40':'M8 40 L61 40 L61 12')+'" stroke="url(#pgrad'+i+')" stroke-width="9" stroke-linejoin="round" fill="none"/><path d="'+(angle<0?'M8 13 L8 40 L61 40':'M8 40 L61 40 L61 12')+'" stroke="#a9e4ff" stroke-width="1.5" fill="none"/></svg>';
+     const values=document.createElement('span');values.className='op-values';
+     const a=document.createElement('strong');a.textContent=(angle>0?'+':'')+angle+'°';
+     const l=document.createElement('small');l.textContent='L = '+numbers(piece.flanges[bend+1],1)+' mm';
+     values.append(a,l);const menu=document.createElement('span');menu.className='op-more';menu.textContent='⋮';
+     el.append(n,visual,values,menu);
+     el.addEventListener('click',()=>{sim.playing=false;sim.last=null;sim.time=i*5;paintAll();});
+     return el;
+   }));
+ }
+ for(const el of root.children){
+  const i=Number(el.dataset.step),bend=piece.order[i];
+  el.classList.toggle('done',st.fractions[bend]>=1-1e-6);
+  el.classList.toggle('current',!st.completed&&i===st.activeOperation);
+  el.setAttribute('aria-current',String(!st.completed&&i===st.activeOperation));
+ }
 }
 function paintAll(){drawProfile('finalCanvas',piece.angles.map(()=>1),true);drawMachine();drawProfile('progressCanvas',stage(piece,sim.time).fractions,false);drawScene();toolDrawing();renderDevelopment();renderToolCards();renderSimulationText();}
 function tick(now){
