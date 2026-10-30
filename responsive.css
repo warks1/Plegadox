@@ -329,3 +329,26 @@ footer{padding-inline:max(12px,env(safe-area-inset-left,0px)) max(12px,env(safe-
  .cp-floating-options button{min-width:38px;min-height:36px}
  .cp-library .cp-tool-grid{max-height:300px;overflow-y:auto}
 }
+
+/* Acabado de controles en móvil: etiquetas legibles y vista horizontal sin
+   ventana de matriz cortada por el borde inferior de la máquina. */
+@media(min-width:375px) and (max-width:699px) and (orientation:portrait){
+ .sidebar .nav[data-tab="herramientas"] span:last-child:not(.nav-picto){
+  font-size:7px!important;white-space:nowrap!important;overflow-wrap:normal!important;letter-spacing:-.025em!important
+ }
+}
+@media (orientation:landscape) and (max-height:560px) and (max-width:1199px){
+ .cp-machine-floats{
+  position:absolute!important;
+  left:7px!important;top:6px!important;bottom:auto!important;
+  display:flex!important;flex-direction:row!important;align-items:flex-start!important;
+  gap:7px!important;max-width:225px!important
+ }
+ .cp-machine-floats .cp-float-tool{
+  width:96px!important;height:auto!important;min-height:0!important;max-height:123px!important;
+  padding:5px!important
+ }
+ .cp-machine-floats .cp-float-tool svg{width:48px!important;height:55px!important}
+ .cp-machine-floats .cp-float-tool strong{font-size:9px!important}
+ .cp-machine-floats .cp-float-tool span{font-size:9px!important;max-height:29px!important}
+}
