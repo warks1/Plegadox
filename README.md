@@ -382,3 +382,12 @@ limita para mantener sus extremos sin moverlos. Esta curva sustituye la
 antigua Bézier gráfica. La fibra central de validación sigue siendo
 segmentada y **no se está simulando deformación plástica, recuperación ni
 radio industrial real verificado**.
+
+### Radios en la vista 3D de la pieza
+
+El visor de pieza 3D usa ahora los mismos arcos circulares paramétricos de
+la sección técnica. Los vértices plegados se redondean por su radio de fibra
+media orientativo, utilizando el **R interior editable** o calculado de la V,
+y el signo real de cada pliegue. La chapa inicial sigue plana. El visor
+representa superficies extruidas, no espesor volumétrico CAD/FEM; las
+colisiones y el desarrollo siguen siendo verificaciones separadas.

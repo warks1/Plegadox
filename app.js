@@ -4,6 +4,7 @@ import {registerCatalogue} from './catalog.js';
 import {analyzeSequence} from './validation.js';
 import {inspectSequenceTools,currentToolContact,describeToolIssue} from './tool-collision.js';
 import {incidentReviewRows} from './incident-navigation.js';
+import {viewerProfile} from './viewer-profile.js';
 import {sectionPunch,sectionDie} from './tool-profiles.js';
 import {getV85} from './machine-config.js';
 registerCatalogue(DIES,PUNCHES);
@@ -218,7 +219,8 @@ function drawScene(){
  const can=canvas2d('sceneCanvas');if(!can)return;const {ctx,w,h}=can;drawGrid(ctx,w,h,36);
  // El modelo 3D usa exactamente las fracciones de la secuencia animada.
   // Antes se dibujaba siempre la pieza FINAL, incluso en el instante cero.
-  const st=stage(piece,sim.time),pts=profile(piece,st.fractions).points,b=bounds(pts),midX=(b.minX+b.maxX)/2,midY=(b.minY+b.maxY)/2;
+  const st=stage(piece,sim.time),viewer=viewerProfile(piece,st.fractions),
+  pts=viewer.points,b=bounds(pts),midX=(b.minX+b.maxX)/2,midY=(b.minY+b.maxY)/2;
  const d=Math.min(piece.width,1500),yaw=camera.yaw,pitch=camera.pitch;
  function coords(x,y,z){const xx=x-midX,yy=y-midY,zz=z;const rX=xx*Math.cos(yaw)-zz*Math.sin(yaw),depth=xx*Math.sin(yaw)+zz*Math.cos(yaw);
  return {x:rX,y:yy*Math.cos(pitch)-depth*Math.sin(pitch),depth:yy*Math.sin(pitch)+depth*Math.cos(pitch)};}
@@ -235,9 +237,11 @@ function drawScene(){
    ctx.save();ctx.shadowColor='#000a';ctx.shadowBlur=10;ctx.shadowOffsetY=4;
    ctx.beginPath();corners.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();
    const steel=ctx.createLinearGradient(left,top,right,bottom);
-   steel.addColorStop(0,f.index%2?'#e2eef5':'#b7c8d5');
+   // Un color consistente evita rayas alternas en las caras pequeñas
+   // que discretizan el arco en el visor 3D.
+   steel.addColorStop(0,'#d7e5ee');
    steel.addColorStop(.18,'#a8bdcd');
-   steel.addColorStop(.42,f.index%2?'#456980':'#668ca2');
+   steel.addColorStop(.42,'#5e8197');
    steel.addColorStop(.69,'#c7d9e5');
    steel.addColorStop(1,'#38556b');
    ctx.fillStyle=steel;ctx.fill();ctx.shadowBlur=0;ctx.lineWidth=1.4;
