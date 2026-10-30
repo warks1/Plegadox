@@ -41,6 +41,12 @@ try{
  assert.equal(await page.locator('#applySuggestedOrder').isDisabled(),true);
  await page.locator('#evaluateOrder').click();
  assert.match(await page.locator('#sequenceAdvice').textContent(),/Comparadas 24 secuencias/);
+ assert.match(await page.locator('#sequenceAdvice').textContent(),/Cribado punzón\/matriz 2D/,
+  'La pantalla debe mostrar que se comparan también útiles paramétricos');
+ assert.match(await page.locator('#sequenceAdvice').textContent(),/muestras\/golpe/,
+  'Se debe mostrar cuántas muestras se inspeccionaron en los útiles');
+ assert.match(await page.locator('#sequenceAdvice').textContent(),/No incluye colisiones 3D/,
+  'No confundir la recomendación con aprobación de máquina real');
  assert.deepEqual(await page.evaluate(()=>window.PLEGADOX_STATE().piece.order),original);
  if(await page.locator('#applySuggestedOrder').isEnabled()){
   await page.locator('#applySuggestedOrder').click();
