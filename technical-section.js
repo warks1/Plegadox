@@ -8,6 +8,7 @@
  */
 import {normalized,stage,presentedAtStage,getTooling,clamp} from './engine.js';
 import {sectionPunch,sectionDie,sectionBounds} from './tool-profiles.js';
+import {contactKinematics} from './bend-contact.js';
 
 const mm=v=>Number.isFinite(+v)?+v:0;
 const mPoint=(x,y)=>({x:mm(x),y:mm(y)});
@@ -16,25 +17,26 @@ export function technicalScene(piece,instant=0){
  const p=normalized(piece),st=typeof instant==='number'?stage(p,instant):instant;
  const tooling=getTooling(p),die=sectionDie(tooling.die),punch=sectionPunch(tooling.punch);
  const t=p.thickness;
- // A common physical coordinate system, in mm: matrix upper plane is y=0.
- const forming=clamp((st.press-.45)/.55,0,1);
- const maxEngagement=Math.min(die.depth*.82,Math.max(t*.4,die.opening*.16));
- const engagement=maxEngagement*forming;
- const centerHeight=t*.5-engagement;
- const approachGap=Math.max(14,die.opening*1.7);
- const tipHeight=st.press<.45
-   ?t+Math.max(0,1-st.press/.45)*approachGap
-   :centerHeight+t*.5;
+ // One real-world coordinate system (millimetres, matrix top at y=0).
+ // Symmetric bend presentation uses both shoulders of the V as supports.
  const presentation=presentedAtStage(p,st);
- const sheet=presentation.points.map(pt=>mPoint(pt.x,pt.y+centerHeight));
+ const kinematics=contactKinematics({
+  points:presentation.points,activeBend:st.activeBend,
+  angle:p.angles[st.activeBend]*st.fractions[st.activeBend],
+  opening:die.opening,dieDepth:die.depth,thickness:t,
+  phase:st.phase,press:st.press
+ });
+ const sheet=kinematics.sheet;
+ const sheetDisplay=kinematics.rounded;
  const diePolygon=die.points.map(([x,y])=>mPoint(x,y-die.height));
- const punchPolygon=punch.points.map(([x,y])=>mPoint(x,y+tipHeight));
+ const punchPolygon=punch.points.map(([x,y])=>mPoint(x,y+kinematics.tipHeight));
+ const engagement=kinematics.sag;
  // Include the selected punch, the V and all sheet wings in view bounds.
- const all=[...sheet,...diePolygon,...punchPolygon];
+ const all=[...sheetDisplay,...sheet,...diePolygon,...punchPolygon];
  const bx=all.map(q=>q.x),by=all.map(q=>q.y);
  const world={minX:Math.min(...bx),maxX:Math.max(...bx),
    minY:Math.min(...by),maxY:Math.max(...by)};
- return {piece:p,stage:st,presentation,sheet,diePolygon,punchPolygon,die,punch,
+ return {piece:p,stage:st,presentation,sheet,sheetDisplay,kinematics,diePolygon,punchPolygon,die,punch,
          dimensions:{opening:die.opening,dieAngle:die.angle,depth:die.depth,
            punchAngle:punch.angle,punchHeight:punch.height,
            punchTipDiameter:tooling.punch.tip,thickness:t,engagement},
@@ -111,7 +113,7 @@ export function drawTechnicalSection(ctx,w,h,piece,sim,view={}){
  ctx.shadowColor='#000b';ctx.shadowBlur=11;
  polygon(ctx,pp,punchFill,'#d8f1ff',1.35);ctx.restore();
  // Sheet from the current accumulated bend state, not a finished omega.
- const sp=poly(result.sheet);
+ const sp=poly(result.sheetDisplay);
  ctx.save();ctx.beginPath();sp.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));
  ctx.lineJoin='round';ctx.lineCap='round';ctx.lineWidth=Math.max(1.4,d.thickness*scale);
  ctx.strokeStyle='#f6aa4e';ctx.shadowColor='#ffb15377';ctx.shadowBlur=5;
