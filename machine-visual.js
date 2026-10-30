@@ -1,6 +1,7 @@
 // Plegadox · Render de taller en vista lateral con materiales pulidos.
 // Geometría ilustrativa, no modelo CAD certificado ni calculador de colisiones.
 import {stage,orientedForMachine,getTooling} from './engine.js';
+import {sceneAtmosphere,dieDepth,ramDepth,sheetDepth,surfaceDetail,sectionOverlay} from './render-enhancements.js';
 
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 function gradient(ctx,x1,y1,x2,y2,colors){
@@ -160,13 +161,21 @@ function stageScene(ctx,w,h,piece,sim,machineView){
  const scale=Math.min(w/740,h/510)* (machineView?.zoom||1);
  const cx=w*.48+(machineView?.panX||0),baseY=h*.665+(machineView?.panY||0);
  const opening=die.opening||16;
- backdrop(ctx,w,h);rearMachine(ctx,w,h,cx,baseY,scale);
- const dieResult=drawDie(ctx,cx,baseY,scale,opening);
+ backdrop(ctx,w,h);
+ sceneAtmosphere(ctx,w,h,{cx,cy:baseY,s:scale});
+ rearMachine(ctx,w,h,cx,baseY,scale);
+ dieDepth(ctx,{cx,cy:baseY,s:scale},opening,Boolean(machineView?.perspective));
+ drawDie(ctx,cx,baseY,scale,opening);
+ surfaceDetail(ctx,{cx,cy:baseY,s:scale},{opening});
  // Ram advances to the sheet and descends while deforming it.
  const travel=st.press<=.45?66*(1-st.press/.45)+12:12-(st.press-.45)/.55*19;
  const tipY=baseY-travel*scale;
- // draw punch after machine background, before sheet
+ // Preserve the real profile; perspective adds an illustrative side face.
+ ramDepth(ctx,{cx,cy:baseY,s:scale},tipY,punch.angle||88,Boolean(machineView?.perspective));
+ ctx.save();
+ if(machineView?.transparent)ctx.globalAlpha=.3;
  drawRam(ctx,cx,baseY,scale,tipY,punch);
+ ctx.restore();
  const fractions=st.fractions;
  const points=orientedForMachine(piece,fractions,st.activeBend);
  const maxExtent=Math.max(...points.map(pt=>Math.abs(pt.x)),50);
@@ -174,7 +183,9 @@ function stageScene(ctx,w,h,piece,sim,machineView){
  const depression=Math.max(0,(st.press-.45)/.55)*8*scale;
  const sheetY=baseY-2*scale+depression;
  const transformed=points.map(pt=>[cx+pt.x*span,sheetY-pt.y*span]);
+ sheetDepth(ctx,transformed,{cx,cy:baseY,s:scale},t,Boolean(machineView?.perspective));
  drawSheet(ctx,transformed,t,scale,st.press>.4);
+ sectionOverlay(ctx,{cx,cy:baseY,s:scale},opening,punch.tip||0,Boolean(machineView?.section));
  // Workpiece shadow and hot contact glow along the working tool tip
  if(st.press>.36){
   ctx.save();ctx.globalAlpha=(st.press-.35)*.7;
@@ -197,7 +208,7 @@ function stageScene(ctx,w,h,piece,sim,machineView){
   ctx.fillStyle='#87b6d6';ctx.textAlign='left';
   ctx.fillText('SIMULACIÓN · PERFIL',12,h-14);
   ctx.textAlign='right';ctx.fillStyle='#6f94ad';
-  ctx.fillText('MODELO PARAMÉTRICO · NO CONTROL CNC',w-12,h-14);
+  ctx.fillText(machineView?.perspective?'PERSPECTIVA ILUSTRATIVA · NO CAD':'MODELO PARAMÉTRICO · NO CONTROL CNC',w-12,h-14);
  }else if(w>=470){
   ctx.font='700 9px system-ui';ctx.fillStyle='#6f94ad';ctx.textAlign='left';
   ctx.fillText('VISTA LATERAL · MODELO PARAMÉTRICO',12,h-12);
