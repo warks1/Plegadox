@@ -8,7 +8,8 @@ export const CATALOG_SOURCES = {
   trumpfTechnical: {title:"TRUMPF — TruBend 2100, herramientas iniciales",url:"https://www.trumpf.com/filestorage/TRUMPF_US/Landingpages/TruBend_2100/TRUMPF_Inc_TruBend_2100_Technical_Quote_3_11_2025.pdf",scope:"OW200/K, EVW10/84 y EVW20/84"},
   amada2025: {title:"AMADA — Semi-standard tooling",url:"https://cdn.amada.eu/fileadmin/Repository/Amada_Tooling_price_list_2021_BENDING1.pdf",scope:"punzones 831, 841 W55/W95, 846 W110 y 804"},
   bystronic: {title:"Bystronic — sistemas RF-A / XPT",url:"https://www.bystronic.com/usa/en-us/lp/press-brakes-tooling",scope:"sistema y compatibilidad, no cotas del perfil"},
-  conicAmadaType2022: {title:"CONIC — catálogo de utillaje TIPO AMADA, páginas 12–15, 20–21, 29",url:"https://www.conic.co.jp/es/bending/pdf/amada_sbt_tooling_202206.pdf",scope:"referencias GN9/GN6/ACT y matrices V004–V012 de 30°, dimensiones publicadas; no CAD completo"}
+  conicAmadaType2022: {title:"CONIC — catálogo de utillaje TIPO AMADA, páginas 12–15, 20–21, 29",url:"https://www.conic.co.jp/es/bending/pdf/amada_sbt_tooling_202206.pdf",scope:"referencias GN9/GN6/ACT y matrices V004–V012 de 30°, dimensiones publicadas; no CAD completo"},
+  rolleriTMR1001630:{title:"Rolleri TMR100.16.30 · fabricante oficial",url:"https://www.rolleri.es/utillaje-127636/soluciones-de-plegado/utillaje/tipo-r2r3-matrices/tmr1001630",scope:"Matriz V16 / 30°, altura total 120 mm, altura útil 100 mm, radio R1,6 y amarre R2/R3; contorno 3D simplificado"}
 };
 
 // verifiedSpecs significa que las dimensiones indicadas están respaldadas,
@@ -32,6 +33,17 @@ export const CATALOG_PUNCHES = [
  {id:"bystronic-r-demo",manufacturer:"Bystronic",reference:"Beyeler R (ejemplo)",name:"Beyeler R · PROVISIONAL",angle:30,tip:.8,height:120,length:415,type:"cabra",mount:"Bystronic R",verifiedSpecs:false,source:"mecosTooling2022",profileAccuracy:"provisional"}
 ];
 export const CATALOG_DIES = [
+ // Ficha de fabricante Rolleri comprobada. NO significa compatibilidad con
+ // el portamatriz de la Trumpf V85: sistema R2/R3 a verificar en taller.
+ {id:"rolleri-tmr100-16-30",manufacturer:"Rolleri",reference:"TMR100.16.30.500",
+  name:"V16 / 30° · Rolleri TMR100",opening:16,angle:30,height:120,workingHeight:100,
+  length:500,shoulderRadius:1.6,mount:"Rolleri R2/R3",verifiedSpecs:true,
+  profileAccuracy:"provisional",source:"rolleriTMR1001630"},
+ // Opción paramétrica sin fabricante, para ensayar V16/30 SIN afirmar que
+ // coincide con un utillaje realmente disponible en la máquina.
+ {id:"v16-30",name:"V16 / 30° · perfil de ensayo",opening:16,angle:30,
+  height:80,verifiedSpecs:false,profileAccuracy:"provisional"},
+
  // Matrices de 30° del catálogo CONIC tipo AMADA, pág. 29.
  {id:"conic-v006-30-s",manufacturer:"CONIC (tipo Amada)",reference:"V006-30-S",name:"Matriz 30° V6 · R1",opening:6,angle:30,height:60,length:835,shoulderRadius:1,outerWidth:17,dimensionA:11.5,mount:"Amada/Promecam",verifiedSpecs:true,profileAccuracy:"provisional",source:"conicAmadaType2022"},
  {id:"conic-v008-30-s",manufacturer:"CONIC (tipo Amada)",reference:"V008-30-S",name:"Matriz 30° V8 · R1,5",opening:8,angle:30,height:60,length:835,shoulderRadius:1.5,outerWidth:20,dimensionA:15,mount:"Amada/Promecam",verifiedSpecs:true,profileAccuracy:"provisional",source:"conicAmadaType2022"},
