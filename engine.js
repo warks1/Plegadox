@@ -80,6 +80,21 @@ export function orientedForMachine(piece,fractions,activeBend){
  // El volteo físico real es otra operación, aún pendiente de modelar.
  return points.map(pt=>{const x=pt.x-pivot.x,y=pt.y-pivot.y;return {x:x*c-y*s,y:x*s+y*c};});
 }
+/**
+ * Presentación ilustrativa en una plegadora con el punzón superior.
+ * El signo geométrico sigue siendo propio de la pieza; para −90° se
+ * representa un volteo alrededor del eje de alimentación antes del golpe.
+ * El volteo se indica explícitamente; no se calcula una trayectoria real
+ * de retirada, rotación ni límites de carrera.
+ */
+export function presentedForMachine(piece,fractions,activeBend){
+ const p=normalized(piece);
+ const points=orientedForMachine(p,fractions,activeBend);
+ const flipped=p.angles[activeBend]<0;
+ return {flipped,points:flipped?points.map(pt=>({x:pt.x,y:-pt.y})):points,
+         sign:p.angles[activeBend]<0?-1:1,
+         label:flipped?'Presentar chapa volteada para pliegue negativo':'Presentación normal'};
+}
 function cross(a,b,c){return (b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);}
 export function selfIntersects(points){
  for(let i=0;i<points.length-1;i++)for(let j=i+2;j<points.length-1;j++){
