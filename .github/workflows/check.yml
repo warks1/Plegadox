@@ -17,6 +17,9 @@ jobs:
           node --check app.js
           node --check catalog.js
           node --check cockpit.js
+          node --check boceto2.js
+          node --check machine-visual.js
+          node --check responsive.js
       - name: Pruebas de dirección, secuencia y desarrollo
         run: npm test
 
@@ -33,7 +36,9 @@ jobs:
           npm install --no-save playwright
           npx playwright install --with-deps chromium
       - name: Comprobar pantallas, selección y simulación
-        run: node tests/browser-smoke.mjs
+        run: |
+          node tests/browser-smoke.mjs
+          node tests/responsive-smoke.mjs
       - name: Guardar capturas de escritorio y móvil
         if: always()
         uses: actions/upload-artifact@v4
