@@ -190,10 +190,18 @@ function stageScene(ctx,w,h,piece,sim,machineView){
  ctx.textAlign='left';ctx.fillText((a>0?'+':'')+a+'°',cx+72*scale,sheetY-37*scale);
  ctx.restore();
  // tiny badges in-frame visual signifiers
- ctx.font='700 10px system-ui';
- ctx.fillStyle='#87b6d6';ctx.textAlign='left';
- ctx.fillText('SIMULACIÓN · PERFIL',12,h-14);
- ctx.textAlign='right';ctx.fillStyle='#6f94ad';ctx.fillText('MODELO PARAMÉTRICO · NO CONTROL CNC',w-12,h-14);
+ // Los textos de contexto no deben tapar el punzón ni el estado cuando
+ // la vista ocupa sólo ~300px en un smartphone.
+ if(w>=660){
+  ctx.font='700 10px system-ui';
+  ctx.fillStyle='#87b6d6';ctx.textAlign='left';
+  ctx.fillText('SIMULACIÓN · PERFIL',12,h-14);
+  ctx.textAlign='right';ctx.fillStyle='#6f94ad';
+  ctx.fillText('MODELO PARAMÉTRICO · NO CONTROL CNC',w-12,h-14);
+ }else if(w>=470){
+  ctx.font='700 9px system-ui';ctx.fillStyle='#6f94ad';ctx.textAlign='left';
+  ctx.fillText('VISTA LATERAL · MODELO PARAMÉTRICO',12,h-12);
+ }
 }
 // Entrypoint used from app.js drawMachine without changing the core timing engine.
 export function drawIndustrialMachine(ctx,w,h,piece,sim,machineView){
