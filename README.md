@@ -215,3 +215,17 @@ Las pruebas se ejecutan automáticamente con GitHub Actions en cada subida a `ma
 5. Completar las pantallas y opciones del control Cybelec 15T respetando las funcionalidades y los límites de propiedad intelectual.
 
 **© AMS · Plegadox**. Uso de desarrollo y demostración. No utilizar como comprobador de seguridad de una plegadora física.
+
+## Revisión preventiva de abertura angular de útiles (v0.9)
+
+El simulador ahora compara, **para cada pliegue y con su signo conservado**, el
+ángulo interior teórico (180° − |giro programado|) con los ángulos nominales de
+punzón y matriz seleccionados. Si cualquiera de los útiles presenta una cuña
+nominal más abierta que el interior solicitado, el programa marca la operación
+y explica el conflicto. Por ejemplo, un pliegue de 120° produce un interior
+de 60° y requiere revisar una combinación de útiles de 88°.
+
+Esta comprobación **no es una simulación de fuerzas, de radio real ni de
+compatibilidad mecánica certificada**: la existencia o ausencia del aviso no
+sustituye la comprobación de amarre, carrera, radios, tonelaje, colisiones o
+pruebas de plegado con la herramienta real.

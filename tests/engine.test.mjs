@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {EXAMPLE,normalized,profile,stage,development,orientedForMachine,selfIntersects} from '../engine.js';
+import {EXAMPLE,normalized,profile,stage,development,orientedForMachine,selfIntersects,toolAngleCompatibility} from '../engine.js';
 const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-6, a+' != '+b);
 test('Chapa inicialmente plana, no nace omega ya doblada',()=>{
  const p=profile(EXAMPLE);assert.ok(p.points.every(point=>point.y===0));
@@ -44,3 +44,17 @@ test('Normalización protege valores de entrada y orden sin repeticiones',()=>{
  assert.deepEqual(p.order,[1,0]);assert.deepEqual(p.angles,[179,-179]);assert.equal(p.thickness,.2);
 });
 test('Línea recta no presenta interferencias',()=>assert.equal(selfIntersects(profile(EXAMPLE).points),false));
+
+test('el interior geométrico conserva el signo de giro y compara ambos útiles',()=>{
+ const a=toolAngleCompatibility({...EXAMPLE,angles:[120,90,90,90]},0);
+ const b=toolAngleCompatibility({...EXAMPLE,angles:[-120,90,90,90]},0);
+ near(a.interiorAngle,60);
+ near(a.dieAngle,88);
+ near(a.punchAngle,88);
+ assert.equal(a.warning,true);
+ assert.equal(b.warning,true);
+ const normal=toolAngleCompatibility(EXAMPLE,0);
+ assert.equal(normal.interiorAngle,90);
+ assert.equal(normal.warning,false);
+ assert.equal(normal.verified,false);
+});

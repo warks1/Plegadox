@@ -290,7 +290,7 @@ function renderSimulationText(){
  $('foldedCount').textContent=st.finished+' de '+st.count+' pliegues';
  $('timeline').value=Math.round(1000*st.time/st.duration);
  const root=$('simSequence');
- const key=JSON.stringify({order:piece.order,angles:piece.angles,flanges:piece.flanges,issues:check.perOperation.map((x,i)=>x.potentialInterference||check.tools.operations[i]?.possibleToolInterference)});
+ const key=JSON.stringify({order:piece.order,angles:piece.angles,flanges:piece.flanges,issues:check.perOperation.map((x,i)=>x.potentialInterference||x.toolAngleWarning||check.tools.operations[i]?.possibleToolInterference)});
  if(root.dataset.key!==key){
    root.dataset.key=key;
    root.replaceChildren(...piece.order.map((bend,i)=>{
@@ -305,8 +305,10 @@ function renderSimulationText(){
      const a=document.createElement('strong');a.textContent=(angle>0?'+':'')+angle+'°';
      const l=document.createElement('small');l.textContent='L = '+numbers(piece.flanges[bend+1],1)+' mm';
      values.append(a,l);const menu=document.createElement('span');menu.className='op-more';menu.textContent='⋮';
-     if(check.perOperation[i]?.potentialInterference||check.tools.operations[i]?.possibleToolInterference){
-       el.classList.add('suspect');el.title='Posible interferencia geométrica 2D: comprobar antes de plegar';
+     if(check.perOperation[i]?.potentialInterference||check.perOperation[i]?.toolAngleWarning||check.tools.operations[i]?.possibleToolInterference){
+       el.classList.add('suspect');el.title=check.perOperation[i]?.toolAngleWarning?
+          'Revisar apertura nominal de punzón/matriz para este ángulo':
+          'Posible interferencia geométrica 2D: comprobar antes de plegar';
        const mark=document.createElement('span');mark.className='op-alert';mark.textContent='!';mark.setAttribute('aria-label','Advertencia geométrica');values.append(mark);
      }
      el.append(n,visual,values,menu);

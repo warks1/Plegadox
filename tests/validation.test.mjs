@@ -56,3 +56,22 @@ test('la proximidad detectada no depende del orden de vértices de una línea',(
  assert.equal(segmentsIntersect(a,b,c,d),false);
  assert.ok(Math.abs(segmentClearance(a,b,c,d)-Math.sqrt(2))<1e-6);
 });
+
+test('avisa cuando el ángulo interior es más cerrado que la abertura de matriz o punzón',()=>{
+ const input={...EXAMPLE,angles:[120,-90,-90,90],punch:'straight88',die:'v16'};
+ const report=analyzeSequence(input);
+ const warning=report.issues.find(i=>i.code==='tool-angle'&&i.bend===0);
+ assert.ok(warning,'Debe advertir del pliegue de 120° con útiles de 88°');
+ assert.match(warning.message,/interior programado 60/);
+ assert.equal(report.perOperation[0].toolAngleWarning,true);
+ assert.ok(report.hasGeometryWarning);
+ const allowed=analyzeSequence({...input,angles:[90,-90,-90,90]});
+ assert.equal(allowed.issues.filter(i=>i.code==='tool-angle').length,0,
+  'Un pliegue habitual de 90° con útiles de 88° no debe bloquearse ni dar aviso de cuña');
+});
+test('la limitación se evalúa tanto para el signo positivo como para el negativo',()=>{
+ const positive=analyzeSequence({...EXAMPLE,angles:[120,0,0,0]});
+ const negative=analyzeSequence({...EXAMPLE,angles:[-120,0,0,0]});
+ assert.ok(positive.issues.some(i=>i.code==='tool-angle'&&i.bend===0));
+ assert.ok(negative.issues.some(i=>i.code==='tool-angle'&&i.bend===0));
+});

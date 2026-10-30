@@ -5,7 +5,7 @@
  * tramos no adyacentes y proximidades inferiores al espesor durante la
  * secuencia seleccionada. No certifica que una operación sea segura.
  */
-import { normalized, profile, stage, getTooling, MACHINE } from './engine.js';
+import { normalized, profile, stage, getTooling, toolAngleCompatibility, MACHINE } from './engine.js';
 import {getV85} from './machine-config.js';
 
 const EPS=1e-7;
@@ -105,8 +105,17 @@ export function analyzeSequence(raw){
     ' (comprobar '+first.phase.toLowerCase()+').',
     {operation:op,example:first}));
   }
+  const compatibility=toolAngleCompatibility(p,bend);
+  if(compatibility.warning){
+   issues.push(issue('tool-angle','warning',bend,
+    'Revisar pliegue '+(bend+1)+': ángulo interior programado '+
+    round(compatibility.interiorAngle,1)+'°, inferior a la abertura nominal de '+
+    compatibility.limitingTools.join(' y ')+' ('+round(compatibility.limitingAngle,1)+
+    '°). El dibujo no valida este plegado.',{operation:op,compatibility}));
+  }
   perOperation.push({operation:op,bend,angle:p.angles[bend],
-    sampledStates:samples.length,potentialInterference:problemSamples.length>0});
+    sampledStates:samples.length,potentialInterference:problemSamples.length>0,
+    toolAngleWarning:compatibility.warning});
  }
  const ratio=die.opening/p.thickness;
  // V/t is guidance only; no physical tonnage or tooling certification.
@@ -128,11 +137,13 @@ export function analyzeSequence(raw){
  return {
   piece:p.name,issues:dedup,perOperation,
   hasGeometryWarning:dedup.some(x=>x.level==='warning'&&
-    ['final-cross','final-clearance','operation-geometry','machine-width'].includes(x.code)),
+    ['final-cross','final-clearance','operation-geometry','machine-width','tool-angle'].includes(x.code)),
   verifiedMachineClearance:false,
   summary:dedup.some(x=>x.code==='operation-geometry'||x.code==='final-cross'||x.code==='final-clearance')
     ?'Posibles interferencias geométricas 2D. Revisar operaciones.'
-    :'Sin cruces 2D detectados en las posiciones muestreadas. Colisiones físicas no verificadas.',
+    :dedup.some(x=>x.code==='tool-angle')
+      ?'Hay pliegues con ángulos interiores más cerrados que la abertura nominal de los útiles. Revisar.'
+      :'Sin cruces 2D detectados en las posiciones muestreadas. Colisiones físicas no verificadas.',
   limitations:'No considera deformación plástica, radio real, cinemática de volteo, profundidad de mordazas, herramientas CAD ni todas las posiciones entre muestras.'
  };
 }

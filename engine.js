@@ -52,6 +52,27 @@ export function profile(piece,fractions=[]){
 export function bounds(points){const x=points.map(p=>p.x),y=points.map(p=>p.y);return {minX:Math.min(...x),maxX:Math.max(...x),minY:Math.min(...y),maxY:Math.max(...y)};}
 export function angleToRadians(d){return d*Math.PI/180;}
 export function getTooling(p){const n=normalized(p);return {die:DIES.find(d=>d.id===n.die),punch:PUNCHES.find(t=>t.id===n.punch),material:MATERIALS.find(m=>m.id===n.material)};}
+/**
+ * Prechequeo geométrico de apertura nominal de útiles.
+ * Ángulo programado = GIRO desde chapa plana; el ángulo interior resultante
+ * es 180° - |giro|. Si el interior solicitado es más cerrado que la cuña
+ * nominal del punzón o de la matriz, no se debe presentar la simulación como
+ * una fabricación geométricamente contrastada.
+ * No contempla radios, montaje, luz, deformación ni recuperación.
+ */
+export function toolAngleCompatibility(piece,bendIndex){
+ const p=normalized(piece),{die,punch}=getTooling(p);
+ const requested=Math.abs(p.angles[bendIndex]??0);
+ const interior=180-requested;
+ const limitingAngle=Math.max(die.angle,punch.angle);
+ const limitingTools=[
+  ...(Math.abs(die.angle-limitingAngle)<1e-8?['matriz']:[]),
+  ...(Math.abs(punch.angle-limitingAngle)<1e-8?['punzón']:[])
+ ];
+ return {bend:bendIndex,requestedAngle:requested,interiorAngle:interior,
+  dieAngle:die.angle,punchAngle:punch.angle,limitingAngle,limitingTools,
+  warning:interior+1e-6<limitingAngle,verified:false};
+}
 export function development(piece){
  const p=normalized(piece),t=p.thickness,{die,material}=getTooling(p);
  const r=p.radius??Math.max(t*.6,die.opening*(material.id.startsWith('alu')?.18:.16));
