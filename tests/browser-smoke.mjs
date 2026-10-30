@@ -16,7 +16,7 @@ try{
   assert.ok(await page.locator('#cockpitTools .cp-tool-card').count()>0,'Hay tarjetas de herramientas');
   await page.locator('#showTool3D').click();
   assert.ok(await page.locator('#cockpitSelectedTool3D').isVisible(),'Visor 3D de herramienta se abre');
-  await page.locator('#showTool3D').click();
+  await page.locator('#closeTool3D').click();
   await page.locator('#cpBrandTabs button[data-brand="Amada"]').click();
   await page.locator('.cp-kind-tabs [data-kind="punch"]').click();
   assert.ok(await page.locator('#cockpitTools .cp-tool-card').count()>=7,'Punzones Amada cargados');
