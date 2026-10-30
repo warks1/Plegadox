@@ -85,7 +85,7 @@ export function ramDepth(ctx,location,tipY,punch,enabled){
  const section=sectionPunch(punch);
  // Use the SAME section polygon as the 2D drawing, not a hard-coded
  // triangular side that incorrectly turns a gooseneck into a straight punch.
- const factor=s*Math.min(1.7,205/section.height);
+ const factor=s;
  const offsetX=25*s,offsetY=-15*s;
  const pts=section.points.map(([x,y])=>[cx+x*factor,tipY-y*factor]);
  ctx.save();ctx.shadowBlur=13*s;ctx.shadowColor='#000c';
