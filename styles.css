@@ -8,3 +8,8 @@
 .toolcards .tool .tool-card-brand{color:#8dbbd3;font-size:10px;}
 .toolcards .tool .tool-card-notice{color:#ffc17b;font-size:10px;line-height:1.25;}
 @media(max-width:480px){.toolcards{grid-template-columns:repeat(2,minmax(0,1fr));}.toolcards .tool .tool-geometry{height:90px;}}
+
+/* Comparador V: operación activa visible también en pantallas pequeñas. */
+#vComparisonRows .v-comparison-selected{background:#103d5d;color:#e0f4ff;}
+#vComparisonRows td{font-variant-numeric:tabular-nums;white-space:nowrap;}
+#vComparisonRows .v-compare-apply{min-width:64px;}

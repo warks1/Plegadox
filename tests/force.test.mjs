@@ -37,3 +37,15 @@ test('el signo ±90 no cambia la fuerza, otros ángulos se señalan fuera de ám
  assert.equal(estimateAirBendForce({...EXAMPLE,angles:[45,90,90,90]}).conventionalAirBend90,false);
  assert.equal(REFERENCE_RM_MPA.alu1050,110);
 });
+
+test('el comparador usa desarrollo nominal en función de la V con radio estimado',()=>{
+ const {development}=await import('../engine.js');
+ const a=development({...EXAMPLE,die:'v16'});
+ const b=development({...EXAMPLE,die:'v32'});
+ assert.notEqual(a.length,b.length);
+ assert.ok(b.radius>a.radius);
+ assert.equal(a.nominal,b.nominal);
+ const fixed=development({...EXAMPLE,die:'v16',radius:2.5});
+ const fixedV32=development({...EXAMPLE,die:'v32',radius:2.5});
+ near(fixed.length,fixedV32.length);
+});

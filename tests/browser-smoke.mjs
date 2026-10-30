@@ -21,6 +21,15 @@ try{
   const newForce=await page.locator('#devSummary .result-item').filter({hasText:'Fuerza aire aprox.'}).locator('b').textContent();
   assert.notEqual(newForce,startForce,'La resistencia Rm introducida debe cambiar la fuerza');
   assert.equal(await page.evaluate(()=>window.PLEGADOX_STATE().piece.rmMPa),600);
+  assert.ok(await page.locator('#vComparisonRows tr').count()>=10,'Comparador V6–V50 visible');
+  const forceV16=await page.locator('#vComparisonRows tr[data-die-id="v16"] td').nth(5).textContent();
+  const forceV32=await page.locator('#vComparisonRows tr[data-die-id="v32"] td').nth(5).textContent();
+  assert.notEqual(forceV16,forceV32,'La fuerza debe cambiar al cambiar V');
+  await page.locator('#vComparisonRows tr[data-die-id="v32"] button').click();
+  assert.equal(await page.evaluate(()=>window.PLEGADOX_STATE().piece.die),'v32');
+  assert.equal(await page.locator('#die').inputValue(),'v32');
+  await page.locator('#vComparisonRows tr[data-die-id="v16"] button').click();
+  assert.equal(await page.evaluate(()=>window.PLEGADOX_STATE().piece.die),'v16');
   await page.locator('[data-tab="simulacion"]').click();
   assert.ok(await page.locator('#cockpitTools .cp-tool-card').count()>0,'Hay tarjetas de herramientas');
   await page.locator('[data-tab="herramientas"]').click();

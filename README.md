@@ -310,3 +310,13 @@ fondo, acuñado ni utillajes especiales.
 Fuentes de consulta:
 - [TRUMPF — tabla de fuerza de plegado](https://www.trumpf.com/filestorage/TRUMPF_Master/Products/Services/01_brochures/TRUMPF-bending-tools-brochure-EN.pdf)
 - [CONIC — cálculo de fuerza y V/t](https://www.conic.co.jp/en/tech/press_brake/pdf/pb_vol4.pdf)
+
+### Comparador V6–V50 en Desarrollo
+
+La pestaña **Desarrollo** incluye un comparador interactivo de V genéricas
+de 88° (V6, V10, V12, V16, V22, V24, V32, V35, V40 y V50) y de la matriz
+seleccionada, que puede ser de 30°. Para la MISMA pieza se muestran relación
+V/espesor, radio interior estimado, desarrollo calculado, diferencia respecto a
+la V activa y fuerza orientativa. **Elegir** cambia la matriz de la programación
+y actualiza las vistas vinculadas; no aprueba compatibilidad mecánica ni CAD.
+La fórmula de fuerza solo se aproxima al plegado al aire convencional de 90°.

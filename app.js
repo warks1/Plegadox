@@ -332,6 +332,39 @@ function renderToolCards(){
  dies.replaceChildren(...DIES.map(d=>toolCard(d,'die')));
  punches.replaceChildren(...PUNCHES.map(p=>toolCard(p,'punch')));
 }
+/** Comparador de V ligado a la pieza: no recalcular filas cada fotograma. */
+function renderVComparison(){
+ const root=$('vComparisonRows');if(!root)return;
+ const key=JSON.stringify([piece.material,piece.rmMPa,piece.thickness,piece.width,
+  piece.flanges,piece.angles,piece.kFactor,piece.radius,piece.datum,piece.die]);
+ if(root.dataset.key===key)return;
+ const current=development(piece).length;
+ const candidates=DIES.filter(d=>/^v[0-9]+$/.test(d.id)||d.id===piece.die)
+  .sort((a,b)=>a.opening-b.opening||a.angle-b.angle);
+ const rows=candidates.map(d=>{
+  const testPiece={...piece,die:d.id},dev=development(testPiece),
+   force=estimateAirBendForce(testPiece),ratio=d.opening/piece.thickness;
+  const tr=document.createElement('tr');tr.dataset.dieId=d.id;
+  tr.className=d.id===piece.die?'v-comparison-selected':'';
+  const figures=[d.name,numbers(ratio,1),numbers(dev.radius,2)+' mm',
+   numbers(dev.length,2)+' mm',
+   (dev.length>=current?'+':'')+numbers(dev.length-current,2)+' mm',
+   numbers(force.tonneForce,2)+' t',
+   ratio<5||ratio>14?'Fuera guía V/t':force.conventionalAirBend90?'Orientativo':'Fuera aire 90°'];
+  for(const value of figures){
+   const cell=document.createElement('td');cell.textContent=value;
+   tr.append(cell);
+  }
+  const action=document.createElement('td'),button=document.createElement('button');
+  button.type='button';button.className='mini v-compare-apply';
+  button.textContent=d.id===piece.die?'Actual':'Elegir';
+  button.disabled=d.id===piece.die;
+  button.setAttribute('aria-label','Seleccionar matriz '+d.name);
+  button.addEventListener('click',()=>changePiece({...piece,die:d.id},true));
+  action.append(button);tr.append(action);return tr;
+ });
+ root.dataset.key=key;root.replaceChildren(...rows);
+}
 function renderDevelopment(){
  const d=development(piece),check=geometryReport(),force=estimateAirBendForce(piece);
  const items=[['Nominal',d.nominal,'mm'],['Desarrollo',d.length,'mm'],
@@ -353,6 +386,7 @@ function renderDevelopment(){
  ].join(' · ');
  if($('forceDetails').textContent!==notes)$('forceDetails').textContent=notes;
  $('forceDetails').style.color=force.exceedsNominal?'#ffbd90':'';
+ renderVComparison();
 
  $('devRows').replaceChildren(...d.perBend.map(b=>{const tr=document.createElement('tr');for(const val of [b.index+1,(b.angle>0?'+':'')+b.angle+'°',numbers(b.ba,2),numbers(b.bd,2)]){const td=document.createElement('td');td.textContent=val;tr.append(td);}return tr;}));
  const out=[['Alas',piece.flanges.length],['Pliegues',piece.angles.length],['L. nominal',numbers(d.nominal,1)+' mm']];
