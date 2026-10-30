@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
 import {chromium} from 'playwright';
-import {mkdirSync} from 'node:fs';
+import {mkdirSync,readFileSync} from 'node:fs';
 mkdirSync('test-results',{recursive:true});
 
 const server=spawn('python3',['-m','http.server','4173','--bind','127.0.0.1'],{stdio:'ignore'});
@@ -54,6 +54,20 @@ try{
     page.waitForEvent('download'),page.locator('#exportDxfFlat').click()
   ]);
   assert.match(flatDXF.suggestedFilename(),/desarrollo-ORIENTATIVO\.dxf$/);
+  const withMarks=readFileSync(await flatDXF.path(),'utf8');
+  assert.match(withMarks,/\r\n8\r\nPLEGADOS_NO_CORTE\r\n/,
+    'El DXF descargado contiene marcas en capa NO CORTE');
+  assert.match(withMarks,/G3 P4 \+90deg/,
+    'La etiqueta en DXF conserva el orden del golpe sobre el pliegue P4');
+  await page.locator('#dxfIncludeBends').uncheck();
+  const [onlyContour]=await Promise.all([
+    page.waitForEvent('download'),page.locator('#exportDxfFlat').click()
+  ]);
+  const cleanText=readFileSync(await onlyContour.path(),'utf8');
+  assert.equal(cleanText.split('\r\n0\r\nLINE\r\n').length-1,4,
+    'Sin marcas deben quedar exactamente cuatro líneas de contorno');
+  assert.ok(!cleanText.includes('\r\n8\r\nPLEGADOS_NO_CORTE\r\n'),
+    'No exportar ninguna línea de plegado al desactivar la casilla');
   assert.match(await page.locator('#dxfStatus').textContent(),/No es un plano validado/);
   await page.locator('[data-tab="simulacion"]').click();
   assert.ok(await page.locator('#cockpitTools .cp-tool-card').count()>0,'Hay tarjetas de herramientas');
