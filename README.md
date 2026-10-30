@@ -46,6 +46,35 @@ Se implementó la disposición oscura elegida: **secuencia de plegado a la izqui
 - **Máquina:** cotas de Trumpf V85 de las fotografías, trancha de 2040 mm, mesa y topes.
 - **Datos:** guardar en dispositivo, importar/exportar piezas en JSON.
 
+## Sección técnica a escala métrica (v0.7)
+
+En la pantalla principal, botón **▥ mm** (en el lateral de la simulación).
+Este modo permite comparar en un **mismo sistema de coordenadas milimétrico**
+la chapa, el punzón y la matriz seleccionados. El perfil visible se recalcula
+en función de la apertura V, ángulo incluido, altura nominal, radio/punta
+del punzón, espesor, orientación y el estado de cada golpe. Dispone de regla de
+20 mm y etiqueta de espesor. Funciona en escritorio, tablet y móvil y no
+sustituye la vista gráfica 2.5D (botón **◈ 3D**).
+
+**Es una vista técnica orientativa, NO un simulador industrial validado.**
+Los perfiles son paramétricos mientras no estén disponibles las poligonales
+CAD exactas de cada referencia. El desplazamiento durante el contacto sigue
+una curva visual aproximada: no modela la curvatura elástica/plástica real,
+recuperación, holgura completa, tonelaje, mesa/topes de forma verificable ni
+colisiones máquina-herramienta. El programa **no certifica un plegado seguro**.
+
+**Ancho de pieza:** el programa conserva una medida indicada aunque sea
+superior a los 2040 mm de la Trumpf configurada y presenta aviso de
+incompatibilidad, en vez de modificar la entrada del usuario.
+
+### Pruebas añadidas
+
+- Apertura de V y profundidad geométrica con el mismo sistema de milímetros.
+- Perfil real de puntas angulares nominales de 15°, 30°, 60° y 88°.
+- Contacto visual centrado entre la punta y la fibra media de chapa.
+- Pantallas de PC, tablet y móvil en el modo de sección.
+- Segundo golpe negativo y pieza plana al inicio, sin perder el orden.
+
 ## Orden de plegado tocando la pieza
 
 En **Editar pieza → Pieza final (perfil 2D)** pulsa **Asignar orden tocando pliegues**. Los vértices se resaltan en amarillo. Toca el primero, luego el segundo y así sucesivamente hasta completar todas las operaciones; los números elegidos se muestran en azul. Al completar la secuencia, se guarda y sincroniza con el simulador. El botón permite cancelar y reiniciar la selección sin modificar la pieza.
