@@ -71,6 +71,12 @@ try{
   assert.match(await page.locator('#dxfStatus').textContent(),/No es un plano validado/);
   await page.locator('[data-tab="simulacion"]').click();
   assert.ok(await page.locator('#cockpitTools .cp-tool-card').count()>0,'Hay tarjetas de herramientas');
+  assert.equal(await page.locator('.sheet-collision-legend').count(),2,
+   'Leyenda en programación y en simulación');
+  assert.match(await page.locator('.sheet-collision-legend').last().textContent(),
+   /Rojo: cruce o solapamiento/);
+  assert.match(await page.locator('.sheet-collision-legend').last().textContent(),
+   /Ámbar: contacto puntual/);
   await page.locator('[data-tab="herramientas"]').click();
   const card= id=>page.locator('#punchCards .tool[data-tool-id="'+id+'"]');
   const shape30=await card('straight30').locator('svg path').getAttribute('d');

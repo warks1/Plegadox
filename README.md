@@ -462,3 +462,7 @@ en el perfil final. El navegador de incidencias distingue las cuatro
 etiquetas y no identifica un mero contacto como una penetración. Estos
 son diagnósticos de fibra 2D con tolerancia geométrica, no una
 certificación de colisión de la chapa de espesor real en 3D.
+
+La leyenda de colores aparece junto al **perfil de programación** y a la
+**pieza en proceso** y aclara explícitamente que el dibujo 2D no valida
+colisiones reales de máquina ni de útiles.
