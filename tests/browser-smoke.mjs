@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
 import {chromium} from 'playwright';
+import {mkdirSync} from 'node:fs';
+mkdirSync('test-results',{recursive:true});
 
 const server=spawn('python3',['-m','http.server','4173','--bind','127.0.0.1'],{stdio:'ignore'});
 let browser;
