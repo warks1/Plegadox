@@ -446,3 +446,7 @@ Las pruebas de navegador abren una pieza de ensayo con alas que se cruzan,
 acceden al golpe señalado y comprueban que la simulación se pausa, que
 aparece el diagnóstico del cruce y que los tramos se colorean de rojo en
 el lienzo. Esta pieza se usa sólo para pruebas, no como pieza fabricable.
+
+El **perfil final** también distingue cruces entre alas en rojo y
+separaciones menores al espesor en ámbar; un cruce prevalece sobre un
+aviso de proximidad en el mismo tramo.

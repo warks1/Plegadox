@@ -211,21 +211,30 @@ function drawProfile(id,fractions,labels=false){
  for(let i=1;i<pts.length-1;i++){ctx.beginPath();ctx.arc(pts[i].x,pts[i].y,4,0,Math.PI*2);ctx.fill();ctx.stroke();}
  if(labels)for(let i=0;i<pts.length-1;i++){const x=(pts[i].x+pts[i+1].x)/2,y=(pts[i].y+pts[i+1].y)/2;text(ctx,numbers(piece.flanges[i],0),x,y-11,'#467187',11,'center');}
  if(labels)for(let i=1;i<pts.length-1;i++){const a=piece.angles[i-1];text(ctx,(a>0?'+':'')+numbers(a,0)+'°',pts[i].x+9,pts[i].y+18,a<0?'#ad5b36':'#267da9',11);}
- // Destacar los tramos geométricos conflictivos; no son contactos CAD de máquina.
+ // Las mismas convenciones rojo/ámbar de la simulación se aplican
+ // al perfil final, sin ocultar un cruce tras una proximidad más leve.
  if(labels){
-  const check=geometryReport(),segments=new Set();
+  const check=geometryReport(),alerts=new Map();
   for(const warn of check.issues){
-   if((warn.code==='final-cross'||warn.code==='final-clearance')&&warn.segments)
-    for(const id of warn.segments)segments.add(id);
+   if(!['final-cross','final-clearance'].includes(warn.code)||!warn.segments)continue;
+   for(const index of warn.segments){
+    if(warn.code==='final-cross'||!alerts.has(index))
+     alerts.set(index,warn.code==='final-cross'?'cross':'close');
+   }
   }
-  if(segments.size){
-   ctx.save();ctx.setLineDash([7,4]);ctx.strokeStyle='#f3a248';ctx.lineWidth=4;
-   for(const index of segments){
+  if(alerts.size){
+   ctx.save();ctx.lineWidth=5;
+   for(const [index,kind] of alerts){
     const a=pts[index],b=pts[index+1];if(!a||!b)continue;
+    ctx.setLineDash(kind==='close'?[7,4]:[]);
+    ctx.strokeStyle=kind==='cross'?'#ef554a':'#f3a248';
     ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
    }
    ctx.restore();
-   text(ctx,'⚠ Revisar tramos señalados · comprobación 2D',12,h-12,'#f0b569',11);
+   const crossed=[...alerts.values()].includes('cross');
+   text(ctx,crossed?'⚠ Cruce en el perfil final · revisión 2D':
+    '⚠ Separación inferior al espesor · revisión 2D',
+    12,h-12,crossed?'#ef554a':'#f0b569',11);
   }
  }
  if(labels&&touchOrderEnabled){
