@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {EXAMPLE,PUNCHES,stage,profile,orientedForMachine,presentedForMachine,presentedAtStage} from '../engine.js';
 import {sectionPunch,sectionDie} from '../tool-profiles.js';
+import {CATALOG_PUNCHES} from '../catalog.js';
 
 const approximate=(x,y,tolerance=.03)=>assert.ok(Math.abs(x-y)<tolerance,`Esperado ${y}; recibido ${x}`);
 test('un punzón de 30°, 60° y 88° tiene transiciones diferentes',()=>{
@@ -139,7 +140,7 @@ test('la punta paramétrica es un arco R=Ø/2 tangente a los dos flancos',()=>{
  }
 });
 test('las patas de cabra de GN9 conservan el escote con punta R0,6 real',()=>{
- const gn9=PUNCHES.find(t=>t.id==='conic-gn9-12-8806');
+ const gn9=CATALOG_PUNCHES.find(t=>t.id==='conic-gn9-12-8806');
  assert.ok(gn9);
  const p=sectionPunch(gn9);
  approximate(p.tipRadius,.6,1e-12);
