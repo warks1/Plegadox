@@ -4,6 +4,7 @@ import {stage,presentedAtStage,getTooling} from './engine.js';
 import {sectionPunch,sectionDie} from './tool-profiles.js';
 import {drawTechnicalSection,technicalScene} from './technical-section.js';
 import {currentToolContact} from './tool-collision.js';
+import {getV85,gaugeOutline} from './machine-config.js';
 import {sceneAtmosphere,dieDepth,ramDepth,sheetDepth,surfaceDetail,sectionOverlay} from './render-enhancements.js';
 
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -79,12 +80,20 @@ function rearMachine(ctx,w,h,cx,cy,scale){
   const x=w*.69+(w*.26*i/4);
   steelRect(ctx,x,cy+23*scale,4*scale,25*scale,false);
  }
- // Tope trasero visible
- const x=cx+145*scale;
- steelRect(ctx,x,cy-24*scale,90*scale,9*scale,true,true);
- steelRect(ctx,x+19*scale,cy-38*scale,22*scale,23*scale,false);
- steelRect(ctx,x+73*scale,cy-27*scale,12*scale,12*scale,false);
- bolt(ctx,x+31*scale,cy-24*scale,2.4*scale);
+ // Tope Stop: geometría ESQUEMÁTICA derivada de L1–L6 editadas en
+ // Máquina, no un CAD de tope ni posición X real de la plegadora.
+ const gauge=getV85().stop,outline=gaugeOutline(gauge);
+ const gaugeScale=scale*.82,ox=cx+145*scale,oy=cy-8*scale;
+ const gg=outline.map(p=>[ox+p.x*gaugeScale,oy+p.y*gaugeScale]);
+ steelRect(ctx,ox-22*scale,oy-7*scale,Math.max(24,gauge[1]*gaugeScale+24*scale),7*scale,false);
+ poly(ctx,gg,
+  gradient(ctx,ox,oy,ox+Math.max(50,gauge[1]*gaugeScale),oy,
+   [[0,'#a5bfce'],[.33,'#4c6a7c'],[.72,'#c2d6e0'],[1,'#3a596e']]),
+  '#b2d7e8',1.2*scale);
+ for(const frac of [.24,.58])bolt(ctx,ox+gauge[0]*gaugeScale*frac,oy-10*scale,2.4*scale);
+ ctx.font='700 '+Math.max(8,11*scale)+'px system-ui';
+ ctx.fillStyle='#89b5d0';ctx.textAlign='left';
+ ctx.fillText('TOPE STOP (esquema)',ox,oy-31*scale);
  // Left support and machine rails
  steelRect(ctx,0,cy+26*scale,w*.3,40*scale,false);
  for(let i=0;i<4;i++){shape(ctx,20+i*32*scale,cy+28*scale,8*scale,34*scale,'#20394e','#435b6b');}
