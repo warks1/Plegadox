@@ -127,8 +127,26 @@ function drawScene(){
  const sc=Math.min((w-75)/width,(h-65)/height,7)*camera.zoom,offX=(bound.minX+bound.maxX)/2,offY=(bound.minY+bound.maxY)/2;
  const project=p=>({x:w/2+(p.x-offX)*sc,y:h/2-(p.y-offY)*sc});
  faces.sort((a,b)=>a.depth-b.depth);
- for(const f of faces){const corners=f.corners.map(project);ctx.beginPath();corners.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.fillStyle=f.index%2?'#69b4decc':'#3a8fc8cc';ctx.fill();ctx.lineWidth=1.8;ctx.strokeStyle='#1b659a';ctx.stroke();}
- for(const z of [-d/2,d/2])line(ctx,pts.map(pt=>project(coords(pt.x,pt.y,z))),'#1b689b',2.5);
+ for(const f of faces){
+   const corners=f.corners.map(project);
+   const xs=corners.map(p=>p.x),ys=corners.map(p=>p.y);
+   const left=Math.min(...xs),right=Math.max(...xs),top=Math.min(...ys),bottom=Math.max(...ys);
+   ctx.save();ctx.shadowColor='#000a';ctx.shadowBlur=10;ctx.shadowOffsetY=4;
+   ctx.beginPath();corners.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();
+   const steel=ctx.createLinearGradient(left,top,right,bottom);
+   steel.addColorStop(0,f.index%2?'#e2eef5':'#b7c8d5');
+   steel.addColorStop(.18,'#a8bdcd');
+   steel.addColorStop(.42,f.index%2?'#456980':'#668ca2');
+   steel.addColorStop(.69,'#c7d9e5');
+   steel.addColorStop(1,'#38556b');
+   ctx.fillStyle=steel;ctx.fill();ctx.shadowBlur=0;ctx.lineWidth=1.4;
+   ctx.strokeStyle='#dceefa';ctx.stroke();ctx.restore();
+ }
+ for(const z of [-d/2,d/2]){
+  const edge=pts.map(pt=>project(coords(pt.x,pt.y,z)));
+  line(ctx,edge,'#183c55',5);
+  line(ctx,edge,'#e7f3f8',1.25);
+ }
  text(ctx,'PIEZA FINAL 3D · gira con el dedo',15,23,'#8ac7f6',12);text(ctx,'Anchura: '+numbers(piece.width,0)+' mm',w-14,h-15,'#648299',11,'right');
 }
 function toolDrawing(){
