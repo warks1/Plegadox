@@ -2,10 +2,11 @@
  * Plegadox: exportación 2D en DXF ASCII R12 con entidades LINE.
  * NO exporta CNC, utillajes ni planos CAD certificados.
  * Los perfiles incluyen líneas interpoladas para radios aproximados;
- * el plano de corte es solo un rectángulo sin agujeros ni líneas de pliegue.
+ * el desarrollo permite marcas separadas NO CORTE (sin agujeros).
  */
 import {normalized,development} from './engine.js';
 import {viewerProfile} from './viewer-profile.js';
+import {flatBendLayout} from './flat-layout.js';
 
 const num=n=>{
  if(!Number.isFinite(n))throw new RangeError('Coordenada DXF no finita');
@@ -23,7 +24,7 @@ const note=(text,x,y)=>[
  ...pair(40,'5'),...pair(1,text),...pair(50,'0')
 ];
 function dxf(lines,kind){
- const layerNames=['PERFIL_APROX','DESARROLLO_APROX','NOTAS_NO_CORTE'];
+ const layerNames=['PERFIL_APROX','DESARROLLO_APROX','PLEGADOS_NO_CORTE','NOTAS_NO_CORTE'];
  const data=[
   ...pair(0,'SECTION'),...pair(2,'HEADER'),
   ...pair(9,'$ACADVER'),...pair(1,'AC1009'),
@@ -34,7 +35,7 @@ function dxf(lines,kind){
   ...pair(0,'TABLE'),...pair(2,'LAYER'),...pair(70,String(layerNames.length)),
   ...layerNames.flatMap((name,i)=>[
    ...pair(0,'LAYER'),...pair(2,name),...pair(70,'0'),
-   ...pair(62,String(i===2?2:7)),...pair(6,'CONTINUOUS')]),
+   ...pair(62,String(i===2?4:i===3?2:7)),...pair(6,'CONTINUOUS')]),
   ...pair(0,'ENDTAB'),...pair(0,'ENDSEC'),
   ...pair(999,'PLEGADOX - '+kind+' - ESTIMACION NO VERIFICADA - mm'),
   ...pair(0,'SECTION'),...pair(2,'ENTITIES'),
@@ -54,14 +55,24 @@ export function exportProfileDXF(raw){
  lines.push(note('PERFIL 2D APROX - NO CAD CERTIFICADO',0,low-20));
  return dxf(lines,'PERFIL PLEGADO');
 }
-export function exportFlatDXF(raw){
- const piece=normalized(raw),dev=development(piece);
- const length=dev.length,width=piece.width;
- if(!Number.isFinite(length)||length<=0||!Number.isFinite(width)||width<=0)
-  throw new RangeError('Longitud desarrollada no valida: revisar cotas, angulos y radio');
+/** Marcadores con ángulo y orden, SIEMPRE en capa distinta NO CORTE. */
+export function exportFlatDXF(raw,options={}){
+ const layout=flatBendLayout(raw);
+ const {length,width}=layout;
  const corners=[{x:0,y:0},{x:length,y:0},{x:length,y:width},
   {x:0,y:width}];
  const entities=corners.map((p,i)=>line(p,corners[(i+1)%4],'DESARROLLO_APROX'));
+ if(options.includeBends!==false){
+  for(const fold of layout.folds){
+   if(Math.abs(fold.angle)<1e-7)continue;
+   entities.push(line({x:fold.position,y:0},{x:fold.position,y:width},
+    'PLEGADOS_NO_CORTE'));
+   const signed=(fold.angle>0?'+':'')+fold.angle;
+   entities.push(note('G'+fold.operation+' P'+(fold.bend+1)+' '+signed+
+    'deg X='+num(fold.position)+'mm - NO CORTE',fold.position,
+    width+10+(fold.operation-1)*8));
+  }
+ }
  entities.push(note('DESARROLLO ESTIMADO - NO CORTAR SIN VERIFICAR',0,-20));
  return dxf(entities,'RECTANGULO DESARROLLADO');
 }
