@@ -391,3 +391,16 @@ media orientativo, utilizando el **R interior editable** o calculado de la V,
 y el signo real de cada pliegue. La chapa inicial sigue plana. El visor
 representa superficies extruidas, no espesor volumétrico CAD/FEM; las
 colisiones y el desarrollo siguen siendo verificaciones separadas.
+
+### Volumen de chapa en el visor 3D
+
+La vista **pieza en proceso 3D** ya no es una superficie sin espesor:
+se genera una malla cerrada formada por caras interior y exterior, cantos
+a ambos extremos de la anchura y tapas de los dos bordes de la chapa.
+La malla usa **exactamente el ancho y el espesor programados** y mantiene
+los radios paramétricos y los signos de plegado. Las secciones en ángulos
+extremos limitan sus uniones para que el dibujo no genere picos indefinidos.
+El renderizado sigue siendo una proyección de polígonos con ordenación
+de profundidad, **no un modelo B-rep/CAD**, ni un cálculo de deformación,
+ni una validación de colisiones físicas. Se añaden pruebas sobre caras,
+cantos, cierres, signos y cambios de espesor/ancho.

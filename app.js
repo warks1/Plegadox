@@ -5,6 +5,7 @@ import {analyzeSequence} from './validation.js';
 import {inspectSequenceTools,currentToolContact,describeToolIssue} from './tool-collision.js';
 import {incidentReviewRows} from './incident-navigation.js';
 import {viewerProfile} from './viewer-profile.js';
+import {sheetSolidMesh} from './sheet-solid.js';
 import {sectionPunch,sectionDie} from './tool-profiles.js';
 import {getV85} from './machine-config.js';
 registerCatalogue(DIES,PUNCHES);
@@ -216,46 +217,57 @@ function drawMachine(){
 }
 
 function drawScene(){
- const can=canvas2d('sceneCanvas');if(!can)return;const {ctx,w,h}=can;drawGrid(ctx,w,h,36);
- // El modelo 3D usa exactamente las fracciones de la secuencia animada.
-  // Antes se dibujaba siempre la pieza FINAL, incluso en el instante cero.
-  const st=stage(piece,sim.time),viewer=viewerProfile(piece,st.fractions),
-  pts=viewer.points,b=bounds(pts),midX=(b.minX+b.maxX)/2,midY=(b.minY+b.maxY)/2;
- const d=Math.min(piece.width,1500),yaw=camera.yaw,pitch=camera.pitch;
- function coords(x,y,z){const xx=x-midX,yy=y-midY,zz=z;const rX=xx*Math.cos(yaw)-zz*Math.sin(yaw),depth=xx*Math.sin(yaw)+zz*Math.cos(yaw);
- return {x:rX,y:yy*Math.cos(pitch)-depth*Math.sin(pitch),depth:yy*Math.sin(pitch)+depth*Math.cos(pitch)};}
- const faces=[];
- for(let i=0;i<pts.length-1;i++){const a=pts[i],bb=pts[i+1],z=d/2;const corners=[coords(a.x,a.y,-z),coords(bb.x,bb.y,-z),coords(bb.x,bb.y,z),coords(a.x,a.y,z)];faces.push({corners,depth:corners.reduce((v,p)=>v+p.depth,0)/4,index:i});}
- const all=faces.flatMap(f=>f.corners),bound=bounds(all),width=bound.maxX-bound.minX||1,height=bound.maxY-bound.minY||1;
- const sc=Math.min((w-75)/width,(h-65)/height,7)*camera.zoom,offX=(bound.minX+bound.maxX)/2,offY=(bound.minY+bound.maxY)/2;
- const project=p=>({x:w/2+(p.x-offX)*sc,y:h/2-(p.y-offY)*sc});
+ const can=canvas2d('sceneCanvas');if(!can)return;
+ const {ctx,w,h}=can;drawGrid(ctx,w,h,36);
+ const st=stage(piece,sim.time),viewer=viewerProfile(piece,st.fractions);
+ const pts=viewer.points;
+ // Volumen esquemático: caras interior/exterior, cantos y dos tapas.
+ // Respeta ancho y espesor declarados, sin recortar artificialmente ancho.
+ const mesh=sheetSolidMesh(pts,piece.width,piece.thickness);
+ const yz=bounds(pts),midX=(yz.minX+yz.maxX)/2,midY=(yz.minY+yz.maxY)/2;
+ const yaw=camera.yaw,pitch=camera.pitch;
+ function coords(pt){
+  const xx=pt.x-midX,yy=pt.y-midY,zz=pt.z;
+  const rx=xx*Math.cos(yaw)-zz*Math.sin(yaw);
+  const depth=xx*Math.sin(yaw)+zz*Math.cos(yaw);
+  return {x:rx,y:yy*Math.cos(pitch)-depth*Math.sin(pitch),
+   depth:yy*Math.sin(pitch)+depth*Math.cos(pitch)};
+ }
+ const faces=mesh.faces.map(face=>{
+  const corners=face.points.map(coords);
+  return {...face,corners,depth:corners.reduce((s,p)=>s+p.depth,0)/4};
+ });
+ const all=faces.flatMap(face=>face.corners),bound=bounds(all);
+ const extentX=Math.max(1,bound.maxX-bound.minX),extentY=Math.max(1,bound.maxY-bound.minY);
+ const scale=Math.max(.01,Math.min((w-75)/extentX,(h-65)/extentY,7))*camera.zoom;
+ const offX=(bound.minX+bound.maxX)/2,offY=(bound.minY+bound.maxY)/2;
+ const project=p=>({x:w/2+(p.x-offX)*scale,y:h/2-(p.y-offY)*scale});
+ // Orden de caras de atrás a delante. No es un motor 3D con z-buffer:
+ // en piezas autocruzadas la oclusión puede ser sólo aproximada.
  faces.sort((a,b)=>a.depth-b.depth);
- for(const f of faces){
-   const corners=f.corners.map(project);
-   const xs=corners.map(p=>p.x),ys=corners.map(p=>p.y);
-   const left=Math.min(...xs),right=Math.max(...xs),top=Math.min(...ys),bottom=Math.max(...ys);
-   ctx.save();ctx.shadowColor='#000a';ctx.shadowBlur=10;ctx.shadowOffsetY=4;
-   ctx.beginPath();corners.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();
-   const steel=ctx.createLinearGradient(left,top,right,bottom);
-   // Un color consistente evita rayas alternas en las caras pequeñas
-   // que discretizan el arco en el visor 3D.
-   steel.addColorStop(0,'#d7e5ee');
-   steel.addColorStop(.18,'#a8bdcd');
-   steel.addColorStop(.42,'#5e8197');
-   steel.addColorStop(.69,'#c7d9e5');
-   steel.addColorStop(1,'#38556b');
-   ctx.fillStyle=steel;ctx.fill();ctx.shadowBlur=0;ctx.lineWidth=1.4;
-   ctx.strokeStyle='#dceefa';ctx.stroke();ctx.restore();
+ const fill={
+  upper:'#b4d1df',lower:'#547b94',front:'#87aabc',
+  back:'#4f7088',start:'#dfb56d',end:'#dfa75c'
+ };
+ for(const face of faces){
+  const points=face.corners.map(project);
+  ctx.save();
+  ctx.beginPath();
+  points.forEach((pt,i)=>i?ctx.lineTo(pt.x,pt.y):ctx.moveTo(pt.x,pt.y));
+  ctx.closePath();
+  ctx.fillStyle=fill[face.kind]||'#8dabbd';
+  ctx.fill();
+  ctx.strokeStyle=face.kind==='front'||face.kind==='back'?'#b2ccda':'#31536a';
+  ctx.lineWidth=face.kind==='front'||face.kind==='back'?.6:.5;
+  ctx.stroke();
+  ctx.restore();
  }
- for(const z of [-d/2,d/2]){
-  const edge=pts.map(pt=>project(coords(pt.x,pt.y,z)));
-  line(ctx,edge,'#183c55',5);
-  line(ctx,edge,'#e7f3f8',1.25);
- }
- const sceneLabel=st.completed?'PIEZA FINAL 3D · gira con el dedo':
-   st.finished===0&&st.phase==='Posicionamiento'?'CHAPA PLANA · VISTA 3D':
-   'PIEZA EN PROCESO 3D · GOLPE '+(st.activeOperation+1)+' / '+st.count;
-  text(ctx,sceneLabel,15,23,'#8ac7f6',12);text(ctx,'Anchura: '+numbers(piece.width,0)+' mm',w-14,h-15,'#648299',11,'right');
+ const title=st.completed?'PIEZA FINAL 3D · gira con el dedo':
+  st.finished===0&&st.phase==='Posicionamiento'?'CHAPA PLANA · VISTA 3D':
+  'PIEZA EN PROCESO 3D · GOLPE '+(st.activeOperation+1)+' / '+st.count;
+ text(ctx,title,15,23,'#8ac7f6',12);
+ text(ctx,'Ancho '+numbers(piece.width,0)+' mm · e '+numbers(piece.thickness,2)+' mm',
+  w-14,h-15,'#648299',11,'right');
 }
 function toolDrawing(){
  const can=canvas2d('toolCanvas');if(!can)return;

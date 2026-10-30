@@ -29,6 +29,8 @@ jobs:
           node --check studio.js
           node --check render-enhancements.js
           node --check validation.js
+          node --check viewer-profile.js
+          node --check sheet-solid.js
       - name: Pruebas de dirección, secuencia y desarrollo
         run: npm test
 

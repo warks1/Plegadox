@@ -28,6 +28,22 @@ try{
  });
  const sceneFinal=await page.locator('#sceneCanvas').evaluate(c=>c.toDataURL());
  assert.notEqual(sceneFinal,sceneSecond,'El 3D debe terminar la secuencia de operaciones');
+ // El nuevo volumen debe cambiar al variar SOLO el espesor programado.
+ await page.locator('[data-tab="programacion"]').click();
+ const control=page.locator('#thickness');
+ await control.fill('8');await control.dispatchEvent('change');
+ await page.locator('#timeline').evaluate(input=>{
+  input.value='1000';input.dispatchEvent(new Event('input',{bubbles:true}));
+ });
+ const thick=await page.locator('#sceneCanvas').evaluate(c=>c.toDataURL());
+ assert.notEqual(sceneFinal,thick,'El canto 3D debe reaccionar al espesor programado');
+ await page.locator('[data-tab="programacion"]').click();
+ await control.fill('2');await control.dispatchEvent('change');
+ await page.locator('#timeline').evaluate(input=>{
+  input.value='1000';input.dispatchEvent(new Event('input',{bubbles:true}));
+ });
+ await page.locator('[data-tab="simulacion"]').click();
+
  await page.locator('#timeline').evaluate(input=>{
   input.value='390';input.dispatchEvent(new Event('input',{bubbles:true}));
  });
