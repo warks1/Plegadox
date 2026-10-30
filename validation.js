@@ -6,6 +6,7 @@
  * secuencia seleccionada. No certifica que una operación sea segura.
  */
 import { normalized, profile, stage, getTooling, MACHINE } from './engine.js';
+import {getV85} from './machine-config.js';
 
 const EPS=1e-7;
 const round=(x,n=2)=>Number(x.toFixed(n));
@@ -114,9 +115,10 @@ export function analyzeSequence(raw){
    'Relación V/espesor '+round(ratio,1)+' fuera del intervalo orientativo 5–14; revisar matriz, material y radio.',
    {ratio:round(ratio,2)}));
  }
- if(p.width>MACHINE.workingWidth){
+ const configuredWidth=getV85().ramWidth;
+ if(p.width>configuredWidth){
   issues.push(issue('machine-width','warning',null,
-   'La pieza excede la anchura configurada de '+MACHINE.workingWidth+' mm.'));
+   'La pieza excede la anchura configurada de la trancha: '+configuredWidth+' mm.'));
  }
  if(!die.verifiedSpecs||!punch.verifiedSpecs||die.profileAccuracy==='provisional'||punch.profileAccuracy==='provisional'){
   issues.push(issue('provisional-tools','advisory',null,
