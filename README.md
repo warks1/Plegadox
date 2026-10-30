@@ -416,3 +416,16 @@ El perfil incluye segmentos para representar radios aproximados, pero
 agujeros, recortes, marcas de pliegue ni correcciones calibradas. Si el
 desarrollo es negativo o inválido, no se genera un archivo. Siempre
 verificar con el plano original y las probetas antes de cortar chapa.
+
+### Posiciones de pliegue y marcas DXF de referencia
+
+El desarrollo ahora muestra una tabla de centros estimados de los pliegues
+con sus posiciones X, número de golpe, número físico de pliegue y ángulo con
+signo. Con cotas exteriores se resta media deducción BD por lado; para cotas
+sobre fibra neutra se añade media BA en el centro. Las posiciones se
+muestran siguiendo la secuencia programada, que puede ser 1-2-4-3, pero
+las marcas están ubicadas en el orden espacial de la chapa. La exportación
+DXF añade por defecto líneas y notas a la capa PLEGADOS_NO_CORTE.
+Se pueden excluir desmarcando la casilla, dejando un contorno de cuatro
+líneas sin marcas. No son órdenes CNC ni líneas de corte; todas las
+compensaciones y cotas siguen sin verificación de taller.

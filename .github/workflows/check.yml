@@ -32,6 +32,7 @@ jobs:
           node --check viewer-profile.js
           node --check sheet-solid.js
           node --check dxf-export.js
+          node --check flat-layout.js
       - name: Pruebas de dirección, secuencia y desarrollo
         run: npm test
 

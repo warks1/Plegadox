@@ -7,6 +7,7 @@ import {incidentReviewRows} from './incident-navigation.js';
 import {viewerProfile} from './viewer-profile.js';
 import {sheetSolidMesh} from './sheet-solid.js';
 import {exportProfileDXF,exportFlatDXF} from './dxf-export.js';
+import {flatBendLayout} from './flat-layout.js';
 import {sectionPunch,sectionDie} from './tool-profiles.js';
 import {getV85} from './machine-config.js';
 registerCatalogue(DIES,PUNCHES);
@@ -74,7 +75,7 @@ function configure(){
   catch(e){$('dxfStatus').textContent='No se pudo generar el DXF: '+e.message;}
  };
  $('exportDxfFlat').onclick=()=>{
-  try{downloadDxf(exportFlatDXF(piece),'desarrollo-ORIENTATIVO');}
+  try{downloadDxf(exportFlatDXF(piece,{includeBends:$('dxfIncludeBends').checked}),'desarrollo-ORIENTATIVO');}
   catch(e){$('dxfStatus').textContent='No se pudo generar el DXF: '+e.message;}
  };
  $('exportBtn').onclick=()=>{
@@ -409,6 +410,35 @@ function renderVComparison(){
  });
  root.dataset.key=key;root.replaceChildren(...rows);
 }
+/** Posiciones de pliegue estimadas: no son coordenadas CNC. */
+function renderFlatBendRows(){
+ const root=$('flatBendRows'),warning=$('flatLayoutWarning');
+ if(!root||!warning)return;
+ const key=JSON.stringify([piece.flanges,piece.angles,piece.order,piece.thickness,
+  piece.kFactor,piece.radius,piece.die,piece.material,piece.datum,piece.width]);
+ if(root.dataset.key===key)return;
+ root.dataset.key=key;
+ try{
+  const flat=flatBendLayout(piece);
+  const rows=[...flat.folds].sort((a,b)=>a.operation-b.operation);
+  root.replaceChildren(...rows.map(fold=>{
+   const tr=document.createElement('tr');
+   for(const value of ['G'+fold.operation,'P'+(fold.bend+1),
+    (fold.angle>0?'+':'')+fold.angle+'°',numbers(fold.position,2)+' mm']){
+    const cell=document.createElement('td');cell.textContent=value;
+    tr.append(cell);
+   }
+   return tr;
+  }));
+  warning.textContent='Cotas '+(flat.datum==='neutral'?'fibra neutra':'exteriores')+
+   ' · largo estimado '+numbers(flat.length,2)+' mm. No son posiciones CNC verificadas.';
+  $('exportDxfFlat').disabled=false;
+ }catch(error){
+  root.replaceChildren();
+  warning.textContent='⚠ '+error.message+'. Corregir antes de exportar.';
+  $('exportDxfFlat').disabled=true;
+ }
+}
 function renderDevelopment(){
  const d=development(piece),check=geometryReport(),force=estimateAirBendForce(piece);
  const items=[['Nominal',d.nominal,'mm'],['Desarrollo',d.length,'mm'],
@@ -431,6 +461,7 @@ function renderDevelopment(){
  if($('forceDetails').textContent!==notes)$('forceDetails').textContent=notes;
  $('forceDetails').style.color=force.exceedsNominal?'#ffbd90':'';
  renderVComparison();
+ renderFlatBendRows();
 
  $('devRows').replaceChildren(...d.perBend.map(b=>{const tr=document.createElement('tr');for(const val of [b.index+1,(b.angle>0?'+':'')+b.angle+'°',numbers(b.ba,2),numbers(b.bd,2)]){const td=document.createElement('td');td.textContent=val;tr.append(td);}return tr;}));
  const out=[['Alas',piece.flanges.length],['Pliegues',piece.angles.length],['L. nominal',numbers(d.nominal,1)+' mm']];

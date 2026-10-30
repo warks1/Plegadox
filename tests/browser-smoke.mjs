@@ -40,6 +40,12 @@ try{
   assert.equal(await page.locator('#die').inputValue(),'v32');
   await page.locator('#vComparisonRows tr[data-die-id="v16"] button').click();
   assert.equal(await page.evaluate(()=>window.PLEGADOX_STATE().piece.die),'v16');
+  assert.equal(await page.locator('#flatBendRows tr').count(),4,
+    'La tabla muestra centros de cuatro pliegues');
+  const labelRows=await page.locator('#flatBendRows tr td:first-child').allTextContents();
+  assert.deepEqual(labelRows,['G1','G2','G3','G4']);
+  assert.match(await page.locator('#flatBendRows tr').nth(2).textContent(),/P4/);
+  assert.equal(await page.locator('#dxfIncludeBends').isChecked(),true);
   const [profileDXF]=await Promise.all([
     page.waitForEvent('download'),page.locator('#exportDxfProfile').click()
   ]);
