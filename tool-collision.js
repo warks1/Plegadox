@@ -72,6 +72,16 @@ function classifySample(sample,scene,kind){
  }
  return null;
 }
+/**
+ * Geometry-only inspection for a user-provided polygon and polyline.
+ * Used by tests and, with the selected tool polygons, by the simulator.
+ */
+export function inspectSheetAgainstPolygon(sheet,polygon,thickness=2,kind='punch',activeBend=-99){
+ const scene={sheet,punchPolygon:polygon,diePolygon:polygon,stage:{activeBend},
+  piece:{thickness}};
+ const samples=sampleSheet(sheet,Math.max(.5,Math.min(3,thickness*.65)));
+ return samples.map(sample=>classifySample(sample,scene,kind)).filter(Boolean);
+}
 export function inspectToolContact(piece,instant=0){
  const scene=technicalScene(piece,instant),samples=sampleSheet(scene.sheet,
   Math.max(.5,Math.min(3,scene.piece.thickness*.65)));
