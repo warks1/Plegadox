@@ -7,9 +7,12 @@ export function sectionPunch(tool={}){
  const height=Math.max(50,Number(tool.height)||120);
  const angle=Math.min(120,Math.max(15,Number(tool.angle)||88));
  const radius=Math.max(.25,Number(tool.tip)||.8);
- const halfTop=22,halfTip=Math.min(halfTop*.4,radius*.5);
+ // El ancho superior se ajusta si un punzón bajo y muy agudo no admite
+ // una sección de 44 mm; se conserva el ángulo incluido de la punta.
+ const halfTip=Math.min(4,radius*.5);
+ const halfTop=Math.min(22,halfTip+(height-4)*Math.tan(angle*Math.PI/360));
  const taperHeight=(halfTop-halfTip)/Math.tan(angle*Math.PI/360);
- const bodyBottom=Math.min(height-4,taperHeight);
+ const bodyBottom=taperHeight;
  let points;
  if(tool.type==='cabra'){
   const clearance=Math.min(height*.42,48);
