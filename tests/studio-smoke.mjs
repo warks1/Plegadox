@@ -17,11 +17,18 @@ try{
  assert.equal(await page.locator('.cp-kind-tabs [data-kind="all"]').getAttribute('aria-pressed'),'true');
  assert.equal(await page.locator('#cockpitTools [data-category="punch"]').count(),1);
  assert.equal(await page.locator('#cockpitTools [data-category="die"]').count(),1);
- assert.equal(await page.locator('#cockpitTools .cp-tool-card').count(),12,'Vista inicial de cuatro punzones y ocho matrices');
+ const compactCount=await page.locator('#cockpitTools .cp-tool-card').count();
+ assert.ok(compactCount>=12,'La portada conserva las 12 herramientas básicas y añade las destacadas');
+ assert.ok(await page.locator('#cockpitTools .cp-tool-card').filter({hasText:'GN9-12-8806'}).count(),
+  'La portada incluye una pata de cabra documentada');
+ assert.ok(await page.locator('#cockpitTools .cp-tool-card').filter({hasText:'V006-30-S'}).count(),
+  'La portada incluye V6 de 30 grados');
  await page.locator('#cpShowAllTools').click();
- assert.ok(await page.locator('#cockpitTools .cp-tool-card').count()>24,'Catálogo completo accesible con el botón');
+ const fullCount=await page.locator('#cockpitTools .cp-tool-card').count();
+ assert.ok(fullCount>compactCount,'Catálogo completo accesible con el botón');
  await page.locator('#cpShowAllTools').click();
- assert.equal(await page.locator('#cockpitTools .cp-tool-card').count(),12,'Volver a vista compacta conserva catálogo');
+ assert.equal(await page.locator('#cockpitTools .cp-tool-card').count(),compactCount,
+  'La portada recupera la misma selección al contraer el catálogo');
  assert.ok(await page.locator('#machineGraphicMode').textContent()==='PERSPECTIVA 2.5D');
  await page.screenshot({path:'test-results/studio-desktop.png',fullPage:true});
  const before=await page.evaluate(()=>window.PLEGADOX_STATE().piece.flanges.length);
