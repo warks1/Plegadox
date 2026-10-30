@@ -21,6 +21,7 @@ jobs:
           node --check machine-visual.js
           node --check tool-profiles.js
           node --check technical-section.js
+          node --check tool-collision.js
           node --check responsive.js
           node --check studio.js
           node --check render-enhancements.js
