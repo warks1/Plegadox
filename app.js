@@ -199,7 +199,9 @@ function drawMachine(){
 
 function drawScene(){
  const can=canvas2d('sceneCanvas');if(!can)return;const {ctx,w,h}=can;drawGrid(ctx,w,h,36);
- const st=stage(piece,sim.time),pts=profile(piece,piece.angles.map(()=>1)).points,b=bounds(pts),midX=(b.minX+b.maxX)/2,midY=(b.minY+b.maxY)/2;
+ // El modelo 3D usa exactamente las fracciones de la secuencia animada.
+  // Antes se dibujaba siempre la pieza FINAL, incluso en el instante cero.
+  const st=stage(piece,sim.time),pts=profile(piece,st.fractions).points,b=bounds(pts),midX=(b.minX+b.maxX)/2,midY=(b.minY+b.maxY)/2;
  const d=Math.min(piece.width,1500),yaw=camera.yaw,pitch=camera.pitch;
  function coords(x,y,z){const xx=x-midX,yy=y-midY,zz=z;const rX=xx*Math.cos(yaw)-zz*Math.sin(yaw),depth=xx*Math.sin(yaw)+zz*Math.cos(yaw);
  return {x:rX,y:yy*Math.cos(pitch)-depth*Math.sin(pitch),depth:yy*Math.sin(pitch)+depth*Math.cos(pitch)};}
@@ -229,7 +231,10 @@ function drawScene(){
   line(ctx,edge,'#183c55',5);
   line(ctx,edge,'#e7f3f8',1.25);
  }
- text(ctx,'PIEZA FINAL 3D · gira con el dedo',15,23,'#8ac7f6',12);text(ctx,'Anchura: '+numbers(piece.width,0)+' mm',w-14,h-15,'#648299',11,'right');
+ const sceneLabel=st.completed?'PIEZA FINAL 3D · gira con el dedo':
+   st.finished===0&&st.phase==='Posicionamiento'?'CHAPA PLANA · VISTA 3D':
+   'PIEZA EN PROCESO 3D · GOLPE '+(st.activeOperation+1)+' / '+st.count;
+  text(ctx,sceneLabel,15,23,'#8ac7f6',12);text(ctx,'Anchura: '+numbers(piece.width,0)+' mm',w-14,h-15,'#648299',11,'right');
 }
 function toolDrawing(){
  const can=canvas2d('toolCanvas');if(!can)return;

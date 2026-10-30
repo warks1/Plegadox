@@ -12,12 +12,26 @@ try{
  page.on('pageerror',e=>errors.push(e.message));
  await page.goto('http://127.0.0.1:4197/',{waitUntil:'networkidle'});
  await page.locator('#machineCanvas').waitFor({state:'visible'});
+ // El visor 3D debe empezar plano y NO mostrar la omega final.
+ const sceneInitial=await page.locator('#sceneCanvas').evaluate(c=>c.toDataURL());
  // The second operation of 1-2-4-3 is −90; show this exact moment.
  await page.evaluate(()=>{
   const r=document.querySelector('#timeline');
   r.value='390';r.dispatchEvent(new Event('input',{bubbles:true}));
  });
  assert.match(await page.locator('#phaseText').textContent(),/[-−]90°/);
+ const sceneSecond=await page.locator('#sceneCanvas').evaluate(c=>c.toDataURL());
+ assert.notEqual(sceneSecond,sceneInitial,
+  'El 3D debe representar los pliegues ya ejecutados, no dibujar siempre la pieza final');
+ await page.locator('#timeline').evaluate(input=>{
+  input.value='1000';input.dispatchEvent(new Event('input',{bubbles:true}));
+ });
+ const sceneFinal=await page.locator('#sceneCanvas').evaluate(c=>c.toDataURL());
+ assert.notEqual(sceneFinal,sceneSecond,'El 3D debe terminar la secuencia de operaciones');
+ await page.locator('#timeline').evaluate(input=>{
+  input.value='390';input.dispatchEvent(new Event('input',{bubbles:true}));
+ });
+
  await page.screenshot({path:'test-results/video-regression-second-minus90-desktop.png',fullPage:false});
  // Tool profiles 30 / 60 / 88 must genuinely differ visually.
  await page.locator('#cpBrandTabs [data-brand="Genéricos"]').click();
