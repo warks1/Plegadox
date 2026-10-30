@@ -2,6 +2,8 @@ import {MATERIALS,DIES,PUNCHES,EXAMPLE,normalized,profile,bounds,development,sta
 import {drawIndustrialMachine} from './machine-visual.js';
 import {registerCatalogue} from './catalog.js';
 import {analyzeSequence} from './validation.js';
+import {inspectSequenceTools,currentToolContact} from './tool-collision.js';
+import {sectionPunch,sectionDie} from './tool-profiles.js';
 registerCatalogue(DIES,PUNCHES);
 const $=id=>document.getElementById(id);
 const storeKey='plegadox:piece:v1';
@@ -13,7 +15,7 @@ let touchOrderEnabled=false,chosenTouchOrder=[];
 const geometryCache={key:null,result:null};
 function geometryReport(){
  const key=JSON.stringify([piece.flanges,piece.angles,piece.order,piece.thickness,piece.width,piece.punch,piece.die]);
- if(key!==geometryCache.key){geometryCache.key=key;geometryCache.result=analyzeSequence(piece);}
+ if(key!==geometryCache.key){geometryCache.key=key;geometryCache.result={...analyzeSequence(piece),tools:inspectSequenceTools(piece,6)};}
  return geometryCache.result;
 }
 const numbers=(n,d=1)=>Number(n).toLocaleString('es-ES',{maximumFractionDigits:d,minimumFractionDigits:d});
@@ -255,14 +257,14 @@ function renderDevelopment(){
  $('validity').style.color=check.hasGeometryWarning?'#ffd89c':'#b9e5ff';
 }
 function renderSimulationText(){
- const st=stage(piece,sim.time),a=piece.angles[st.activeBend],check=geometryReport();
+ const st=stage(piece,sim.time),a=piece.angles[st.activeBend],check=geometryReport(),toolNow=currentToolContact(piece,sim.time);
  $('simStatus').textContent=st.phase;
  $('phaseText').textContent=st.completed?'Pieza final · secuencia completada':st.phase+' · pliegue '+(st.activeBend+1)+' ('+(a>0?'+':'')+a+'°)';
  $('stepText').textContent='Golpe '+st.finished+'/'+st.count;
  $('foldedCount').textContent=st.finished+' de '+st.count+' pliegues';
  $('timeline').value=Math.round(1000*st.time/st.duration);
  const root=$('simSequence');
- const key=JSON.stringify({order:piece.order,angles:piece.angles,flanges:piece.flanges,issues:check.perOperation.map(x=>x.potentialInterference)});
+ const key=JSON.stringify({order:piece.order,angles:piece.angles,flanges:piece.flanges,issues:check.perOperation.map((x,i)=>x.potentialInterference||check.tools.operations[i]?.possibleToolIntrusion)});
  if(root.dataset.key!==key){
    root.dataset.key=key;
    root.replaceChildren(...piece.order.map((bend,i)=>{
@@ -277,7 +279,7 @@ function renderSimulationText(){
      const a=document.createElement('strong');a.textContent=(angle>0?'+':'')+angle+'°';
      const l=document.createElement('small');l.textContent='L = '+numbers(piece.flanges[bend+1],1)+' mm';
      values.append(a,l);const menu=document.createElement('span');menu.className='op-more';menu.textContent='⋮';
-     if(check.perOperation[i]?.potentialInterference){
+     if(check.perOperation[i]?.potentialInterference||check.tools.operations[i]?.possibleToolIntrusion){
        el.classList.add('suspect');el.title='Posible interferencia geométrica 2D: comprobar antes de plegar';
        const mark=document.createElement('span');mark.className='op-alert';mark.textContent='!';mark.setAttribute('aria-label','Advertencia geométrica');values.append(mark);
      }
@@ -296,15 +298,23 @@ function renderSimulationText(){
  if(details){
    const active=check.issues.filter(x=>x.bend===st.activeBend);
    const main=active.length?active[0].message:check.summary;
-   const other=check.issues.filter(x=>x.code!=='provisional-tools'&&x.bend==null).slice(0,2).map(x=>x.message);
-   const messages=[main,...other];
+   const other=check.issues.filter(x=>x.code!=='provisional-tools'&&x.bend==null).slice(0,1).map(x=>x.message);
+   const toolStep=check.tools.operations[st.activeOperation];
+   const currentIssue=toolNow.issues[0];
+   const toolWarning=currentIssue?
+     '⚠ Posible penetración 2D de chapa en '+(currentIssue.kind==='punch'?'PUNZÓN':'MATRIZ')+
+     ' (tramo '+(currentIssue.segment+1)+'). Ver puntos rojos en «▥ mm».':
+     toolStep?.possibleToolIntrusion?
+       '⚠ En este golpe aparecen posibles interferencias con herramientas en otras posiciones.':
+       'Sin penetración 2D detectada en esta muestra; NO certifica ausencia de colisiones.';
+   const messages=[toolWarning,main,...other];
    const signature=JSON.stringify(messages);
    if(details.dataset.signature!==signature){
      details.dataset.signature=signature;
      details.replaceChildren(...messages.map((m,i)=>{const line=document.createElement('p');line.textContent=(i?'• ':'')+m;return line;}));
      details.title=check.limitations;
    }
-   details.classList.toggle('has-warning',check.hasGeometryWarning);
+   details.classList.toggle('has-warning',check.hasGeometryWarning||toolNow.hasWarning||!!toolStep?.possibleToolIntrusion);
  }
 }
 function paintAll(){drawProfile('finalCanvas',piece.angles.map(()=>1),true);drawMachine();drawProfile('progressCanvas',stage(piece,sim.time).fractions,false);drawScene();toolDrawing();renderDevelopment();renderToolCards();renderSimulationText();}
