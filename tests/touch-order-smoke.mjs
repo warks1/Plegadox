@@ -43,8 +43,10 @@ try{
    angles:[120,120,120],order:[0,1,2],material:'s235',thickness:2,width:450,die:'v16',punch:'straight88'}))
  });
  await page.locator('[data-tab="simulacion"]').click();
- await page.waitForFunction(()=>document.querySelector('#collisionDetails')?.textContent?.includes('Cruce de tramos'));
- assert.match(await page.locator('#collisionDetails').textContent(),/Cruce de tramos/);
+ // Tres giros de +120° hacen SOLAPAR el ala final con la inicial.
+ // El aviso correcto ya no debe llamarse «cruce interior».
+ await page.waitForFunction(()=>document.querySelector('#collisionDetails')?.textContent?.includes('Solapamiento colineal'));
+ assert.match(await page.locator('#collisionDetails').textContent(),/Solapamiento colineal de alas/);
  await page.locator('[data-tab="programacion"]').click();
  assert.match(await page.locator('#validity').textContent(),/Revisar geometría y configuración/);
  assert.deepEqual(errors,[],'El navegador no debe lanzar excepciones');
