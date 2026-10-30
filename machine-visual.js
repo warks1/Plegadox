@@ -92,7 +92,7 @@ function drawDie(ctx,cx,cy,scale,die){
  // Perfil en V con apertura y ángulo INCLUIDO de la matriz elegida.
  // El bloque exterior sigue siendo ilustrativo hasta disponer de CAD oficial.
  const profile=sectionDie(die);
- const half=88*scale,top=cy,width=half*2,body=120*scale;
+ const half=Math.max(28,profile.opening*1.18+14)*scale,top=cy,width=half*2,body=110*scale;
  const v=clamp(profile.opening*1.55*scale,8*scale,86*scale);
  const depth=Math.min(body*.64,(v/2)/Math.tan(profile.angle*Math.PI/360));
  const left=cx-half,right=cx+half;
