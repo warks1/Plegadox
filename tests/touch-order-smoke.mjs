@@ -46,7 +46,7 @@ try{
  await page.waitForFunction(()=>document.querySelector('#collisionDetails')?.textContent?.includes('Cruce de tramos'));
  assert.match(await page.locator('#collisionDetails').textContent(),/Cruce de tramos/);
  await page.locator('[data-tab="programacion"]').click();
- assert.match(await page.locator('#validity').textContent(),/Revisar geometría 2D/);
+ assert.match(await page.locator('#validity').textContent(),/Revisar geometría y configuración/);
  assert.deepEqual(errors,[],'El navegador no debe lanzar excepciones');
  console.log('DIRECT_BEND_INPUT_OK',JSON.stringify({order,warning:true}));
 }finally{await browser?.close();server.kill();}

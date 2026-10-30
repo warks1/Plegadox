@@ -345,3 +345,9 @@ sobre advertencias orientativas de baja gravedad. La cabina también indica
 cuando la pieza supera la longitud nominal de un solo segmento de punzón o
 matriz; **no presume** que puedan unirse herramientas sin verificar su
 sistema de amarre, distribución de cargas y disponibilidad real.
+
+El catálogo se registra directamente cuando se importa `engine.js`, por
+lo que `normalized()`, `getTooling()` y las verificaciones de secuencia
+reconocen también referencias comerciales fuera de la interfaz principal.
+El registro es idempotente; no multiplica herramientas ni cambia la
+naturaleza provisional de los modelos 2D/3D.

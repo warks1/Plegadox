@@ -1,4 +1,5 @@
-/** Plegadox: núcleo geométrico determinista y sin dependencias. Unidades: mm y grados. */
+/** Plegadox: núcleo geométrico determinista. Unidades: mm y grados. */
+import {registerCatalogue} from './catalog.js';
 export const MATERIALS = [
  {id:'s235',name:'Acero S235',k:0.36,springback:1.0},
  {id:'s275',name:'Acero S275',k:0.36,springback:1.1},
@@ -22,6 +23,10 @@ export const PUNCHES = [
   angle:88,height:100,topWidth:50,tip:2,type:'cabra',
   profileStyle:'user-photo',verifiedSpecs:false,profileAccuracy:'provisional'}
 ];
+// Registro único al inicializar el núcleo. La selección de herramientas
+// documentadas NO depende de importar app.js (UI) o cockpit.js.
+// registerCatalogue es idempotente para los módulos que lo reutilizan.
+registerCatalogue(DIES,PUNCHES);
 export const MACHINE = Object.freeze({name:'Trumpf V85',tonnage:85,workingWidth:2040,ram:[1340,28,2,25.4,20,30,125,20,39,28],bed:[820,80,25.25,25.25,50,20,20],stop:[70,100,18,25,12,0],support:[70,100,8,25,12,8]});
 export const EXAMPLE = {name:'Omega · ejemplo geométrico',material:'s235',thickness:2,width:500,die:'v16',punch:'straight88',flanges:[50,50,50,50,50],angles:[90,-90,-90,90],order:[0,1,3,2],kFactor:null,radius:null,datum:'outside'};
 export function clamp(x,a,b){return Math.min(b,Math.max(a,x));}

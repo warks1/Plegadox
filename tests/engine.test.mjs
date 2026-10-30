@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {EXAMPLE,normalized,profile,stage,development,orientedForMachine,selfIntersects,toolAngleCompatibility} from '../engine.js';
+import {EXAMPLE,normalized,profile,stage,development,orientedForMachine,selfIntersects,toolAngleCompatibility,getTooling} from '../engine.js';
 const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-6, a+' != '+b);
 test('Chapa inicialmente plana, no nace omega ya doblada',()=>{
  const p=profile(EXAMPLE);assert.ok(p.points.every(point=>point.y===0));
@@ -57,4 +57,13 @@ test('el interior geométrico conserva el signo de giro y compara ambos útiles'
  assert.equal(normal.interiorAngle,90);
  assert.equal(normal.warning,false);
  assert.equal(normal.verified,false);
+});
+
+test('el núcleo reconoce herramientas de catálogo aunque no se inicie la interfaz',()=>{
+ const p=normalized({...EXAMPLE,punch:'amada-831',die:'conic-v010-30-s'});
+ assert.equal(p.punch,'amada-831');
+ assert.equal(p.die,'conic-v010-30-s');
+ const {punch,die}=getTooling(p);
+ assert.equal(punch.length,415);
+ assert.equal(die.length,835);
 });
