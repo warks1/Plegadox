@@ -2,6 +2,7 @@
 // Geometría ilustrativa, no modelo CAD certificado ni calculador de colisiones.
 import {stage,presentedAtStage,getTooling} from './engine.js';
 import {sectionPunch,sectionDie} from './tool-profiles.js';
+import {drawTechnicalSection} from './technical-section.js';
 import {sceneAtmosphere,dieDepth,ramDepth,sheetDepth,surfaceDetail,sectionOverlay} from './render-enhancements.js';
 
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -238,5 +239,8 @@ function stageScene(ctx,w,h,piece,sim,machineView){
 }
 // Entrypoint used from app.js drawMachine without changing the core timing engine.
 export function drawIndustrialMachine(ctx,w,h,piece,sim,machineView){
+ // Cotas nominales y todas las siluetas comparten una sola escala mm/px.
+ // El modo artístico queda intacto como referencia estética del Boceto 2.
+ if(machineView?.section)return drawTechnicalSection(ctx,w,h,piece,sim,machineView);
  stageScene(ctx,w,h,piece,sim,machineView);
 }
