@@ -46,6 +46,42 @@ Se implementó la disposición oscura elegida: **secuencia de plegado a la izqui
 - **Máquina:** cotas de Trumpf V85 de las fotografías, trancha de 2040 mm, mesa y topes.
 - **Datos:** guardar en dispositivo, importar/exportar piezas en JSON.
 
+## Diagnóstico preliminar chapa-herramientas y perfiles de catálogo (v0.8)
+
+El motor `tool-collision.js` comprueba geometrías **2D** durante los golpes:
+muestrea la fibra media de chapa con su espesor nominal y comprueba si
+entra en el volumen representado por la **matriz** o el **punzón**. Los
+puntos sospechosos aparecen en rojo en la vista técnica (▥ mm) y un aviso
+indica qué herramienta y qué tramo están implicados. Las tarjetas de golpes
+también muestran advertencias cuando se detectan posibles interferencias
+en las posiciones muestreadas.
+
+**No declarar 'sin colisiones' por ausencia de aviso.** Las geometrías
+de herramientas siguen siendo aproximadas salvo donde se haya importado
+una poligonal completa y verificada. La chapa no modela radio plástico
+real, recuperación, contacto distribuido ni los seis grados de libertad
+de la pieza. Los avisos son candidatos a colisión y no certifican ni
+permiten trabajar sin verificación física.
+
+Se han añadido referencias reales del **catálogo CONIC (tipo Amada)**:
+- Punzones agudos 30° ACT-09-3006 y ACT-12-3006.
+- Punzones de pata de cabra GN6-12-8806 y GN9-12-8806,
+  distinguiendo sus escotes nominales k6/k9.
+- Matrices de 30° V006-30-S, V008-30-S, V010-30-S y V012-30-S,
+  con V, R, ancho exterior B y cotas publicadas.
+
+Fuente: [CONIC, catálogo AMADA TYPE, páginas 12–15, 20–21 y 29](https://www.conic.co.jp/es/bending/pdf/amada_sbt_tooling_202206.pdf).
+**Son herramientas CONIC compatibles con el sistema tipo Amada, no
+herramientas fabricadas por Amada.** Los escotes y contornos todavía
+contienen transiciones paramétricas no acotadas en su totalidad, por lo
+que `profileAccuracy` permanece como `provisional`. La geometría 3D
+extrusionada y la vista de herramientas usan la misma poligonal que
+la sección 2D, evitando que la pata de cabra se dibuje como un recto.
+
+QA: `tests/tool-collision.test.mjs`, `tests/catalog-sourced.test.mjs`
+y `tests/catalog-contact-smoke.mjs` revisan intrusiones de chapa,
+referencias, perfiles y selección en PC y smartphone.
+
 ## Sección técnica a escala métrica (v0.7)
 
 En la pantalla principal, botón **▥ mm** (en el lateral de la simulación).
