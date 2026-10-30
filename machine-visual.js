@@ -1,6 +1,6 @@
 // Plegadox · Render de taller en vista lateral con materiales pulidos.
 // Geometría ilustrativa, no modelo CAD certificado ni calculador de colisiones.
-import {stage,presentedForMachine,getTooling} from './engine.js';
+import {stage,presentedAtStage,getTooling} from './engine.js';
 import {sectionPunch,sectionDie} from './tool-profiles.js';
 import {sceneAtmosphere,dieDepth,ramDepth,sheetDepth,surfaceDetail,sectionOverlay} from './render-enhancements.js';
 
@@ -186,7 +186,7 @@ function stageScene(ctx,w,h,piece,sim,machineView){
  drawRam(ctx,cx,baseY,scale,tipY,punch);
  ctx.restore();
  const fractions=st.fractions;
- const presentation=presentedForMachine(piece,fractions,st.activeBend);
+ const presentation=presentedAtStage(piece,st);
  const points=presentation.points;
  const maxExtent=Math.max(...points.map(pt=>Math.abs(pt.x)),50);
  const span=Math.min(w*.78/(2*maxExtent),scale*1.35);
@@ -205,6 +205,12 @@ function stageScene(ctx,w,h,piece,sim,machineView){
  // El ángulo se presenta en el panel de control, sin dibujar una
  // circunferencia sobre el punto de contacto de la chapa con la matriz.
  const a=piece.angles[st.activeBend]||0;
+ if(presentation.repositioning){
+  ctx.save();ctx.fillStyle='#9dd8ff';
+  ctx.font='700 '+Math.max(9,11*scale)+'px system-ui';ctx.textAlign='center';
+  ctx.fillText('REPOSICIONAMIENTO · GIRO DE PIEZA (VISTA ORIENTATIVA)',w/2,h-48*scale);
+  ctx.restore();
+ }
  // El signo del plano no se cambia: sólo cambia la CARA de presentación
  // al trabajar con un punzón que desciende desde arriba.
  if(presentation.flipped){
