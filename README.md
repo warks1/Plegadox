@@ -501,3 +501,8 @@ secuencia propuesta con grados firmados y las incidencias comparadas.
 **«Aplicar orden sugerido» requiere una pulsación expresa** y
 se desactiva si se edita la pieza. No comprueba punzones, matrices, carrera
 CNC, mesa, topes ni reorientaciones reales; **NO autoriza fabricar**.
+
+El comparador también calcula por separado las incidencias del **perfil
+final**, que son independientes del orden: si ese perfil tiene cruces,
+solapamientos o contactos, se advierte expresamente que reorganizar los
+golpes no corrige la geometría final de la pieza.

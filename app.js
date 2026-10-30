@@ -88,6 +88,12 @@ function configure(){
   };
   const prefix='Comparadas '+tested.compared+' secuencias'+
    (tested.exhaustive?' (todas las permutaciones)':' (búsqueda limitada)')+'. ';
+  const finalWarning=tested.finalGeometryAffected?
+   ' ATENCIÓN: la pieza final conserva '+tested.finalRisks.cross+' cruces, '+
+   tested.finalRisks.overlap+' solapes, '+tested.finalRisks.touch+
+   ' contactos y '+tested.finalRisks.close+
+   ' proximidades 2D, independientemente del orden.':'';
+
   if(tested.improved){
    pendingSequenceAdvice={key:JSON.stringify([piece.flanges,piece.angles,piece.order,piece.thickness]),
     order:tested.order};
@@ -95,10 +101,11 @@ function configure(){
    message.textContent=prefix+'Actual: '+counts(tested.current)+
     '. Alternativa: '+tested.order.map((bend,i)=>'G'+(i+1)+'→P'+(bend+1)+
       '('+(piece.angles[bend]>0?'+':'')+piece.angles[bend]+'°)').join(' · ')+
-    '. Incidencias alternativas: '+counts(tested.best)+'. Sólo reduce incidencias muestreadas en 2D.';
+    '. Incidencias alternativas: '+counts(tested.best)+
+    '. Sólo reduce incidencias muestreadas en 2D.'+finalWarning;
   }else{
    message.textContent=prefix+'No se ha encontrado otra secuencia con menos '+
-    'incidencias de chapa en las muestras analizadas. No significa que sea segura.';
+    'incidencias de chapa en las muestras analizadas. No significa que sea segura.'+finalWarning;
   }
  };
  $('applySuggestedOrder').onclick=()=>{

@@ -66,6 +66,11 @@ export function sequenceCandidates(order,maxCandidates=60){
 export function suggestBendOrder(piece,options={}){
  const p=normalized(piece),maxCandidates=options.maxCandidates??60;
  const current=scoreBendOrder(p,p.order);
+ // La forma final NO depende del orden: si las alas acaban cruzadas,
+ // ninguna permutación puede resolver ese defecto del diseño.
+ const finalIssues=inspectProfile(profile(p,p.angles.map(()=>1)).points,p.thickness);
+ const finalRisks={cross:0,overlap:0,touch:0,close:0};
+ for(const hit of finalIssues)finalRisks[hit.kind]++;
  let best=current;
  const candidates=sequenceCandidates(p.order,maxCandidates);
  for(const order of candidates){
@@ -75,6 +80,7 @@ export function suggestBendOrder(piece,options={}){
  }
  const improved=best.score<current.score;
  return {current,best,improved,order:improved?best.order:current.order,
+  finalRisks,finalGeometryAffected:finalIssues.length>0,
   compared:candidates.length,exhaustive:p.order.length<=4&&candidates.length===
    Array.from({length:p.order.length},(_,i)=>i+1).reduce((a,b)=>a*b,1),
   method:'Muéstreos de fibra media 2D entre alas de chapa; útiles y volteos no evaluados',

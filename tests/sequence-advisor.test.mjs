@@ -54,3 +54,13 @@ test('la puntuación penaliza los cruces más que la mera proximidad',()=>{
  assert.ok(score.score>=1000);
  assert.equal(score.verified,false);
 });
+
+test('no insinúa que cambiar el orden cure cruces permanentes de la pieza final',()=>{
+ const piece={flanges:[50,50,50,50],angles:[140,140,140],order:[0,1,2],thickness:2};
+ const result=suggestBendOrder(piece);
+ assert.equal(result.finalGeometryAffected,true);
+ assert.ok(result.finalRisks.cross>0,'El perfil final tiene al menos un cruce');
+ const reverse=suggestBendOrder({...piece,order:[2,1,0]});
+ assert.deepEqual(reverse.finalRisks,result.finalRisks,
+  'La geometría final depende de la pieza, no de la secuencia elegida');
+});
