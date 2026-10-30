@@ -35,6 +35,11 @@ try{
   await page.locator('#showTool3D').click();
   assert.ok(await page.locator('#cockpitSelectedTool3D').isVisible(),'Visor 3D de herramienta se abre');
   await page.locator('#closeTool3D').click();
+  // El catálogo de portada debe mostrar los 30° y las patas de cabra reales.
+  assert.ok(await page.locator('#cockpitTools .cp-tool-card').filter({hasText:'GN9-12-8806'}).count(),
+    'La pata de cabra GN9 debe ser visible sin desplegar todo el catálogo');
+  assert.ok(await page.locator('#cockpitTools .cp-tool-card').filter({hasText:'V006-30-S'}).count(),
+    'La matriz V6/30 debe ser visible inicialmente');
   const initialIcon=await page.locator('.cp-float-tool:first-child svg > path').getAttribute('d');
   await page.locator('#cpBrandTabs button[data-brand="Amada"]').click();
   await page.locator('.cp-kind-tabs [data-kind="punch"]').click();

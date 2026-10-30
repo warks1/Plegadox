@@ -16,16 +16,30 @@ function allMatches(){
  return kindList().filter(t=>toolMatchesBrand(t,state.brand)&&
  (!state.search||[t.name,t.reference,t.id,t.mount,t.angle,t.opening,t.height].join(' ').toLowerCase().includes(state.search)));
 }
+/**
+ * Vista inicial representativa: los modelos de 30°, patas de cabra y
+ * matrices de V estrecha deben ser visibles SIN abrir 'catálogo completo'.
+ * Conserva además la herramienta activa incluso cuando quede fuera
+ * de la selección de portada. Todos los modelos siguen en el catálogo.
+ */
+export const CATALOG_SHOWCASE_IDS=[
+ 'straight30','goose','ref-goose-50-100-r1',
+ 'conic-act-12-3006','conic-gn9-12-8806','conic-gn6-12-8806',
+ 'v16','v16-30','conic-v006-30-s','rolleri-tmr100-16-30'
+];
+export function initialToolSelection(items,selectedPunch,selectedDie){
+ const featured=new Set([...CATALOG_SHOWCASE_IDS,selectedPunch,selectedDie]);
+ let punches=0,dies=0;
+ return items.filter(tool=>{
+  const base=tool.uiKind==='punch'?punches++<4:dies++<8;
+  return base||featured.has(tool.id);
+ });
+}
 function filtered(){
  const items=allMatches();
  if(state.kind!=='all'||state.showAll||state.search)return items;
- // Primera pantalla fiel al boceto: una fila de punzones y dos de matrices.
- // Nunca elimina herramientas; los filtros y "Ver catálogo completo" dan acceso a todas.
- let punches=0,dies=0;
- return items.filter(tool=>{
-  if(tool.uiKind==='punch')return punches++<4;
-  return dies++<8;
- });
+ const p=current().piece;
+ return initialToolSelection(items,p.punch,p.die);
 }
 function toolPicked(tool){
  const kind=tool.uiKind||(tool.opening!=null?'die':'punch');

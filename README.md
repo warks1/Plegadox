@@ -256,3 +256,8 @@ de máquina, miniaturas e inspector. Se distingue el punzón recto del de pata
 de cabra y se diferencian V y ángulos de apertura. Incluye referencia,
 medidas nominales disponibles y marca de geometría provisional. Los dibujos
 no equivalen a un catálogo CAD oficial acotado.
+
+En la **biblioteca de cabina** las referencias agudas de 30°, las patas de
+cabra GN6/GN9 y algunas matrices V de 30° se muestran en la selección
+inicial, además de las herramientas ya activas. El catálogo completo
+permanece disponible en el botón correspondiente o mediante filtros.
