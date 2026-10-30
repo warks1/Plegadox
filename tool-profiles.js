@@ -15,16 +15,22 @@ export function sectionPunch(tool={}){
  const bodyBottom=taperHeight;
  let points;
  if(tool.type==='cabra'){
-  const clearance=Math.min(height*.42,48);
-  const neck=5;
-  const shelfY=Math.max(25,bodyBottom+5);
+  // Pata de cabra: el hueco lateral forma una concavidad REAL en el polígono.
+  // CONIC GN9/GN6 publican el desplazamiento k=9/6 mm, H=90/120 y
+  // ángulo/R de punta. Otros empalmes permanecen parametrizados.
+  const neckOffset=Math.max(4,Math.min(18,Number(tool.neckOffset)||9));
+  const shoulderY=Math.max(bodyBottom+19,height*.48);
+  const recessY=Math.max(shoulderY+9,height*.72);
+  const outerW=Math.max(18,halfTop+3);
+  const rearW=outerW+7;
   points=[
-   [-24,height],[24,height],[24,height-17],[-9,height-17],
-   [-9,height-17-clearance],[21,height-17-clearance],
-   [21,shelfY],[halfTop,shelfY],[halfTop,bodyBottom],
-   [halfTip,0],[-halfTip,0],[-halfTop,bodyBottom],
-   [-halfTop,shelfY-12],[-31,shelfY-12],
-   [-31,height-12],[-24,height-12]
+   [-rearW,height],[13,height],
+   [13,height-20],[-neckOffset,height-20],
+   [-neckOffset,recessY],[outerW,recessY],
+   [outerW,shoulderY],[halfTop,shoulderY],
+   [halfTop,bodyBottom],[halfTip,0],[-halfTip,0],
+   [-halfTop,bodyBottom],[-halfTop,shoulderY-9],
+   [-rearW,shoulderY-9],[-rearW,height]
   ];
  }else{
   points=[
@@ -40,7 +46,7 @@ export function sectionDie(tool={}){
  const height=Math.max(25,Number(tool.height)||80);
  const halfOpen=opening/2;
  const depth=halfOpen/Math.tan(angle*Math.PI/360);
- const halfBody=Math.max(opening*.98,halfOpen+9);
+ const halfBody=Number(tool.outerWidth)>opening ? Number(tool.outerWidth)/2 : Math.max(opening*.98,halfOpen+9);
  const h=Math.max(height,depth+7);
  return {
   points:[
