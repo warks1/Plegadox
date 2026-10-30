@@ -31,7 +31,7 @@ test('no se presume compatibilidad de montajes cruzados',()=>{
  const punch=CATALOG_PUNCHES.find(t=>t.id==='amada-831');
  const die=CATALOG_DIES.find(t=>t.id==='trumpf-ev001');
  assert.equal(selectionCompatibility(punch,die).compatible,false);
- assert.equal(selectionCompatibility(CATALOG_PUNCHES[0],CATALOG_DIES[0]).compatible,null);
+ assert.equal(selectionCompatibility(CATALOG_PUNCHES.find(p=>p.id==='conic-act-12-3006'),CATALOG_DIES.find(d=>d.id==='conic-v006-30-s')).compatible,null);
 });
 test('−90 conserva dirección negativa también en la vista de máquina',()=>{
  const piece=normalized({...EXAMPLE,flanges:[50,50],angles:[-90],order:[0]});
