@@ -11,4 +11,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: npm test
+      - name: Comprobar sintaxis del motor y la interfaz
+        run: |
+          node --check engine.js
+          node --check app.js
+      - name: Pruebas de dirección, secuencia y desarrollo
+        run: npm test
