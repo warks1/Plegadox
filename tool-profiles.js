@@ -14,7 +14,17 @@ export function sectionPunch(tool={}){
  const taperHeight=(halfTop-halfTip)/Math.tan(angle*Math.PI/360);
  const bodyBottom=taperHeight;
  let points;
- if(tool.type==='cabra'){
+ if(tool.profileStyle==='user-photo'){
+  // Contorno trazado proporcionalmente del ejemplo gráfico enviado al chat.
+  // La zona cuadriculada de la imagen es espacio libre, NO material de útil.
+  // El valor "8" de la zona inclinada no se convierte sin interpretación
+  // en una cota certificada del punzón.
+  const w=Number(tool.topWidth)||50,scaleX=w/50,scaleY=height/100;
+  points=[
+   [-10,100],[8,100],[8,60],[-16,52],[-16,31],
+   [0,0],[-42,31],[-42,72],[-10,72]
+  ].map(([x,y])=>[x*scaleX,y*scaleY]);
+ }else if(tool.type==='cabra'){
   // Pata de cabra: el hueco lateral forma una concavidad REAL en el polígono.
   // CONIC GN9/GN6 publican el desplazamiento k=9/6 mm, H=90/120 y
   // ángulo/R de punta. Otros empalmes permanecen parametrizados.
