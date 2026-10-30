@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {EXAMPLE,stage,profile,orientedForMachine,presentedForMachine,presentedAtStage} from '../engine.js';
+import {EXAMPLE,PUNCHES,stage,profile,orientedForMachine,presentedForMachine,presentedAtStage} from '../engine.js';
 import {sectionPunch,sectionDie} from '../tool-profiles.js';
 
 const approximate=(x,y,tolerance=.03)=>assert.ok(Math.abs(x-y)<tolerance,`Esperado ${y}; recibido ${x}`);
@@ -69,4 +69,18 @@ test('la reorientación cambia la cara con una proyección de volteo sin deforma
  const final=profile(input,[1,1,1,1]);
  assert.equal(final.points.length,input.flanges.length+1);
  assert.equal(input.angles[1],-90);
+});
+
+test('el contorno 50×100 de pata de cabra de fotografía no se convierte en un punzón recto',()=>{
+ const tool=PUNCHES.find(x=>x.id==='ref-goose-50-100-r1');
+ assert.ok(tool);
+ assert.equal(tool.profileAccuracy,'provisional');
+ assert.equal(tool.tip,2,'radio de punta R1 equivale a diámetro de 2 mm');
+ const profile=sectionPunch(tool),pts=profile.points;
+ const xmin=Math.min(...pts.map(p=>p[0])),xmax=Math.max(...pts.map(p=>p[0]));
+ const ymin=Math.min(...pts.map(p=>p[1])),ymax=Math.max(...pts.map(p=>p[1]));
+ approximate(xmax-xmin,50);
+ approximate(ymax-ymin,100);
+ assert.ok(pts.length>=9,'debe existir escote interno real');
+ assert.notDeepEqual(pts,sectionPunch({angle:88,height:100,type:'recto',tip:2}).points);
 });
