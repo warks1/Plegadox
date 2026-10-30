@@ -13,3 +13,18 @@
 #vComparisonRows .v-comparison-selected{background:#103d5d;color:#e0f4ff;}
 #vComparisonRows td{font-variant-numeric:tabular-nums;white-space:nowrap;}
 #vComparisonRows .v-compare-apply{min-width:64px;}
+
+/* Navegador de incidencias: muestra el golpe real y permite tocar la muestra. */
+.cp-incident-heading{display:flex;justify-content:space-between;gap:8px;align-items:center;margin:14px 0 8px;color:#c1dfed;font-size:11px;letter-spacing:.035em;}
+.cp-incident-heading span{font-weight:500;color:#92b4c7;letter-spacing:0;}
+.cp-incident-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;}
+.cp-incident-item{min-width:0;padding:9px;text-align:left;border:1px solid #355772;border-radius:9px;background:#0d293e;color:#d8ecfa;display:grid;gap:4px;}
+.cp-incident-item:hover{background:#174460;color:white;}
+.cp-incident-item.active{outline:2px solid #65c9fb;outline-offset:-2px;}
+.cp-incident-item strong{font-size:12px;font-weight:800;}
+.cp-incident-item .cp-incident-status{font-size:10px;color:#ffc48c;font-weight:700;}
+.cp-incident-item[data-category="penetration"] .cp-incident-status{color:#ff8c86;}
+.cp-incident-item[data-category="none"] .cp-incident-status{color:#a0c5d9;}
+.cp-incident-item small{color:#abc4d4;font-size:10px;line-height:1.35;overflow-wrap:anywhere;}
+.cp-incident-note{font-size:10px;color:#90b2c8;line-height:1.4;margin:7px 0 10px;}
+@media(max-width:380px){.cp-incident-nav{grid-template-columns:1fr;}}

@@ -60,6 +60,19 @@ try{
   assert.match(await page.locator('#dieCards .tool[data-tool-id="conic-v006-30-s"]').getAttribute('class'),/selected/);
   await page.locator('[data-tab="simulacion"]').click();
 
+  const incidentButtons=page.locator('#incidentNavigator .cp-incident-item');
+  assert.equal(await incidentButtons.count(),4,'Cuatro golpes en el orden físico');
+  const labels=await incidentButtons.locator('strong').allTextContents();
+  assert.match(labels[0],/G1 · P1 · \+90°/);
+  assert.match(labels[1],/G2 · P2 · -90°/);
+  assert.match(labels[2],/G3 · P4 · \+90°/);
+  assert.match(labels[3],/G4 · P3 · -90°/);
+  const jumpTo=Number(await incidentButtons.nth(1).getAttribute('data-time'));
+  await incidentButtons.nth(1).click();
+  const navState=await page.evaluate(()=>window.PLEGADOX_STATE());
+  assert.equal(navState.sim.playing,false,'Navegar a una incidencia debe pausar');
+  assert.ok(Math.abs(navState.sim.time-jumpTo)<1e-8,'Debe saltar a la muestra correspondiente');
+  assert.match(await page.locator('#phaseText').textContent(),/pliegue 2 \(-90°\)/);
   await page.locator('#showTool3D').click();
   assert.ok(await page.locator('#cockpitSelectedTool3D').isVisible(),'Visor 3D de herramienta se abre');
   await page.locator('#closeTool3D').click();

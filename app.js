@@ -3,6 +3,7 @@ import {drawIndustrialMachine} from './machine-visual.js';
 import {registerCatalogue} from './catalog.js';
 import {analyzeSequence} from './validation.js';
 import {inspectSequenceTools,currentToolContact,describeToolIssue} from './tool-collision.js';
+import {incidentReviewRows} from './incident-navigation.js';
 import {sectionPunch,sectionDie} from './tool-profiles.js';
 import {getV85} from './machine-config.js';
 registerCatalogue(DIES,PUNCHES);
@@ -402,8 +403,51 @@ function renderDevelopment(){
  $('validity').style.background=check.hasGeometryWarning?'#5b351b':'#173c54';
  $('validity').style.color=check.hasGeometryWarning?'#ffd89c':'#b9e5ff';
 }
+/**
+ * Accesos a las incidencias de cada golpe. La vista saltará al instante
+ * muestreado que dio el aviso más grave, NO a un contacto exacto 3D.
+ */
+function renderIncidentNavigator(check,st){
+ const root=$('incidentNavigator');
+ if(!root)return;
+ const rows=incidentReviewRows(piece,check,check.tools);
+ const signature=JSON.stringify(rows);
+ if(root.dataset.signature!==signature){
+  root.dataset.signature=signature;
+  root.replaceChildren(...rows.map(row=>{
+   const button=document.createElement('button');button.type='button';
+   button.className='cp-incident-item';button.dataset.operation=String(row.operation);
+   button.dataset.time=String(row.time);button.dataset.category=row.category;
+   button.setAttribute('aria-label','Revisar golpe '+(row.operation+1)+
+      ', pliegue '+(row.bend+1)+', '+(row.angle>0?'+':'')+row.angle+' grados');
+   const number=document.createElement('strong');
+   number.textContent='G'+(row.operation+1)+' · P'+(row.bend+1)+' · '+
+     (row.angle>0?'+':'')+row.angle+'°';
+   const severity=document.createElement('span');severity.className='cp-incident-status';
+   severity.textContent=row.category==='penetration'?'PENETRACIÓN 2D':
+      row.category==='clearance'?'HOLGURA 2D':
+      row.category==='geometry'?'REVISAR GEOMETRÍA':'SIN AVISO MUESTREADO';
+   const detail=document.createElement('small');
+   detail.textContent=row.summary+
+     (row.hasToolSample?' · muestra '+row.time.toFixed(2)+' s':
+      ' · vista del golpe '+row.time.toFixed(2)+' s');
+   button.append(number,severity,detail);
+   button.addEventListener('click',()=>{
+    sim.playing=false;sim.last=null;sim.time=row.time;
+    paintAll();
+   });
+   return button;
+  }));
+ }
+ for(const button of root.children){
+  const active=Number(button.dataset.operation)===st.activeOperation&&!st.completed;
+  button.classList.toggle('active',active);
+  button.setAttribute('aria-current',active?'step':'false');
+ }
+}
 function renderSimulationText(){
  const st=stage(piece,sim.time),a=piece.angles[st.activeBend],check=geometryReport(),toolNow=currentToolContact(piece,sim.time);
+ renderIncidentNavigator(check,st);
  $('simStatus').textContent=st.phase;
  $('phaseText').textContent=st.completed?'Pieza final · secuencia completada':st.phase+' · pliegue '+(st.activeBend+1)+' ('+(a>0?'+':'')+a+'°)';
  $('stepText').textContent='Golpe '+st.finished+'/'+st.count;

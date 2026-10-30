@@ -351,3 +351,14 @@ lo que `normalized()`, `getTooling()` y las verificaciones de secuencia
 reconocen también referencias comerciales fuera de la interfaz principal.
 El registro es idempotente; no multiplica herramientas ni cambia la
 naturaleza provisional de los modelos 2D/3D.
+
+### Navegación a incidencias por golpe
+
+El panel de **Comprobaciones** incorpora botones **G1, G2, G3...** que
+respetan el orden programado de plegado (en la omega de ejemplo, 1–2–4–3)
+y conservan el signo del ángulo. Cada botón identifica, cuando existe,
+la **muestra más grave observada** de posible penetración de fibra o falta
+de holgura; al pulsarlo se pausa la simulación y se sitúa en ese instante.
+Los avisos geométricos sin ejemplo de herramienta llevan al punto central
+del golpe. «Sin aviso muestreado» NO significa que la operación esté libre
+de colisiones físicas. No se calculan instantes exactos ni movimientos CNC.
