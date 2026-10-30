@@ -218,7 +218,8 @@ function stageScene(ctx,w,h,piece,sim,machineView){
   ctx.font='700 '+Math.max(10,11*scale)+'px system-ui';
   ctx.textAlign='left';ctx.fillStyle='#ffca78';
   ctx.shadowColor='#000';ctx.shadowBlur=4;
-  ctx.fillText('−'+Math.abs(a)+'° · CHAPA VOLTEADA',Math.min(w-186*scale,14*scale),h-34*scale);
+  const shownAngle=presentation.repositioning?piece.angles[presentation.nextBend]:a;
+  ctx.fillText((shownAngle<0?'−':'+')+Math.abs(shownAngle)+'° · CHAPA VOLTEADA',Math.min(w-186*scale,14*scale),h-34*scale);
   ctx.restore();
  }
  // tiny badges in-frame visual signifiers
