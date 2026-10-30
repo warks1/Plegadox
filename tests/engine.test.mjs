@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {EXAMPLE,normalized,profile,stage,development,orientedForMachine,selfIntersects,toolAngleCompatibility,getTooling} from '../engine.js';
+import {EXAMPLE,normalized,profile,stage,development,orientedForMachine,selfIntersects,toolAngleCompatibility,getTooling,bendPreviewPath} from '../engine.js';
 const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-6, a+' != '+b);
 test('Chapa inicialmente plana, no nace omega ya doblada',()=>{
  const p=profile(EXAMPLE);assert.ok(p.points.every(point=>point.y===0));
@@ -66,4 +66,21 @@ test('el núcleo reconoce herramientas de catálogo aunque no se inicie la inter
  const {punch,die}=getTooling(p);
  assert.equal(punch.length,415);
  assert.equal(die.length,835);
+});
+
+test('miniaturas muestran el ángulo firmado programado y no una escuadra fija',()=>{
+ const vertex=angle=>{
+  const command=bendPreviewPath(angle);
+  const match=command.match(/L ([\d.-]+) ([\d.-]+)$/);
+  assert.ok(match,'Vista SVG válida: '+command);
+  return {x:Number(match[1]),y:Number(match[2])};
+ };
+ const up=vertex(90),down=vertex(-90);
+ near(up.x,35);near(down.x,35);
+ assert.ok(up.y<26 && down.y>26,'Signo positivo y negativo opuestos');
+ assert.notEqual(bendPreviewPath(30),bendPreviewPath(45));
+ assert.notEqual(bendPreviewPath(45),bendPreviewPath(120));
+ near(vertex(0).y,26);
+ assert.ok(vertex(120).x<35,'Pliegue superior a 90 vuelve hacia el ala de entrada');
+ assert.ok(vertex(-120).y>26);
 });

@@ -56,6 +56,16 @@ export function profile(piece,fractions=[]){
 }
 export function bounds(points){const x=points.map(p=>p.x),y=points.map(p=>p.y);return {minX:Math.min(...x),maxX:Math.max(...x),minY:Math.min(...y),maxY:Math.max(...y)};}
 export function angleToRadians(d){return d*Math.PI/180;}
+/**
+ * Vista previa angular del golpe. No confundir con el perfil completo de la
+ * pieza; conserva el ángulo firmado que se introdujo en programación.
+ * El plano de pantalla tiene Y descendente (+90 se ve hacia arriba).
+ */
+export function bendPreviewPath(angle){
+ const a=angleToRadians(clamp(finite(angle,0),-179,179));
+ const x=35+26*Math.cos(a),y=26-22*Math.sin(a);
+ return 'M 9 26 L 35 26 L '+x.toFixed(2)+' '+y.toFixed(2);
+}
 export function getTooling(p){const n=normalized(p);return {die:DIES.find(d=>d.id===n.die),punch:PUNCHES.find(t=>t.id===n.punch),material:MATERIALS.find(m=>m.id===n.material)};}
 /**
  * Prechequeo geométrico de apertura nominal de útiles.

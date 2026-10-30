@@ -62,6 +62,11 @@ try{
 
   const incidentButtons=page.locator('#incidentNavigator .cp-incident-item');
   assert.equal(await incidentButtons.count(),4,'Cuatro golpes en el orden físico');
+  const thumbnails=await page.locator('#simSequence .op-preview path').evaluateAll(
+    elements=>elements.filter((_,i)=>i%2===0).map(el=>el.getAttribute('d')));
+  assert.equal(thumbnails.length,4);
+  assert.notEqual(thumbnails[0],thumbnails[1],'Miniaturas +90°/-90° diferentes');
+  assert.equal(thumbnails[0],thumbnails[2],'El mismo ángulo muestra igual contorno');
   const labels=await incidentButtons.locator('strong').allTextContents();
   assert.match(labels[0],/G1 · P1 · \+90°/);
   assert.match(labels[1],/G2 · P2 · -90°/);

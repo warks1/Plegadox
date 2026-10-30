@@ -1,4 +1,4 @@
-import {MATERIALS,DIES,PUNCHES,EXAMPLE,normalized,profile,bounds,development,estimateAirBendForce,REFERENCE_RM_MPA,stage,orientedForMachine,getTooling,selfIntersects,clamp,finite} from './engine.js';
+import {MATERIALS,DIES,PUNCHES,EXAMPLE,normalized,profile,bendPreviewPath,bounds,development,estimateAirBendForce,REFERENCE_RM_MPA,stage,orientedForMachine,getTooling,selfIntersects,clamp,finite} from './engine.js';
 import {drawIndustrialMachine} from './machine-visual.js';
 import {registerCatalogue} from './catalog.js';
 import {analyzeSequence} from './validation.js';
@@ -464,7 +464,8 @@ function renderSimulationText(){
      const n=document.createElement('span');n.className='op-num';n.textContent=String(i+1);
      const visual=document.createElement('span');visual.className='op-preview';
      const angle=piece.angles[bend];
-     visual.innerHTML='<svg viewBox="0 0 70 52" aria-hidden="true" focusable="false"><defs><linearGradient id="pgrad'+i+'" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e8f6ff"/><stop offset=".45" stop-color="#7897ae"/><stop offset="1" stop-color="#3f566b"/></linearGradient></defs><path d="'+(angle<0?'M8 13 L8 40 L61 40':'M8 40 L61 40 L61 12')+'" stroke="url(#pgrad'+i+')" stroke-width="9" stroke-linejoin="round" fill="none"/><path d="'+(angle<0?'M8 13 L8 40 L61 40':'M8 40 L61 40 L61 12')+'" stroke="#a9e4ff" stroke-width="1.5" fill="none"/></svg>';
+     const outline=bendPreviewPath(angle);
+     visual.innerHTML='<svg viewBox="0 0 70 52" aria-hidden="true" focusable="false"><defs><linearGradient id="pgrad'+i+'" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e8f6ff"/><stop offset=".45" stop-color="#7897ae"/><stop offset="1" stop-color="#3f566b"/></linearGradient></defs><path d="'+outline+'" stroke="url(#pgrad'+i+')" stroke-width="8" stroke-linejoin="round" stroke-linecap="round" fill="none"/><path d="'+outline+'" stroke="#a9e4ff" stroke-width="1.5" fill="none"/></svg>';
      const values=document.createElement('span');values.className='op-values';
      const a=document.createElement('strong');a.textContent=(angle>0?'+':'')+angle+'°';
      const l=document.createElement('small');l.textContent='L = '+numbers(piece.flanges[bend+1],1)+' mm';

@@ -362,3 +362,12 @@ de holgura; al pulsarlo se pausa la simulación y se sitúa en ese instante.
 Los avisos geométricos sin ejemplo de herramienta llevan al punto central
 del golpe. «Sin aviso muestreado» NO significa que la operación esté libre
 de colisiones físicas. No se calculan instantes exactos ni movimientos CNC.
+
+### Miniaturas de golpes según ángulo firmado
+
+Las tarjetas de la secuencia usan la inclinación **real programada** en el
+esquema (30°, 45°, 90°, 120° y sus equivalentes negativos). Ya no se
+representan todos los golpes como un ángulo fijo de 90°. El esquema es un
+pictograma de **dos alas**; la silueta completa de la pieza sigue en las
+vistas de simulación. El sentido de plegado y el orden de operaciones se
+conservan íntegros.
