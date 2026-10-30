@@ -202,14 +202,9 @@ function stageScene(ctx,w,h,piece,sim,machineView){
   ctx.fillStyle=radial(ctx,cx,sheetY,33*scale,[[0,'#13c8ffdd'],[.12,'#16a7ff6d'],[1,'#00aaff00']]);
   ctx.beginPath();ctx.ellipse(cx,sheetY,33*scale,14*scale,0,0,Math.PI*2);ctx.fill();ctx.restore();
  }
- // Functional overlay decorative: orientation angle marker
+ // El ángulo se presenta en el panel de control, sin dibujar una
+ // circunferencia sobre el punto de contacto de la chapa con la matriz.
  const a=piece.angles[st.activeBend]||0;
- ctx.save();
- ctx.strokeStyle='#ff9c28';ctx.fillStyle='#ffad4c';ctx.lineWidth=2.5;
- ctx.beginPath();ctx.arc(cx+48*scale,sheetY-22*scale,34*scale,-1.55,-.45, a<0);ctx.stroke();
- ctx.font='900 '+Math.max(12,17*scale)+'px system-ui';
- ctx.textAlign='left';ctx.fillText((a>0?'+':'')+a+'°',cx+72*scale,sheetY-37*scale);
- ctx.restore();
  // El signo del plano no se cambia: sólo cambia la CARA de presentación
  // al trabajar con un punzón que desciende desde arriba.
  if(presentation.flipped){
