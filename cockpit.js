@@ -137,10 +137,32 @@ function drawThumbnail(canvas,tool,kind){
 }
 function drawToolViewer(){
  let canvas=$('cockpitSelectedTool3D');
- if(!canvas){const wrap=document.createElement('div');wrap.className='cp-viewer-wrap';const header=document.createElement('div');header.className='cp-viewer-header';header.textContent='VISTA 3D DE LA HERRAMIENTA · GIRAR / ZOOM';canvas=document.createElement('canvas');canvas.id='cockpitSelectedTool3D';canvas.className='cp-3d-viewer';canvas.style.cssText='width:100%;height:170px;display:block;background:radial-gradient(ellipse,#153b59,#061626);border:1px solid #1b4968;border-radius:8px;touch-action:none';wrap.append(header,canvas);$('cockpitToolInfo').after(wrap);attachViewer(canvas);}
+ if(!canvas){
+  const wrap=document.createElement('div');wrap.className='cp-viewer-wrap';
+  wrap.setAttribute('role','dialog');wrap.setAttribute('aria-label','Inspector 3D de herramienta');
+  const header=document.createElement('div');header.className='cp-viewer-header';
+  header.textContent='INSPECTOR 3D · GIRA PARA EXAMINAR EL PERFIL';
+  const close=document.createElement('button');close.type='button';close.id='closeTool3D';
+  close.textContent='✕ Cerrar';close.setAttribute('aria-label','Cerrar vista 3D');
+  close.addEventListener('click',()=>$('showTool3D').click());
+  const info=document.createElement('div');info.id='toolInspectorMeta';info.className='tool-inspector-meta';
+  canvas=document.createElement('canvas');canvas.id='cockpitSelectedTool3D';
+  canvas.className='cp-3d-viewer';
+  canvas.style.cssText='width:100%;height:170px;display:block;background:radial-gradient(ellipse,#153b59,#061626);border:1px solid #1b4968;border-radius:8px;touch-action:none';
+  const note=document.createElement('p');note.className='tool-inspector-note';
+  note.textContent='Arrastra para girar · pellizca o usa la rueda para ampliar · perfil paramétrico, no CAD verificado';
+  wrap.append(header,close,info,canvas,note);$('cockpitToolInfo').after(wrap);
+  attachViewer(canvas);
+ }
  const p=current().piece,kind=state.kind==='all'?state.selectedToolKind:state.kind;
  const tool=kind==='punch'?PUNCHES.find(t=>t.id===p.punch):DIES.find(t=>t.id===p.die);
  if(!tool)return;
+ const meta=$('toolInspectorMeta');
+ if(meta)meta.textContent=[tool.manufacturer||'Herramienta genérica',
+  tool.reference||tool.name,kind==='punch'?'Ángulo '+tool.angle+'° · Altura '+tool.height+' mm · Punta R'+tool.tip:
+  'V '+tool.opening+' mm · '+tool.angle+'° · Altura '+tool.height+' mm',
+  tool.profileAccuracy==='verified'?'Geometría verificada':'Perfil provisional sin cotas CAD completas'
+ ].join('  |  ');
  const w=canvas.clientWidth||260,h=canvas.clientHeight||170,d=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(w*d);canvas.height=Math.round(h*d);
  const ctx=canvas.getContext('2d');ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,w,h);
  const polygon=shape(tool,kind),depth=65;
