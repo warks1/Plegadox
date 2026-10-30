@@ -404,3 +404,15 @@ El renderizado sigue siendo una proyección de polígonos con ordenación
 de profundidad, **no un modelo B-rep/CAD**, ni un cálculo de deformación,
 ni una validación de colisiones físicas. Se añaden pruebas sobre caras,
 cantos, cierres, signos y cambios de espesor/ancho.
+
+### Exportación DXF ASCII R12 (2D)
+
+En Desarrollo hay dos botones de exportación: perfil plegado ilustrativo
+(`PERFIL_APROX`) y rectángulo desarrollado calculado
+(`DESARROLLO_APROX`). Utilizan entidades `LINE`, cabecera DXF R12
+y unidades **milímetros**, con anotaciones en la capa `NOTAS_NO_CORTE`.
+El perfil incluye segmentos para representar radios aproximados, pero
+**no es un contorno CAD exacto**. El rectángulo desarrollado **no** contiene
+agujeros, recortes, marcas de pliegue ni correcciones calibradas. Si el
+desarrollo es negativo o inválido, no se genera un archivo. Siempre
+verificar con el plano original y las probetas antes de cortar chapa.

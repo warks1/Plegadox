@@ -6,6 +6,7 @@ import {inspectSequenceTools,currentToolContact,describeToolIssue} from './tool-
 import {incidentReviewRows} from './incident-navigation.js';
 import {viewerProfile} from './viewer-profile.js';
 import {sheetSolidMesh} from './sheet-solid.js';
+import {exportProfileDXF,exportFlatDXF} from './dxf-export.js';
 import {sectionPunch,sectionDie} from './tool-profiles.js';
 import {getV85} from './machine-config.js';
 registerCatalogue(DIES,PUNCHES);
@@ -57,6 +58,25 @@ function configure(){
  $('touchOrderMode').onclick=toggleTouchOrder;
  $('finalCanvas').addEventListener('pointerdown',pickBendFromDrawing);
  $('saveBtn').onclick=save;
+ const downloadDxf=(content,suffix)=>{
+  const filename=(piece.name.replace(/[^a-z0-9áéíóú_-]+/gi,'-').slice(0,45)||'pieza')+
+    '-'+suffix+'.dxf';
+  const blob=new Blob([content],{type:'application/dxf;charset=utf-8'});
+  const url=URL.createObjectURL(blob),link=document.createElement('a');
+  link.href=url;link.download=filename;
+  document.body.append(link);link.click();link.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),3000);
+  $('dxfStatus').textContent='DXF generado: '+filename+
+   '. No es un plano validado para fabricar ni cortar.';
+ };
+ $('exportDxfProfile').onclick=()=>{
+  try{downloadDxf(exportProfileDXF(piece),'perfil-2D-aproximado');}
+  catch(e){$('dxfStatus').textContent='No se pudo generar el DXF: '+e.message;}
+ };
+ $('exportDxfFlat').onclick=()=>{
+  try{downloadDxf(exportFlatDXF(piece),'desarrollo-ORIENTATIVO');}
+  catch(e){$('dxfStatus').textContent='No se pudo generar el DXF: '+e.message;}
+ };
  $('exportBtn').onclick=()=>{
  const blob=new Blob([JSON.stringify({...piece,format:'plegadox-piece-v1'},null,2)],{type:'application/json'});
  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=(piece.name.replace(/[^a-z0-9áéíóú_-]+/gi,'-').slice(0,55)||'pieza')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),4000);
