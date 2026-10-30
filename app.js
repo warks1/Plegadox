@@ -30,7 +30,14 @@ function configure(){
  options($('material'),MATERIALS,piece.material);options($('die'),DIES,piece.die);options($('punch'),PUNCHES,piece.punch);
  document.querySelectorAll('.nav').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.nav').forEach(n=>n.classList.toggle('active',n===btn));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id==='tab-'+btn.dataset.tab));paintAll();}));
  const entries=[['pieceName','name'],['material','material'],['thickness','thickness'],['width','width'],['die','die'],['punch','punch'],['datum','datum']];
- for(const [id,key] of entries)$(id).addEventListener('change',e=>{const v=key==='thickness'||key==='width'?finite(e.target.value,2):e.target.value;changePiece({...piece,[key]:v},true);});
+ for(const [id,key] of entries)$(id).addEventListener('change',e=>{
+  const v=key==='thickness'||key==='width'?finite(e.target.value,2):e.target.value;
+  const updated={...piece,[key]:v};
+  // La Rm introducida sólo corresponde al material para el que se eligió.
+  // Al cambiar de material se vuelve a la referencia orientativa visible.
+  if(key==='material'&&v!==piece.material)updated.rmMPa=null;
+  changePiece(updated,true);
+ });
  $('kFactor').addEventListener('change',e=>changePiece({...piece,kFactor:e.target.value===''?null:finite(e.target.value,.36)}));
  $('insideRadius').addEventListener('change',e=>changePiece({...piece,radius:e.target.value===''?null:finite(e.target.value,2)}));
  $('rmMPa').addEventListener('change',e=>{

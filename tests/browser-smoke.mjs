@@ -21,6 +21,16 @@ try{
   const newForce=await page.locator('#devSummary .result-item').filter({hasText:'Fuerza aire aprox.'}).locator('b').textContent();
   assert.notEqual(newForce,startForce,'La resistencia Rm introducida debe cambiar la fuerza');
   assert.equal(await page.evaluate(()=>window.PLEGADOX_STATE().piece.rmMPa),600);
+  await page.locator('[data-tab="programacion"]').click();
+  await page.locator('#material').selectOption('alu5754');
+  assert.equal(await page.evaluate(()=>window.PLEGADOX_STATE().piece.rmMPa),null,
+    'La resistencia manual de acero NO se arrastra al aluminio');
+  await page.locator('[data-tab="desarrollo"]').click();
+  assert.match(await page.locator('#forceDetails').textContent(),/Rm 260 MPa/);
+  await page.locator('[data-tab="programacion"]').click();
+  await page.locator('#material').selectOption('s235');
+  await page.locator('[data-tab="desarrollo"]').click();
+
   assert.ok(await page.locator('#vComparisonRows tr').count()>=10,'Comparador V6–V50 visible');
   const forceV16=await page.locator('#vComparisonRows tr[data-die-id="v16"] td').nth(5).textContent();
   const forceV32=await page.locator('#vComparisonRows tr[data-die-id="v32"] td').nth(5).textContent();
