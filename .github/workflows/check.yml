@@ -19,3 +19,25 @@ jobs:
           node --check cockpit.js
       - name: Pruebas de dirección, secuencia y desarrollo
         run: npm test
+
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Instalar navegador de prueba
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Comprobar pantallas, selección y simulación
+        run: node tests/browser-smoke.mjs
+      - name: Guardar capturas de escritorio y móvil
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: plegadox-capturas
+          path: test-results/
+          if-no-files-found: ignore
