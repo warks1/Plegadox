@@ -1,6 +1,7 @@
 // Plegadox · Render de taller en vista lateral con materiales pulidos.
 // Geometría ilustrativa, no modelo CAD certificado ni calculador de colisiones.
-import {stage,orientedForMachine,getTooling} from './engine.js';
+import {stage,presentedForMachine,getTooling} from './engine.js';
+import {sectionPunch,sectionDie} from './tool-profiles.js';
 import {sceneAtmosphere,dieDepth,ramDepth,sheetDepth,surfaceDetail,sectionOverlay} from './render-enhancements.js';
 
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -87,62 +88,68 @@ function rearMachine(ctx,w,h,cx,cy,scale){
  for(let i=0;i<4;i++){shape(ctx,20+i*32*scale,cy+28*scale,8*scale,34*scale,'#20394e','#435b6b');}
  ctx.restore();
 }
-function drawDie(ctx,cx,cy,scale,opening){
- // Main die: frontal metallic block, concave groove physically open in V.
+function drawDie(ctx,cx,cy,scale,die){
+ // Perfil en V con apertura y ángulo INCLUIDO de la matriz elegida.
+ // El bloque exterior sigue siendo ilustrativo hasta disponer de CAD oficial.
+ const profile=sectionDie(die);
  const half=88*scale,top=cy,width=half*2,body=120*scale;
- const v=clamp(opening*1.95*scale,19*scale,76*scale),depth=clamp(opening*1.18*scale,15*scale,45*scale);
+ const v=clamp(profile.opening*1.55*scale,8*scale,86*scale);
+ const depth=Math.min(body*.64,(v/2)/Math.tan(profile.angle*Math.PI/360));
  const left=cx-half,right=cx+half;
- ctx.save();
- ctx.shadowColor='#000d';ctx.shadowBlur=28*scale;ctx.shadowOffsetY=12*scale;
- poly(ctx,[[left,top],[cx-v/2,top],[cx,top+depth],[cx+v/2,top],[right,top],[right,top+body],[left,top+body]],gradient(ctx,left,0,right,0,[[0,'#c1cad0'],[.2,'#8496a5'],[.48,'#6d7d8b'],[.65,'#a9b7c2'],[1,'#344c5d']]),'#152636',2*scale);
+ ctx.save();ctx.shadowColor='#000d';ctx.shadowBlur=28*scale;ctx.shadowOffsetY=12*scale;
+ poly(ctx,[[left,top],[cx-v/2,top],[cx,top+depth],[cx+v/2,top],
+     [right,top],[right,top+body],[left,top+body]],
+     gradient(ctx,left,0,right,0,[[0,'#c1cad0'],[.2,'#8496a5'],[.48,'#6d7d8b'],[.65,'#a9b7c2'],[1,'#344c5d']]),
+     '#152636',2*scale);
  ctx.restore();
- // die inner groove shadow
+ ctx.save();
  ctx.beginPath();ctx.moveTo(cx-v/2,top);ctx.lineTo(cx,top+depth);ctx.lineTo(cx+v/2,top);
- ctx.strokeStyle='#020d1a';ctx.lineWidth=8*scale;ctx.lineJoin='round';ctx.stroke();
- ctx.strokeStyle='#e0edf4';ctx.lineWidth=2.5*scale;ctx.stroke();
- ctx.beginPath();ctx.moveTo(cx-v/2,top);ctx.lineTo(cx,top+depth);ctx.lineTo(cx+v/2,top);
- ctx.strokeStyle='#195b99';ctx.lineWidth=1*scale;ctx.stroke();
- // front vertical metal brushing
+ ctx.strokeStyle='#04111d';ctx.lineWidth=5*scale;ctx.lineJoin='round';ctx.stroke();
+ ctx.strokeStyle='#d2e7f4';ctx.lineWidth=1.8*scale;ctx.stroke();
+ ctx.restore();
  ctx.save();ctx.beginPath();ctx.rect(left+2,top+depth+1,width-4,body-depth-1);ctx.clip();
  ctx.globalAlpha=.11;
  for(let k=0;k<80;k++){let x=left+(k*.13%1)*width;ctx.strokeStyle=k%4?'#edf3f6':'#0c273d';ctx.lineWidth=.55;ctx.beginPath();ctx.moveTo(x,top+depth);ctx.lineTo(x+3,top+body);ctx.stroke();}
  ctx.restore();
- for(const x of [left+15*scale,right-15*scale]){bolt(ctx,x,cy+body-13*scale,2.8*scale);}
- ctx.strokeStyle='#e8f6ff';ctx.lineWidth=1.5*scale;ctx.beginPath();ctx.moveTo(left+2,top+1);ctx.lineTo(cx-v/2,top+1);ctx.moveTo(cx+v/2,top+1);ctx.lineTo(right-2,top+1);ctx.stroke();
- // Table lower clamps
+ for(const x of [left+15*scale,right-15*scale])bolt(ctx,x,cy+body-13*scale,2.8*scale);
+ ctx.strokeStyle='#e8f6ff';ctx.lineWidth=1.3*scale;
+ ctx.beginPath();ctx.moveTo(left+2,top+1);ctx.lineTo(cx-v/2,top+1);
+ ctx.moveTo(cx+v/2,top+1);ctx.lineTo(right-2,top+1);ctx.stroke();
  const baseY=cy+body;
  steelRect(ctx,cx-half-14*scale,baseY,(half+14*scale)*2,15*scale,false,true);
  ctx.save();ctx.fillStyle='#041624';ctx.fillRect(cx-half-19*scale,baseY+16*scale,(half+19*scale)*2,10*scale);ctx.restore();
- return {top:cy,depth};
+ return {top,depth,opening:v,angle:profile.angle};
 }
 function drawRam(ctx,cx,cy,scale,tipY,punch){
- const top=tipY-202*scale;
- // upper ram 3D metal assembly
+ // Silueta del punzón calculada con el ángulo incluido nominal:
+ // 30° = transición larga y estrecha, 60° = intermedia, 88° = corta.
+ const geometry=sectionPunch(punch);
+ const factor=scale*Math.min(1.7,205/geometry.height);
+ const top=tipY-geometry.height*factor;
  const ramW=125*scale;
  steelRect(ctx,cx-ramW*.48,top-65*scale,ramW,75*scale,false);
- poly(ctx,[[cx+ramW*.52,top-65*scale],[cx+ramW*.66,top-76*scale],[cx+ramW*.66,top+5*scale],[cx+ramW*.52,top+10*scale]],'#2a4250','#647e8d',1.5);
+ poly(ctx,[[cx+ramW*.52,top-65*scale],[cx+ramW*.66,top-76*scale],
+       [cx+ramW*.66,top+5*scale],[cx+ramW*.52,top+10*scale]],
+       '#2a4250','#647e8d',1.5);
  steelRect(ctx,cx-38*scale,top-10*scale,76*scale,27*scale,true);
- const h=tipY-top,tipR=Math.max(.75,(punch.tip||1)*.65)*scale;
- let pts;
- if(punch.type==='cabra'){
-  pts=[[cx-41*scale,top+12*scale],[cx+44*scale,top+12*scale],[cx+44*scale,top+60*scale],[cx+15*scale,top+60*scale],[cx+15*scale,top+91*scale],[cx+43*scale,top+91*scale],[cx+43*scale,top+119*scale],[cx+17*scale,top+119*scale],[cx+12*scale,tipY-41*scale],[cx+tipR,tipY],[cx-tipR,tipY],[cx-28*scale,tipY-46*scale],[cx-42*scale,top+108*scale]];
- }else{
-  let bevel=(punch.angle<=45?100:60)*scale;
-  pts=[[cx-43*scale,top+12*scale],[cx+43*scale,top+12*scale],[cx+40*scale,top+bevel],[cx+tipR,tipY],[cx-tipR,tipY],[cx-40*scale,top+bevel]];
+ const pts=geometry.points.map(([x,y])=>[cx+x*factor,tipY-y*factor]);
+ ctx.save();ctx.shadowColor='#000e';ctx.shadowBlur=20*scale;ctx.shadowOffsetX=7*scale;
+ poly(ctx,pts,gradient(ctx,cx-45*scale,0,cx+45*scale,0,
+   [[0,'#a0afba'],[.17,'#f0f7fa'],[.34,'#889cab'],[.52,'#d0dbe1'],
+    [.7,'#536776'],[.95,'#c0d3e2'],[1,'#5c6c7b']]),'#1f3c51',1.6*scale);
+ ctx.restore();
+ ctx.save();ctx.beginPath();pts.forEach((pt,i)=>i?ctx.lineTo(...pt):ctx.moveTo(...pt));
+ ctx.closePath();ctx.clip();ctx.globalAlpha=.16;
+ for(let k=0;k<70;k++){
+  const x=cx-42*scale+k*.7*scale;
+  ctx.beginPath();ctx.moveTo(x,top);ctx.lineTo(x+2*scale,tipY);
+  ctx.strokeStyle=k%3?'#e6f7ff':'#244763';ctx.lineWidth=.6*scale;ctx.stroke();
  }
- ctx.save();ctx.shadowColor='#000e';ctx.shadowBlur=25*scale;ctx.shadowOffsetX=8*scale;
- poly(ctx,pts,gradient(ctx,cx-43*scale,0,cx+48*scale,0,[[0,'#a0afba'],[.17,'#f0f7fa'],[.34,'#889cab'],[.52,'#d0dbe1'],[.7,'#536776'],[.95,'#c0d3e2'],[1,'#5c6c7b']]),'#1f3c51',1.8*scale);
  ctx.restore();
- ctx.save();ctx.globalAlpha=.23;ctx.lineWidth=.5*scale;
- for(let k=0;k<70;k++){const x=cx-43*scale+k*.55*scale;ctx.beginPath();ctx.moveTo(x,top+12*scale);ctx.lineTo(x+2*scale,tipY);ctx.strokeStyle=k%3?'#e6f7ff':'#244763';ctx.stroke();}
- ctx.restore();
- // polished working edges, highlights
- ctx.beginPath();ctx.moveTo(cx-41*scale,top+13*scale);ctx.lineTo(cx-39*scale,top+(punch.angle<=45?100:60)*scale);ctx.lineTo(cx-tipR,tipY);ctx.strokeStyle='#e2f5ff';ctx.lineWidth=2.5*scale;ctx.stroke();
- ctx.beginPath();ctx.moveTo(cx+42*scale,top+13*scale);ctx.lineTo(cx+39*scale,top+(punch.angle<=45?100:60)*scale);ctx.lineTo(cx+tipR,tipY);ctx.strokeStyle='#49677d';ctx.lineWidth=3*scale;ctx.stroke();
- // laser-blue active pressure glow
- ctx.shadowColor='#00baff';ctx.shadowBlur=13*scale;
- ctx.beginPath();ctx.moveTo(cx-4*scale,tipY);ctx.lineTo(cx+4*scale,tipY);ctx.strokeStyle='#1fb8ff';ctx.lineWidth=3*scale;ctx.stroke();
- ctx.shadowBlur=0;
+ // Ray on actual tool tip; located at the real contact point of the mesh.
+ ctx.save();ctx.shadowColor='#00baff';ctx.shadowBlur=10*scale;
+ ctx.beginPath();ctx.moveTo(cx-3*scale,tipY);ctx.lineTo(cx+3*scale,tipY);
+ ctx.strokeStyle='#30c3ff';ctx.lineWidth=2*scale;ctx.stroke();ctx.restore();
 }
 function drawSheet(ctx,pts,thickness,scale,active){
  if(pts.length<2)return;
@@ -165,10 +172,12 @@ function stageScene(ctx,w,h,piece,sim,machineView){
  sceneAtmosphere(ctx,w,h,{cx,cy:baseY,s:scale});
  rearMachine(ctx,w,h,cx,baseY,scale);
  dieDepth(ctx,{cx,cy:baseY,s:scale},opening,Boolean(machineView?.perspective));
- drawDie(ctx,cx,baseY,scale,opening);
+ drawDie(ctx,cx,baseY,scale,die);
  surfaceDetail(ctx,{cx,cy:baseY,s:scale},{opening});
  // Ram advances to the sheet and descends while deforming it.
- const travel=st.press<=.45?66*(1-st.press/.45)+12:12-(st.press-.45)/.55*19;
+ // La formación no comienza antes de que la punta alcance la chapa.
+ // Durante el golpe, punta y fibra central descienden conjuntamente hacia V.
+ const travel=st.press<=.45?67-65*(st.press/.45):2-((st.press-.45)/.55)*10;
  const tipY=baseY-travel*scale;
  // Preserve the real profile; perspective adds an illustrative side face.
  ramDepth(ctx,{cx,cy:baseY,s:scale},tipY,punch.angle||88,Boolean(machineView?.perspective));
@@ -177,11 +186,12 @@ function stageScene(ctx,w,h,piece,sim,machineView){
  drawRam(ctx,cx,baseY,scale,tipY,punch);
  ctx.restore();
  const fractions=st.fractions;
- const points=orientedForMachine(piece,fractions,st.activeBend);
+ const presentation=presentedForMachine(piece,fractions,st.activeBend);
+ const points=presentation.points;
  const maxExtent=Math.max(...points.map(pt=>Math.abs(pt.x)),50);
  const span=Math.min(w*.78/(2*maxExtent),scale*1.35);
- const depression=Math.max(0,(st.press-.45)/.55)*8*scale;
- const sheetY=baseY-2*scale+depression;
+ // Contact: la punta del punzón arrastra el centro de la chapa.
+ const sheetY=st.press<=.45?baseY-piece.thickness*.5*scale:tipY+piece.thickness*.5*scale;
  const transformed=points.map(pt=>[cx+pt.x*span,sheetY-pt.y*span]);
  sheetDepth(ctx,transformed,{cx,cy:baseY,s:scale},t,Boolean(machineView?.perspective));
  drawSheet(ctx,transformed,t,scale,st.press>.4);
@@ -200,6 +210,16 @@ function stageScene(ctx,w,h,piece,sim,machineView){
  ctx.font='900 '+Math.max(12,17*scale)+'px system-ui';
  ctx.textAlign='left';ctx.fillText((a>0?'+':'')+a+'°',cx+72*scale,sheetY-37*scale);
  ctx.restore();
+ // El signo del plano no se cambia: sólo cambia la CARA de presentación
+ // al trabajar con un punzón que desciende desde arriba.
+ if(presentation.flipped){
+  ctx.save();
+  ctx.font='700 '+Math.max(10,11*scale)+'px system-ui';
+  ctx.textAlign='left';ctx.fillStyle='#ffca78';
+  ctx.shadowColor='#000';ctx.shadowBlur=4;
+  ctx.fillText('−'+Math.abs(a)+'° · CHAPA VOLTEADA',Math.min(w-186*scale,14*scale),h-34*scale);
+  ctx.restore();
+ }
  // tiny badges in-frame visual signifiers
  // Los textos de contexto no deben tapar el punzón ni el estado cuando
  // la vista ocupa sólo ~300px en un smartphone.
