@@ -49,6 +49,7 @@ jobs:
           node tests/touch-order-smoke.mjs
           node tests/video-regression-smoke.mjs
           node tests/technical-section-smoke.mjs
+          node tests/catalog-contact-smoke.mjs
       - name: Guardar capturas de escritorio y móvil
         if: always()
         uses: actions/upload-artifact@v4
