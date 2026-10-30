@@ -117,7 +117,7 @@ function drawMachine(){
 
 function drawScene(){
  const can=canvas2d('sceneCanvas');if(!can)return;const {ctx,w,h}=can;drawGrid(ctx,w,h,36);
- const st=stage(piece,sim.time),pts=profile(piece,st.fractions).points,b=bounds(pts),midX=(b.minX+b.maxX)/2,midY=(b.minY+b.maxY)/2;
+ const st=stage(piece,sim.time),pts=profile(piece,piece.angles.map(()=>1)).points,b=bounds(pts),midX=(b.minX+b.maxX)/2,midY=(b.minY+b.maxY)/2;
  const d=Math.min(piece.width,1500),yaw=camera.yaw,pitch=camera.pitch;
  function coords(x,y,z){const xx=x-midX,yy=y-midY,zz=z;const rX=xx*Math.cos(yaw)-zz*Math.sin(yaw),depth=xx*Math.sin(yaw)+zz*Math.cos(yaw);
  return {x:rX,y:yy*Math.cos(pitch)-depth*Math.sin(pitch),depth:yy*Math.sin(pitch)+depth*Math.cos(pitch)};}
@@ -129,7 +129,7 @@ function drawScene(){
  faces.sort((a,b)=>a.depth-b.depth);
  for(const f of faces){const corners=f.corners.map(project);ctx.beginPath();corners.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.fillStyle=f.index%2?'#69b4decc':'#3a8fc8cc';ctx.fill();ctx.lineWidth=1.8;ctx.strokeStyle='#1b659a';ctx.stroke();}
  for(const z of [-d/2,d/2])line(ctx,pts.map(pt=>project(coords(pt.x,pt.y,z))),'#1b689b',2.5);
- text(ctx,'3D · gira con el dedo',15,23,'#577d95',12);text(ctx,'Anchura: '+numbers(piece.width,0)+' mm',w-14,h-15,'#648299',11,'right');
+ text(ctx,'PIEZA FINAL 3D · gira con el dedo',15,23,'#8ac7f6',12);text(ctx,'Anchura: '+numbers(piece.width,0)+' mm',w-14,h-15,'#648299',11,'right');
 }
 function toolDrawing(){
  const can=canvas2d('toolCanvas');if(!can)return;const {ctx,w,h}=can;drawGrid(ctx,w,h,36);
@@ -198,3 +198,5 @@ function tick(now){
 }
 configure();
 window.PLEGADOX_STATE=()=>({piece,sim});
+window.PLEGADOX_MACHINE_VIEW=machineView;
+window.PLEGADOX_REDRAW=()=>paintAll();
