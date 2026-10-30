@@ -65,7 +65,7 @@ export function sceneAtmosphere(ctx,w,h,location){
 }
 export function dieDepth(ctx,location,opening,enabled){
  if(!enabled)return;
- const {cx,cy,s}=location,half=88*s;
+ const {cx,cy,s}=location,half=Math.max(28,opening*1.18+14)*s;
  const forward=33*s,up=20*s,depth=115*s;
  // Side and top exposed surfaces of the front V matrix.
  const sides=[
@@ -117,7 +117,7 @@ export function sheetDepth(ctx,points,location,thickness,enabled){
  ctx.restore();
 }
 export function surfaceDetail(ctx,location,tooling){
- const {cx,cy,s}=location,half=88*s;
+ const {cx,cy,s}=location,half=Math.max(28,(tooling?.opening||16)*1.18+14)*s;
  const y=cy+65*s;
  ctx.save();
  // Machined dark grooves, clamp blocks and machined pocket bolts.
