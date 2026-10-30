@@ -19,6 +19,24 @@ export function machineToolProjection(scene,cx,datumY,scale){
  const transform=points=>points.map(({x,y})=>[cx+x*scale,datumY-y*scale]);
  return {die:transform(scene.diePolygon),punch:transform(scene.punchPolygon)};
 }
+/**
+ * Proyección oblicua de la chapa mientras cambia de cara. Sólo se usa
+ * cuando el usuario activa el modo 3D ilustrativo de cabina. La sección mm
+ * sigue mostrando el alzado puro. La componente Z procede del giro rígido
+ * de presentedAtStage, no de una deformación del ala.
+ */
+export function machineSheetProjection(scene,cx,datumY,scale,perspective=false){
+ if(!Number.isFinite(scale)||scale<=0||![cx,datumY].every(Number.isFinite))
+  throw Error('Transformación de chapa inválida');
+ const presentation=scene.presentation;
+ const point3D=perspective&&presentation?.repositioning&&
+  Array.isArray(presentation.points3D)?presentation.points3D:null;
+ const positions=point3D?
+  point3D.map(p=>({x:p.x+.48*p.z,
+   y:p.y+scene.kinematics.centerHeight+.19*p.z})):
+  scene.sheetDisplay;
+ return positions.map(p=>[cx+p.x*scale,datumY-p.y*scale]);
+}
 function gradient(ctx,x1,y1,x2,y2,colors){
  const g=ctx.createLinearGradient(x1,y1,x2,y2);
  for(const [at,color] of colors)g.addColorStop(at,color);
@@ -205,7 +223,7 @@ function stageScene(ctx,w,h,piece,sim,machineView){
  // Pieza, matriz y punzón comparten escala mm→px. La fibra de la chapa
  // sigue el contacto con los dos hombros de la V y el descenso del punzón.
  const sheetY=baseY-scene.kinematics.centerHeight*scale;
- const transformed=scene.sheetDisplay.map(pt=>[cx+pt.x*scale,baseY-pt.y*scale]);
+ const transformed=machineSheetProjection(scene,cx,baseY,scale,Boolean(machineView?.perspective));
  sheetDepth(ctx,transformed,{cx,cy:baseY,s:scale},t,Boolean(machineView?.perspective));
  drawSheet(ctx,transformed,t,scale,st.press>.4);
  sectionOverlay(ctx,{cx,cy:baseY,s:scale},opening,punch.tip||0,Boolean(machineView?.section));
@@ -221,7 +239,9 @@ function stageScene(ctx,w,h,piece,sim,machineView){
  if(presentation.repositioning){
   ctx.save();ctx.fillStyle='#9dd8ff';
   ctx.font='700 '+Math.max(9,11*scale)+'px system-ui';ctx.textAlign='center';
-  ctx.fillText('RETIRADA → GIRO → PRESENTACIÓN (ESQUEMA)',w/2,h-48*scale);
+  ctx.fillText(machineView?.perspective?
+    'RETIRADA → VOLTEO 3D PROYECTADO → PRESENTACIÓN':
+    'RETIRADA → GIRO → PRESENTACIÓN (ESQUEMA)',w/2,h-48*scale);
   ctx.restore();
  }
  // El signo del plano no se cambia: sólo cambia la CARA de presentación

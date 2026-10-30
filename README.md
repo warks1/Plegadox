@@ -242,3 +242,8 @@ proyectarlo en 2D algunas alas pueden parecer más cortas momentáneamente.
 **No es una trayectoria de máquina ni una separación segura de 5 mm**. Las
 mordazas, ejes, topes, mesa, radios y caminos de giro reales requieren CAD,
 cinemática 3D y datos de máquina verificados antes de poder validar colisiones.
+
+El modo de **perspectiva ilustrativa 2.5D** utiliza además la componente
+Z calculada durante el cambio de cara: muestra una proyección oblicua del
+volteo, en lugar de colapsar visualmente todas las alas en el plano lateral.
+La proyección no equivale a un sólido cinemático verificado.

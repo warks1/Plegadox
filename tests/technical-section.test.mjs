@@ -4,7 +4,7 @@ import {EXAMPLE,MACHINE,normalized,stage,profile} from '../engine.js';
 import {technicalScene} from '../technical-section.js';
 import {analyzeSequence} from '../validation.js';
 import {sectionPunch} from '../tool-profiles.js';
-import {machineToolProjection} from '../machine-visual.js';
+import {machineToolProjection,machineSheetProjection} from '../machine-visual.js';
 
 const near=(actual,expected,tolerance=1e-8)=>{
  assert.ok(Math.abs(actual-expected)<tolerance,
@@ -102,4 +102,19 @@ test('la vista industrial respeta H y fondo nominal de matrices diferentes',()=>
  near(Math.max(...p88.map(p=>p[1])),100+s88.die.height);
  assert.ok(s30.die.depth>s88.die.depth);
  assert.notDeepEqual(p30,p88);
+});
+
+test('la chapa en perspectiva refleja la profundidad del volteo sin alterar el alzado métrico',()=>{
+ const scene=technicalScene(EXAMPLE,4.6);
+ assert.equal(scene.presentation.repositioning,true);
+ const front=machineSheetProjection(scene,200,200,1,false);
+ const oblique=machineSheetProjection(scene,200,200,1,true);
+ assert.equal(front.length,scene.sheetDisplay.length);
+ assert.equal(oblique.length,scene.presentation.points3D.length);
+ assert.ok(oblique.every(p=>p.every(Number.isFinite)));
+ assert.notDeepEqual(front,oblique,'el giro de cara utiliza la profundidad Z');
+ const normal=technicalScene(EXAMPLE,2.7);
+ assert.deepEqual(machineSheetProjection(normal,200,200,1,false),
+  machineSheetProjection(normal,200,200,1,true),
+  'fuera del giro, el 2.5D y el alzado conservan la misma chapa');
 });
