@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {EXAMPLE,normalized,estimateAirBendForce,REFERENCE_RM_MPA} from '../engine.js';
+import {EXAMPLE,normalized,estimateAirBendForce,REFERENCE_RM_MPA,development} from '../engine.js';
 const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-8, a+' != '+b);
 test('S235 V16 2 mm 500 mm: kN, t y kN/m coherentes',()=>{
  const r=estimateAirBendForce(EXAMPLE);
@@ -39,7 +39,7 @@ test('el signo ±90 no cambia la fuerza, otros ángulos se señalan fuera de ám
 });
 
 test('el comparador usa desarrollo nominal en función de la V con radio estimado',()=>{
- const {development}=await import('../engine.js');
+
  const a=development({...EXAMPLE,die:'v16'});
  const b=development({...EXAMPLE,die:'v32'});
  assert.notEqual(a.length,b.length);
