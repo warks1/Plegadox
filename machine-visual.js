@@ -3,6 +3,7 @@
 import {stage,presentedAtStage,getTooling} from './engine.js';
 import {sectionPunch,sectionDie} from './tool-profiles.js';
 import {drawTechnicalSection} from './technical-section.js';
+import {currentToolContact} from './tool-collision.js';
 import {sceneAtmosphere,dieDepth,ramDepth,sheetDepth,surfaceDetail,sectionOverlay} from './render-enhancements.js';
 
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -238,9 +239,22 @@ function stageScene(ctx,w,h,piece,sim,machineView){
  }
 }
 // Entrypoint used from app.js drawMachine without changing the core timing engine.
+function drawWarningHud(ctx,w,h,piece,sim,view){
+ const diagnostic=currentToolContact(piece,sim.time);
+ if(!diagnostic.hasWarning)return;
+ const dominant=diagnostic.issues[0],tool=dominant.kind==='punch'?'PUNZÓN':'MATRIZ';
+ const message='⚠ POSIBLE INTERFERENCIA 2D · '+tool;
+ ctx.save();
+ const font=Math.max(9,Math.min(12,w/48));
+ ctx.font='800 '+font+'px system-ui';const width=Math.min(w-16,ctx.measureText(message).width+19);
+ const x=8,y=view?.section?(w<500?h-133:h-57):h-61;
+ ctx.fillStyle='#632416e9';ctx.strokeStyle='#ffab50';ctx.lineWidth=1.2;
+ ctx.beginPath();ctx.roundRect(x,y,width,26,5);ctx.fill();ctx.stroke();
+ ctx.fillStyle='#ffdda3';ctx.fillText(message,x+9,y+18);
+ ctx.restore();
+}
 export function drawIndustrialMachine(ctx,w,h,piece,sim,machineView){
- // Cotas nominales y todas las siluetas comparten una sola escala mm/px.
- // El modo artístico queda intacto como referencia estética del Boceto 2.
- if(machineView?.section)return drawTechnicalSection(ctx,w,h,piece,sim,machineView);
- stageScene(ctx,w,h,piece,sim,machineView);
+ if(machineView?.section)drawTechnicalSection(ctx,w,h,piece,sim,machineView);
+ else stageScene(ctx,w,h,piece,sim,machineView);
+ drawWarningHud(ctx,w,h,piece,sim,machineView);
 }
