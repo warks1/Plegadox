@@ -76,3 +76,32 @@ test('al reposicionar entre golpes la chapa sube sobre V sin mover la punta del 
  assert.ok(Math.abs(before.sheet[1].y-after.sheet[1].y)<.01,
   'no debe saltar al comenzar la siguiente operación');
 });
+
+test('el arco de 90° es circular y tangente a las alas, no una curva Bézier',()=>{
+ const pts=[{x:-30,y:0},{x:0,y:0},{x:0,y:30}],fillet=roundedCorner(pts,1,5);
+ assert.equal(fillet.length,15);
+ assert.deepEqual(fillet[0],pts[0]);
+ assert.deepEqual(fillet.at(-1),pts.at(-1));
+ const cx=-5,cy=5;
+ for(const p of fillet.slice(1,-1))
+  close(Math.hypot(p.x-cx,p.y-cy),5,1e-7);
+ close(fillet[1].x,-5,1e-8);close(fillet[1].y,0,1e-8);
+ close(fillet.at(-2).x,0,1e-8);close(fillet.at(-2).y,5,1e-8);
+});
+test('arcos para signos de giro contrarios conservan radio y extremos',()=>{
+ const positive=[{x:-50,y:0},{x:0,y:0},{x:0,y:50}];
+ const negative=[{x:-50,y:0},{x:0,y:0},{x:0,y:-50}];
+ const a=roundedCorner(positive,1,6),b=roundedCorner(negative,1,6);
+ assert.deepEqual(a[0],positive[0]);assert.deepEqual(b[0],negative[0]);
+ assert.ok(a.at(-2).y>0&&b.at(-2).y<0);
+ close(a[1].x,b[1].x,1e-8);
+ assert.ok(a.every(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)));
+ assert.ok(b.every(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)));
+});
+test('cuando la ala es muy corta limita la transición sin mover extremos',()=>{
+ const source=[{x:-3,y:0},{x:0,y:0},{x:0,y:12}];
+ const arc=roundedCorner(source,1,100);
+ assert.deepEqual(arc[0],source[0]);assert.deepEqual(arc.at(-1),source.at(-1));
+ assert.ok(arc[1].x>-3,'Radio mayor que ala es limitado para la vista');
+ assert.ok(arc.every(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)));
+});

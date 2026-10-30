@@ -14,7 +14,8 @@ const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const lerp=(a,b,t)=>a+(b-a)*t;
 export function contactKinematics({
  points,activeBend,angle=0,opening=16,dieDepth=8,thickness=2,
- phase='Posicionamiento',press=0,approachGap=null,presentationLift=0
+ phase='Posicionamiento',press=0,approachGap=null,presentationLift=0,
+ insideRadius=null
 }){
  const input=Array.isArray(points)?points:[];
  if(input.length<2)return {sheet:[],rounded:[],tipHeight:0,
@@ -53,31 +54,48 @@ export function contactKinematics({
  else if(phase==='Retorno')tipHeight=centerHeight+thickness/2+gap*clamp(1-press,0,1);
  else tipHeight=thickness+gap*clamp(1-press/.45,0,1);
  if(isTransition)tipHeight=thickness+gap;
- const rounded=roundedCorner(sheet,valid,Math.max(.2,thickness*.6));
+ // La fibra media dibujada se desplaza aproximadamente medio espesor
+ // desde el radio interior programado. La deformación real no se calcula.
+ const requestedCenterlineRadius=insideRadius==null?
+  Math.max(.2,thickness*.6):
+  Math.max(.2,Number(insideRadius)||0)+thickness/2;
+ const rounded=roundedCorner(sheet,valid,requestedCenterlineRadius);
  return {sheet,rounded,tipHeight,centerHeight,sag,sagTarget,
   limitedByDie:dieLimit,contact:phase==='Plegado',
-  repositionLift,roundedApproximation:true};
+  requestedCenterlineRadius,repositionLift,roundedApproximation:true};
 }
-/** Visual quadratic transition through the corner with its adjacent flats. */
+/**
+ * Fillet de sección: verdadero arco circular tangente a ambas fibras rectas,
+ * muestreado con 12 divisiones. Se limita el radio si una de las alas es tan
+ * corta que no caben sus puntos de tangencia; NO modela recuperación real.
+ * Conserva todos los vértices y extremos salvo el vértice redondeado.
+ */
 export function roundedCorner(points,index,radius){
  if(!points.length||index<=0||index>=points.length-1)return points.slice();
  const v=points[index],prev=points[index-1],next=points[index+1];
  const vin={x:v.x-prev.x,y:v.y-prev.y},vout={x:next.x-v.x,y:next.y-v.y};
  const lenIn=dist(prev,v),lenOut=dist(v,next);
  if(lenIn<1e-6||lenOut<1e-6)return points.slice();
- const dot=clamp((vin.x*vout.x+vin.y*vout.y)/(lenIn*lenOut),-1,1);
- const turn=Math.acos(dot);
- if(turn<.008)return points.slice();
- const tangent=Math.min(lenIn*.38,lenOut*.38,Math.max(.05,radius)*Math.tan(turn/2));
- const dirIn={x:vin.x/lenIn,y:vin.y/lenIn};
- const dirOut={x:vout.x/lenOut,y:vout.y/lenOut};
- const start={x:v.x-dirIn.x*tangent,y:v.y-dirIn.y*tangent};
- const end={x:v.x+dirOut.x*tangent,y:v.y+dirOut.y*tangent};
+ const u={x:vin.x/lenIn,y:vin.y/lenIn},w={x:vout.x/lenOut,y:vout.y/lenOut};
+ const turn=Math.atan2(u.x*w.y-u.y*w.x,u.x*w.x+u.y*w.y);
+ const absTurn=Math.abs(turn);
+ if(absTurn<.008||absTurn>=Math.PI-.008)return points.slice();
+ const tanHalf=Math.tan(absTurn/2);
+ if(tanHalf<=1e-9)return points.slice();
+ const requested=Math.max(.05,Number(radius)||.05);
+ const tangent=Math.min(lenIn*.38,lenOut*.38,requested*tanHalf);
+ const effectiveRadius=tangent/tanHalf;
+ const start={x:v.x-u.x*tangent,y:v.y-u.y*tangent};
+ const sign=Math.sign(turn);
+ const normal={x:-sign*u.y,y:sign*u.x};
+ const center={x:start.x+normal.x*effectiveRadius,
+               y:start.y+normal.y*effectiveRadius};
+ const begin=Math.atan2(start.y-center.y,start.x-center.x);
  const result=[...points.slice(0,index),start];
  for(let i=1;i<=12;i++){
-  const t=i/12,u=1-t;
-  result.push({x:u*u*start.x+2*u*t*v.x+t*t*end.x,
-               y:u*u*start.y+2*u*t*v.y+t*t*end.y});
+  const theta=begin+turn*i/12;
+  result.push({x:center.x+effectiveRadius*Math.cos(theta),
+               y:center.y+effectiveRadius*Math.sin(theta)});
  }
  result.push(...points.slice(index+1));
  return result;

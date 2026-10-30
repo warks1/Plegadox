@@ -371,3 +371,14 @@ representan todos los golpes como un ángulo fijo de 90°. El esquema es un
 pictograma de **dos alas**; la silueta completa de la pieza sigue en las
 vistas de simulación. El sentido de plegado y el orden de operaciones se
 conservan íntegros.
+
+### Radio interior conectado al arco de chapa
+
+La chapa de la sección técnica se dibuja con una transición **circular
+paramétrica tangente** a las dos alas. Su radio de fibra media se aproxima a
+`R interior + espesor/2`, utilizando el R editable en Desarrollo o el valor
+aproximado del cálculo de la V. Cuando un ala es demasiado corta, el arco se
+limita para mantener sus extremos sin moverlos. Esta curva sustituye la
+antigua Bézier gráfica. La fibra central de validación sigue siendo
+segmentada y **no se está simulando deformación plástica, recuperación ni
+radio industrial real verificado**.

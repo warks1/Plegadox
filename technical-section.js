@@ -6,7 +6,7 @@
  * es un perfil de fibra media con espesor nominal; el contacto es orientativo.
  * No usar esta vista para verificar colisiones o seguridad de máquina.
  */
-import {normalized,stage,presentedAtStage,getTooling,clamp} from './engine.js';
+import {normalized,stage,presentedAtStage,getTooling,development,clamp} from './engine.js';
 import {sectionPunch,sectionDie,sectionBounds} from './tool-profiles.js';
 import {contactKinematics} from './bend-contact.js';
 
@@ -25,6 +25,7 @@ export function technicalScene(piece,instant=0){
   angle:p.angles[st.activeBend]*st.fractions[st.activeBend],
   opening:die.opening,dieDepth:die.depth,thickness:t,
   phase:st.phase,press:st.press,
+  insideRadius:development(p).radius,
   presentationLift:presentation.clearanceLift??0
  });
  const sheet=kinematics.sheet;

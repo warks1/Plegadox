@@ -119,3 +119,14 @@ test('la chapa en perspectiva refleja la profundidad del volteo sin alterar el a
   machineSheetProjection(normal,200,200,1,true),
   'fuera del giro, el 2.5D y el alzado conservan la misma chapa');
 });
+
+test('la sección gráfica usa el radio interior elegido sin modificar la fibra central',()=>{
+ const p={...EXAMPLE,radius:3},q={...EXAMPLE,radius:9};
+ const small=technicalScene(p,2.7),large=technicalScene(q,2.7);
+ assert.deepEqual(small.sheet,large.sheet);
+ assert.ok(Math.abs(small.kinematics.requestedCenterlineRadius-4)<1e-8);
+ assert.ok(Math.abs(large.kinematics.requestedCenterlineRadius-10)<1e-8);
+ assert.notDeepEqual(small.sheetDisplay,large.sheetDisplay,
+   'Al cambiar R debe cambiar la curva visual de la chapa');
+ assert.equal(small.verified,false);
+});
