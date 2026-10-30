@@ -104,7 +104,7 @@ function drawDie(ctx,cx,cy,scale,die){
  // El bloque exterior sigue siendo ilustrativo hasta disponer de CAD oficial.
  const profile=sectionDie(die);
  const half=Math.max(28,profile.opening*1.18+14)*scale,top=cy,width=half*2,body=110*scale;
- const v=clamp(profile.opening*1.55*scale,8*scale,86*scale);
+ const v=Math.max(2,profile.opening*scale);
  const depth=Math.min(body*.64,(v/2)/Math.tan(profile.angle*Math.PI/360));
  const left=cx-half,right=cx+half;
  ctx.save();ctx.shadowColor='#000d';ctx.shadowBlur=28*scale;ctx.shadowOffsetY=12*scale;
@@ -135,7 +135,7 @@ function drawRam(ctx,cx,cy,scale,tipY,punch){
  // Silueta del punzón calculada con el ángulo incluido nominal:
  // 30° = transición larga y estrecha, 60° = intermedia, 88° = corta.
  const geometry=sectionPunch(punch);
- const factor=scale*Math.min(1.7,205/geometry.height);
+ const factor=scale;
  const top=tipY-geometry.height*factor;
  const ramW=125*scale;
  steelRect(ctx,cx-ramW*.48,top-65*scale,ramW,75*scale,false);
@@ -176,6 +176,7 @@ function drawSheet(ctx,pts,thickness,scale,active){
 }
 function stageScene(ctx,w,h,piece,sim,machineView){
  const st=stage(piece,sim.time),{punch,die}=getTooling(piece),t=piece.thickness;
+ const scene=technicalScene(piece,st);
  const scale=Math.min(w/740,h/510)* (machineView?.zoom||1);
  const cx=w*.48+(machineView?.panX||0),baseY=h*.665+(machineView?.panY||0);
  const opening=die.opening||16;
@@ -188,22 +189,18 @@ function stageScene(ctx,w,h,piece,sim,machineView){
  // Ram advances to the sheet and descends while deforming it.
  // La formación no comienza antes de que la punta alcance la chapa.
  // Durante el golpe, punta y fibra central descienden conjuntamente hacia V.
- const travel=st.press<=.45?67-65*(st.press/.45):2-((st.press-.45)/.55)*10;
- const tipY=baseY-travel*scale;
+ const tipY=baseY-scene.kinematics.tipHeight*scale;
  // Preserve the real profile; perspective adds an illustrative side face.
  ramDepth(ctx,{cx,cy:baseY,s:scale},tipY,punch,Boolean(machineView?.perspective));
  ctx.save();
  if(machineView?.transparent)ctx.globalAlpha=.3;
  drawRam(ctx,cx,baseY,scale,tipY,punch);
  ctx.restore();
- const fractions=st.fractions;
- const presentation=presentedAtStage(piece,st);
- const points=presentation.points;
- const maxExtent=Math.max(...points.map(pt=>Math.abs(pt.x)),50);
- const span=Math.min(w*.78/(2*maxExtent),scale*1.35);
- // Contact: la punta del punzón arrastra el centro de la chapa.
- const sheetY=st.press<=.45?baseY-piece.thickness*.5*scale:tipY+piece.thickness*.5*scale;
- const transformed=points.map(pt=>[cx+pt.x*span,sheetY-pt.y*span]);
+ const presentation=scene.presentation;
+ // Pieza, matriz y punzón comparten escala mm→px. La fibra de la chapa
+ // sigue el contacto con los dos hombros de la V y el descenso del punzón.
+ const sheetY=baseY-scene.kinematics.centerHeight*scale;
+ const transformed=scene.sheetDisplay.map(pt=>[cx+pt.x*scale,baseY-pt.y*scale]);
  sheetDepth(ctx,transformed,{cx,cy:baseY,s:scale},t,Boolean(machineView?.perspective));
  drawSheet(ctx,transformed,t,scale,st.press>.4);
  sectionOverlay(ctx,{cx,cy:baseY,s:scale},opening,punch.tip||0,Boolean(machineView?.section));
