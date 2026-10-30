@@ -198,10 +198,35 @@ function attachViewer(canvas){
  for(const name of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(name,e=>{points.delete(e.pointerId);lastDistance=0;});
  canvas.addEventListener('wheel',e=>{e.preventDefault();state.zoom=Math.max(.3,Math.min(4,state.zoom*Math.exp(-e.deltaY*.002)));drawToolViewer();},{passive:false});
 }
+/**
+ * Los pictogramas de la cabina no son siluetas fijas: cambian al elegir
+ * un punzón recto, de 30° o pata de cabra, y cada matriz V/ángulo.
+ */
+function updateFloatingToolIcon(kind,tool){
+ const selector=kind==='punch'?'.cp-float-tool:first-child svg':
+  '.cp-float-tool:nth-child(2) svg';
+ const svg=document.querySelector(selector);
+ if(!svg||svg.dataset.toolId===tool.id)return;
+ const shape=kind==='punch'?sectionPunch(tool):sectionDie(tool),pts=shape.points;
+ const x=pts.map(p=>p[0]),y=pts.map(p=>p[1]);
+ const left=Math.min(...x),right=Math.max(...x),bottom=Math.min(...y),top=Math.max(...y);
+ const scale=Math.min(74/Math.max(1,right-left),78/Math.max(1,top-bottom));
+ const d=pts.map(([px,py],i)=>(i?'L':'M')+
+  (45+(px-(left+right)/2)*scale).toFixed(2)+' '+
+  (48-(py-(bottom+top)/2)*scale).toFixed(2)).join(' ')+' Z';
+ // Conservar los degradados SVG originales; sustituir sólo la silueta.
+ svg.querySelectorAll(':scope > path').forEach(path=>path.remove());
+ const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+ path.setAttribute('d',d);path.setAttribute('fill','url(#'+(kind==='punch'?'mgt':'mgd')+')');
+ path.setAttribute('stroke','#d6e9f7');path.setAttribute('stroke-width','1.2');
+ svg.appendChild(path);svg.dataset.toolId=tool.id;
+}
 function refresh(){
  const {piece,sim}=current(),st=stage(piece,sim.time),data=development(piece),{die,punch,material}=getTooling(piece);
  const top=[['cockpitPieceName',piece.name],['cockpitMaterial',material.name],['cockpitThickness',format(piece.thickness,2)+' mm'],['cockpitAngle',(piece.angles[st.activeBend]>0?'+':'')+piece.angles[st.activeBend]+'°'],['cockpitDie',die.name],['cpPunchLabel','Punzón: '+punch.name],['cpDieLabel','Matriz: '+die.name],['cpCurrentAngle',(piece.angles[st.activeBend]>0?'+':'')+piece.angles[st.activeBend]+'°']];
  for(const [id,value] of top)if($(id)&&$(id).textContent!==value)$(id).textContent=value;
+ updateFloatingToolIcon('punch',punch);
+ updateFloatingToolIcon('die',die);
  const ready=$('cockpitReady');ready.textContent=st.completed?'● Pieza simulada':'● '+st.phase;
  const comp=selectionCompatibility(punch,die),msg=comp.reason+(punch.profileAccuracy==='provisional'||die.profileAccuracy==='provisional'?' · Geometría paramétrica no validada':'');
  if($('cockpitCompatibility').textContent!==msg)$('cockpitCompatibility').textContent=msg;

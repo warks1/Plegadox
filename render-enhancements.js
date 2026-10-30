@@ -1,4 +1,4 @@
-import {sectionPunch} from './tool-profiles.js';
+import {sectionPunch,sectionDie} from './tool-profiles.js';
 // Plegadox Studio · capas decorativas parametrizadas de la máquina.
 // Vista 2.5D ilustrativa: NO es una simulación de contacto, no aporta una
 // verificación de colisiones ni una geometría CAD de herramienta.
@@ -64,20 +64,24 @@ export function sceneAtmosphere(ctx,w,h,location){
  glow(ctx,cx,cy+7*s,125*s,'#2aaafe',.12);
  ctx.restore();
 }
-export function dieDepth(ctx,location,opening,enabled){
+export function dieDepth(ctx,location,opening,enabled,profile=null){
  if(!enabled)return;
- const {cx,cy,s}=location,half=Math.max(28,opening*1.18+14)*s;
- const forward=33*s,up=20*s,depth=115*s;
- // Side and top exposed surfaces of the front V matrix.
- const sides=[
- [[cx+half,cy],[cx+half+forward,cy-up],[cx+half+forward,cy+depth-up],[cx+half,cy+depth]],
- [[cx-half,cy],[cx-half+forward,cy-up],[cx+half+forward,cy-up],[cx+half,cy]]
- ];
- ctx.save();ctx.shadowColor='#000b';ctx.shadowBlur=18*s;
- path(ctx,sides[0],grad(ctx,cx+half,cy,cx+half+forward,cy,[[0,'#637c8c'],[.35,'#b9cad4'],[1,'#273e50']]),'#0a2539',1.4*s);
- path(ctx,sides[1],grad(ctx,cx-half,cy,cx+half+forward,cy-up,[[0,'#d0dde5'],[.28,'#657c8b'],[.58,'#b2c4d1'],[1,'#355267']]),'#183b52',1.2*s);
+ const {cx,cy,s}=location,die=profile||sectionDie({opening,angle:88,height:80});
+ const points=die.points.map(([x,y])=>[cx+x*s,cy+(die.height-y)*s]);
+ const dx=33*s,dy=-20*s;
+ ctx.save();ctx.shadowBlur=14*s;ctx.shadowColor='#000a';
+ // Extruir la MISMA sección de la matriz que se dibuja en 2D.
+ // El relieve de la V debe conservarse también en la perspectiva.
+ const rear=points.map(([x,y])=>[x+dx,y+dy]);
+ path(ctx,rear,grad(ctx,cx,cy,cx+dx,cy+dy,
+  [[0,'#809aaa'],[.55,'#3e6075'],[1,'#172b3b']]),'#284e62',.7*s);
+ for(let i=0;i<points.length;i++){
+  const j=(i+1)%points.length;
+  const side=[points[i],points[j],rear[j],rear[i]];
+  path(ctx,side,grad(ctx,points[i][0],points[i][1],rear[j][0],rear[j][1],
+   [[0,'#6c8799'],[.45,'#a0b8c6'],[1,'#29465b']]),'#25485d',.7*s);
+ }
  ctx.restore();
- for(const frac of [.2,.5,.8])screw(ctx,cx+half+forward*.65,cy+depth*frac-up*.65,2.2*s);
 }
 export function ramDepth(ctx,location,tipY,punch,enabled){
  if(!enabled)return;

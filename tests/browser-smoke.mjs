@@ -17,10 +17,14 @@ try{
   await page.locator('#showTool3D').click();
   assert.ok(await page.locator('#cockpitSelectedTool3D').isVisible(),'Visor 3D de herramienta se abre');
   await page.locator('#closeTool3D').click();
+  const initialIcon=await page.locator('.cp-float-tool:first-child svg > path').getAttribute('d');
   await page.locator('#cpBrandTabs button[data-brand="Amada"]').click();
   await page.locator('.cp-kind-tabs [data-kind="punch"]').click();
   assert.ok(await page.locator('#cockpitTools .cp-tool-card').count()>=7,'Punzones Amada cargados');
   await page.locator('#cockpitTools .cp-tool-card').first().click();
+  const selectedIcon=await page.locator('.cp-float-tool:first-child svg > path').getAttribute('d');
+  assert.notEqual(selectedIcon,initialIcon,'El pictograma debe reflejar el punzón seleccionado');
+
   await page.locator('#playBtn').click();
   await page.waitForTimeout(800);
   assert.ok(Number(await page.locator('#timeline').inputValue())>0,'El tiempo de simulación avanza');

@@ -8,6 +8,17 @@ import {getV85,gaugeOutline} from './machine-config.js';
 import {sceneAtmosphere,dieDepth,ramDepth,sheetDepth,surfaceDetail,sectionOverlay} from './render-enhancements.js';
 
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+/**
+ * Cabina y sección técnica usan exactamente las mismas poligonales en mm.
+ * Solo cambia la transformación de coordenadas (y de mm hacia arriba a
+ * píxeles hacia abajo). No alterar el perfil de la matriz por estética.
+ */
+export function machineToolProjection(scene,cx,datumY,scale){
+ if(!Number.isFinite(scale)||scale<=0||![cx,datumY].every(Number.isFinite))
+  throw Error('Transformación de máquina inválida');
+ const transform=points=>points.map(({x,y})=>[cx+x*scale,datumY-y*scale]);
+ return {die:transform(scene.diePolygon),punch:transform(scene.punchPolygon)};
+}
 function gradient(ctx,x1,y1,x2,y2,colors){
  const g=ctx.createLinearGradient(x1,y1,x2,y2);
  for(const [at,color] of colors)g.addColorStop(at,color);
@@ -99,39 +110,33 @@ function rearMachine(ctx,w,h,cx,cy,scale){
  for(let i=0;i<4;i++){shape(ctx,20+i*32*scale,cy+28*scale,8*scale,34*scale,'#20394e','#435b6b');}
  ctx.restore();
 }
-function drawDie(ctx,cx,cy,scale,die){
- // Perfil en V con apertura y ángulo INCLUIDO de la matriz elegida.
- // El bloque exterior sigue siendo ilustrativo hasta disponer de CAD oficial.
- const profile=sectionDie(die);
- const half=Math.max(28,profile.opening*1.18+14)*scale,top=cy,width=half*2,body=110*scale;
- const v=Math.max(2,profile.opening*scale);
- const depth=Math.min(body*.64,(v/2)/Math.tan(profile.angle*Math.PI/360));
- const left=cx-half,right=cx+half;
- ctx.save();ctx.shadowColor='#000d';ctx.shadowBlur=28*scale;ctx.shadowOffsetY=12*scale;
- poly(ctx,[[left,top],[cx-v/2,top],[cx,top+depth],[cx+v/2,top],
-     [right,top],[right,top+body],[left,top+body]],
-     gradient(ctx,left,0,right,0,[[0,'#c1cad0'],[.2,'#8496a5'],[.48,'#6d7d8b'],[.65,'#a9b7c2'],[1,'#344c5d']]),
-     '#152636',2*scale);
+function drawDie(ctx,scene,cx,cy,scale){
+ // La geometría se comparte con technicalScene y cambia con V, ángulo y H.
+ const {die}=scene,pts=machineToolProjection(scene,cx,cy,scale).die;
+ const xs=pts.map(pt=>pt[0]),minX=Math.min(...xs),maxX=Math.max(...xs);
+ ctx.save();ctx.shadowColor='#000d';ctx.shadowBlur=22*scale;ctx.shadowOffsetY=10*scale;
+ poly(ctx,pts,gradient(ctx,minX,cy,maxX,cy,
+  [[0,'#c1cad0'],[.2,'#8496a5'],[.48,'#6d7d8b'],
+   [.65,'#a9b7c2'],[1,'#344c5d']]),'#152636',2*scale);
  ctx.restore();
+ // Los reflejos decorativos no deben salirse del cuerpo acotado,
+ // particularmente al pasar de una matriz H120 a otra H60.
  ctx.save();
- ctx.beginPath();ctx.moveTo(cx-v/2,top);ctx.lineTo(cx,top+depth);ctx.lineTo(cx+v/2,top);
- ctx.strokeStyle='#04111d';ctx.lineWidth=5*scale;ctx.lineJoin='round';ctx.stroke();
- ctx.strokeStyle='#d2e7f4';ctx.lineWidth=1.8*scale;ctx.stroke();
+ ctx.beginPath();pts.forEach((pt,i)=>i?ctx.lineTo(...pt):ctx.moveTo(...pt));
+ ctx.closePath();ctx.clip();
+ surfaceDetail(ctx,{cx,cy,s:scale},{opening:die.opening});
  ctx.restore();
- ctx.save();ctx.beginPath();ctx.rect(left+2,top+depth+1,width-4,body-depth-1);ctx.clip();
- ctx.globalAlpha=.11;
- for(let k=0;k<80;k++){let x=left+(k*.13%1)*width;ctx.strokeStyle=k%4?'#edf3f6':'#0c273d';ctx.lineWidth=.55;ctx.beginPath();ctx.moveTo(x,top+depth);ctx.lineTo(x+3,top+body);ctx.stroke();}
- ctx.restore();
- for(const x of [left+15*scale,right-15*scale])bolt(ctx,x,cy+body-13*scale,2.8*scale);
- ctx.strokeStyle='#e8f6ff';ctx.lineWidth=1.3*scale;
- ctx.beginPath();ctx.moveTo(left+2,top+1);ctx.lineTo(cx-v/2,top+1);
- ctx.moveTo(cx+v/2,top+1);ctx.lineTo(right-2,top+1);ctx.stroke();
- const baseY=cy+body;
- steelRect(ctx,cx-half-14*scale,baseY,(half+14*scale)*2,15*scale,false,true);
- ctx.save();ctx.fillStyle='#041624';ctx.fillRect(cx-half-19*scale,baseY+16*scale,(half+19*scale)*2,10*scale);ctx.restore();
- return {top,depth,opening:v,angle:profile.angle};
+ const half=die.opening/2*scale,depth=die.depth*scale;
+ ctx.save();ctx.beginPath();
+ ctx.moveTo(cx-half,cy);ctx.lineTo(cx,cy+depth);ctx.lineTo(cx+half,cy);
+ ctx.strokeStyle='#091e2e';ctx.lineWidth=3*scale;ctx.lineJoin='round';ctx.stroke();
+ ctx.strokeStyle='#cce8f4';ctx.lineWidth=1*scale;ctx.stroke();ctx.restore();
+ const bottom=cy+die.height*scale;
+ // Esta base es la mesa/soporte ilustrativo, no parte del cuerpo de la matriz.
+ steelRect(ctx,minX-10*scale,bottom,maxX-minX+20*scale,13*scale,false,true);
+ return {top:cy,depth,opening:die.opening*scale,angle:die.angle,contour:pts};
 }
-function drawRam(ctx,cx,cy,scale,tipY,punch){
+function drawRam(ctx,cx,cy,scale,tipY,punch,scene){
  // Silueta del punzón calculada con el ángulo incluido nominal:
  // 30° = transición larga y estrecha, 60° = intermedia, 88° = corta.
  const geometry=sectionPunch(punch);
@@ -143,7 +148,7 @@ function drawRam(ctx,cx,cy,scale,tipY,punch){
        [cx+ramW*.66,top+5*scale],[cx+ramW*.52,top+10*scale]],
        '#2a4250','#647e8d',1.5);
  steelRect(ctx,cx-38*scale,top-10*scale,76*scale,27*scale,true);
- const pts=geometry.points.map(([x,y])=>[cx+x*factor,tipY-y*factor]);
+ const pts=machineToolProjection(scene,cx,cy,scale).punch;
  ctx.save();ctx.shadowColor='#000e';ctx.shadowBlur=20*scale;ctx.shadowOffsetX=7*scale;
  poly(ctx,pts,gradient(ctx,cx-45*scale,0,cx+45*scale,0,
    [[0,'#a0afba'],[.17,'#f0f7fa'],[.34,'#889cab'],[.52,'#d0dbe1'],
@@ -183,9 +188,9 @@ function stageScene(ctx,w,h,piece,sim,machineView){
  backdrop(ctx,w,h);
  sceneAtmosphere(ctx,w,h,{cx,cy:baseY,s:scale});
  rearMachine(ctx,w,h,cx,baseY,scale);
- dieDepth(ctx,{cx,cy:baseY,s:scale},opening,Boolean(machineView?.perspective));
- drawDie(ctx,cx,baseY,scale,die);
- surfaceDetail(ctx,{cx,cy:baseY,s:scale},{opening});
+ dieDepth(ctx,{cx,cy:baseY,s:scale},opening,Boolean(machineView?.perspective),scene.die);
+ drawDie(ctx,scene,cx,baseY,scale);
+ // Los reflejos de la matriz se recortan a su contorno real en drawDie.
  // Ram advances to the sheet and descends while deforming it.
  // La formación no comienza antes de que la punta alcance la chapa.
  // Durante el golpe, punta y fibra central descienden conjuntamente hacia V.
@@ -194,7 +199,7 @@ function stageScene(ctx,w,h,piece,sim,machineView){
  ramDepth(ctx,{cx,cy:baseY,s:scale},tipY,punch,Boolean(machineView?.perspective));
  ctx.save();
  if(machineView?.transparent)ctx.globalAlpha=.3;
- drawRam(ctx,cx,baseY,scale,tipY,punch);
+ drawRam(ctx,cx,baseY,scale,tipY,punch,scene);
  ctx.restore();
  const presentation=scene.presentation;
  // Pieza, matriz y punzón comparten escala mm→px. La fibra de la chapa

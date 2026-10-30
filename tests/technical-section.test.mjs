@@ -4,6 +4,7 @@ import {EXAMPLE,MACHINE,normalized,stage,profile} from '../engine.js';
 import {technicalScene} from '../technical-section.js';
 import {analyzeSequence} from '../validation.js';
 import {sectionPunch} from '../tool-profiles.js';
+import {machineToolProjection} from '../machine-visual.js';
 
 const near=(actual,expected,tolerance=1e-8)=>{
  assert.ok(Math.abs(actual-expected)<tolerance,
@@ -70,4 +71,35 @@ test('la herramienta nunca se marca como CAD certificado',()=>{
  for(const t of [0,2.8,7.8,16]){
   assert.equal(technicalScene(EXAMPLE,t).verified,false);
  }
+});
+
+test('la cabina y sección métrica utilizan idénticas siluetas y posiciones en mm',()=>{
+ const combos=[
+  {...EXAMPLE,die:'v16',punch:'straight88'},
+  {...EXAMPLE,die:'v16-30',punch:'straight30'},
+  {...EXAMPLE,die:'v6',punch:'goose'}
+ ];
+ for(const item of combos)for(const time of [0,2.8,7.8,13.2]){
+  const scene=technicalScene(item,time),cx=250,cy=340,scale=1.25;
+  const projected=machineToolProjection(scene,cx,cy,scale);
+  for(const key of ['punch','die']){
+   const metric=scene[key+'Polygon'];
+   assert.equal(projected[key].length,metric.length);
+   projected[key].forEach(([x,y],i)=>{
+    near(x,cx+metric[i].x*scale);
+    near(y,cy-metric[i].y*scale);
+   });
+  }
+ }
+ assert.throws(()=>machineToolProjection(technicalScene(EXAMPLE,0),0,0,0),/inválida/);
+});
+test('la vista industrial respeta H y fondo nominal de matrices diferentes',()=>{
+ const s30=technicalScene({...EXAMPLE,die:'v16-30'},0);
+ const s88=technicalScene(EXAMPLE,0);
+ const p30=machineToolProjection(s30,0,100,1).die;
+ const p88=machineToolProjection(s88,0,100,1).die;
+ near(Math.max(...p30.map(p=>p[1])),100+s30.die.height);
+ near(Math.max(...p88.map(p=>p[1])),100+s88.die.height);
+ assert.ok(s30.die.depth>s88.die.depth);
+ assert.notDeepEqual(p30,p88);
 });
