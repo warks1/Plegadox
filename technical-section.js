@@ -24,7 +24,8 @@ export function technicalScene(piece,instant=0){
   points:presentation.points,activeBend:st.activeBend,
   angle:p.angles[st.activeBend]*st.fractions[st.activeBend],
   opening:die.opening,dieDepth:die.depth,thickness:t,
-  phase:st.phase,press:st.press
+  phase:st.phase,press:st.press,
+  presentationLift:presentation.clearanceLift??0
  });
  const sheet=kinematics.sheet;
  const sheetDisplay=kinematics.rounded;

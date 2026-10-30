@@ -84,3 +84,33 @@ test('el contorno 50×100 de pata de cabra de fotografía no se convierte en un 
  assert.ok(pts.length>=9,'debe existir escote interno real');
  assert.notDeepEqual(pts,sectionPunch({angle:88,height:100,type:'recto',tip:2}).points);
 });
+
+test('la reorientación espera a retirar la chapa antes de empezar a girarla',()=>{
+ const lift=presentedAtStage(EXAMPLE,stage(EXAMPLE,4.30));
+ const rotate=presentedAtStage(EXAMPLE,stage(EXAMPLE,4.60));
+ const lower=presentedAtStage(EXAMPLE,stage(EXAMPLE,4.90));
+ assert.equal(lift.repositioning,true);
+ assert.equal(lift.progress,0,'al retirar todavía no gira');
+ assert.ok(lift.clearanceLift>0,'la chapa se eleva al retirarla');
+ assert.ok(rotate.progress>.3&&rotate.progress<.7,'el giro se hace tras retirada');
+ assert.ok(rotate.clearanceLift>0);
+ assert.equal(lower.progress,1,'al volver a bajar ya está orientada');
+ assert.ok(lower.clearanceLift>0);
+ const end=presentedAtStage(EXAMPLE,stage(EXAMPLE,4.999999));
+ assert.ok(end.clearanceLift<.001,'acaba de presentar sin salto vertical');
+});
+test('el volteo intermedio conserva longitudes en 3D y sólo comprime su proyección en 2D',()=>{
+ const p=EXAMPLE;
+ for(const time of [4.3,4.55,4.7,4.9]){
+  const st=stage(p,time),result=presentedAtStage(p,st);
+  const source=profile(p,st.fractions).points;
+  assert.equal(result.points3D.length,source.length);
+  for(let i=0;i<source.length-1;i++){
+   const a=source[i],b=source[i+1];
+   const length=Math.hypot(b.x-a.x,b.y-a.y);
+   const c=result.points3D[i],d=result.points3D[i+1];
+   const length3D=Math.hypot(d.x-c.x,d.y-c.y,d.z-c.z);
+   approximate(length3D,length,.00001);
+  }
+ }
+});

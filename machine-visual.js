@@ -221,7 +221,7 @@ function stageScene(ctx,w,h,piece,sim,machineView){
  if(presentation.repositioning){
   ctx.save();ctx.fillStyle='#9dd8ff';
   ctx.font='700 '+Math.max(9,11*scale)+'px system-ui';ctx.textAlign='center';
-  ctx.fillText('REPOSICIONAMIENTO · GIRO DE PIEZA (VISTA ORIENTATIVA)',w/2,h-48*scale);
+  ctx.fillText('RETIRADA → GIRO → PRESENTACIÓN (ESQUEMA)',w/2,h-48*scale);
   ctx.restore();
  }
  // El signo del plano no se cambia: sólo cambia la CARA de presentación

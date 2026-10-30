@@ -14,7 +14,7 @@ const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const lerp=(a,b,t)=>a+(b-a)*t;
 export function contactKinematics({
  points,activeBend,angle=0,opening=16,dieDepth=8,thickness=2,
- phase='Posicionamiento',press=0,approachGap=null
+ phase='Posicionamiento',press=0,approachGap=null,presentationLift=0
 }){
  const input=Array.isArray(points)?points:[];
  if(input.length<2)return {sheet:[],rounded:[],tipHeight:0,
@@ -41,7 +41,11 @@ export function contactKinematics({
  // During return the piece stays folded; only its CENTER rises away from V.
  const recovery=phase==='Retorno'?clamp((1-press)/.8,0,1):0;
  const lift=sag*recovery;
- const centerHeight=thickness/2-sag+lift;
+ // Retirada de presentación: sólo representa un espacio libre esquemático
+ // para girar la pieza entre golpes, nunca un movimiento CNC calculado.
+ const repositionLift=isTransition&&phase==='Reposicionamiento'?
+  Math.max(0,Number(presentationLift)||0):0;
+ const centerHeight=thickness/2-sag+lift+repositionLift;
  const sheet=moved.map(pt=>({x:pt.x,y:pt.y+centerHeight}));
  const gap=approachGap??Math.max(14,opening*1.7);
  let tipHeight;
@@ -52,7 +56,7 @@ export function contactKinematics({
  const rounded=roundedCorner(sheet,valid,Math.max(.2,thickness*.6));
  return {sheet,rounded,tipHeight,centerHeight,sag,sagTarget,
   limitedByDie:dieLimit,contact:phase==='Plegado',
-  roundedApproximation:true};
+  repositionLift,roundedApproximation:true};
 }
 /** Visual quadratic transition through the corner with its adjacent flats. */
 export function roundedCorner(points,index,radius){

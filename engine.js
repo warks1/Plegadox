@@ -123,11 +123,11 @@ export function presentedForMachine(piece,fractions,activeBend){
          label:flipped?'Presentar chapa volteada para pliegue negativo':'Presentación normal'};
 }
 /**
- * Reorientación gráfica entre golpes sin deformar las longitudes de las alas.
- * Se interpola un cambio de sistema de referencia rígido. Si hace falta
- * voltear la pieza, su profundidad 3D se proyecta temporalmente en 2D.
- * PREVISUALIZACIÓN: todavía no calcula brazos del operario ni trayectoria
- * libre de colisiones de la chapa a través del espacio.
+ * Reorientación en tres etapas: retirar de V, reorientar mientras la
+ * pieza está elevada y volver a apoyar. La rotación para invertir la cara
+ * se calcula también en 3D y luego se PROYECTA en la sección 2D.
+ * PREVISUALIZACIÓN: no calcula trayectorias mecánicas ni valida holguras
+ * reales frente a topes, mesa, trancha, punzón o mordazas.
  */
 export function presentedAtStage(piece,st){
  const p=normalized(piece);
@@ -142,19 +142,33 @@ export function presentedAtStage(piece,st){
  }
  const old=frame(st.activeBend),next=frame(p.order[st.activeOperation+1]);
  const sub=(st.time/5)%1;
- const raw=clamp((sub-.84)/.16,0,1),u=raw*raw*(3-2*raw);
+ const raw=clamp((sub-.84)/.16,0,1);
+ const ease=t=>t*t*(3-2*t);
+ // 0–22 %: sacar chapa de V · 22–78 %: girarla fuera de la matriz
+ // 78–100 %: volver a presentarla al siguiente punto de plegado.
+ const liftFactor=raw<.22?ease(raw/.22):raw>.78?ease((1-raw)/.22):1;
+ const u=ease(clamp((raw-.22)/.56,0,1));
  const angleDiff=Math.atan2(Math.sin(next.theta-old.theta),Math.cos(next.theta-old.theta));
  const theta=old.theta+angleDiff*u;
  const pivot={x:old.pivot.x+(next.pivot.x-old.pivot.x)*u,
               y:old.pivot.y+(next.pivot.y-old.pivot.y)*u};
- const flip=old.flip===next.flip?old.flip:old.flip*Math.cos(Math.PI*u);
+ const flipAngle=old.flip===next.flip?0:Math.PI*u;
+ const projectionY=old.flip*Math.cos(flipAngle);
+ const projectionZ=old.flip*Math.sin(flipAngle);
  const c=Math.cos(-theta),s=Math.sin(-theta);
- const points=pts.map(pt=>{
+ const points3D=pts.map(pt=>{
   const x=pt.x-pivot.x,y=pt.y-pivot.y;
-  return {x:x*c-y*s,y:(x*s+y*c)*flip};
+  const localX=x*c-y*s,localY=x*s+y*c;
+  return {x:localX,y:localY*projectionY,z:localY*projectionZ};
  });
- return {points,flipped:flip<0,sign:next.flip,label:'Reposicionamiento ilustrativo',
-         repositioning:true,progress:u,nextBend:next.bend};
+ const points=points3D.map(({x,y})=>({x,y}));
+ // Sólo para la vista: la cara INFERIOR de la chapa queda al menos 5 mm
+ // encima del plano de hombros durante el tramo central de giro.
+ // No es una distancia segura ni una trayectoria mecanizable.
+ const clearanceLift=Math.max(0,5-Math.min(...points.map(pt=>pt.y)))*liftFactor;
+ return {points,points3D,clearanceLift,
+  flipped:projectionY<0,sign:next.flip,label:'Retirada, giro y presentación orientativos',
+  repositioning:true,progress:u,nextBend:next.bend,liftFactor};
 }
 function cross(a,b,c){return (b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);}
 export function selfIntersects(points){

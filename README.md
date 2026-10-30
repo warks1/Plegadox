@@ -229,3 +229,16 @@ Esta comprobación **no es una simulación de fuerzas, de radio real ni de
 compatibilidad mecánica certificada**: la existencia o ausencia del aviso no
 sustituye la comprobación de amarre, carrera, radios, tonelaje, colisiones o
 pruebas de plegado con la herramienta real.
+
+## Retirada y reorientación entre pliegues (simulación gráfica)
+
+Entre operaciones, Plegadox divide el reposicionamiento en tres intervalos:
+**retirada de V**, **giro de presentación** y **nuevo apoyo**. En la fase
+central del giro la cara inferior se dibuja, de forma orientativa, al menos
+5 mm por encima del plano nominal de los hombros de la matriz. El volteo
+se calcula conservando las longitudes tridimensionales de los tramos; al
+proyectarlo en 2D algunas alas pueden parecer más cortas momentáneamente.
+
+**No es una trayectoria de máquina ni una separación segura de 5 mm**. Las
+mordazas, ejes, topes, mesa, radios y caminos de giro reales requieren CAD,
+cinemática 3D y datos de máquina verificados antes de poder validar colisiones.

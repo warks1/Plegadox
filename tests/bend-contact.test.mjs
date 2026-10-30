@@ -62,3 +62,17 @@ test('la sección técnica se alimenta de la misma cinemática del contacto',()=
  close(result.kinematics.tipHeight,result.sheet[st.activeBend+1].y+EXAMPLE.thickness/2,1e-6);
  assert.equal(result.verified,false,'No vender este modelo aproximado como validación CAD');
 });
+
+test('al reposicionar entre golpes la chapa sube sobre V sin mover la punta del punzón',()=>{
+ const time=4.6;
+ const normal=technicalScene(EXAMPLE,stage(EXAMPLE,time));
+ const lift=normal.presentation.clearanceLift;
+ assert.ok(lift>0,'se ha solicitado retirada antes del giro');
+ close(normal.kinematics.repositionLift,lift,1e-8);
+ const minimum=Math.min(...normal.sheet.map(p=>p.y))-EXAMPLE.thickness/2;
+ assert.ok(minimum>=4.99,'la cara inferior no cruza el plano V en el centro del giro');
+ const before=technicalScene(EXAMPLE,stage(EXAMPLE,4.999999));
+ const after=technicalScene(EXAMPLE,stage(EXAMPLE,5));
+ assert.ok(Math.abs(before.sheet[1].y-after.sheet[1].y)<.01,
+  'no debe saltar al comenzar la siguiente operación');
+});
