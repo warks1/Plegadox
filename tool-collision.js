@@ -47,6 +47,48 @@ function sampleSheet(sheet,step){
  }
  return samples;
 }
+/**
+ * Comprobar intersecciones exactas del EJE de cada ala con los perfiles 2D.
+ * El muestreo está limitado a 100 subdivisiones por tramo y puede omitir
+ * herramientas estrechas cuando un ala alcanza varios metros.
+ *
+ * Para cada corte con el contorno se estudian los intervalos abiertos que
+ * quedan entre los parámetros de intersección. Así se comprueban también
+ * penetraciones inferiores al intervalo de muestreo sin inventar CAD.
+ */
+function segmentPolygonPenetrations(sheet,scene,kind){
+ const polygon=kind==='punch'?scene.punchPolygon:scene.diePolygon;
+ const cross=(a,b)=>a.x*b.y-a.y*b.x,issues=[];
+ if(!Array.isArray(polygon)||polygon.length<3)return issues;
+ for(let segment=0;segment<sheet.length-1;segment++){
+  const a=sheet[segment],b=sheet[segment+1],r={x:b.x-a.x,y:b.y-a.y};
+  if(r.x*r.x+r.y*r.y<EPS)continue;
+  const cuts=[0,1];
+  for(let j=0;j<polygon.length;j++){
+   const c=polygon[j],d=polygon[(j+1)%polygon.length];
+   const s={x:d.x-c.x,y:d.y-c.y};
+   const denominator=cross(r,s);
+   if(Math.abs(denominator)<=EPS)continue; // tangentes paralelas o solapadas
+   const delta={x:c.x-a.x,y:c.y-a.y};
+   const t=cross(delta,s)/denominator,u=cross(delta,r)/denominator;
+   if(t>=-EPS&&t<=1+EPS&&u>=-EPS&&u<=1+EPS)
+    cuts.push(Math.max(0,Math.min(1,t)));
+  }
+  cuts.sort((x,y)=>x-y);
+  const unique=cuts.filter((t,i)=>i===0||t-cuts[i-1]>1e-9);
+  for(let i=0;i<unique.length-1;i++){
+   if(unique[i+1]-unique[i]<=1e-9)continue;
+   const u=(unique[i]+unique[i+1])/2;
+   const point={x:a.x+r.x*u,y:a.y+r.y*u};
+   if(!insidePolygon(point,polygon))continue;
+   const distanceToEdge=polygonDistance(point,polygon);
+   if(distanceToEdge<=EPS)continue; // contacto en el borde, sin penetración
+   issues.push({kind,category:'penetration',point,segment,
+    depth:distanceToEdge+scene.piece.thickness/2});
+  }
+ }
+ return issues;
+}
 function classifySample(sample,scene,kind){
  const {point:p,segment}=sample;
  const polygon=kind==='punch'?scene.punchPolygon:scene.diePolygon;
@@ -80,7 +122,8 @@ export function inspectSheetAgainstPolygon(sheet,polygon,thickness=2,kind='punch
  const scene={sheet,punchPolygon:polygon,diePolygon:polygon,stage:{activeBend},
   piece:{thickness}};
  const samples=sampleSheet(sheet,Math.max(.5,Math.min(3,thickness*.65)));
- return samples.map(sample=>classifySample(sample,scene,kind)).filter(Boolean);
+ return [...samples.map(sample=>classifySample(sample,scene,kind)).filter(Boolean),
+  ...segmentPolygonPenetrations(sheet,scene,kind)];
 }
 export function inspectToolContact(piece,instant=0){
  const scene=technicalScene(piece,instant),samples=sampleSheet(scene.sheet,
@@ -92,6 +135,9 @@ export function inspectToolContact(piece,instant=0){
    if(found)all.push(found);
   }
  }
+ // Detectar también penetraciones entre puntos muestreados, por ejemplo
+ // un perfil estrecho en un ala de varios metros.
+ for(const kind of ['punch','die'])all.push(...segmentPolygonPenetrations(scene.sheet,scene,kind));
  // Keep the deepest issue per tool and segment, avoiding dozens of repeated
  // warnings and huge per-frame DOM updates.
  const grouped=new Map();

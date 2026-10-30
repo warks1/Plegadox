@@ -37,3 +37,18 @@ test('escanea las cuatro operaciones en el orden real 1,2,4,3',()=>{
  assert.deepEqual(result.operations.map(x=>x.bend),[0,1,3,2]);
  assert.ok(result.operations.every(x=>x.samples===4&&x.verified===false));
 });
+
+test('detecta una penetración muy estrecha incluso en un ala de 10 metros',()=>{
+ // El muestreo antiguo separa los puntos unos 100 mm y no ve x=45..47.
+ const narrow=[point(45,-3),point(47,-3),point(47,3),point(45,3)];
+ const sheet=[point(-5000,0),point(5000,0)];
+ const conflicts=inspectSheetAgainstPolygon(sheet,narrow,2,'die');
+ assert.ok(conflicts.some(hit=>hit.category==='penetration'&&
+  hit.point.x>45&&hit.point.x<47), 'Detectar cruce entre muestras');
+});
+test('un roce tangencial no se clasifica como penetración de la fibra media',()=>{
+ const narrow=[point(45,-3),point(47,-3),point(47,3),point(45,3)];
+ const tangent=[point(-5000,3),point(5000,3)];
+ const conflicts=inspectSheetAgainstPolygon(tangent,narrow,2,'die');
+ assert.equal(conflicts.filter(hit=>hit.category==='penetration').length,0);
+});
