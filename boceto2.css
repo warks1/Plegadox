@@ -107,7 +107,13 @@ main{margin:0;max-width:none;width:calc(100% - 106px);flex:1;min-width:0;padding
 .cp-tool-card em{font-size:8px;color:#7facc8}
 .cp-tool-card.selected{border:2px solid #ff9b19;box-shadow:0 0 12px #ff871a66,inset 0 0 10px #a36b182b;background:linear-gradient(145deg,#173652,#092139)}
 .cp-tool-info{min-height:0;max-height:68px;overflow:auto;font-size:9px;padding:8px;margin-top:6px;line-height:1.35}
+.cp-library{position:relative}
+.cp-view-tool-button{padding:4px 6px;color:#72cbff;font-size:9px;border:1px solid #17496d;background:#0b2841;border-radius:5px;white-space:nowrap}
+.cp-view-tool-button:hover{color:#fff;background:#164a70}
 .cp-viewer-wrap{display:none!important}
+.cp-library.viewer-open .cp-viewer-wrap{display:block!important;position:absolute;z-index:12;left:8px;right:8px;bottom:8px;border-radius:9px;padding:9px;background:#041525f5;border:1px solid #26b0fc;box-shadow:0 0 22px #000c,0 0 8px #10a7ed66}
+.cp-viewer-header{font-size:10px;color:#7fd5ff;font-weight:750;margin-bottom:6px}
+.cp-library.viewer-open #cockpitSelectedTool3D{height:185px!important}
 .cockpit-bottom{display:grid;grid-template-columns:minmax(215px,1.13fr) minmax(130px,.72fr) minmax(270px,1.47fr) minmax(150px,.82fr) minmax(183px,1.03fr);gap:7px;margin-top:7px;height:235px}
 .cockpit-bottom>.card{padding:10px;min-height:0;overflow:hidden}
 .cockpit-bottom .cardhead{margin-bottom:5px}
