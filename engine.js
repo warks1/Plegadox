@@ -95,6 +95,40 @@ export function presentedForMachine(piece,fractions,activeBend){
          sign:p.angles[activeBend]<0?-1:1,
          label:flipped?'Presentar chapa volteada para pliegue negativo':'Presentación normal'};
 }
+/**
+ * Reorientación gráfica entre golpes sin deformar las longitudes de las alas.
+ * Se interpola un cambio de sistema de referencia rígido. Si hace falta
+ * voltear la pieza, su profundidad 3D se proyecta temporalmente en 2D.
+ * PREVISUALIZACIÓN: todavía no calcula brazos del operario ni trayectoria
+ * libre de colisiones de la chapa a través del espacio.
+ */
+export function presentedAtStage(piece,st){
+ const p=normalized(piece);
+ const current=presentedForMachine(p,st.fractions,st.activeBend);
+ if(st.phase!=='Reposicionamiento'||st.activeOperation>=p.order.length-1)
+  return {...current,repositioning:false,progress:0};
+ const pts=profile(p,st.fractions).points;
+ function frame(bend){
+  const pivot=pts[bend+1],before=pts[bend];
+  return {pivot,theta:Math.atan2(pivot.y-before.y,pivot.x-before.x),
+          flip:p.angles[bend]<0?-1:1,bend};
+ }
+ const old=frame(st.activeBend),next=frame(p.order[st.activeOperation+1]);
+ const sub=(st.time/5)%1;
+ const raw=clamp((sub-.84)/.16,0,1),u=raw*raw*(3-2*raw);
+ const angleDiff=Math.atan2(Math.sin(next.theta-old.theta),Math.cos(next.theta-old.theta));
+ const theta=old.theta+angleDiff*u;
+ const pivot={x:old.pivot.x+(next.pivot.x-old.pivot.x)*u,
+              y:old.pivot.y+(next.pivot.y-old.pivot.y)*u};
+ const flip=old.flip===next.flip?old.flip:old.flip*Math.cos(Math.PI*u);
+ const c=Math.cos(-theta),s=Math.sin(-theta);
+ const points=pts.map(pt=>{
+  const x=pt.x-pivot.x,y=pt.y-pivot.y;
+  return {x:x*c-y*s,y:(x*s+y*c)*flip};
+ });
+ return {points,flipped:flip<0,sign:next.flip,label:'Reposicionamiento ilustrativo',
+         repositioning:true,progress:u,nextBend:next.bend};
+}
 function cross(a,b,c){return (b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);}
 export function selfIntersects(points){
  for(let i=0;i<points.length-1;i++)for(let j=i+2;j<points.length-1;j++){
