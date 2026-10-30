@@ -1,6 +1,7 @@
 import {MATERIALS,DIES,PUNCHES,EXAMPLE,normalized,profile,bounds,development,stage,orientedForMachine,getTooling,selfIntersects,clamp,finite} from './engine.js';
 import {drawIndustrialMachine} from './machine-visual.js';
 import {registerCatalogue} from './catalog.js';
+import {analyzeSequence} from './validation.js';
 registerCatalogue(DIES,PUNCHES);
 const $=id=>document.getElementById(id);
 const storeKey='plegadox:piece:v1';
@@ -8,6 +9,12 @@ let piece=restore();
 let sim={playing:false,time:0,last:null,speed:1};
 let camera={yaw:-.62,pitch:.45,zoom:1};
 let machineView={panX:0,panY:0,zoom:1};
+const geometryCache={key:null,result:null};
+function geometryReport(){
+ const key=JSON.stringify([piece.flanges,piece.angles,piece.order,piece.thickness,piece.width,piece.punch,piece.die]);
+ if(key!==geometryCache.key){geometryCache.key=key;geometryCache.result=analyzeSequence(piece);}
+ return geometryCache.result;
+}
 const numbers=(n,d=1)=>Number(n).toLocaleString('es-ES',{maximumFractionDigits:d,minimumFractionDigits:d});
 function restore(){try{const saved=localStorage.getItem(storeKey);return normalized(saved?JSON.parse(saved):EXAMPLE);}catch{return normalized(EXAMPLE);}}
 function persist(){try{localStorage.setItem(storeKey,JSON.stringify(piece));}catch{}}
@@ -165,24 +172,25 @@ function renderToolCards(){
  const punches=$('punchCards');punches.replaceChildren(...PUNCHES.map(p=>{const b=document.createElement('button');b.className='tool'+(p.id===piece.punch?' selected':'');b.innerHTML='<b>'+p.name+'</b><span>Altura nominal '+p.height+' mm</span>';b.onclick=()=>changePiece({...piece,punch:p.id},true);return b;}));
 }
 function renderDevelopment(){
- const d=development(piece),p=profile(piece,piece.angles.map(()=>1)),interference=selfIntersects(p.points);
+ const d=development(piece),check=geometryReport();
  const items=[['Nominal',d.nominal],['Desarrollo',d.length],['Deducción total',d.totalBD],['Radio interior',d.radius]];
  $('devSummary').replaceChildren(...items.map(([name,val])=>{const el=document.createElement('div');el.className='result-item';const b=document.createElement('b');b.textContent=numbers(val,2)+' mm';const s=document.createElement('span');s.textContent=name;el.append(b,s);return el;}));
  $('devRows').replaceChildren(...d.perBend.map(b=>{const tr=document.createElement('tr');for(const val of [b.index+1,(b.angle>0?'+':'')+b.angle+'°',numbers(b.ba,2),numbers(b.bd,2)]){const td=document.createElement('td');td.textContent=val;tr.append(td);}return tr;}));
  const out=[['Alas',piece.flanges.length],['Pliegues',piece.angles.length],['L. nominal',numbers(d.nominal,1)+' mm']];
  $('geometrySummary').replaceChildren(...out.map(([name,val])=>{const e=document.createElement('div');e.className='stat';const b=document.createElement('b');b.textContent=String(val);const s=document.createElement('span');s.textContent=name;e.append(b,s);return e;}));
- $('validity').textContent=interference?'Revisar cruces':'Geometría calculada';
- $('validity').style.background=interference?'#fff1df':'#e6f5ef';
+ $('validity').textContent=check.hasGeometryWarning?'Revisar geometría 2D':'Perfil calculado · sin validación física';
+ $('validity').style.background=check.hasGeometryWarning?'#5b351b':'#173c54';
+ $('validity').style.color=check.hasGeometryWarning?'#ffd89c':'#b9e5ff';
 }
 function renderSimulationText(){
- const st=stage(piece,sim.time),a=piece.angles[st.activeBend];
+ const st=stage(piece,sim.time),a=piece.angles[st.activeBend],check=geometryReport();
  $('simStatus').textContent=st.phase;
  $('phaseText').textContent=st.completed?'Pieza final · secuencia completada':st.phase+' · pliegue '+(st.activeBend+1)+' ('+(a>0?'+':'')+a+'°)';
  $('stepText').textContent='Golpe '+st.finished+'/'+st.count;
  $('foldedCount').textContent=st.finished+' de '+st.count+' pliegues';
  $('timeline').value=Math.round(1000*st.time/st.duration);
  const root=$('simSequence');
- const key=JSON.stringify({order:piece.order,angles:piece.angles,flanges:piece.flanges});
+ const key=JSON.stringify({order:piece.order,angles:piece.angles,flanges:piece.flanges,issues:check.perOperation.map(x=>x.potentialInterference)});
  if(root.dataset.key!==key){
    root.dataset.key=key;
    root.replaceChildren(...piece.order.map((bend,i)=>{
@@ -197,6 +205,10 @@ function renderSimulationText(){
      const a=document.createElement('strong');a.textContent=(angle>0?'+':'')+angle+'°';
      const l=document.createElement('small');l.textContent='L = '+numbers(piece.flanges[bend+1],1)+' mm';
      values.append(a,l);const menu=document.createElement('span');menu.className='op-more';menu.textContent='⋮';
+     if(check.perOperation[i]?.potentialInterference){
+       el.classList.add('suspect');el.title='Posible interferencia geométrica 2D: comprobar antes de plegar';
+       const mark=document.createElement('span');mark.className='op-alert';mark.textContent='!';mark.setAttribute('aria-label','Advertencia geométrica');values.append(mark);
+     }
      el.append(n,visual,values,menu);
      el.addEventListener('click',()=>{sim.playing=false;sim.last=null;sim.time=i*5;paintAll();});
      return el;
@@ -207,6 +219,20 @@ function renderSimulationText(){
   el.classList.toggle('done',st.fractions[bend]>=1-1e-6);
   el.classList.toggle('current',!st.completed&&i===st.activeOperation);
   el.setAttribute('aria-current',String(!st.completed&&i===st.activeOperation));
+ }
+ const details=$('collisionDetails');
+ if(details){
+   const active=check.issues.filter(x=>x.bend===st.activeBend);
+   const main=active.length?active[0].message:check.summary;
+   const other=check.issues.filter(x=>x.code!=='provisional-tools'&&x.bend==null).slice(0,2).map(x=>x.message);
+   const messages=[main,...other];
+   const signature=JSON.stringify(messages);
+   if(details.dataset.signature!==signature){
+     details.dataset.signature=signature;
+     details.replaceChildren(...messages.map((m,i)=>{const line=document.createElement('p');line.textContent=(i?'• ':'')+m;return line;}));
+     details.title=check.limitations;
+   }
+   details.classList.toggle('has-warning',check.hasGeometryWarning);
  }
 }
 function paintAll(){drawProfile('finalCanvas',piece.angles.map(()=>1),true);drawMachine();drawProfile('progressCanvas',stage(piece,sim.time).fractions,false);drawScene();toolDrawing();renderDevelopment();renderToolCards();renderSimulationText();}
