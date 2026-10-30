@@ -231,15 +231,35 @@ function drawScene(){
  text(ctx,'PIEZA FINAL 3D · gira con el dedo',15,23,'#8ac7f6',12);text(ctx,'Anchura: '+numbers(piece.width,0)+' mm',w-14,h-15,'#648299',11,'right');
 }
 function toolDrawing(){
- const can=canvas2d('toolCanvas');if(!can)return;const {ctx,w,h}=can;drawGrid(ctx,w,h,36);
- const {die,punch}=getTooling(piece),scale=Math.min(h/220,w/260,2);
- const cx=w/2,cy=h*.54;
- const pt=(x,y)=>({x:cx+x*scale,y:cy-y*scale});
- function poly(arr,fill){ctx.beginPath();arr.map(([x,y])=>pt(x,y)).forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.fillStyle=fill;ctx.fill();ctx.strokeStyle='#405e70';ctx.lineWidth=2;ctx.stroke();}
- poly([[-36,105],[36,105],[28,48],[punch.tip/2,4],[-punch.tip/2,4],[-28,48]],'#9db0bc');
- poly([[-65,-3],[-die.opening/2,-3],[0,-3-die.opening*.45],[die.opening/2,-3],[65,-3],[65,-40],[-65,-40]],'#657d8d');
- const a=pt(-die.opening/2,-2),b=pt(die.opening/2,-2);line(ctx,[{x:a.x,y:a.y-10},{x:b.x,y:b.y-10}],'#e1a24e',2);
- text(ctx,'V'+die.opening+' mm',cx,cy+70*scale,'#3a6e8d',14,'center');text(ctx,punch.name,cx,26,'#526e83',13,'center');
+ const can=canvas2d('toolCanvas');if(!can)return;
+ const {ctx,w,h}=can;drawGrid(ctx,w,h,36);
+ const {die,punch}=getTooling(piece);
+ // La ficha y la vista de máquina comparten los mismos perfiles paramétricos.
+ const punchSection=sectionPunch(punch),dieSection=sectionDie(die);
+ const pPts=punchSection.points.map(([x,y])=>({x,y:y+14}));
+ const dPts=dieSection.points.map(([x,y])=>({x,y:y-dieSection.height}));
+ const all=[...pPts,...dPts],bb=bounds(all),spanX=Math.max(25,bb.maxX-bb.minX),
+       spanY=Math.max(80,bb.maxY-bb.minY);
+ const scale=Math.min((w-36)/spanX,(h-56)/spanY,3),
+       mx=(bb.minX+bb.maxX)/2,my=(bb.minY+bb.maxY)/2;
+ const pt=q=>({x:w/2+(q.x-mx)*scale,y:h/2-(q.y-my)*scale});
+ function drawPolygon(pts,fill,stroke){
+  const projected=pts.map(pt);
+  ctx.save();ctx.shadowBlur=8;ctx.shadowColor='#0008';
+  ctx.beginPath();projected.forEach((q,i)=>i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y));
+  ctx.closePath();
+  const grad=ctx.createLinearGradient(w*.33,0,w*.67,0);
+  grad.addColorStop(0,fill);grad.addColorStop(.43,'#dceaf1');grad.addColorStop(.7,fill);
+  ctx.fillStyle=grad;ctx.fill();ctx.strokeStyle=stroke;ctx.lineWidth=1.2;ctx.stroke();
+  ctx.restore();
+ }
+ drawPolygon(dPts,'#587c91','#b6e8ff');
+ drawPolygon(pPts,'#849bac','#d7f1ff');
+ const vLeft=pt({x:-die.opening/2,y:0}),vRight=pt({x:die.opening/2,y:0});
+ line(ctx,[{x:vLeft.x,y:vLeft.y-8},{x:vRight.x,y:vRight.y-8}],'#e1a24e',2);
+ text(ctx,'V'+die.opening+' / '+die.angle+'°',w/2,h-11,'#8bd3ff',12,'center');
+ text(ctx,punch.name,10,18,'#9ecfee',12);
+ text(ctx,'MODELO PARAMÉTRICO · NO CAD',w-9,18,'#c49b65',9,'right');
 }
 function renderToolCards(){
  const dies=$('dieCards');dies.replaceChildren(...DIES.map(d=>{const b=document.createElement('button');b.className='tool'+(d.id===piece.die?' selected':'');b.innerHTML='<b>'+d.name+'</b><span>Abertura '+d.opening+' mm</span>';b.onclick=()=>changePiece({...piece,die:d.id},true);return b;}));
