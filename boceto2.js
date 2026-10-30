@@ -84,6 +84,15 @@ function setup(){
  if(viewer)viewer.addEventListener('click',()=>{
   const panel=$('tab-simulacion').querySelector('.cp-library');
   const open=panel.classList.toggle('viewer-open');viewer.setAttribute('aria-expanded',String(open));viewer.textContent=open?'✕ CERRAR 3D':'◈ VER EN 3D';
+  if(open){requestAnimationFrame(()=>{
+   window.dispatchEvent(new Event('resize'));
+   document.querySelector('#closeTool3D')?.focus();
+  });}else viewer.focus();
+ });
+ document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&document.querySelector('.cp-library.viewer-open')){
+   e.preventDefault();viewer.click();
+  }
  });
  window.addEventListener('resize',()=>{lastDev='';drawDevelopment();});
  window.addEventListener('plegadox:pieceChanged',()=>{lastTop='';lastDims='';lastDev='';drawDevelopment();});
