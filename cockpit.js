@@ -58,15 +58,53 @@ function shape(tool,kind){
  return [[-22,44],[22,44],[22,14],[16,-5],[tip,-44],[-tip,-44],[-16,-5],[-22,14]];
 }
 function drawThumbnail(canvas,tool,kind){
- const w=canvas.clientWidth||100,h=canvas.clientHeight||60,d=Math.min(2,devicePixelRatio||1);
+ // Modelado paramétrico 2.5D: la silueta depende de la herramienta seleccionada.
+ // Ilustración, no CAD acotado ni documentación para mecanizado.
+ const w=canvas.clientWidth||100,h=canvas.clientHeight||65,d=Math.min(2,devicePixelRatio||1);
  canvas.width=Math.round(w*d);canvas.height=Math.round(h*d);
- const ctx=canvas.getContext('2d');ctx.setTransform(d,0,0,d,0,0);
- const silhouette=shape(tool,kind),maxX=Math.max(...silhouette.map(p=>Math.abs(p[0]))),maxY=Math.max(...silhouette.map(p=>Math.abs(p[1])));
- const scale=Math.min((w-20)/(maxX*2),(h-9)/(maxY*2));
- const xy=([x,y])=>({x:w/2+x*scale,y:h/2-y*scale});
- ctx.shadowBlur=10;ctx.shadowColor='#31a8fe44';
- const g=ctx.createLinearGradient(0,0,w,h);g.addColorStop(0,'#f1f7fd');g.addColorStop(.25,'#8bafc7');g.addColorStop(.6,'#53748c');g.addColorStop(1,'#d4e3eb');
- ctx.beginPath();silhouette.forEach((p,i)=>{const q=xy(p);i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y);});ctx.closePath();ctx.fillStyle=g;ctx.fill();ctx.shadowBlur=0;ctx.strokeStyle='#a8d8f8';ctx.lineWidth=1.2;ctx.stroke();
+ const ctx=canvas.getContext('2d');ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,w,h);
+ const silhouette=shape(tool,kind);
+ const maxX=Math.max(1,...silhouette.map(p=>Math.abs(p[0])));
+ const maxY=Math.max(1,...silhouette.map(p=>Math.abs(p[1])));
+ const extrusion=Math.max(4,Math.min(12,w*.12)),rise=extrusion*.64;
+ const scale=Math.min((w-12-extrusion)/(maxX*2),(h-8-rise)/(maxY*2));
+ const xx=w/2-extrusion*.32,yy=h/2+rise*.25;
+ const front=([x,y])=>({x:xx+x*scale,y:yy-y*scale});
+ const shift=p=>({x:p.x+extrusion,y:p.y-rise});
+ const polygon=(points,fill,stroke='#9abbd0',lw=.8)=>{
+  ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();
+  ctx.fillStyle=fill;ctx.fill();ctx.lineWidth=lw;ctx.strokeStyle=stroke;ctx.stroke();
+ };
+ const frontPoints=silhouette.map(front);
+ ctx.save();ctx.shadowColor='#000c';ctx.shadowBlur=11;ctx.shadowOffsetX=3;ctx.shadowOffsetY=5;
+ // Right side of extruded tool; make dark metal edges and brushed reflections.
+ for(let i=0;i<frontPoints.length;i++){
+  const next=(i+1)%frontPoints.length,a=frontPoints[i],b=frontPoints[next];
+  const edgeX=b.x-a.x;
+  const face=[a,b,shift(b),shift(a)];
+  const side=ctx.createLinearGradient(a.x,a.y,b.x+extrusion,b.y-rise);
+  if(edgeX>=0){side.addColorStop(0,'#bcd2df');side.addColorStop(.45,'#587991');side.addColorStop(1,'#182e42');}
+  else{side.addColorStop(0,'#647f92');side.addColorStop(.5,'#29485d');side.addColorStop(1,'#9bb6c7');}
+  polygon(face,side,'#2c536e',.9);
+ }
+ ctx.restore();
+ ctx.save();ctx.shadowColor='#000b';ctx.shadowBlur=5;
+ const steel=ctx.createLinearGradient(Math.min(...frontPoints.map(p=>p.x)),0,Math.max(...frontPoints.map(p=>p.x)),0);
+ steel.addColorStop(0,'#6b869b');steel.addColorStop(.14,'#dceaf2');steel.addColorStop(.29,'#8fa8ba');
+ steel.addColorStop(.46,'#eff7fa');steel.addColorStop(.66,'#5e7e91');steel.addColorStop(.87,'#c8dce8');steel.addColorStop(1,'#426179');
+ polygon(frontPoints,steel,'#cfe9f5',1.1);
+ ctx.restore();
+ // fine texture, contained in actual front profile
+ ctx.save();ctx.beginPath();frontPoints.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.clip();
+ ctx.globalAlpha=.14;
+ for(let i=0;i<Math.min(90,w);i+=2){
+  const x=w*i/Math.min(90,w);
+  ctx.strokeStyle=i%4===0?'#fff':'#16364a';ctx.lineWidth=.45;ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x+1,h);ctx.stroke();
+ }
+ ctx.restore();
+ // slot in generic tooling is a visual cue, not a manufacturer-specific feature
+ ctx.lineWidth=1;ctx.strokeStyle='#b4e8ff99';ctx.beginPath();
+ const p=frontPoints[0];ctx.moveTo(p.x,p.y);ctx.lineTo(p.x+extrusion,p.y-rise);ctx.stroke();
 }
 function drawToolViewer(){
  let canvas=$('cockpitSelectedTool3D');
