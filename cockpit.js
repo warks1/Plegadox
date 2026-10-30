@@ -3,7 +3,7 @@
 import {DIES,PUNCHES,MATERIALS,normalized,development,stage,getTooling} from './engine.js';
 import {CATALOG_SOURCES,toolMatchesBrand,selectionCompatibility} from './catalog.js';
 const $=id=>document.getElementById(id);
-const state={brand:'Todos',kind:'all',search:'',selectedTool:null,selectedToolKind:'punch',yaw:-.6,pitch:.34,zoom:1};
+const state={brand:'Todos',kind:'all',search:'',selectedTool:null,selectedToolKind:'punch',showAll:false,yaw:-.6,pitch:.34,zoom:1};
 const format=(n,d=1)=>Number(n).toLocaleString('es-ES',{minimumFractionDigits:d,maximumFractionDigits:d});
 function current(){const s=window.PLEGADOX_STATE?.();if(s)return s;let p=null;try{p=JSON.parse(localStorage.getItem('plegadox:piece:v1'));}catch{}return {piece:normalized(p),sim:{time:0}};}
 const kindList=()=>{
@@ -11,7 +11,21 @@ const kindList=()=>{
  const dies=DIES.map(tool=>({...tool,uiKind:'die'}));
  return state.kind==='all'?[...punches,...dies]:state.kind==='punch'?punches:dies;
 };
-function filtered(){return kindList().filter(t=>toolMatchesBrand(t,state.brand)&&(!state.search||[t.name,t.reference,t.id,t.mount,t.angle,t.opening,t.height].join(' ').toLowerCase().includes(state.search)));}
+function allMatches(){
+ return kindList().filter(t=>toolMatchesBrand(t,state.brand)&&
+ (!state.search||[t.name,t.reference,t.id,t.mount,t.angle,t.opening,t.height].join(' ').toLowerCase().includes(state.search)));
+}
+function filtered(){
+ const items=allMatches();
+ if(state.kind!=='all'||state.showAll||state.search)return items;
+ // Primera pantalla fiel al boceto: una fila de punzones y dos de matrices.
+ // Nunca elimina herramientas; los filtros y "Ver catálogo completo" dan acceso a todas.
+ let punches=0,dies=0;
+ return items.filter(tool=>{
+  if(tool.uiKind==='punch')return punches++<4;
+  return dies++<8;
+ });
+}
 function toolPicked(tool){
  const kind=tool.uiKind||(tool.opening!=null?'die':'punch');
  const sel=$(kind==='punch'?'punch':'die');
@@ -22,7 +36,14 @@ function renderCatalogue(){
  const p=current().piece;
  for(const b of document.querySelectorAll('#cpBrandTabs button')){b.classList.toggle('selected',b.dataset.brand===state.brand);b.setAttribute('aria-pressed',String(b.dataset.brand===state.brand));}
  for(const b of document.querySelectorAll('.cp-kind-tabs button')){b.classList.toggle('selected',b.dataset.kind===state.kind);b.setAttribute('aria-pressed',String(b.dataset.kind===state.kind));}
- const list=filtered();$('cpCatalogCount').textContent=list.length+' herramientas';
+ const all=allMatches(),list=filtered();
+ $('cpCatalogCount').textContent=list.length===all.length?all.length+' herramientas':list.length+' / '+all.length;
+ const expand=$('cpShowAllTools');
+ if(expand){
+  expand.hidden=state.kind!=='all'||!!state.search||list.length===all.length&&!state.showAll;
+  expand.textContent=state.showAll?'Mostrar selección inicial':'Ver catálogo completo';
+  expand.setAttribute('aria-expanded',String(state.showAll));
+ }
  const container=$('cockpitTools');container.replaceChildren();
  for(const tool of list){
    const kind=tool.uiKind || (tool.opening!=null?'die':'punch');
@@ -175,9 +196,10 @@ function refresh(){
 }
 function init(){
  if(!$('cockpitTools'))return;
- for(const button of document.querySelectorAll('#cpBrandTabs button'))button.addEventListener('click',()=>{state.brand=button.dataset.brand;state.selectedTool=null;renderCatalogue();});
- for(const button of document.querySelectorAll('.cp-kind-tabs button'))button.addEventListener('click',()=>{state.kind=button.dataset.kind;state.selectedTool=null;state.selectedToolKind=state.kind==='die'?'die':'punch';renderCatalogue();});
+ for(const button of document.querySelectorAll('#cpBrandTabs button'))button.addEventListener('click',()=>{state.brand=button.dataset.brand;state.selectedTool=null;state.showAll=false;renderCatalogue();});
+ for(const button of document.querySelectorAll('.cp-kind-tabs button'))button.addEventListener('click',()=>{state.kind=button.dataset.kind;state.selectedTool=null;state.selectedToolKind=state.kind==='die'?'die':'punch';state.showAll=false;renderCatalogue();});
  $('cpToolSearch').addEventListener('input',e=>{state.search=e.target.value.trim().toLowerCase();renderCatalogue();});
+ $('cpShowAllTools')?.addEventListener('click',()=>{state.showAll=!state.showAll;renderCatalogue();});
  for(const [id,tab] of [['jumpToProgramming','programacion'],['jumpToDevelopment','desarrollo']])$(id).addEventListener('click',()=>document.querySelector('[data-tab="'+tab+'"]').click());
  window.addEventListener('plegadox:pieceChanged',()=>{renderCatalogue();refresh();});
  window.addEventListener('resize',()=>renderCatalogue());
