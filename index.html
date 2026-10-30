@@ -1,14 +1,26 @@
 <!doctype html>
 <html lang="es"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#eaf2f7">
+<meta name="theme-color" content="#030d1a">
 <title>Plegadox · Control de plegado</title>
-<link rel="stylesheet" href="./styles.css"><link rel="stylesheet" href="./cockpit.css">
+<link rel="stylesheet" href="./styles.css"><link rel="stylesheet" href="./cockpit.css"><link rel="stylesheet" href="./boceto2.css">
 </head><body>
 <div id="app">
-<header class="topbar"><div class="brand"><div class="mark">PD</div><div><strong>PLEGADOX</strong><small>CONTROL DE PLEGADO · TRUMPF V85</small></div></div><div class="topright"><span id="clock" aria-label="Hora"></span><span class="machine-pill">V85 · 85 T</span><button id="saveBtn" class="blue-btn">Guardar pieza</button></div></header>
+<header class="topbar">
+<div class="header-logo"><span class="logo-title">PLEGADO<span>DO</span><em>X</em></span><small>PRECISIÓN EN CADA ÁNGULO</small></div>
+<div class="header-project"><span class="h-icon">▱</span><div class="h-content"><small>PROYECTO ACTUAL</small><strong id="topProject">Omega · ejemplo geométrico</strong></div></div>
+<div class="header-stats"><div><small>Material</small><strong id="topMaterial">Acero S235</strong></div><div><small>Espesor</small><strong id="topThickness">2,00 mm</strong></div><div><small>Ángulo</small><strong id="topAngle">+90°</strong></div><div><small>Apertura V</small><strong id="topV">16 mm</strong></div><div><small>Punzón</small><strong id="topPunch">Recto 88°</strong></div><div><small>Matriz</small><strong id="topDie">V16</strong></div></div>
+<div class="header-right"><div class="header-status"><span class="led">▶</span><span id="topState">Simulación lista</span></div><span id="clock" aria-label="Hora"></span><button id="saveBtn" class="header-icon-button" title="Guardar pieza" aria-label="Guardar pieza">▣</button></div>
+</header>
 <div class="shell">
-<nav class="sidebar" aria-label="Módulos"><button class="nav" data-tab="programacion"><span>▤</span> Programación</button><button class="nav active" data-tab="simulacion"><span>▶</span> Simulación</button><button class="nav" data-tab="herramientas"><span>⌁</span> Herramientas</button><button class="nav" data-tab="desarrollo"><span>▱</span> Desarrollo</button><button class="nav" data-tab="maquina"><span>⚙</span> Máquina</button><div class="sidebar-foot">PLEGADOX v0.1<br>Proyecto independiente<br>© AMS</div></nav>
+<nav class="sidebar" aria-label="Módulos">
+<button class="nav active" data-tab="simulacion"><span class="nav-picto">▤</span><span>PROGRAMA</span></button>
+<button class="nav" data-tab="programacion"><span class="nav-picto">▧</span><span>EDITAR PIEZA</span></button>
+<button class="nav" data-tab="herramientas"><span class="nav-picto">⚒</span><span>HERRAMIENTAS</span></button>
+<button class="nav" data-tab="desarrollo"><span class="nav-picto">▱</span><span>DESARROLLO</span></button>
+<button class="nav" data-tab="maquina"><span class="nav-picto">⚙</span><span>MÁQUINA</span></button>
+<div class="nav-spacer"></div><button class="side-action" id="sideSave" title="Guardar pieza">▣<span>GUARDAR</span></button><button class="side-action" id="sideImport" title="Importar pieza JSON">⇧<span>IMPORTAR</span></button><div class="nav-version">AMS · PLEGADOX v0.3</div>
+</nav>
 <main>
 <section class="panel" id="tab-programacion">
 <div class="page-title"><div><h1>Programación de pieza</h1><p>Introduce las alas, el sentido real de cada pliegue y el orden de fabricación.</p></div><div class="actions"><button id="newBtn">Nueva pieza</button><button id="loadBtn">Importar JSON</button><button id="exportBtn">Exportar JSON</button><input type="file" id="fileInput" accept=".json,application/json" hidden></div></div>
@@ -18,37 +30,48 @@
 <article class="card"><div class="cardhead"><h2>Orden de plegado</h2><span class="smalllabel">Pulsa un pliegue para subirlo o bajarlo en la secuencia</span></div><div id="sequence" class="sequence"></div><p class="hint">La secuencia de operaciones no cambia el signo de cada pliegue. La forma final se obtiene aplicando únicamente los golpes ejecutados.</p></article>
 </section>
 <section class="panel active cockpit-page" id="tab-simulacion">
-<div class="cockpit-banner"><div class="cp-title"><span class="cp-kicker">CENTRO DE PLEGADO · PROYECTO INDEPENDIENTE</span><h1>Simulación industrial</h1><p>Vista realista de trabajo · secuencia editable · desarrollo integrado</p></div><div class="cp-meta"><div><small>PIEZA ACTUAL</small><strong id="cockpitPieceName">Omega</strong></div><div><small>MATERIAL</small><strong id="cockpitMaterial">S235</strong></div><div><small>ESPESOR</small><strong id="cockpitThickness">2,00 mm</strong></div><div><small>ÁNGULO ACTUAL</small><strong id="cockpitAngle">+90°</strong></div><div><small>MATRIZ</small><strong id="cockpitDie">V16</strong></div><span class="cp-ready" id="cockpitReady">● Simulación preparada</span></div></div>
+<div class="cockpit-banner">
+<div class="cp-title"><span class="cp-kicker">PLEGADOX / CONTROL INDUSTRIAL</span><h1>Simulación de plegado</h1><p>TRUMPF V85 · Vista lateral · Programa de pieza</p></div>
+<div class="cp-meta"><div><small>PIEZA ACTUAL</small><strong id="cockpitPieceName">Omega</strong></div><div><small>MATERIAL</small><strong id="cockpitMaterial">S235</strong></div><div><small>ESPESOR</small><strong id="cockpitThickness">2,00 mm</strong></div><div><small>ÁNGULO</small><strong id="cockpitAngle">+90°</strong></div><div><small>MATRIZ</small><strong id="cockpitDie">V16</strong></div><span class="cp-ready" id="cockpitReady">● Simulación preparada</span></div>
+</div>
 <div class="cockpit-main">
 <aside class="card cp-operations">
-<div class="cardhead"><h2>SECUENCIA DE PLEGADO</h2><span class="smalllabel">Orden real</span></div>
+<div class="cardhead"><h2>SECUENCIA DE PLEGADO</h2><span class="head-dots">⌃</span></div>
 <div id="simSequence" class="op-list"></div>
-<div class="cp-help">Los números indican la secuencia de golpes. Los signos + y − se conservan.</div>
-<div class="cp-actions"><button id="jumpToProgramming">Editar secuencia</button><button id="jumpToDevelopment">Ver desarrollo</button></div>
+<div class="cp-actions"><button id="jumpToProgramming">✎ Editar secuencia</button><button id="jumpToDevelopment">⌗ Desarrollo</button></div>
+<div class="cp-help">Pulsa una operación para verla. Los signos +90° y −90° conservan su sentido.</div>
 </aside>
 <article class="card cp-simulation">
-<div class="cardhead"><h2>SIMULACIÓN 2D · MÁQUINA</h2><span id="simStatus" class="tag">Preparado</span></div>
-<div class="cp-machine-frame"><canvas id="machineCanvas" class="canvas machine" aria-label="Vista de perfil punzón matriz topes y chapa"></canvas>
-<div class="cp-overlay cp-overlay-left"><span id="cpPunchLabel">Punzón</span><span id="cpDieLabel">Matriz</span></div>
-<div class="cp-overlay cp-overlay-right"><span>TRUMPF V85</span><span id="cpCurrentAngle">+90°</span></div></div>
-<div class="cp-player"><div class="controls"><button id="playBtn" class="blue-btn">▶ Reproducir</button><button id="pauseBtn">Ⅱ Pausar</button><button id="stepBtn">Siguiente golpe</button><button id="restartBtn">↺ Reiniciar</button><label class="speed">Velocidad <select id="speed"><option value=".5">0,5×</option><option value="1" selected>1×</option><option value="1.5">1,5×</option><option value="2">2×</option></select></label></div><input id="timeline" type="range" min="0" max="1000" value="0" aria-label="Avance de la simulación"><div class="status-row"><span id="phaseText">Chapa plana · lista para plegar</span><span id="stepText">Golpe 0/4</span></div></div>
+<div class="cp-machine-frame">
+<canvas id="machineCanvas" class="canvas machine" aria-label="Cinemática de punzón, matriz, tope y chapa"></canvas>
+<div class="cp-machine-floats" aria-hidden="true">
+<div class="cp-float-tool"><strong>PUNZÓN</strong><svg viewBox="0 0 90 94"><defs><linearGradient id="mgt" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#e5f5ff"/><stop offset=".34" stop-color="#708c9d"/><stop offset=".6" stop-color="#cedde7"/><stop offset="1" stop-color="#566d80"/></linearGradient></defs><path fill="url(#mgt)" stroke="#e1edf9" stroke-width="1" d="M21 10H70V42L47 88L44 94L41 88L21 44Z"/></svg><span id="cpPunchLabel">Punzón</span></div>
+<div class="cp-float-tool"><strong>MATRIZ</strong><svg viewBox="0 0 90 94"><defs><linearGradient id="mgd" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d0e1eb"/><stop offset=".4" stop-color="#758d9e"/><stop offset="1" stop-color="#2d485e"/></linearGradient></defs><path fill="url(#mgd)" stroke="#abcadd" stroke-width="1" d="M8 20H32L45 60L58 20H82V87H8Z"/><path d="M32 20L45 60L58 20" fill="none" stroke="#06172a" stroke-width="5"/></svg><span id="cpDieLabel">Matriz</span></div>
+</div>
+<div class="cp-floating-options"><span>VISTA LATERAL</span><button id="machineZoomIn" title="Acercar máquina" aria-label="Acercar máquina">⌕ +</button><button id="machineZoomOut" title="Alejar máquina" aria-label="Alejar máquina">⌕ −</button><button id="machineReset" title="Centrar máquina" aria-label="Centrar máquina">⊞</button><button id="machineView3D" title="Mostrar pieza tridimensional" aria-label="Mostrar pieza tridimensional">▧</button></div>
+<div class="cp-overlay cp-overlay-right"><span id="simStatus" class="tag">Preparado</span><span id="cpCurrentAngle">+90°</span></div>
+</div>
+<div class="cp-player"><div class="controls"><button id="playBtn" class="blue-btn" aria-label="Reproducir">▶</button><button id="pauseBtn" aria-label="Pausar">Ⅱ</button><button id="stepBtn" aria-label="Siguiente golpe">⏭</button><button id="restartBtn" aria-label="Reiniciar">↺</button><input id="timeline" type="range" min="0" max="1000" value="0" aria-label="Progreso del plegado"><label class="speed">Velocidad <select id="speed"><option value=".5">0,5×</option><option value="1" selected>1×</option><option value="1.5">1,5×</option><option value="2">2×</option></select></label></div><div class="status-row"><span id="phaseText">Chapa plana · lista para plegar</span><span id="stepText">Golpe 0/4</span></div></div>
 </article>
 <aside class="card cp-library">
 <div class="cardhead"><h2>BIBLIOTECA DE HERRAMIENTAS</h2><span id="cpCatalogCount" class="smalllabel">—</span></div>
 <div id="cpBrandTabs" class="cp-brand-tabs" role="group" aria-label="Fabricante"><button data-brand="Trumpf" class="selected" type="button">Trumpf</button><button data-brand="Amada" type="button">Amada</button><button data-brand="Bystronic" type="button">Bystronic</button><button data-brand="Genéricos" type="button">Genéricos</button></div>
-<input id="cpToolSearch" placeholder="Buscar referencia, ángulo, V..." aria-label="Buscar herramientas">
+<div class="cp-search-row"><input id="cpToolSearch" placeholder="⌕ Buscar herramienta..." aria-label="Buscar herramientas"></div>
 <div class="cp-kind-tabs"><button class="selected" data-kind="punch" type="button">Punzones</button><button data-kind="die" type="button">Matrices</button></div>
 <div id="cockpitTools" class="cp-tool-grid"></div>
 <div id="cockpitToolInfo" class="cp-tool-info">Selecciona una herramienta para ver su referencia y medidas.</div>
 </aside></div>
 <div class="cockpit-bottom">
-<article class="card cp-piece"><div class="cardhead"><h2>VISTA DE PIEZA · PLEGADO ACTUAL</h2><span id="foldedCount" class="smalllabel">0 pliegues</span></div><canvas id="progressCanvas" class="canvas stage" aria-label="Pieza parcialmente plegada"></canvas><div class="legend"><span><i class="dot steel"></i>Chapa</span><span><i class="dot punch"></i>Punzón</span><span><i class="dot die"></i>Matriz</span><span><i class="dot gauge"></i>Tope</span></div></article>
-<article class="card cp-3d"><div class="cardhead"><h2>PIEZA 3D · VISTA ORBITAL</h2><span class="smalllabel">Arrastra o pellizca para girar y ampliar</span></div><canvas id="sceneCanvas" class="canvas scene" aria-label="Vista 3D pieza plegada"></canvas><div class="inline-actions"><button id="viewIsometric">Isométrica</button><button id="viewFront">Perfil</button><button id="zoomIn">+ Zoom</button><button id="zoomOut">− Zoom</button></div></article>
-<article class="card cp-information"><div class="cardhead"><h2>RESULTADOS DE FABRICACIÓN</h2></div><div id="cockpitResults" class="cp-results"></div><div id="cockpitCompatibility" class="cp-compatibility"></div><p class="cp-disclaimer">Geometría y desarrollo orientativos. No hay validación de colisiones, carga ni compatibilidad del amarre.</p></article>
+<article class="card cp-product-card"><div class="cardhead"><h2>VISTA PIEZA FINAL</h2><span class="cp-indicator">◈ 3D</span></div><canvas id="sceneCanvas" class="canvas scene" aria-label="Pieza terminada vista 3D"></canvas><div class="inline-actions cp-camera-buttons"><button id="viewIsometric">Isométrica</button><button id="viewFront">Perfil</button><button id="zoomIn">+</button><button id="zoomOut">−</button></div></article>
+<article class="card cp-dimensions-card"><div class="cardhead"><h2>DIMENSIONES (mm)</h2></div><div id="cpDimensions" class="cp-dimension-list"></div><div class="cp-current-label">PERFIL ACTUAL</div><canvas id="progressCanvas" class="canvas stage" aria-label="Perfil de pieza en curso"></canvas><span id="foldedCount" class="smalllabel">0 pliegues</span></article>
+<article class="card cp-development-card"><div class="cardhead"><h2>DESARROLLO</h2></div><canvas id="developmentCanvas" class="canvas" aria-label="Vista del desarrollo plano de la pieza"></canvas><div class="cp-dev-total" id="cpDevTotal">Estimación de longitud desarrollada</div></article>
+<article class="card cp-information"><div class="cardhead"><h2>INFORMACIÓN</h2></div><div id="cockpitResults" class="cp-results"></div></article>
+<article class="card cp-checks"><div class="cardhead"><h2>COMPROBACIONES</h2></div><div id="cockpitCompatibility" class="cp-compatibility">Geometría provisional: revisar amarre y colisiones reales.</div><div class="cp-check-list"><span>◉ Signo ± aplicado</span><span>◉ Orden secuencial</span><span>◌ Colisiones físicas pendientes</span><span>◌ Fuerza sin verificar</span></div><button class="cp-run-primary" id="cpStartButton">▶ INICIAR SIMULACIÓN</button></article>
 </div>
+<p class="cp-disclaimer">DEMOSTRACIÓN GEOMÉTRICA · No controla la máquina. El cálculo de desarrollo, tonelaje, colisiones y compatibilidad de utillaje requieren validación física.</p>
 </section>
 <section class="panel" id="tab-herramientas"><div class="page-title"><div><h1>Biblioteca de herramientas</h1><p>Selección inicial de punzones y matrices paramétricos. Catálogos oficiales pendientes de incorporar.</p></div></div><div class="twocol"><article class="card"><h2>Matrices</h2><div id="dieCards" class="toolcards"></div></article><article class="card"><h2>Punzones</h2><div id="punchCards" class="toolcards"></div></article></div><article class="card"><h2>Perfil de herramientas seleccionadas</h2><canvas id="toolCanvas" class="canvas tools"></canvas><p class="hint">Representación genérica de geometría nominal. No equivale a un perfil acotado de fabricante ni permite certificar colisiones todavía.</p></article></section>
 <section class="panel" id="tab-desarrollo"><div class="page-title"><div><h1>Desarrollo de chapa</h1><p>Estimación de fibra neutra, radios y deducciones según material y herramienta.</p></div></div><div class="formgrid"><label>Factor K (editable)<input type="number" id="kFactor" min=".15" max=".6" step=".01"></label><label>Radio interior (mm)<input type="number" id="insideRadius" min=".1" max="100" step=".1"></label><label>Criterio de cota<select id="datum"><option value="outside">Cotas exteriores teóricas</option><option value="neutral">Longitud sobre fibra neutra</option></select></label></div><div class="twocol"><article class="card"><h2>Resultado estimado</h2><div id="devSummary" class="big-result"></div></article><article class="card"><h2>Detalle por pliegue</h2><div class="table-scroll"><table class="edit-table"><thead><tr><th>Pliegue</th><th>Ángulo</th><th>BA</th><th>BD</th></tr></thead><tbody id="devRows"></tbody></table></div></article></div><p class="warn">Los valores de radio, K, recuperación y deducción son aproximaciones iniciales. Deben contrastarse con probetas reales, tablas de herramienta y mediciones antes de fabricar.</p></section>
 <section class="panel" id="tab-maquina"><div class="page-title"><div><h1>Configuración de máquina</h1><p>Perfil basado en las fotografías del control de la Trumpf V85.</p></div></div><div class="twocol"><article class="card"><h2>Trumpf V85</h2><div class="specgrid"><span>Fuerza nominal</span><b>85 T</b><span>Anchura trancha</span><b>2040 mm</b><span>Anchura portaherramientas</span><b>2040 mm</b><span>Origen trancha</span><b>0 mm</b><span>Origen portaherramientas</span><b>0 mm</b><span>Trancha L1</span><b>1340 mm</b><span>Trancha L2 / L3</span><b>28 / 2 mm</b><span>Trancha L4 / L5</span><b>25,40 / 20 mm</b><span>Trancha L6 / L7</span><b>30 / 125 mm</b><span>Trancha L8 / L9 / L10</span><b>20 / 39 / 28 mm</b></div></article><article class="card"><h2>Mesa y topes</h2><div class="specgrid"><span>Mesa L1 / L2</span><b>820 / 80 mm</b><span>Mesa L3 / L4</span><b>25,25 / 25,25 mm</b><span>Mesa L5 / L6 / L7</span><b>50 / 20 / 20 mm</b><span>Tope Stop L1 / L2</span><b>70 / 100 mm</b><span>Tope Stop L3 / L4 / L5</span><b>18 / 25 / 12 mm</b><span>Tope Support L3</span><b>8 mm</b><span>Tope Support L6</span><b>8 mm</b><span>Distancia preferida</span><b>80 %</b></div></article></div><p class="warn">Las cotas se han transcrito de las fotografías proporcionadas. La cinemática es una simulación geométrica de formación, no un control numérico de máquina. Ninguna animación sustituye las protecciones ni la verificación de colisiones físicas.</p></section>
 </main></div><footer>PLEGADOX · Software de plegado · © AMS · Motor geométrico de demostración, sin conexión a la máquina</footer></div>
-<script type="module" src="./app.js"></script><script type="module" src="./cockpit.js"></script></body></html>
+<script type="module" src="./app.js"></script><script type="module" src="./cockpit.js"></script><script type="module" src="./boceto2.js"></script></body></html>
