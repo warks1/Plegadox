@@ -75,12 +75,15 @@ export function drawTechnicalSection(ctx,w,h,piece,sim,view={}){
  ctx.save();
  const bg=gradient(ctx,0,0,w,h,[[0,'#071c2f'],[.45,'#0d3046'],[1,'#061322']]);
  ctx.fillStyle=bg;ctx.fillRect(0,0,w,h);
- const bounds=result.world,padW=Math.max(45,w*.08),padH=Math.max(36,h*.1);
+ // En móvil la fila de mandos ocupa la parte inferior del visor.
+ // Se resta esa franja ANTES de ajustar la escala, evitando cortar la matriz.
+ const controlsReserve=w<500?67:0,drawHeight=h-controlsReserve;
+ const bounds=result.world,padW=Math.max(28,w*.07),padH=Math.max(30,drawHeight*.095);
  const xRange=Math.max(60,bounds.maxX-bounds.minX),yRange=Math.max(100,bounds.maxY-bounds.minY);
- const scale=Math.max(.08,Math.min((w-padW*2)/xRange,(h-padH*2)/yRange))*(view.zoom||1);
+ const scale=Math.max(.08,Math.min((w-padW*2)/xRange,(drawHeight-padH*2)/yRange))*(view.zoom||1);
  const mx=(bounds.minX+bounds.maxX)/2,my=(bounds.minY+bounds.maxY)/2;
  const map=pt=>({x:w*.5+(pt.x-mx)*scale+(view.panX||0),
-  y:h*.5-(pt.y-my)*scale+(view.panY||0)});
+  y:drawHeight*.5-(pt.y-my)*scale+(view.panY||0)});
  const poly=pts=>pts.map(map),origin=map(mPoint(0,0));
  // 10 mm metric grid. Draw only the visible grid; no browser zoom.
  const step=10;ctx.save();ctx.lineWidth=.55;ctx.strokeStyle='#83b2d920';
@@ -128,9 +131,16 @@ export function drawTechnicalSection(ctx,w,h,piece,sim,view={}){
   ctx.fillStyle=fill;ctx.fillRect(x,y-13,width,20);
   drawLabel(ctx,text,x+8,y+1,'#f2f9ff',11);
  };
- badge('PUNZÓN '+d.punchAngle+'°',9,22,'#315878de');
- badge('MATRIZ V'+d.opening+' / '+d.dieAngle+'°',9,49,'#1a5a69db');
- if(w>=400)badge('CHAPA '+d.thickness+' mm',9,76,'#7c531cdb');
+ if(w<500){
+  // Fichas reducidas sin tapar la cabeza del punzón en pantallas estrechas.
+  badge('P '+d.punchAngle+'°',9,17,'#315878de');
+  badge('V'+d.opening+'/'+d.dieAngle+'°',9,39,'#1a5a69db');
+  badge('e '+d.thickness+' mm',9,61,'#7c531cdb');
+ }else{
+  badge('PUNZÓN '+d.punchAngle+'°',9,22,'#315878de');
+  badge('MATRIZ V'+d.opening+' / '+d.dieAngle+'°',9,49,'#1a5a69db');
+  badge('CHAPA '+d.thickness+' mm',9,76,'#7c531cdb');
+ }
  drawLabel(ctx,st.phase+' · pliegue '+(st.activeBend+1),w-11,18,'#d6eefb',11,'right');
  // En móvil se reserva una banda inferior para los mandos táctiles:
  // ni la escala ni la advertencia quedan debajo de los botones.
