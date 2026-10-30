@@ -48,10 +48,18 @@ test('el orden 1-2-4-3 se mantiene y ningún aviso es aprobación',()=>{
 });
 
 test('un cuadrado que sólo cierra sobre el extremo inicial es CONTACTO, no CRUCE',()=>{
- const shape={flanges:[50,50,50,50],angles:[120,120,120],order:[0,1,2],thickness:2};
+ const shape={flanges:[50,50,50,50],angles:[90,90,90],order:[0,1,2],thickness:2};
  const frame=inspectSheetFrame(shape,15);
  assert.ok(frame.issues.some(i=>i.kind==='touch'));
  assert.equal(frame.hasCross,false);
  assert.equal(frame.hasNear,true);
  assert.match(describeSheetIssue(frame.issues.find(i=>i.kind==='touch')),/CONTACTO PUNTUAL/);
+});
+
+test('el regreso sobre un tramo previo se clasifica como solapamiento colineal',()=>{
+ const shape={flanges:[50,50,50,50],angles:[120,120,120],order:[0,1,2],thickness:2};
+ const frame=inspectSheetFrame(shape,15);
+ assert.equal(frame.hasCross,true);
+ assert.ok(frame.issues.some(x=>x.kind==='overlap'));
+ assert.match(describeSheetIssue(frame.issues.find(x=>x.kind==='overlap')),/SOLAPAMIENTO/);
 });

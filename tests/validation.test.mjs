@@ -152,7 +152,7 @@ test('identifica el tipo correcto en perfiles sin alas consecutivas',()=>{
  assert.ok(overlapping.some(i=>i.kind==='overlap'&&i.segments[0]===0&&i.segments[1]===3));
 });
 test('informe final etiqueta el contacto puntual sin llamarlo cruce',()=>{
- const shape={flanges:[50,50,50,50],angles:[120,120,120],order:[0,1,2],thickness:2};
+ const shape={flanges:[50,50,50,50],angles:[90,90,90],order:[0,1,2],thickness:2};
  const report=analyzeSequence(shape);
  assert.ok(report.issues.some(i=>i.code==='final-touch'));
  assert.ok(!report.issues.some(i=>i.code==='final-cross'));
