@@ -9,7 +9,7 @@ export function sectionPunch(tool={}){
  const radius=Math.max(.25,Number(tool.tip)||.8);
  const halfTop=22,halfTip=Math.min(halfTop*.4,radius*.5);
  const taperHeight=(halfTop-halfTip)/Math.tan(angle*Math.PI/360);
- const bodyBottom=Math.max(4,height-taperHeight);
+ const bodyBottom=Math.min(height-4,taperHeight);
  let points;
  if(tool.type==='cabra'){
   const clearance=Math.min(height*.42,48);
