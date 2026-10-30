@@ -60,6 +60,7 @@ try {
   assert.equal(await page.evaluate(()=>window.PLEGADOX_STATE().piece.die),'rolleri-tmr100-16-30');
   await page.locator('#die').selectOption('v16-30');
   assert.equal(await page.evaluate(()=>window.PLEGADOX_STATE().piece.die),'v16-30');
+  await page.locator('[data-tab="simulacion"]').click();
   await page.locator('#machineSection').click();
   assert.equal(await page.locator('#machineSection').getAttribute('aria-pressed'),'true');
   const overflow=await page.evaluate(()=>({sw:document.documentElement.scrollWidth,vw:innerWidth}));
