@@ -46,6 +46,30 @@ Se implementó la disposición oscura elegida: **secuencia de plegado a la izqui
 - **Máquina:** cotas de Trumpf V85 de las fotografías, trancha de 2040 mm, mesa y topes.
 - **Datos:** guardar en dispositivo, importar/exportar piezas en JSON.
 
+## Mejoras de plegado realista (v0.9)
+
+El modelo `bend-contact.js` coordina la visualización de la chapa en V
+usando una sola escala en milímetros, **dos hombros de apoyo**, un centro
+que desciende con la punta del punzón y una transición redondeada en el
+vértice. En la retirada se conserva la forma plegada; la chapa se separa
+de la matriz mientras el punzón vuelve a subir. Se limita la profundidad
+de dibujo para no atravesar el vértice de la V representada. Ambas
+vistas, **cabina industrial** y **sección técnica**, comparten las mismas
+posiciones de chapa/punzón/matriz.
+
+No es un modelo de deformación plástica FEM. El radio que se visualiza es
+una aproximación paramétrica, no una curva certificada. Es necesario
+contar con contornos CAD completos, contactos reales, condiciones de
+sujeción y datos de material calibrados para predecir colisiones y
+deformación con fiabilidad industrial.
+
+La biblioteca también incluye la referencia de **pata de cabra
+50 × 100 mm, R1**, basada en la fotografía facilitada por el usuario.
+El escote ha sido trazado proporcionalmente a la imagen. Solo se tratan
+como datos confirmados esas tres cotas visibles. El ángulo asignado para
+la representación es orientativo y debe comprobarse antes de usar el
+modelo en una comprobación real.
+
 ## Configuración Trumpf V85 y V16/30° (actualización)
 
 El módulo **Máquina** ahora permite **editar de verdad** todos los valores de
