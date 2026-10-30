@@ -1,0 +1,158 @@
+// Plegadox · editor funcional de las cotas de Cybelec 30a / 29.
+// Las dimensiones editadas también actualizan la máquina dibujada en cabina.
+import {V85_FACTORY,getV85,updateV85,resetV85,gaugeOutline} from './machine-config.js';
+
+const $=id=>document.getElementById(id);
+const locale=n=>Number(n).toLocaleString('es-ES',{minimumFractionDigits:0,maximumFractionDigits:2});
+const groups=[
+ {id:'machineRamFields',part:'ram',labels:Array.from({length:10},(_,i)=>'L'+(i+1)),extra:[
+  ['ramWidth','Ancho trancha'],['holderWidth','Ancho portaútil'],
+  ['ramOrigin','Origen trancha'],['holderOrigin','Origen portaútil'],
+  ['toolWorkingDistance','Distancia de trabajo']]},
+ {id:'machineBedFields',part:'bed',labels:Array.from({length:7},(_,i)=>'L'+(i+1))},
+ {id:'machineStopFields',part:'stop',labels:Array.from({length:6},(_,i)=>'L'+(i+1)),
+  extra:[['stopL6Max','L6 máximo'],['stopL6Min','L6 mínimo'],['stopOx','Ox'],['stopOz','Oz']]},
+ {id:'machineSupportFields',part:'support',labels:Array.from({length:6},(_,i)=>'L'+(i+1)),
+  extra:[['supportL6Max','L6 máximo'],['supportL6Min','L6 mínimo'],
+   ['supportOx','Ox'],['supportOz','Oz'],['preferredDistance','Distancia preferida (%)']]}
+];
+let dirty=false;
+function control(label,value,path){
+ const holder=document.createElement('label');holder.className='machine-number-field';
+ const title=document.createElement('span');title.textContent=label;
+ const input=document.createElement('input');
+ input.type='number';input.step='0.01';input.inputMode='decimal';
+ input.value=String(value);
+ input.dataset.path=path;
+ input.setAttribute('aria-label',label+(path.includes('.')?' de '+path.split('.')[0]:'')+' en '+(label.includes('%')?'porcentaje':'milímetros'));
+ input.addEventListener('change',()=>{
+  const next=getV85();
+  const n=Number(input.value.replace(',','.'));
+  if(!Number.isFinite(n)){render();return;}
+  const parts=path.split('.');
+  if(parts.length===2){
+   const key=parts[0],index=Number(parts[1]);next[key][index]=n;
+  }else next[parts[0]]=n;
+  updateV85(next);dirty=true;render();
+  const state=$('machineSaveState');
+  if(state)state.textContent='Configuración guardada en este dispositivo. Comprueba las cotas antes de trabajar.';
+ });
+ holder.append(title,input);return holder;
+}
+function fields(){
+ const cfg=getV85();
+ for(const group of groups){
+  const box=$(group.id);if(!box)continue;
+  box.replaceChildren();
+  for(let i=0;i<group.labels.length;i++)
+   box.append(control(group.labels[i],cfg[group.part][i],group.part+'.'+i));
+  for(const [key,label] of group.extra||[])
+   box.append(control(label,cfg[key],key));
+ }
+}
+function roundedRect(ctx,x,y,w,h,r){
+ ctx.beginPath();ctx.roundRect(x,y,w,h,r);
+}
+function label(ctx,text,x,y,size=11,color='#b9ddf2',align='left'){
+ ctx.fillStyle=color;ctx.font='600 '+size+'px system-ui';ctx.textAlign=align;ctx.fillText(text,x,y);
+}
+function arrow(ctx,a,b,color='#91d7ff'){
+ ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);
+ ctx.strokeStyle=color;ctx.lineWidth=1;ctx.stroke();
+}
+function gaugeCanvas(ctx,w,h,cfg,key){
+ const values=cfg[key],outline=gaugeOutline(values),maxX=Math.max(values[1],1),
+   maxY=Math.max(values[3],1);
+ const pad=46,s=Math.min((w-2*pad)/maxX,(h-2*pad)/maxY);
+ const xy=p=>({x:pad+p.x*s,y:pad+maxY*s+p.y*s});
+ ctx.save();
+ ctx.beginPath();outline.forEach((p,i)=>{const q=xy(p);i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y);});
+ ctx.closePath();const g=ctx.createLinearGradient(pad,0,pad+maxX*s,h);
+ g.addColorStop(0,'#b4d8e5');g.addColorStop(.45,'#31556a');g.addColorStop(1,'#163249');
+ ctx.fillStyle=g;ctx.fill();ctx.strokeStyle='#bfe9fa';ctx.lineWidth=2;ctx.stroke();
+ const x0=pad,x1=pad+values[0]*s,x2=pad+values[1]*s;
+ const yy=pad+maxY*s;
+ arrow(ctx,{x:x0,y:yy+16},{x:x2,y:yy+16});
+ label(ctx,'L2 '+locale(values[1]),(x0+x2)/2,yy+30,10,'#8edbfa','center');
+ arrow(ctx,{x:x0,y:pad-16},{x:x1,y:pad-16});
+ label(ctx,'L1 '+locale(values[0]),(x0+x1)/2,pad-20,10,'#8edbfa','center');
+ label(ctx,'L3 '+locale(values[2]),Math.max(pad,w-8),pad+24,10,'#d9eef8','right');
+ label(ctx,'L4 '+locale(values[3]),Math.max(pad,w-8),pad+40,10,'#d9eef8','right');
+ label(ctx,'L5 '+locale(values[4])+' · L6 '+locale(values[5]),pad+8,Math.max(pad+15,yy-6),10);
+ ctx.restore();
+}
+function barCanvas(ctx,w,h,cfg,key){
+ const values=cfg[key],max=Math.max(...values,1),left=37,right=18,
+  top=30,bottom=17,gap=4;
+ const rowHeight=Math.max(16,(h-top-bottom)/values.length-gap);
+ for(let i=0;i<values.length;i++){
+  const v=values[i],y=top+i*(rowHeight+gap),maxW=w-left-right-56;
+  label(ctx,'L'+(i+1),8,y+rowHeight*.73,11,'#d0e7f5');
+  const g=ctx.createLinearGradient(left,y,left+maxW,y);
+  g.addColorStop(0,'#426f8c');g.addColorStop(1,'#89cae7');
+  roundedRect(ctx,left,y,Math.max(.5,v/max*maxW),Math.max(6,rowHeight*.72),2);
+  ctx.fillStyle=g;ctx.fill();
+  label(ctx,locale(v)+' mm',left+maxW+6,y+rowHeight*.7,10);
+ }
+ label(ctx,key==='ram'?'TRANCHA · L1–L10':'MESA · L1–L7',10,18,11,'#9ddaf5');
+}
+function draw(canvas,key){
+ if(!canvas||!canvas.clientWidth)return;
+ const rect=canvas.getBoundingClientRect(),w=rect.width,h=rect.height;
+ const dpr=Math.min(devicePixelRatio||1,2);
+ canvas.width=Math.max(2,Math.round(w*dpr));canvas.height=Math.max(2,Math.round(h*dpr));
+ const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
+ const g=ctx.createLinearGradient(0,0,w,h);
+ g.addColorStop(0,'#0c263d');g.addColorStop(1,'#061524');
+ ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
+ const cfg=getV85();
+ if(key==='ram'||key==='bed')barCanvas(ctx,w,h,cfg,key);
+ else gaugeCanvas(ctx,w,h,cfg,key);
+}
+function render(){
+ fields();const cfg=getV85();
+ const text=$('machineSummary');
+ if(text){
+  text.replaceChildren(...[
+   ['Trancha / portaútil',locale(cfg.ramWidth)+' / '+locale(cfg.holderWidth)+' mm'],
+   ['Trabajo punzón',locale(cfg.toolWorkingDistance)+' mm'],
+   ['Stop / Support',locale(cfg.stop[0])+' / '+locale(cfg.support[0])+' mm'],
+   ['Distancia preferida',locale(cfg.preferredDistance)+' %']
+  ].map(([n,v])=>{
+   const b=document.createElement('div');b.className='machine-summary-item';
+   const span=document.createElement('span');span.textContent=n;
+   const strong=document.createElement('strong');strong.textContent=v;
+   b.append(span,strong);return b;
+  }));
+ }
+ redraw();
+}
+function redraw(){
+ for(const [id,key] of [['machineRamProfile','ram'],['machineBedProfile','bed'],
+  ['machineStopProfile','stop'],['machineSupportProfile','support']])
+  draw($(id),key);
+}
+function exportConfig(){
+ const data=JSON.stringify({format:'Plegadox V85 configuración 1.0',
+  unit:'mm',source:'fotografías Cybelec de usuario',machine:getV85()},null,2);
+ const blob=new Blob([data],{type:'application/json'});
+ const url=URL.createObjectURL(blob),link=document.createElement('a');
+ link.href=url;link.download='Plegadox-Trumpf-V85-configuracion.json';
+ document.body.append(link);link.click();link.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),1200);
+}
+if($('machineRamFields')){
+ $('machineResetValues')?.addEventListener('click',()=>{
+  resetV85();dirty=false;render();
+  $('machineSaveState').textContent='Restauradas las cotas de las fotografías Cybelec.';
+ });
+ $('machineExport')?.addEventListener('click',exportConfig);
+ window.addEventListener('plegadox:machineChanged',()=>{redraw();window.PLEGADOX_REDRAW?.();});
+ if('ResizeObserver' in window){
+  const obs=new ResizeObserver(redraw);
+  for(const id of ['machineRamProfile','machineBedProfile','machineStopProfile','machineSupportProfile']){
+   const target=$(id);if(target)obs.observe(target);
+  }
+ }
+ render();
+}
