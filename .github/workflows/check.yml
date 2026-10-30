@@ -33,6 +33,7 @@ jobs:
           node --check sheet-solid.js
           node --check dxf-export.js
           node --check flat-layout.js
+          node --check sheet-interference.js
       - name: Pruebas de dirección, secuencia y desarrollo
         run: npm test
 

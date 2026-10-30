@@ -429,3 +429,15 @@ DXF añade por defecto líneas y notas a la capa PLEGADOS_NO_CORTE.
 Se pueden excluir desmarcando la casilla, dejando un contorno de cuatro
 líneas sin marcas. No son órdenes CNC ni líneas de corte; todas las
 compensaciones y cotas siguen sin verificación de taller.
+
+### Auto-interferencias de chapa durante la simulación
+
+El perfil **PIEZA EN PROCESO** resalta en **rojo** las alas no
+consecutivas que se cruzan en el alzado 2D y en **ámbar** las que
+presentan una separación de fibras centrales menor que el espesor.
+El análisis por golpe toma 16 posiciones orientativas, anota el
+caso más grave y permite acceder a la muestra desde **REVISAR CADA GOLPE**.
+Las incidencias entre chapa y utillaje permanecen independientes.
+La posición de la muestra y la geometría siguen siendo aproximadas:
+un muestreo sin avisos no garantiza ausencia de colisiones 3D, y no
+incluye las rotaciones reales de preparación ni deformaciones.

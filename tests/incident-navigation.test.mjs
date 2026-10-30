@@ -36,3 +36,30 @@ test('aviso geométrico sin ejemplo de herramienta lleva al medio del golpe',()=
  assert.match(result[2].summary,/Ala pequeña/);
  assert.equal(result[2].hasToolSample,false);
 });
+
+test('un cruce de alas prevalece ante holgura menor y salta al instante muestreado',()=>{
+ const geometry={issues:[],perOperation:[],sheetScan:{operations:[
+  null,{exampleTime:7.45,samples:16,example:{finding:{kind:'cross',segments:[0,3],clearance:0}}}
+ ]}};
+ const tool={operations:[null,{exampleTime:7.75,samples:6,example:
+  {category:'clearance',kind:'punch',depth:2}}]};
+ const row=incidentReviewRows(EXAMPLE,geometry,tool)[1];
+ assert.equal(row.bend,1);
+ assert.equal(row.angle,-90);
+ assert.equal(row.category,'sheet-cross');
+ assert.equal(row.time,7.45);
+ assert.equal(row.hasSheetSample,true);
+ assert.equal(row.hasToolSample,false);
+ assert.match(row.summary,/alas 1 y 4/);
+ assert.equal(row.verified,false);
+});
+test('una penetración de útil prevalece frente a mera cercanía entre alas',()=>{
+ const geometry={issues:[],perOperation:[],sheetScan:{operations:[
+  {exampleTime:2.1,example:{finding:{kind:'close',segments:[0,2],clearance:1.2}}}
+ ]}};
+ const tool={operations:[{exampleTime:2.5,example:{category:'penetration',kind:'die',depth:1}}]};
+ const row=incidentReviewRows(EXAMPLE,geometry,tool)[0];
+ assert.equal(row.category,'penetration');
+ assert.equal(row.time,2.5);
+ assert.equal(row.hasSheetSample,false);
+});

@@ -4,6 +4,7 @@ import {registerCatalogue} from './catalog.js';
 import {analyzeSequence} from './validation.js';
 import {inspectSequenceTools,currentToolContact,describeToolIssue} from './tool-collision.js';
 import {incidentReviewRows} from './incident-navigation.js';
+import {inspectSheetFrame,scanSheetSequence,describeSheetIssue} from './sheet-interference.js';
 import {viewerProfile} from './viewer-profile.js';
 import {sheetSolidMesh} from './sheet-solid.js';
 import {exportProfileDXF,exportFlatDXF} from './dxf-export.js';
@@ -21,7 +22,7 @@ let touchOrderEnabled=false,chosenTouchOrder=[];
 const geometryCache={key:null,result:null};
 function geometryReport(){
  const key=JSON.stringify([piece.flanges,piece.angles,piece.order,piece.thickness,piece.width,piece.material,piece.rmMPa,piece.punch,piece.die,getV85().ramWidth,getV85().holderWidth]);
- if(key!==geometryCache.key){geometryCache.key=key;geometryCache.result={...analyzeSequence(piece),tools:inspectSequenceTools(piece,6)};}
+ if(key!==geometryCache.key){geometryCache.key=key;geometryCache.result={...analyzeSequence(piece),tools:inspectSequenceTools(piece,6),sheetScan:scanSheetSequence(piece,15)};}
  return geometryCache.result;
 }
 const numbers=(n,d=1)=>Number(n).toLocaleString('es-ES',{maximumFractionDigits:d,minimumFractionDigits:d});
@@ -229,7 +230,24 @@ function drawProfile(id,fractions,labels=false){
    ctx.restore();
   }
  }
- if(!labels)text(ctx,'PIEZA EN PROCESO',14,23,'#8095a4',11);
+ if(!labels){
+  // En la imagen del golpe actual, colorear las alas que están demasiado
+  // cerca o se cruzan. NO son contactos CAD ni tiempos exactos del útil.
+  const frame=inspectSheetFrame(piece,sim.time);
+  for(const hit of frame.issues){
+   const color=hit.kind==='cross'?'#ef554a':'#f5af42';
+   for(const i of hit.segments){
+    const a=pts[i],b=pts[i+1];if(!a||!b)continue;
+    ctx.save();ctx.strokeStyle=color;ctx.lineWidth=5;
+    ctx.setLineDash(hit.kind==='close'?[6,3]:[]);
+    ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+    ctx.restore();
+   }
+  }
+  text(ctx,frame.issues.length?'⚠ Interferencia entre alas · 2D':
+    'PIEZA EN PROCESO · revisión 2D no certificada',
+   14,23,frame.issues.length?'#f0a45b':'#8095a4',11);
+ }
 }
 function drawMachine(){
  const can=canvas2d('machineCanvas');
@@ -493,10 +511,12 @@ function renderIncidentNavigator(check,st){
    const severity=document.createElement('span');severity.className='cp-incident-status';
    severity.textContent=row.category==='penetration'?'PENETRACIÓN 2D':
       row.category==='clearance'?'HOLGURA 2D':
+      row.category==='sheet-cross'?'CRUCE DE ALAS 2D':
+      row.category==='sheet-close'?'ALAS MUY PRÓXIMAS':
       row.category==='geometry'?'REVISAR GEOMETRÍA':'SIN AVISO MUESTREADO';
    const detail=document.createElement('small');
    detail.textContent=row.summary+
-     (row.hasToolSample?' · muestra '+row.time.toFixed(2)+' s':
+     (row.hasToolSample||row.hasSheetSample?' · muestra '+row.time.toFixed(2)+' s':
       ' · vista del golpe '+row.time.toFixed(2)+' s');
    button.append(number,severity,detail);
    button.addEventListener('click',()=>{
@@ -521,7 +541,10 @@ function renderSimulationText(){
  $('foldedCount').textContent=st.finished+' de '+st.count+' pliegues';
  $('timeline').value=Math.round(1000*st.time/st.duration);
  const root=$('simSequence');
- const key=JSON.stringify({order:piece.order,angles:piece.angles,flanges:piece.flanges,issues:check.perOperation.map((x,i)=>x.potentialInterference||x.toolAngleWarning||x.vSupportWarning||check.tools.operations[i]?.possibleToolInterference)});
+ const key=JSON.stringify({order:piece.order,angles:piece.angles,flanges:piece.flanges,
+  issues:check.perOperation.map((x,i)=>x.potentialInterference||x.toolAngleWarning||
+   x.vSupportWarning||check.tools.operations[i]?.possibleToolInterference||
+   check.sheetScan.operations[i]?.possibleSheetInterference)});
  if(root.dataset.key!==key){
    root.dataset.key=key;
    root.replaceChildren(...piece.order.map((bend,i)=>{
@@ -537,7 +560,7 @@ function renderSimulationText(){
      const a=document.createElement('strong');a.textContent=(angle>0?'+':'')+angle+'°';
      const l=document.createElement('small');l.textContent='L = '+numbers(piece.flanges[bend+1],1)+' mm';
      values.append(a,l);const menu=document.createElement('span');menu.className='op-more';menu.textContent='⋮';
-     if(check.perOperation[i]?.potentialInterference||check.perOperation[i]?.toolAngleWarning||check.perOperation[i]?.vSupportWarning||check.tools.operations[i]?.possibleToolInterference){
+     if(check.perOperation[i]?.potentialInterference||check.perOperation[i]?.toolAngleWarning||check.perOperation[i]?.vSupportWarning||check.tools.operations[i]?.possibleToolInterference||check.sheetScan.operations[i]?.possibleSheetInterference){
        el.classList.add('suspect');el.title=check.perOperation[i]?.toolAngleWarning?
           'Revisar apertura nominal de punzón/matriz para este ángulo':
           check.perOperation[i]?.vSupportWarning?
@@ -576,14 +599,16 @@ function renderSimulationText(){
      toolStep?.possibleToolInterference?
        '⚠ En este golpe aparecen posibles interferencias con herramientas en otras posiciones.':
        describeToolIssue(null);
-   const messages=[toolWarning,main,...other];
+   const sheetNow=inspectSheetFrame(piece,sim.time);
+   const sheetWarning=sheetNow.issues.length?describeSheetIssue(sheetNow.issues[0]):null;
+   const messages=[toolWarning,...(sheetWarning?[sheetWarning]:[]),main,...other];
    const signature=JSON.stringify(messages);
    if(details.dataset.signature!==signature){
      details.dataset.signature=signature;
      details.replaceChildren(...messages.map((m,i)=>{const line=document.createElement('p');line.textContent=(i?'• ':'')+m;return line;}));
      details.title=check.limitations;
    }
-   details.classList.toggle('has-warning',check.hasGeometryWarning||toolNow.hasWarning||!!toolStep?.possibleToolInterference);
+   details.classList.toggle('has-warning',check.hasGeometryWarning||toolNow.hasWarning||sheetNow.hasWarning||!!toolStep?.possibleToolInterference);
  }
 }
 function paintAll(){drawProfile('finalCanvas',piece.angles.map(()=>1),true);drawMachine();drawProfile('progressCanvas',stage(piece,sim.time).fractions,false);drawScene();toolDrawing();renderDevelopment();renderToolCards();renderSimulationText();}
