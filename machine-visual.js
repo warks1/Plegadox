@@ -182,7 +182,7 @@ function stageScene(ctx,w,h,piece,sim,machineView){
  const travel=st.press<=.45?67-65*(st.press/.45):2-((st.press-.45)/.55)*10;
  const tipY=baseY-travel*scale;
  // Preserve the real profile; perspective adds an illustrative side face.
- ramDepth(ctx,{cx,cy:baseY,s:scale},tipY,punch.angle||88,Boolean(machineView?.perspective));
+ ramDepth(ctx,{cx,cy:baseY,s:scale},tipY,punch,Boolean(machineView?.perspective));
  ctx.save();
  if(machineView?.transparent)ctx.globalAlpha=.3;
  drawRam(ctx,cx,baseY,scale,tipY,punch);
