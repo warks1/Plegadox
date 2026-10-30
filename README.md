@@ -518,3 +518,11 @@ La interfaz muestra ambos recuentos y el número de alternativas examinadas.
 Esto NO analiza todas las trayectorias ni garantiza ausencia de colisiones:
 perfiles paramétricos, muestreos discretos, montaje de útiles, topes, mesa,
 volteos y reorientaciones reales siguen pendientes de verificación física.
+
+La medición mínima entre la fibra de chapa y las aristas de utillaje
+identifica ahora también **cruces de interior a interior** de dos
+segmentos, aunque sus cuatro extremos estén alejados. Antes, la rutina
+que examinaba sólo proyecciones de extremos podía informar de una
+separación inexistente en ese caso. Se añaden pruebas para cruces rectos,
+oblicuos, paralelos y aristas colineales. Sigue siendo comprobación de
+sección 2D paramétrica, no análisis industrial de colisiones.

@@ -39,7 +39,21 @@ function polygonDistance(p,verts){
  * más próximos de ambos. Detecta cruces de la ENVOLVENTE de espesor
  * incluso si la fibra media no corta el útil y las muestras son lejanas.
  */
-function segmentNearestPoints(a,b,c,d){
+export function segmentNearestPoints(a,b,c,d){
+ const r={x:b.x-a.x,y:b.y-a.y},s={x:d.x-c.x,y:d.y-c.y};
+ const cross=(u,v)=>u.x*v.y-u.y*v.x;
+ const delta={x:c.x-a.x,y:c.y-a.y};
+ const divisor=cross(r,s);
+ const scale=Math.hypot(r.x,r.y)*Math.hypot(s.x,s.y);
+ // Ambos interiores pueden cruzarse aunque todos los extremos estén lejos:
+ // medir sólo punto-extremo a segmento omite este caso exacto.
+ if(scale>EPS&&Math.abs(divisor)>1e-12*scale){
+  const t=cross(delta,s)/divisor,u=cross(delta,r)/divisor;
+  if(t>=-1e-10&&t<=1+1e-10&&u>=-1e-10&&u<=1+1e-10){
+   const v=Math.min(1,Math.max(0,t)),p={x:a.x+r.x*v,y:a.y+r.y*v};
+   return {sheet:p,tool:{...p},dist:0};
+  }
+ }
  const closest=(p,v,w)=>{
   const dx=w.x-v.x,dy=w.y-v.y,len=dx*dx+dy*dy;
   const t=len<EPS?0:Math.max(0,Math.min(1,((p.x-v.x)*dx+(p.y-v.y)*dy)/len));

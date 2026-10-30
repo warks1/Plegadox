@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {EXAMPLE} from '../engine.js';
-import {insidePolygon,inspectSheetAgainstPolygon,inspectToolContact,inspectSequenceTools,describeToolIssue,consolidateToolIssues} from '../tool-collision.js';
+import {segmentNearestPoints,insidePolygon,inspectSheetAgainstPolygon,inspectToolContact,inspectSequenceTools,describeToolIssue,consolidateToolIssues} from '../tool-collision.js';
 const point=(x,y)=>({x,y});
 const block=[point(-4,8),point(4,8),point(4,0),point(-4,0)];
 test('un punto dentro de un punzón es intrusión, uno fuera no',()=>{
@@ -122,4 +122,30 @@ test('para una categoría idéntica se muestra el caso con mayor profundidad',()
  ]);
  assert.equal(out[0].depth,.8);
  assert.equal(out[1].segment,1);
+});
+
+test('distancia exacta 0 cuando las ARISTAS se cruzan por su interior',()=>{
+ const near=segmentNearestPoints({x:-50,y:0},{x:50,y:0},
+  {x:0,y:-50},{x:0,y:50});
+ assert.equal(near.dist,0);
+ assert.ok(Math.abs(near.sheet.x)<1e-9&&Math.abs(near.sheet.y)<1e-9);
+ assert.deepEqual(near.sheet,near.tool);
+});
+test('cruce interior oblicuo entre útiles largos no depende de extremos cercanos',()=>{
+ const near=segmentNearestPoints({x:-100,y:-100},{x:100,y:100},
+  {x:-100,y:100},{x:100,y:-100});
+ assert.equal(near.dist,0);
+ assert.ok(Math.abs(near.sheet.x)<1e-9&&Math.abs(near.sheet.y)<1e-9);
+});
+test('aristas paralelas y separadas devuelven distancia mínima física',()=>{
+ const near=segmentNearestPoints({x:0,y:0},{x:20,y:0},
+  {x:8,y:3},{x:15,y:3});
+ assert.ok(Math.abs(near.dist-3)<1e-9);
+ assert.ok(Math.abs(near.sheet.y)<1e-9);
+ assert.ok(Math.abs(near.tool.y-3)<1e-9);
+});
+test('los tramos colineales superpuestos siguen teniendo distancia cero',()=>{
+ const near=segmentNearestPoints({x:0,y:0},{x:20,y:0},
+  {x:10,y:0},{x:30,y:0});
+ assert.equal(near.dist,0);
 });
