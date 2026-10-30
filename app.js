@@ -4,6 +4,7 @@ import {registerCatalogue} from './catalog.js';
 import {analyzeSequence} from './validation.js';
 import {inspectSequenceTools,currentToolContact} from './tool-collision.js';
 import {sectionPunch,sectionDie} from './tool-profiles.js';
+import {getV85} from './machine-config.js';
 registerCatalogue(DIES,PUNCHES);
 const $=id=>document.getElementById(id);
 const storeKey='plegadox:piece:v1';
@@ -14,7 +15,7 @@ let machineView={panX:0,panY:0,zoom:1};
 let touchOrderEnabled=false,chosenTouchOrder=[];
 const geometryCache={key:null,result:null};
 function geometryReport(){
- const key=JSON.stringify([piece.flanges,piece.angles,piece.order,piece.thickness,piece.width,piece.punch,piece.die]);
+ const key=JSON.stringify([piece.flanges,piece.angles,piece.order,piece.thickness,piece.width,piece.punch,piece.die,getV85().ramWidth]);
  if(key!==geometryCache.key){geometryCache.key=key;geometryCache.result={...analyzeSequence(piece),tools:inspectSequenceTools(piece,6)};}
  return geometryCache.result;
 }
