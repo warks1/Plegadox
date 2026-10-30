@@ -15,5 +15,7 @@ jobs:
         run: |
           node --check engine.js
           node --check app.js
+          node --check catalog.js
+          node --check cockpit.js
       - name: Pruebas de dirección, secuencia y desarrollo
         run: npm test
