@@ -9,6 +9,7 @@ let piece=restore();
 let sim={playing:false,time:0,last:null,speed:1};
 let camera={yaw:-.62,pitch:.45,zoom:1};
 let machineView={panX:0,panY:0,zoom:1};
+let touchOrderEnabled=false,chosenTouchOrder=[];
 const geometryCache={key:null,result:null};
 function geometryReport(){
  const key=JSON.stringify([piece.flanges,piece.angles,piece.order,piece.thickness,piece.width,piece.punch,piece.die]);
@@ -33,6 +34,8 @@ function configure(){
  $('sampleBtn').onclick=()=>changePiece(EXAMPLE,true);
  $('addFlange').onclick=()=>{if(piece.flanges.length>=20)return;changePiece({...piece,flanges:[...piece.flanges,50],angles:[...piece.angles,90],order:[...piece.order,piece.angles.length]},true);};
  $('resetOrder').onclick=()=>changePiece({...piece,order:piece.angles.map((_,i)=>i)},true);
+ $('touchOrderMode').onclick=toggleTouchOrder;
+ $('finalCanvas').addEventListener('pointerdown',pickBendFromDrawing);
  $('saveBtn').onclick=save;
  $('exportBtn').onclick=()=>{
  const blob=new Blob([JSON.stringify({...piece,format:'plegadox-piece-v1'},null,2)],{type:'application/json'});
@@ -94,6 +97,47 @@ function renderEditor(){
  piece.order.forEach((id,i)=>{const c=document.createElement('div');c.className='seq-card';const text=document.createElement('div');const b=document.createElement('b');b.textContent=(i+1)+'. Pliegue '+(id+1);const small=document.createElement('span');small.textContent=' '+(piece.angles[id]>0?'+':'')+piece.angles[id]+'°';text.append(b,small);const up=document.createElement('button');up.textContent='←';up.title='Hacer antes';up.disabled=!i;up.onclick=()=>reorder(i,-1);const down=document.createElement('button');down.textContent='→';down.title='Hacer después';down.disabled=i===piece.order.length-1;down.onclick=()=>reorder(i,1);c.append(text,up,down);seq.append(c);});
 }
 function reorder(i,delta){const order=[...piece.order];[order[i],order[i+delta]]=[order[i+delta],order[i]];changePiece({...piece,order},true);}
+function touchOrderMessage(message){
+ const hint=$('touchOrderHint');
+ if(hint)hint.textContent=message;
+ const btn=$('touchOrderMode');
+ if(btn){btn.setAttribute('aria-pressed',String(touchOrderEnabled));btn.classList.toggle('selected',touchOrderEnabled);}
+}
+function toggleTouchOrder(){
+ touchOrderEnabled=!touchOrderEnabled;chosenTouchOrder=[];
+ touchOrderMessage(touchOrderEnabled
+   ?'Toca en el dibujo el pliegue 1, después el 2… (los puntos amarillos).'
+   :'Modo de selección por toques desactivado.');
+ drawProfile('finalCanvas',piece.angles.map(()=>1),true);
+}
+function pickBendFromDrawing(e){
+ if(!touchOrderEnabled)return;
+ const rect=$('finalCanvas').getBoundingClientRect();
+ if(!rect.width||!rect.height)return;
+ const points=profile(piece,piece.angles.map(()=>1)).points;
+ const map=fit(points,rect.width,rect.height,43);
+ const x=e.clientX-rect.left,y=e.clientY-rect.top;
+ let picked=-1,distance=Infinity;
+ for(let i=0;i<piece.angles.length;i++){
+   if(chosenTouchOrder.includes(i))continue;
+   const pt=map(points[i+1]),d=Math.hypot(pt.x-x,pt.y-y);
+   if(d<distance){distance=d;picked=i;}
+ }
+ if(picked<0||distance>32){
+   touchOrderMessage('Toca un punto amarillo del pliegue, no la línea del ala.');
+   return;
+ }
+ chosenTouchOrder.push(picked);
+ if(chosenTouchOrder.length===piece.angles.length){
+   const order=[...chosenTouchOrder];touchOrderEnabled=false;chosenTouchOrder=[];
+   changePiece({...piece,order},true);
+   touchOrderMessage('Secuencia aplicada: '+order.map((id,i)=>(i+1)+'→pliegue '+(id+1)).join(' · '));
+ }else{
+   touchOrderMessage('Seleccionados: '+chosenTouchOrder.length+'/'+piece.angles.length+
+     '. Ahora toca el pliegue '+(chosenTouchOrder.length+1)+'.');
+   drawProfile('finalCanvas',piece.angles.map(()=>1),true);
+ }
+}
 function canvas2d(id){
  const c=$(id);if(!c||c.offsetParent===null)return null;const r=c.getBoundingClientRect();if(!r.width||!r.height)return null;
  const dpr=Math.min(window.devicePixelRatio||1,2);const w=r.width,h=r.height;
@@ -114,6 +158,17 @@ function drawProfile(id,fractions,labels=false){
  for(let i=1;i<pts.length-1;i++){ctx.beginPath();ctx.arc(pts[i].x,pts[i].y,4,0,Math.PI*2);ctx.fill();ctx.stroke();}
  if(labels)for(let i=0;i<pts.length-1;i++){const x=(pts[i].x+pts[i+1].x)/2,y=(pts[i].y+pts[i+1].y)/2;text(ctx,numbers(piece.flanges[i],0),x,y-11,'#467187',11,'center');}
  if(labels)for(let i=1;i<pts.length-1;i++){const a=piece.angles[i-1];text(ctx,(a>0?'+':'')+numbers(a,0)+'°',pts[i].x+9,pts[i].y+18,a<0?'#ad5b36':'#267da9',11);}
+ if(labels&&touchOrderEnabled){
+  for(let i=1;i<pts.length-1;i++){
+   const index=chosenTouchOrder.indexOf(i-1),selected=index>=0,pt=pts[i];
+   ctx.save();ctx.beginPath();ctx.arc(pt.x,pt.y,13,0,Math.PI*2);
+   ctx.fillStyle=selected?'#1787c8':'#ffc155';ctx.fill();
+   ctx.strokeStyle=selected?'#bef0ff':'#8f5b17';ctx.lineWidth=2;ctx.stroke();
+   ctx.font='900 12px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';
+   ctx.fillStyle=selected?'#fff':'#37200a';ctx.fillText(selected?String(index+1):String(i),pt.x,pt.y);
+   ctx.restore();
+  }
+ }
  if(!labels)text(ctx,'PIEZA EN PROCESO',14,23,'#8095a4',11);
 }
 function drawMachine(){
