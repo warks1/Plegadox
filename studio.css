@@ -291,3 +291,62 @@ html{background:#020913}
  #touchOrderMode{font-size:13px;min-height:45px}
  #touchOrderHint{font-size:12px}
 }
+
+
+/* Inspector 3D de herramienta: modal grande táctil, no ventana minúscula
+   ocultada bajo la biblioteca como ocurría en el vídeo. */
+.cp-library.viewer-open::before{
+ content:"";position:fixed;inset:0;z-index:139;
+ background:#000b;backdrop-filter:blur(8px);pointer-events:auto;
+}
+.cp-library.viewer-open .cp-viewer-wrap{
+ position:fixed!important;z-index:140!important;
+ left:50%!important;right:auto!important;top:50%!important;bottom:auto!important;
+ transform:translate(-50%,-50%)!important;
+ display:flex!important;flex-direction:column!important;align-items:stretch!important;
+ width:min(760px,calc(100vw - 28px))!important;
+ height:min(740px,calc(100dvh - 36px))!important;
+ padding:19px!important;background:linear-gradient(145deg,#0a2a45,#051522)!important;
+ border:1px solid #38b9ff!important;border-radius:16px!important;
+ box-shadow:0 0 0 1px #154a70,0 22px 100px #000e,0 0 42px #008eff44!important;
+ overflow:hidden!important;
+}
+.cp-library.viewer-open .cp-viewer-wrap .cp-viewer-header{
+ padding-right:90px;color:#d5f2ff;font-weight:850;font-size:15px;
+ letter-spacing:.055em;line-height:1.4;min-height:23px;
+}
+.cp-library.viewer-open .cp-viewer-wrap #closeTool3D{
+ position:absolute;right:17px;top:13px;z-index:2;
+ padding:8px 10px;min-height:42px;border-color:#286e9c;
+ font-size:13px;color:#e7f8ff;background:#153d59;
+}
+.cp-library.viewer-open .cp-viewer-wrap .tool-inspector-meta{
+ display:block;color:#9bd2f2;font-size:12px;line-height:1.6;
+ padding:9px 0;border-bottom:1px solid #1d587d;min-height:38px;
+}
+.cp-library.viewer-open .cp-viewer-wrap #cockpitSelectedTool3D{
+ flex:1 1 auto!important;min-height:180px!important;
+ height:auto!important;max-height:none!important;width:100%!important;
+ margin:11px 0 6px!important;
+ background:radial-gradient(ellipse,#123f62,#04111e)!important;
+ border:1px solid #286285!important;
+}
+.cp-library.viewer-open .cp-viewer-wrap .tool-inspector-note{
+ flex:0 0 auto;margin:5px 0 2px;color:#8eafc9;
+ font-size:11px;line-height:1.5;
+}
+@media(max-width:699px){
+ .cp-library.viewer-open .cp-viewer-wrap{
+  width:calc(100vw - 14px)!important;height:calc(100dvh - 20px)!important;
+  padding:13px!important;border-radius:12px!important;
+  padding-bottom:max(12px,env(safe-area-inset-bottom,12px))!important;
+ }
+ .cp-library.viewer-open .cp-viewer-wrap .cp-viewer-header{
+  padding-right:72px;font-size:13px;
+ }
+ .cp-library.viewer-open .cp-viewer-wrap #closeTool3D{
+  right:9px;top:7px;min-height:42px;padding:7px;font-size:11px;
+ }
+ .cp-library.viewer-open .cp-viewer-wrap .tool-inspector-meta{font-size:11px}
+ .cp-library.viewer-open .cp-viewer-wrap .tool-inspector-note{font-size:10px}
+}
