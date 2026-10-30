@@ -3,35 +3,51 @@
 import {DIES,PUNCHES,MATERIALS,normalized,development,stage,getTooling} from './engine.js';
 import {CATALOG_SOURCES,toolMatchesBrand,selectionCompatibility} from './catalog.js';
 const $=id=>document.getElementById(id);
-const state={brand:'Trumpf',kind:'punch',search:'',selectedTool:null,yaw:-.6,pitch:.34,zoom:1};
+const state={brand:'Todos',kind:'all',search:'',selectedTool:null,selectedToolKind:'punch',yaw:-.6,pitch:.34,zoom:1};
 const format=(n,d=1)=>Number(n).toLocaleString('es-ES',{minimumFractionDigits:d,maximumFractionDigits:d});
 function current(){const s=window.PLEGADOX_STATE?.();if(s)return s;let p=null;try{p=JSON.parse(localStorage.getItem('plegadox:piece:v1'));}catch{}return {piece:normalized(p),sim:{time:0}};}
-const kindList=()=>state.kind==='punch'?PUNCHES:DIES;
+const kindList=()=>{
+ const punches=PUNCHES.map(tool=>({...tool,uiKind:'punch'}));
+ const dies=DIES.map(tool=>({...tool,uiKind:'die'}));
+ return state.kind==='all'?[...punches,...dies]:state.kind==='punch'?punches:dies;
+};
 function filtered(){return kindList().filter(t=>toolMatchesBrand(t,state.brand)&&(!state.search||[t.name,t.reference,t.id,t.mount,t.angle,t.opening,t.height].join(' ').toLowerCase().includes(state.search)));}
 function toolPicked(tool){
- const sel=$(state.kind==='punch'?'punch':'die');
+ const kind=tool.uiKind||(tool.opening!=null?'die':'punch');
+ const sel=$(kind==='punch'?'punch':'die');
  if(sel){sel.value=tool.id;sel.dispatchEvent(new Event('change',{bubbles:true}));}
- state.selectedTool=tool.id;renderCatalogue();refresh();
+ state.selectedTool=tool.id;state.selectedToolKind=kind;renderCatalogue();refresh();
 }
 function renderCatalogue(){
- const p=current().piece,selected=state.kind==='punch'?p.punch:p.die;
+ const p=current().piece;
  for(const b of document.querySelectorAll('#cpBrandTabs button')){b.classList.toggle('selected',b.dataset.brand===state.brand);b.setAttribute('aria-pressed',String(b.dataset.brand===state.brand));}
  for(const b of document.querySelectorAll('.cp-kind-tabs button')){b.classList.toggle('selected',b.dataset.kind===state.kind);b.setAttribute('aria-pressed',String(b.dataset.kind===state.kind));}
- const list=filtered();$('cpCatalogCount').textContent=list.length+' referencias';
+ const list=filtered();$('cpCatalogCount').textContent=list.length+' herramientas';
  const container=$('cockpitTools');container.replaceChildren();
  for(const tool of list){
+   const kind=tool.uiKind || (tool.opening!=null?'die':'punch');
+   if(state.kind==='all' && !container.querySelector('[data-category="'+kind+'"]')){
+     const group=document.createElement('div');
+     group.className='cp-library-group-label';
+     group.dataset.category=kind;
+     group.textContent=kind==='punch'?'PUNZONES':'MATRICES';
+     container.append(group);
+   }
+   const selected=kind==='punch'?p.punch:p.die;
    const b=document.createElement('button');b.type='button';b.className='cp-tool-card'+(selected===tool.id?' selected':'');
    b.title=(tool.reference||tool.name)+(tool.verifiedSpecs?' · Especificaciones verificadas':' · Modelo provisional');
    const canvas=document.createElement('canvas');canvas.setAttribute('aria-hidden','true');
    const title=document.createElement('b');title.textContent=tool.reference||tool.name;
-   const detail=document.createElement('small');detail.textContent=state.kind==='punch'?tool.angle+'° · R'+tool.tip+' · H'+tool.height:'V'+tool.opening+' · '+tool.angle+'° · H'+tool.height;
+   const detail=document.createElement('small');detail.textContent=kind==='punch'?tool.angle+'° · R'+tool.tip+' · H'+tool.height:'V'+tool.opening+' · '+tool.angle+'° · H'+tool.height;
    const flag=document.createElement('em');flag.textContent=tool.verifiedSpecs?'Ficha documentada':'Geometría provisional';
    b.append(canvas,title,detail,flag);b.onclick=()=>toolPicked(tool);
-   container.append(b);drawThumbnail(canvas,tool,state.kind);
+   container.append(b);drawThumbnail(canvas,tool,kind);
  }
  if(!list.length){const msg=document.createElement('p');msg.className='hint';msg.textContent='No hay referencias que coincidan con la búsqueda. Prueba otro fabricante o término.';container.append(msg);}
- const chosen=kindList().find(t=>t.id===selected)||null;
- const shown=kindList().find(t=>t.id===state.selectedTool)||chosen;
+ const tools=kindList();
+ const selected=state.selectedToolKind==='die'?p.die:p.punch;
+ const chosen=tools.find(t=>t.id===selected)||tools.find(t=>t.id===(state.kind==='die'?p.die:p.punch))||null;
+ const shown=tools.find(t=>t.id===state.selectedTool)||chosen;
  const info=$('cockpitToolInfo');info.replaceChildren();
  if(shown){
    const name=document.createElement('b');name.textContent=shown.name;info.append(name);
@@ -109,11 +125,12 @@ function drawThumbnail(canvas,tool,kind){
 function drawToolViewer(){
  let canvas=$('cockpitSelectedTool3D');
  if(!canvas){const wrap=document.createElement('div');wrap.className='cp-viewer-wrap';const header=document.createElement('div');header.className='cp-viewer-header';header.textContent='VISTA 3D DE LA HERRAMIENTA · GIRAR / ZOOM';canvas=document.createElement('canvas');canvas.id='cockpitSelectedTool3D';canvas.className='cp-3d-viewer';canvas.style.cssText='width:100%;height:170px;display:block;background:radial-gradient(ellipse,#153b59,#061626);border:1px solid #1b4968;border-radius:8px;touch-action:none';wrap.append(header,canvas);$('cockpitToolInfo').after(wrap);attachViewer(canvas);}
- const p=current().piece,tool=state.kind==='punch'?PUNCHES.find(t=>t.id===p.punch):DIES.find(t=>t.id===p.die);
+ const p=current().piece,kind=state.kind==='all'?state.selectedToolKind:state.kind;
+ const tool=kind==='punch'?PUNCHES.find(t=>t.id===p.punch):DIES.find(t=>t.id===p.die);
  if(!tool)return;
  const w=canvas.clientWidth||260,h=canvas.clientHeight||170,d=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(w*d);canvas.height=Math.round(h*d);
  const ctx=canvas.getContext('2d');ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,w,h);
- const polygon=shape(tool,state.kind),depth=65;
+ const polygon=shape(tool,kind),depth=65;
  const project=(point)=>{
    const [xx,yy,zz]=point;
    const yaw=state.yaw,pitch=state.pitch;
@@ -159,7 +176,7 @@ function refresh(){
 function init(){
  if(!$('cockpitTools'))return;
  for(const button of document.querySelectorAll('#cpBrandTabs button'))button.addEventListener('click',()=>{state.brand=button.dataset.brand;state.selectedTool=null;renderCatalogue();});
- for(const button of document.querySelectorAll('.cp-kind-tabs button'))button.addEventListener('click',()=>{state.kind=button.dataset.kind;state.selectedTool=null;renderCatalogue();});
+ for(const button of document.querySelectorAll('.cp-kind-tabs button'))button.addEventListener('click',()=>{state.kind=button.dataset.kind;state.selectedTool=null;state.selectedToolKind=state.kind==='die'?'die':'punch';renderCatalogue();});
  $('cpToolSearch').addEventListener('input',e=>{state.search=e.target.value.trim().toLowerCase();renderCatalogue();});
  for(const [id,tab] of [['jumpToProgramming','programacion'],['jumpToDevelopment','desarrollo']])$(id).addEventListener('click',()=>document.querySelector('[data-tab="'+tab+'"]').click());
  window.addEventListener('plegadox:pieceChanged',()=>{renderCatalogue();refresh();});
