@@ -11,8 +11,8 @@ let machineView={panX:0,panY:0,zoom:1};
 const numbers=(n,d=1)=>Number(n).toLocaleString('es-ES',{maximumFractionDigits:d,minimumFractionDigits:d});
 function restore(){try{const saved=localStorage.getItem(storeKey);return normalized(saved?JSON.parse(saved):EXAMPLE);}catch{return normalized(EXAMPLE);}}
 function persist(){try{localStorage.setItem(storeKey,JSON.stringify(piece));}catch{}}
-function save(){persist();$('saveBtn').textContent='✓ Guardado';setTimeout(()=>$('saveBtn').textContent='Guardar pieza',1500);}
-function resetPlayback(){sim.time=0;sim.last=null;sim.playing=false;$('playBtn').textContent='▶ Reproducir';}
+function save(){persist();$('saveBtn').textContent='✓';$('saveBtn').title='Guardado en este dispositivo';setTimeout(()=>$('saveBtn').textContent='▣';$('saveBtn').title='Guardar pieza',1500);}
+function resetPlayback(){sim.time=0;sim.last=null;sim.playing=false;$('playBtn').textContent='▶';$('playBtn').title='Reproducir simulación';}
 function changePiece(p,structural=false){piece=normalized(p);persist();if(structural)resetPlayback();renderEditor();renderSetup();paintAll();window.dispatchEvent(new CustomEvent('plegadox:pieceChanged',{detail:piece}));}
 function configure(){
  const options=(select,items,current)=>{select.replaceChildren(...items.map(item=>{const o=document.createElement('option');o.value=item.id;o.textContent=item.name;return o;}));select.value=current;};
@@ -36,8 +36,8 @@ function configure(){
  const file=e.target.files?.[0];if(!file)return;
  try{if(file.size>1024*1024)throw new Error('Archivo demasiado grande');const data=JSON.parse(await file.text());if(!Array.isArray(data.flanges)||!Array.isArray(data.angles))throw new Error('El JSON no contiene alas y pliegues');changePiece(data,true);}catch(err){alert('No se pudo cargar la pieza: '+err.message);}e.target.value='';
  };
- $('playBtn').onclick=()=>{if(sim.time>=piece.order.length*5)sim.time=0;sim.playing=true;sim.last=null;$('playBtn').textContent='▶ En marcha';};
- $('pauseBtn').onclick=()=>{sim.playing=false;sim.last=null;$('playBtn').textContent='▶ Continuar';};
+ $('playBtn').onclick=()=>{if(sim.time>=piece.order.length*5)sim.time=0;sim.playing=true;sim.last=null;$('playBtn').textContent='▶';$('playBtn').title='Reproduciendo';};
+ $('pauseBtn').onclick=()=>{sim.playing=false;sim.last=null;$('playBtn').textContent='▶';$('playBtn').title='Continuar simulación';};
  $('restartBtn').onclick=()=>{resetPlayback();paintAll();};
  $('stepBtn').onclick=()=>{sim.playing=false;sim.last=null;const i=Math.floor(sim.time/5);sim.time=Math.min(piece.order.length*5,(i+1)*5);paintAll();};
  $('timeline').oninput=e=>{sim.playing=false;sim.last=null;sim.time=piece.order.length*5*Number(e.target.value)/1000;paintAll();};
