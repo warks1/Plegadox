@@ -158,6 +158,23 @@ function drawProfile(id,fractions,labels=false){
  for(let i=1;i<pts.length-1;i++){ctx.beginPath();ctx.arc(pts[i].x,pts[i].y,4,0,Math.PI*2);ctx.fill();ctx.stroke();}
  if(labels)for(let i=0;i<pts.length-1;i++){const x=(pts[i].x+pts[i+1].x)/2,y=(pts[i].y+pts[i+1].y)/2;text(ctx,numbers(piece.flanges[i],0),x,y-11,'#467187',11,'center');}
  if(labels)for(let i=1;i<pts.length-1;i++){const a=piece.angles[i-1];text(ctx,(a>0?'+':'')+numbers(a,0)+'°',pts[i].x+9,pts[i].y+18,a<0?'#ad5b36':'#267da9',11);}
+ // Destacar los tramos geométricos conflictivos; no son contactos CAD de máquina.
+ if(labels){
+  const check=geometryReport(),segments=new Set();
+  for(const warn of check.issues){
+   if((warn.code==='final-cross'||warn.code==='final-clearance')&&warn.segments)
+    for(const id of warn.segments)segments.add(id);
+  }
+  if(segments.size){
+   ctx.save();ctx.setLineDash([7,4]);ctx.strokeStyle='#f3a248';ctx.lineWidth=4;
+   for(const index of segments){
+    const a=pts[index],b=pts[index+1];if(!a||!b)continue;
+    ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+   }
+   ctx.restore();
+   text(ctx,'⚠ Revisar tramos señalados · comprobación 2D',12,h-12,'#f0b569',11);
+  }
+ }
  if(labels&&touchOrderEnabled){
   for(let i=1;i<pts.length-1;i++){
    const index=chosenTouchOrder.indexOf(i-1),selected=index>=0,pt=pts[i];
