@@ -9,6 +9,7 @@ import {viewerProfile} from './viewer-profile.js';
 import {sheetSolidMesh} from './sheet-solid.js';
 import {exportProfileDXF,exportFlatDXF} from './dxf-export.js';
 import {flatBendLayout} from './flat-layout.js';
+import {suggestBendOrder} from './sequence-advisor.js';
 import {sectionPunch,sectionDie} from './tool-profiles.js';
 import {getV85} from './machine-config.js';
 registerCatalogue(DIES,PUNCHES);
@@ -19,6 +20,7 @@ let sim={playing:false,time:0,last:null,speed:1};
 let camera={yaw:-.62,pitch:.45,zoom:1};
 let machineView={panX:0,panY:0,zoom:1};
 let touchOrderEnabled=false,chosenTouchOrder=[];
+let pendingSequenceAdvice=null;
 const geometryCache={key:null,result:null};
 function geometryReport(){
  const key=JSON.stringify([piece.flanges,piece.angles,piece.order,piece.thickness,piece.width,piece.material,piece.rmMPa,piece.punch,piece.die,getV85().ramWidth,getV85().holderWidth]);
@@ -39,7 +41,16 @@ function restore(){try{const saved=localStorage.getItem(storeKey);return normali
 function persist(){try{localStorage.setItem(storeKey,JSON.stringify(piece));}catch{}}
 function save(){persist();$('saveBtn').textContent='✓';$('saveBtn').title='Guardado en este dispositivo';setTimeout(()=>{$('saveBtn').textContent='▣';$('saveBtn').title='Guardar pieza';},1500);}
 function resetPlayback(){sim.time=0;sim.last=null;sim.playing=false;$('playBtn').textContent='▶';$('playBtn').title='Reproducir simulación';}
-function changePiece(p,structural=false){piece=normalized(p);persist();if(structural)resetPlayback();renderEditor();renderSetup();paintAll();window.dispatchEvent(new CustomEvent('plegadox:pieceChanged',{detail:piece}));}
+function changePiece(p,structural=false){
+ piece=normalized(p);persist();
+ // Una edición invalida la comparación anterior y evita aplicar resultados obsoletos.
+ pendingSequenceAdvice=null;
+ if($('applySuggestedOrder'))$('applySuggestedOrder').disabled=true;
+ if($('sequenceAdvice'))$('sequenceAdvice').textContent='Sin analizar este programa. La secuencia actual se conserva.';
+ if(structural)resetPlayback();
+ renderEditor();renderSetup();paintAll();
+ window.dispatchEvent(new CustomEvent('plegadox:pieceChanged',{detail:piece}));
+}
 function configure(){
  const options=(select,items,current)=>{select.replaceChildren(...items.map(item=>{const o=document.createElement('option');o.value=item.id;o.textContent=item.name;return o;}));select.value=current;};
  options($('material'),MATERIALS,piece.material);options($('die'),DIES,piece.die);options($('punch'),PUNCHES,piece.punch);
@@ -66,6 +77,43 @@ function configure(){
  $('sampleBtn').onclick=()=>changePiece(EXAMPLE,true);
  $('addFlange').onclick=()=>{if(piece.flanges.length>=20)return;changePiece({...piece,flanges:[...piece.flanges,50],angles:[...piece.angles,90],order:[...piece.order,piece.angles.length]},true);};
  $('resetOrder').onclick=()=>changePiece({...piece,order:piece.angles.map((_,i)=>i)},true);
+ $('evaluateOrder').onclick=()=>{
+  const message=$('sequenceAdvice'),apply=$('applySuggestedOrder');
+  apply.disabled=true;pendingSequenceAdvice=null;
+  const tested=suggestBendOrder(piece);
+  const counts=c=>{
+   const v=c.counts;
+   return v.cross+' cruces · '+v.overlap+' solapes · '+v.touch+
+    ' contactos · '+v.close+' proximidades';
+  };
+  const prefix='Comparadas '+tested.compared+' secuencias'+
+   (tested.exhaustive?' (todas las permutaciones)':' (búsqueda limitada)')+'. ';
+  if(tested.improved){
+   pendingSequenceAdvice={key:JSON.stringify([piece.flanges,piece.angles,piece.order,piece.thickness]),
+    order:tested.order};
+   apply.disabled=false;
+   message.textContent=prefix+'Actual: '+counts(tested.current)+
+    '. Alternativa: '+tested.order.map((bend,i)=>'G'+(i+1)+'→P'+(bend+1)+
+      '('+(piece.angles[bend]>0?'+':'')+piece.angles[bend]+'°)').join(' · ')+
+    '. Incidencias alternativas: '+counts(tested.best)+'. Sólo reduce incidencias muestreadas en 2D.';
+  }else{
+   message.textContent=prefix+'No se ha encontrado otra secuencia con menos '+
+    'incidencias de chapa en las muestras analizadas. No significa que sea segura.';
+  }
+ };
+ $('applySuggestedOrder').onclick=()=>{
+  const advice=pendingSequenceAdvice;
+  if(!advice||JSON.stringify([piece.flanges,piece.angles,piece.order,piece.thickness])!==advice.key){
+   pendingSequenceAdvice=null;$('applySuggestedOrder').disabled=true;
+   $('sequenceAdvice').textContent='Sugerencia caducada; calcula otra comparación.';
+   return;
+  }
+  const order=[...advice.order];
+  changePiece({...piece,order},true);
+  $('sequenceAdvice').textContent='Secuencia propuesta aplicada: '+
+   order.map((bend,i)=>'G'+(i+1)+'→P'+(bend+1)).join(' · ')+
+   '. Revisar montaje e interferencias reales antes de fabricar.';
+ };
  $('touchOrderMode').onclick=toggleTouchOrder;
  $('finalCanvas').addEventListener('pointerdown',pickBendFromDrawing);
  $('saveBtn').onclick=save;

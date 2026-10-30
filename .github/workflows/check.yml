@@ -34,6 +34,7 @@ jobs:
           node --check dxf-export.js
           node --check flat-layout.js
           node --check sheet-interference.js
+          node --check sequence-advisor.js
       - name: Pruebas de dirección, secuencia y desarrollo
         run: npm test
 

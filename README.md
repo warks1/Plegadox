@@ -488,3 +488,16 @@ El muestreo de interferencias evita ahora asignar la posición exacta
 comenzado la operación siguiente. Las muestras finales de cada golpe
 se toman justo antes de la transición y se conserva la muestra de
 pieza terminada en el último golpe.
+
+### Comparador de órdenes de plegado (chapa 2D)
+
+Desde **Programación → Orden de plegado** se puede pulsar **Analizar órdenes
+posibles**. Para hasta cuatro pliegues se examinan todas las permutaciones
+(24 para 4); en piezas más largas la búsqueda se limita a 60 alternativas
+por coste. Cada candidato se puntúa en cinco posiciones ilustrativas por
+golpe según cruces, solapes, contacto puntual y proximidad de alas no
+consecutivas. Si existe una puntuación **estrictamente menor**, muestra la
+secuencia propuesta con grados firmados y las incidencias comparadas.
+**«Aplicar orden sugerido» requiere una pulsación expresa** y
+se desactiva si se edita la pieza. No comprueba punzones, matrices, carrera
+CNC, mesa, topes ni reorientaciones reales; **NO autoriza fabricar**.

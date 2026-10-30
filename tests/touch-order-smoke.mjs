@@ -36,6 +36,22 @@ try{
  assert.deepEqual(order,[3,2,1,0],'Tocar los pliegues permite establecer el orden real');
  assert.equal(await page.locator('#touchOrderMode').getAttribute('aria-pressed'),'false');
  assert.match(await page.locator('#touchOrderHint').textContent(),/Secuencia aplicada/);
+ // La sugerencia nunca modifica la pieza hasta pulsar APLICAR.
+ const original=await page.evaluate(()=>window.PLEGADOX_STATE().piece.order);
+ assert.equal(await page.locator('#applySuggestedOrder').isDisabled(),true);
+ await page.locator('#evaluateOrder').click();
+ assert.match(await page.locator('#sequenceAdvice').textContent(),/Comparadas 24 secuencias/);
+ assert.deepEqual(await page.evaluate(()=>window.PLEGADOX_STATE().piece.order),original);
+ if(await page.locator('#applySuggestedOrder').isEnabled()){
+  await page.locator('#applySuggestedOrder').click();
+  const changed=await page.evaluate(()=>window.PLEGADOX_STATE().piece.order);
+  assert.notDeepEqual(changed,original);
+  assert.match(await page.locator('#sequenceAdvice').textContent(),/Secuencia propuesta aplicada/);
+  assert.equal(await page.locator('#applySuggestedOrder').isDisabled(),true);
+ }else{
+  assert.match(await page.locator('#sequenceAdvice').textContent(),/No se ha encontrado/);
+ }
+
  await page.locator('#fileInput').setInputFiles({
   name:'pieza-interferencias.json',
   mimeType:'application/json',

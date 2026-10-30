@@ -45,3 +45,8 @@
 .sheet-collision-legend .sheet-red{background:#ef554a;}
 .sheet-collision-legend .sheet-amber{background:#f5af42;}
 .sheet-collision-legend small{font-size:10px;line-height:1.4;width:100%;opacity:.9;}
+
+.sequence-advisor{margin-top:12px;border:1px solid #c2d9e5;border-radius:10px;background:rgba(57,141,186,.06);padding:12px;display:grid;gap:8px;}
+.sequence-advisor p{font-size:12px;line-height:1.55;margin:0;overflow-wrap:anywhere;}
+.sequence-advisor small{color:#64879d;font-size:11px;line-height:1.45;}
+.sequence-advisor button:disabled{opacity:.48;cursor:not-allowed;}
