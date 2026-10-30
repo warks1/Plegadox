@@ -10,6 +10,7 @@ export const MATERIALS = [
  {id:'zincor',name:'Acero zincor',k:0.36,springback:1.0}
 ];
 export const DIES = [6,10,12,16,22,24,32,35,40,50].map(v=>({id:'v'+v,name:'V'+v,opening:v,angle:88,height:80}));
+DIES.push({id:'v16-30',name:'V16 / 30° · perfil de ensayo',opening:16,angle:30,height:80,verifiedSpecs:false,profileAccuracy:'provisional'});
 export const PUNCHES = [
  {id:'straight88',name:'Recto 88°',angle:88,height:120,tip:0.8,type:'recto'},
  {id:'straight30',name:'Recto 30°',angle:30,height:120,tip:0.5,type:'recto'},
