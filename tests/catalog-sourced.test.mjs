@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {DIES,PUNCHES} from '../engine.js';
 import {registerCatalogue,CATALOG_SOURCES,toolMatchesBrand} from '../catalog.js';
-import {sectionPunch,sectionDie} from '../tool-profiles.js';
+import {sectionPunch,sectionDie,sectionBounds} from '../tool-profiles.js';
 import {inspectProfile} from '../validation.js';
 registerCatalogue(DIES,PUNCHES);
 
@@ -34,8 +34,10 @@ test('matrices de 30° muestran V6 V8 V10 V12 y anchura exterior de ficha',()=>{
    assert.ok(die,id);
    assert.equal(die.angle,30);
    assert.equal(die.opening,openings[i]);
-   const pts=sectionDie(die).points;
-   assert.equal(pts[4][0]-pts[0][0],widths[i]);
+   const section=sectionDie(die),bounds=sectionBounds(section.points);
+   assert.equal(bounds.maxX-bounds.minX,widths[i]);
+   assert.ok(section.roundedShoulders,'Debe dibujarse R de hombro de ficha');
+   assert.ok(section.points.length>15,'Cada hombro incluye arco circular');
    assert.equal(die.profileAccuracy,'provisional');
  });
 });
@@ -44,4 +46,30 @@ test('catálogo de tipo Amada no suplanta fabricante AMADA',()=>{
  assert.ok(toolMatchesBrand(tool,'Amada'));
  assert.equal(tool.manufacturer,'CONIC (tipo Amada)');
  assert.match(CATALOG_SOURCES[tool.source].url,/conic\.co\.jp/);
+});
+
+test('R nominal de hombro de matrices CONIC se conserva sin cambiar apertura teórica',()=>{
+ for(const id of ['conic-v006-30-s','conic-v008-30-s','conic-v010-30-s','conic-v012-30-s']){
+  const item=DIES.find(x=>x.id===id),s=sectionDie(item),r=item.shoulderRadius;
+  assert.ok(Math.abs(s.shoulderRadius-r)<1e-10);
+  assert.equal(s.opening,item.opening);
+  assert.equal(s.angle,30);
+  const leftArc=s.points.slice(1,10);
+  assert.equal(leftArc.length,9);
+  const cx=leftArc[0][0],cy=s.height-r;
+  for(const [x,y] of leftArc)
+   assert.ok(Math.abs(Math.hypot(x-cx,y-cy)-r)<1e-9,
+     'Los puntos del hombro deben estar en el círculo R'+r);
+  const rightArc=s.points.slice(11,20);
+  for(let i=0;i<9;i++){
+   assert.ok(Math.abs(leftArc[8-i][0]+rightArc[i][0])<1e-9);
+   assert.ok(Math.abs(leftArc[8-i][1]-rightArc[i][1])<1e-9);
+  }
+ }
+});
+test('no se inventa radio de hombro en matrices de V genéricas',()=>{
+ const generic=sectionDie({opening:16,angle:88,height:80});
+ assert.equal(generic.shoulderRadius,0);
+ assert.equal(generic.roundedShoulders,false);
+ assert.equal(generic.points.length,7);
 });

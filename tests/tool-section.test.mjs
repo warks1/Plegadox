@@ -148,3 +148,14 @@ test('las patas de cabra de GN9 conservan el escote con punta R0,6 real',()=>{
  assert.ok(p.points.length>20);
  assert.ok(p.points.some(q=>Math.abs(q[0]+9)<.001));
 });
+
+test('la matriz V16/30 con R1,6 de hombros conserva perfil simétrico provisional',()=>{
+ const item={opening:16,angle:30,height:120,shoulderRadius:1.6};
+ const m=sectionDie(item);
+ approximate(m.shoulderRadius,1.6,1e-9);
+ approximate(m.depth,8/Math.tan(15*Math.PI/180),1e-9);
+ const n=m.points.length;
+ assert.equal(n,23);
+ approximate(m.points[1][0],-m.points[n-5][0],1e-9);
+ assert.equal(m.provisional,true);
+});

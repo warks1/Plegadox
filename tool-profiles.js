@@ -67,13 +67,34 @@ export function sectionDie(tool={}){
  const depth=halfOpen/Math.tan(angle*Math.PI/360);
  const halfBody=Number(tool.outerWidth)>opening ? Number(tool.outerWidth)/2 : Math.max(opening*.98,halfOpen+9);
  const h=Math.max(height,depth+7);
- return {
-  points:[
-   [-halfBody,h],[-halfOpen,h],[0,h-depth],
-   [halfOpen,h],[halfBody,h],[halfBody,0],[-halfBody,0]
-  ],
-  opening,angle,height:h,depth,provisional:tool.profileAccuracy!=='verified'
- };
+ const specifiedRadius=Number(tool.shoulderRadius);
+ const beta=angle*Math.PI/360;
+ // Radios sólo cuando figuran en la ficha. El punto de intersección de
+ // flancos sigue siendo V nominal; los redondeos recortan su hombro agudo.
+ const rawRadius=Number.isFinite(specifiedRadius)&&specifiedRadius>0?specifiedRadius:0;
+ const cornerAngle=Math.PI/2-beta;
+ const geometricMax=Math.min((halfBody-halfOpen)*.8,depth*.8)/
+     Math.tan(cornerAngle/2);
+ const shoulderRadius=Math.min(rawRadius,Math.max(0,geometricMax));
+ let points;
+ if(shoulderRadius>0){
+  const dist=shoulderRadius*Math.tan(cornerAngle/2);
+  const cx=-halfOpen-dist,cy=h-shoulderRadius;
+  const leftArc=Array.from({length:9},(_,i)=>{
+   const theta=Math.PI/2-(Math.PI/2-beta)*i/8;
+   return [cx+shoulderRadius*Math.cos(theta),
+     cy+shoulderRadius*Math.sin(theta)];
+  });
+  const rightArc=leftArc.slice().reverse().map(([x,y])=>[-x,y]);
+  points=[[-halfBody,h],...leftArc,[0,h-depth],...rightArc,
+   [halfBody,h],[halfBody,0],[-halfBody,0]];
+ }else{
+  points=[[-halfBody,h],[-halfOpen,h],[0,h-depth],
+   [halfOpen,h],[halfBody,h],[halfBody,0],[-halfBody,0]];
+ }
+ return {points,opening,angle,height:h,depth,shoulderRadius,
+  roundedShoulders:shoulderRadius>0,
+  provisional:tool.profileAccuracy!=='verified'};
 }
 export function sectionBounds(points){
  return {

@@ -280,3 +280,13 @@ circular tangente a ambos flancos**, según diámetro de punta y ángulo
 incluido. En las fichas se muestra R = diámetro / 2; Ø1,2 mm es R0,6,
 no R1,2. El arco es una polilínea aproximada, y el resto del cuerpo,
 amarre y radios aún requieren contornos acotados del fabricante.
+
+### Radios de hombro de matrices documentadas
+
+Cuando el catálogo incluye expresamente radio de hombro de matriz
+(por ejemplo CONIC R1/R1,5/R2/R2,5 o Rolleri R1,6), la sección
+paramétrica dibuja arcos circulares tangentes al plano de apoyo y a los
+flancos de la V, conservando la apertura y la profundidad **teóricas**.
+Las matrices sin cota de radio se mantienen sin fillete inventado.
+La forma restante y la geometría de amarre siguen siendo provisionales:
+ninguna referencia pasa a ser CAD verificado por esta mejora.
