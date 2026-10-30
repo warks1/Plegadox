@@ -9,6 +9,7 @@ const buttons=[
 function currentView(){return window.PLEGADOX_MACHINE_VIEW;}
 function syncControls(){
  const view=currentView();if(!view)return;
+ document.querySelector('.cp-simulation')?.classList.toggle('is-technical',Boolean(view.section));
  for(const [id,key]of buttons){
   const b=$(id);if(b)b.setAttribute('aria-pressed',String(Boolean(view[key])));
  }
@@ -24,8 +25,8 @@ function syncControls(){
  }
 }
 function repaint(){
- window.PLEGADOX_REDRAW?.();
  syncControls();
+ window.PLEGADOX_REDRAW?.();
 }
 function init(){
  const view=currentView();if(!view)return;
