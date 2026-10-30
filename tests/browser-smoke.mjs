@@ -12,9 +12,11 @@ try{
   const page=await desktop.newPage(),errors=[];
   page.on('pageerror',err=>errors.push(err.message));
   await page.goto('http://127.0.0.1:4173/',{waitUntil:'networkidle',timeout:30000});
-  await page.getByRole('heading',{name:'Simulación industrial'}).waitFor();
+  await page.getByRole('heading',{name:'Simulación de plegado'}).waitFor();
   assert.ok(await page.locator('#cockpitTools .cp-tool-card').count()>0,'Hay tarjetas de herramientas');
-  assert.ok(await page.locator('#cockpitSelectedTool3D').isVisible(),'Visor de herramienta 3D visible');
+  await page.locator('#showTool3D').click();
+  assert.ok(await page.locator('#cockpitSelectedTool3D').isVisible(),'Visor 3D de herramienta se abre');
+  await page.locator('#showTool3D').click();
   await page.locator('#cpBrandTabs button[data-brand="Amada"]').click();
   assert.ok(await page.locator('#cockpitTools .cp-tool-card').count()>=7,'Punzones Amada cargados');
   await page.locator('#cockpitTools .cp-tool-card').first().click();
@@ -23,6 +25,11 @@ try{
   assert.ok(Number(await page.locator('#timeline').inputValue())>0,'El tiempo de simulación avanza');
   await page.locator('#pauseBtn').click();
   await page.screenshot({path:'test-results/plegadox-desktop.png',fullPage:true});
+  const preview=await page.screenshot({type:'jpeg',quality:43,fullPage:false});
+  console.log('UI_SCREENSHOT_BEGIN');
+  const data=preview.toString('base64');
+  for(let i=0;i<data.length;i+=1800)console.log('UI_IMAGE_CHUNK:'+data.slice(i,i+1800));
+  console.log('UI_SCREENSHOT_END');
   await page.locator('[data-tab="programacion"]').click();
   await page.locator('.angle-input').first().fill('-90');
   await page.locator('.angle-input').first().dispatchEvent('change');
@@ -35,7 +42,7 @@ try{
   const phone=await mobile.newPage(),mobileErrors=[];
   phone.on('pageerror',err=>mobileErrors.push(err.message));
   await phone.goto('http://127.0.0.1:4173/',{waitUntil:'networkidle',timeout:30000});
-  await phone.getByRole('heading',{name:'Simulación industrial'}).waitFor();
+  await phone.getByRole('heading',{name:'Simulación de plegado'}).waitFor();
   await phone.locator('#cpBrandTabs button[data-brand="Bystronic"]').click();
   assert.ok(await phone.locator('#cockpitTools .cp-tool-card').count()>0,'Herramientas Bystronic visibles en móvil');
   const scroll=await phone.evaluate(()=>({actual:document.documentElement.scrollWidth,viewport:window.innerWidth}));
