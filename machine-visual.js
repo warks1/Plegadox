@@ -266,15 +266,25 @@ function drawWarningHud(ctx,w,h,piece,sim,view){
    const x=w*.5+(issue.point.x-cx)*scale+(view.panX||0);
    const y=usable*.5-(issue.point.y-cy)*scale+(view.panY||0);
    if(y<0||y>usable||x<0||x>w)continue;
-   ctx.fillStyle='#ff663b4b';ctx.strokeStyle='#ff784f';ctx.lineWidth=2;
+   const penetration=issue.category==='penetration';
+   ctx.fillStyle=penetration?'#ff663b4b':'#ffbb4545';
+   ctx.strokeStyle=penetration?'#ff784f':'#ffcc70';ctx.lineWidth=2;
    ctx.beginPath();ctx.arc(x,y,8,0,Math.PI*2);ctx.fill();ctx.stroke();
-   ctx.beginPath();ctx.moveTo(x-4,y-4);ctx.lineTo(x+4,y+4);
-   ctx.moveTo(x+4,y-4);ctx.lineTo(x-4,y+4);ctx.stroke();
+   ctx.beginPath();
+   if(penetration){
+    ctx.moveTo(x-4,y-4);ctx.lineTo(x+4,y+4);
+    ctx.moveTo(x+4,y-4);ctx.lineTo(x-4,y+4);
+   }else{
+    ctx.moveTo(x,y-4);ctx.lineTo(x,y+1);
+    ctx.moveTo(x,y+4);ctx.lineTo(x+.1,y+4);
+   }
+   ctx.stroke();
   }
   ctx.restore();
  }
  const dominant=diagnostic.issues[0],tool=dominant.kind==='punch'?'PUNZÓN':'MATRIZ';
- const message='⚠ POSIBLE INTERFERENCIA 2D · '+tool;
+ const message=dominant.category==='penetration'?
+  '⚠ PENETRACIÓN 2D · '+tool:'⚠ HOLGURA 2D · '+tool;
  ctx.save();
  const font=Math.max(9,Math.min(12,w/48));
  ctx.font='800 '+font+'px system-ui';const width=Math.min(w-16,ctx.measureText(message).width+19);

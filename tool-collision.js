@@ -238,19 +238,27 @@ export function currentToolContact(piece,time=0){
 }
 export function inspectSequenceTools(piece,samplesPerOperation=9){
  const p=normalized(piece),out=[];
+ const severity=hit=>hit.category==='penetration'?2:1;
  for(let op=0;op<p.order.length;op++){
-  let worst=null,firstTime=null,checked=0;
+  let worst=null,firstTime=null,checked=0,hasPenetration=false;
   for(let n=0;n<samplesPerOperation;n++){
    const time=op*5+(n+.5)/samplesPerOperation*5;
    const result=inspectToolContact(p,time);checked++;
+   if(result.hasPenetration)hasPenetration=true;
    if(result.issues.length){
-    const deepest=result.issues[0];
-    if(!worst||deepest.depth>worst.depth){worst={...deepest};firstTime=time;}
+    const representative=[...result.issues].sort((a,b)=>
+      severity(b)-severity(a)||b.depth-a.depth)[0];
+    if(!worst||severity(representative)>severity(worst)||
+       (severity(representative)===severity(worst)&&representative.depth>worst.depth)){
+      worst={...representative};firstTime=time;
+    }
    }
   }
   out.push({operation:op,bend:p.order[op],angle:p.angles[p.order[op]],
-   possibleToolIntrusion:!!worst,example:worst,exampleTime:firstTime,
-   samples:checked,verified:false});
+   possibleToolInterference:!!worst,possibleToolIntrusion:hasPenetration,
+   example:worst,exampleTime:firstTime,samples:checked,verified:false});
  }
- return {operations:out,verified:false,warningCount:out.filter(x=>x.possibleToolIntrusion).length};
+ return {operations:out,verified:false,
+  warningCount:out.filter(x=>x.possibleToolInterference).length,
+  intrusionCount:out.filter(x=>x.possibleToolIntrusion).length};
 }

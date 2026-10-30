@@ -86,3 +86,14 @@ test('el aviso diferencia holgura por espesor y penetración de la fibra',()=>{
  assert.match(penetration,/PUNZÓN/);
  assert.match(describeToolIssue(null),/NO está verificada/);
 });
+
+test('la secuencia prioriza penetraciones y diferencia los avisos de holgura',()=>{
+ const result=inspectSequenceTools(EXAMPLE,4);
+ assert.equal(result.warningCount,result.operations.filter(x=>x.possibleToolInterference).length);
+ assert.equal(result.intrusionCount,result.operations.filter(x=>x.possibleToolIntrusion).length);
+ for(const op of result.operations){
+  assert.equal(op.possibleToolInterference,Boolean(op.example));
+  if(op.example?.category==='penetration')assert.equal(op.possibleToolIntrusion,true);
+  assert.equal(op.verified,false);
+ }
+});

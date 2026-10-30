@@ -290,7 +290,7 @@ function renderSimulationText(){
  $('foldedCount').textContent=st.finished+' de '+st.count+' pliegues';
  $('timeline').value=Math.round(1000*st.time/st.duration);
  const root=$('simSequence');
- const key=JSON.stringify({order:piece.order,angles:piece.angles,flanges:piece.flanges,issues:check.perOperation.map((x,i)=>x.potentialInterference||check.tools.operations[i]?.possibleToolIntrusion)});
+ const key=JSON.stringify({order:piece.order,angles:piece.angles,flanges:piece.flanges,issues:check.perOperation.map((x,i)=>x.potentialInterference||check.tools.operations[i]?.possibleToolInterference)});
  if(root.dataset.key!==key){
    root.dataset.key=key;
    root.replaceChildren(...piece.order.map((bend,i)=>{
@@ -305,7 +305,7 @@ function renderSimulationText(){
      const a=document.createElement('strong');a.textContent=(angle>0?'+':'')+angle+'°';
      const l=document.createElement('small');l.textContent='L = '+numbers(piece.flanges[bend+1],1)+' mm';
      values.append(a,l);const menu=document.createElement('span');menu.className='op-more';menu.textContent='⋮';
-     if(check.perOperation[i]?.potentialInterference||check.tools.operations[i]?.possibleToolIntrusion){
+     if(check.perOperation[i]?.potentialInterference||check.tools.operations[i]?.possibleToolInterference){
        el.classList.add('suspect');el.title='Posible interferencia geométrica 2D: comprobar antes de plegar';
        const mark=document.createElement('span');mark.className='op-alert';mark.textContent='!';mark.setAttribute('aria-label','Advertencia geométrica');values.append(mark);
      }
@@ -328,7 +328,7 @@ function renderSimulationText(){
    const toolStep=check.tools.operations[st.activeOperation];
    const currentIssue=toolNow.issues[0];
    const toolWarning=currentIssue?describeToolIssue(currentIssue):
-     toolStep?.possibleToolIntrusion?
+     toolStep?.possibleToolInterference?
        '⚠ En este golpe aparecen posibles interferencias con herramientas en otras posiciones.':
        describeToolIssue(null);
    const messages=[toolWarning,main,...other];
@@ -338,7 +338,7 @@ function renderSimulationText(){
      details.replaceChildren(...messages.map((m,i)=>{const line=document.createElement('p');line.textContent=(i?'• ':'')+m;return line;}));
      details.title=check.limitations;
    }
-   details.classList.toggle('has-warning',check.hasGeometryWarning||toolNow.hasWarning||!!toolStep?.possibleToolIntrusion);
+   details.classList.toggle('has-warning',check.hasGeometryWarning||toolNow.hasWarning||!!toolStep?.possibleToolInterference);
  }
 }
 function paintAll(){drawProfile('finalCanvas',piece.angles.map(()=>1),true);drawMachine();drawProfile('progressCanvas',stage(piece,sim.time).fractions,false);drawScene();toolDrawing();renderDevelopment();renderToolCards();renderSimulationText();}
