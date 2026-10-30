@@ -45,7 +45,7 @@ try{
  assert.ok(await page.locator('#cockpitTools .cp-tool-card').count()>=2);
  await page.locator('#cockpitTools .cp-tool-card').first().click();
  const saved=await page.evaluate(()=>({die:window.PLEGADOX_STATE().piece.die,kind:window.PLEGADOX_STATE().piece.punch}));
- assert.ok(saved.die.startsWith('amada'),'La matriz elegida en el catálogo modifica la programación');
+ assert.ok(saved.die.startsWith('amada')||saved.die.startsWith('conic-'),'La matriz seleccionada en Amada o CONIC tipo Amada debe modificar la programación: '+saved.die);
  await page.locator('.cp-kind-tabs [data-kind="all"]').click();
  assert.equal(await page.locator('#cockpitTools [data-category="punch"]').count(),1);
  assert.equal(await page.locator('#cockpitTools [data-category="die"]').count(),1);
