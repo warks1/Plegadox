@@ -64,3 +64,48 @@ test('no insinúa que cambiar el orden cure cruces permanentes de la pieza final
  assert.deepEqual(reverse.finalRisks,result.finalRisks,
   'La geometría final depende de la pieza, no de la secuencia elegida');
 });
+
+test('el segundo filtro descarta mejoras de chapa que agraven contacto con útiles',()=>{
+ const p={flanges:[50,50,50,50],angles:[140,140,140],
+  order:[0,1,2],thickness:2};
+ const baseline=scoreBendOrder(p,p.order);
+ const permutations=sequenceCandidates(p.order).filter(order=>
+  order.some((id,i)=>id!==p.order[i])&&scoreBendOrder(p,order).score<baseline.score);
+ assert.ok(permutations.length>0,'Debe haber secuencias candidatas de mejora');
+ const evaluator=part=>({operations:part.order.map((bend,index)=>({
+  samples:2,possibleToolIntrusion:index===0&&part.order[0]!==0,
+  possibleToolInterference:index===0&&part.order[0]!==0
+ }))});
+ const res=suggestBendOrder(p,{toolEvaluator:evaluator,maxToolCandidates:8});
+ assert.equal(res.toolScreen.current.penetrationOperations,0);
+ assert.ok(res.toolScreen.candidateChecks<=8);
+ assert.ok(res.toolScreen.blockedByTools>=0);
+ assert.ok(res.best.score<=res.current.score);
+ assert.ok(res.improved===false||res.toolScreen.best.penetrationOperations===0);
+ assert.ok(res.improved===false||res.toolScreen.best.warningOperations===0);
+ assert.equal(res.toolScreen.verified,false);
+});
+test('un evaluador que marca todos los candidatos como peores bloquea su aplicación',()=>{
+ const p={flanges:[50,50,50,50],angles:[140,140,140],
+  order:[0,1,2],thickness:2};
+ const evaluator=part=>({operations:part.order.map((_,i)=>({
+  samples:1,possibleToolIntrusion:i===0&&part.order.join(',')!==p.order.join(','),
+  possibleToolInterference:i===0&&part.order.join(',')!==p.order.join(',')
+ }))});
+ const res=suggestBendOrder(p,{toolEvaluator:evaluator,maxToolCandidates:4});
+ assert.ok(res.bestSheet.score<res.current.score,'Hay una alternativa de chapa');
+ assert.equal(res.improved,false,'El cribado de herramienta impide recomendarla');
+ assert.deepEqual(res.order,p.order);
+ assert.ok(res.toolScreen.blockedByTools>0);
+ assert.equal(res.toolScreen.current.warningOperations,0);
+ assert.equal(res.toolScreen.best.warningOperations,0);
+});
+test('herramientas y signos del programa no se modifican al comparar secuencias',()=>{
+ const p={...EXAMPLE,punch:'straight30',die:'v16-30',angles:[90,-90,120,-120]};
+ const initial=structuredClone(p);
+ const screening=suggestBendOrder(p,{maxToolCandidates:2,toolSamples:1});
+ assert.deepEqual(p,initial);
+ assert.equal(screening.toolScreen.samplesPerOperation,1);
+ assert.equal(screening.toolScreen.current.order.length,4);
+ assert.equal(screening.verified,false);
+});

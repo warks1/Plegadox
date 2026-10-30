@@ -88,6 +88,16 @@ function configure(){
   };
   const prefix='Comparadas '+tested.compared+' secuencias'+
    (tested.exhaustive?' (todas las permutaciones)':' (búsqueda limitada)')+'. ';
+  const tool=tested.toolScreen;
+  const toolDetails=' Cribado punzón/matriz 2D ('+tool.samplesPerOperation+
+   ' muestras/golpe, '+tool.candidateChecks+' alternativas): actual '+
+   tool.current.penetrationOperations+' golpes con penetración posible y '+
+   tool.current.warningOperations+' con avisos; propuesta '+
+   tool.best.penetrationOperations+' y '+tool.best.warningOperations+
+   ', respectivamente. No incluye colisiones 3D.';
+  const toolBlock=tool.blockedByTools?
+   ' Se descartaron '+tool.blockedByTools+
+    ' alternativas que aumentaban los avisos de útiles de la muestra.':'';
   const finalWarning=tested.finalGeometryAffected?
    ' ATENCIÓN: la pieza final conserva '+tested.finalRisks.cross+' cruces, '+
    tested.finalRisks.overlap+' solapes, '+tested.finalRisks.touch+
@@ -102,10 +112,11 @@ function configure(){
     '. Alternativa: '+tested.order.map((bend,i)=>'G'+(i+1)+'→P'+(bend+1)+
       '('+(piece.angles[bend]>0?'+':'')+piece.angles[bend]+'°)').join(' · ')+
     '. Incidencias alternativas: '+counts(tested.best)+
-    '. Sólo reduce incidencias muestreadas en 2D.'+finalWarning;
+    '. Sólo reduce incidencias muestreadas en 2D.'+toolDetails+toolBlock+finalWarning;
   }else{
    message.textContent=prefix+'No se ha encontrado otra secuencia con menos '+
-    'incidencias de chapa en las muestras analizadas. No significa que sea segura.'+finalWarning;
+    'incidencias de chapa sin agravar los avisos de útiles en las alternativas cribadas. '+
+    'No significa que sea segura.'+toolDetails+toolBlock+finalWarning;
   }
  };
  $('applySuggestedOrder').onclick=()=>{

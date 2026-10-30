@@ -506,3 +506,15 @@ El comparador también calcula por separado las incidencias del **perfil
 final**, que son independientes del orden: si ese perfil tiene cruces,
 solapamientos o contactos, se advierte expresamente que reorganizar los
 golpes no corrige la geometría final de la pieza.
+
+### Segundo cribado de herramientas para el orden sugerido
+
+La sugerencia ahora contrasta la secuencia actual y hasta **cuatro alternativas
+candidatas** también con las siluetas 2D de **punzón y matriz** seleccionados,
+en tres posiciones por golpe. Una alternativa que aumente el número de
+operaciones con posible penetración o con holgura insuficiente respecto
+al orden actual **se descarta**, incluso si mejora las incidencias entre alas.
+La interfaz muestra ambos recuentos y el número de alternativas examinadas.
+Esto NO analiza todas las trayectorias ni garantiza ausencia de colisiones:
+perfiles paramétricos, muestreos discretos, montaje de útiles, topes, mesa,
+volteos y reorientaciones reales siguen pendientes de verificación física.
