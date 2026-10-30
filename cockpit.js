@@ -6,6 +6,7 @@ import {sectionPunch,sectionDie} from './tool-profiles.js';
 const $=id=>document.getElementById(id);
 const state={brand:'Todos',kind:'all',search:'',selectedTool:null,selectedToolKind:'punch',showAll:false,yaw:-.6,pitch:.34,zoom:1};
 const format=(n,d=1)=>Number(n).toLocaleString('es-ES',{minimumFractionDigits:d,maximumFractionDigits:d});
+const tipR=tool=>format((Number(tool.tip)||0)/2,2);
 function current(){const s=window.PLEGADOX_STATE?.();if(s)return s;let p=null;try{p=JSON.parse(localStorage.getItem('plegadox:piece:v1'));}catch{}return {piece:normalized(p),sim:{time:0}};}
 const kindList=()=>{
  const punches=PUNCHES.map(tool=>({...tool,uiKind:'punch'}));
@@ -74,7 +75,7 @@ function renderCatalogue(){
    b.title=(tool.reference||tool.name)+(tool.verifiedSpecs?' · Especificaciones verificadas':' · Modelo provisional');
    const canvas=document.createElement('canvas');canvas.setAttribute('aria-hidden','true');
    const title=document.createElement('b');title.textContent=tool.reference||tool.name;
-   const detail=document.createElement('small');detail.textContent=kind==='punch'?tool.angle+'° · R'+tool.tip+' · H'+tool.height:'V'+tool.opening+' · '+tool.angle+'° · H'+tool.height;
+   const detail=document.createElement('small');detail.textContent=kind==='punch'?tool.angle+'° · R'+tipR(tool)+' · H'+tool.height:'V'+tool.opening+' · '+tool.angle+'° · H'+tool.height;
    const flag=document.createElement('em');flag.textContent=tool.verifiedSpecs?'Ficha documentada':'Geometría provisional';
    b.append(canvas,title,detail,flag);b.onclick=()=>toolPicked(tool);
    container.append(b);drawThumbnail(canvas,tool,kind);
@@ -173,7 +174,7 @@ function drawToolViewer(){
  if(!tool)return;
  const meta=$('toolInspectorMeta');
  if(meta)meta.textContent=[tool.manufacturer||'Herramienta genérica',
-  tool.reference||tool.name,kind==='punch'?'Ángulo '+tool.angle+'° · Altura '+tool.height+' mm · Punta R'+tool.tip:
+  tool.reference||tool.name,kind==='punch'?'Ángulo '+tool.angle+'° · Altura '+tool.height+' mm · Punta R'+tipR(tool):
   'V '+tool.opening+' mm · '+tool.angle+'° · Altura '+tool.height+' mm',
   tool.profileAccuracy==='verified'?'Geometría verificada':'Perfil provisional sin cotas CAD completas'
  ].join('  |  ');

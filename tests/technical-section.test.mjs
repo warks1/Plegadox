@@ -55,9 +55,10 @@ test('el segundo golpe negativo no cambia el signo de la pieza final',()=>{
 });
 test('punzón corto de 15° conserva su ángulo incluido real',()=>{
  const shape=sectionPunch({angle:15,height:50,tip:.6});
- const apex=shape.points[3],shoulder=shape.points[2];
- const width=shoulder[0]-apex[0],dy=shoulder[1]-apex[1];
+ const tangent=shape.points[3],shoulder=shape.points[2];
+ const width=shoulder[0]-tangent[0],dy=shoulder[1]-tangent[1];
  near(2*Math.atan2(width,dy)*180/Math.PI,15,1e-6);
+ near(Math.min(...shape.points.map(p=>p[1])),0);
 });
 test('cotas de 2400 mm no se truncan; se avisa del límite de máquina',()=>{
  const p=normalized({...EXAMPLE,width:2400});

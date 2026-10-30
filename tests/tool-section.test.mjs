@@ -114,3 +114,36 @@ test('el volteo intermedio conserva longitudes en 3D y sólo comprime su proyecc
   }
  }
 });
+
+test('la punta paramétrica es un arco R=Ø/2 tangente a los dos flancos',()=>{
+ for(const angle of [15,30,60,88,120]){
+  for(const diameter of [.6,1.2,2]){
+   const p=sectionPunch({type:'recto',height:120,angle,tip:diameter});
+   approximate(p.tipRadius,diameter/2,1e-12);
+   assert.equal(p.roundedNose,true);
+   const rightShoulder=p.points[2],rightTangent=p.points[3];
+   const beta=angle*Math.PI/360,r=diameter/2;
+   approximate(rightTangent[0],r*Math.cos(beta),1e-9);
+   approximate(rightTangent[1],r*(1-Math.sin(beta)),1e-9);
+   const included=2*Math.atan2(rightShoulder[0]-rightTangent[0],
+      rightShoulder[1]-rightTangent[1])*180/Math.PI;
+   approximate(included,angle,1e-8);
+   const apex=p.points[11];
+   approximate(apex[0],0,1e-8);
+   approximate(apex[1],0,1e-8);
+   const circle=p.points.slice(3,20);
+   for(const [x,y] of circle)
+    approximate(Math.hypot(x,y-r),r,1e-8);
+   assert.equal(p.points[0][1],120);
+  }
+ }
+});
+test('las patas de cabra de GN9 conservan el escote con punta R0,6 real',()=>{
+ const gn9=PUNCHES.find(t=>t.id==='conic-gn9-12-8806');
+ assert.ok(gn9);
+ const p=sectionPunch(gn9);
+ approximate(p.tipRadius,.6,1e-12);
+ assert.equal(p.roundedNose,true);
+ assert.ok(p.points.length>20);
+ assert.ok(p.points.some(q=>Math.abs(q[0]+9)<.001));
+});

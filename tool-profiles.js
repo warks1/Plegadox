@@ -6,13 +6,20 @@
 export function sectionPunch(tool={}){
  const height=Math.max(50,Number(tool.height)||120);
  const angle=Math.min(120,Math.max(15,Number(tool.angle)||88));
- const radius=Math.max(.25,Number(tool.tip)||.8);
- // El ancho superior se ajusta si un punzón bajo y muy agudo no admite
- // una sección de 44 mm; se conserva el ángulo incluido de la punta.
- const halfTip=Math.min(4,radius*.5);
- const halfTop=Math.min(22,halfTip+(height-4)*Math.tan(angle*Math.PI/360));
- const taperHeight=(halfTop-halfTip)/Math.tan(angle*Math.PI/360);
- const bodyBottom=taperHeight;
+ // En el catálogo tip es el DIÁMETRO Ø, no el radio (p. ej. Ø1,2 = R0,6).
+ const tipDiameter=Math.max(.25,Number(tool.tip)||.8);
+ const tipRadius=tipDiameter/2;
+ const beta=angle*Math.PI/360;
+ const tangentX=tipRadius*Math.cos(beta);
+ const tangentY=tipRadius*(1-Math.sin(beta));
+ const halfTop=Math.min(22,tangentX+Math.max(0,height-4-tangentY)*Math.tan(beta));
+ const bodyBottom=tangentY+(halfTop-tangentX)/Math.tan(beta);
+ // Arco circular de la punta tangente a los DOS flancos rectos.
+ // Polilínea aproximada, NO geometría CAD de fabricación.
+ const noseArc=Array.from({length:17},(_,i)=>{
+  const theta=-beta-(Math.PI-2*beta)*i/16;
+  return [tipRadius*Math.cos(theta),tipRadius*(1+Math.sin(theta))];
+ });
  let points;
  if(tool.profileStyle==='user-photo'){
   // Contorno trazado proporcionalmente del ejemplo gráfico enviado al chat.
@@ -38,17 +45,19 @@ export function sectionPunch(tool={}){
    [13,height-20],[-neckOffset,height-20],
    [-neckOffset,recessY],[outerW,recessY],
    [outerW,shoulderY],[halfTop,shoulderY],
-   [halfTop,bodyBottom],[halfTip,0],[-halfTip,0],
+   [halfTop,bodyBottom],...noseArc,
    [-halfTop,bodyBottom],[-halfTop,shoulderY-9],
    [-rearW,shoulderY-9],[-rearW,height]
   ];
  }else{
   points=[
    [-halfTop,height],[halfTop,height],
-   [halfTop,bodyBottom],[halfTip,0],[-halfTip,0],[-halfTop,bodyBottom]
+   [halfTop,bodyBottom],...noseArc,[-halfTop,bodyBottom]
   ];
  }
- return {points,angle,height,tipRadius:radius/2,provisional:tool.profileAccuracy!=='verified'};
+ return {points,angle,height,tipRadius,
+  roundedNose:tool.profileStyle!=='user-photo',
+  provisional:tool.profileAccuracy!=='verified'};
 }
 export function sectionDie(tool={}){
  const opening=Math.max(4,Number(tool.opening)||16);

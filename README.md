@@ -271,3 +271,12 @@ se avisa en la operación correspondiente. Es un prechequeo de
 **geometría nominal, NO una fórmula certificada de ala mínima**.
 El radio, el utillaje especial, el método de plegado, la recuperación,
 las tolerancias y las dimensiones exteriores pueden cambiar la viabilidad.
+
+### Corrección de punta redonda y R nominal
+
+Los perfiles paramétricos de punzón recto y pata de cabra (excepto el
+trazado proporcional de fotografía) dibujan ahora **un arco de punta
+circular tangente a ambos flancos**, según diámetro de punta y ángulo
+incluido. En las fichas se muestra R = diámetro / 2; Ø1,2 mm es R0,6,
+no R1,2. El arco es una polilínea aproximada, y el resto del cuerpo,
+amarre y radios aún requieren contornos acotados del fabricante.
