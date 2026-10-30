@@ -46,6 +46,38 @@ Se implementó la disposición oscura elegida: **secuencia de plegado a la izqui
 - **Máquina:** cotas de Trumpf V85 de las fotografías, trancha de 2040 mm, mesa y topes.
 - **Datos:** guardar en dispositivo, importar/exportar piezas en JSON.
 
+## Configuración Trumpf V85 y V16/30° (actualización)
+
+El módulo **Máquina** ahora permite **editar de verdad** todos los valores de
+las pantallas Cybelec **30a Dimensiones máquina 1** y
+**29 Configuración topes** enviados por el usuario:
+- Ancho trancha y portaútil 2040 mm, orígenes 0 mm.
+- Trancha L1–L10: 1340, 28, 2, 25,40, 20, 30, 125, 20, 39, 28 mm.
+- Mesa L1–L7: 820, 80, 25,25, 25,25, 50, 20, 20 mm.
+- Tool-Working distance: 30 mm.
+- Stop L1–L6: 70, 100, 18, 25, 12, 0 mm.
+- Support L1–L6: 70, 100, 8, 25, 12, 8 mm.
+- Preferred distance: 80 %, y valores de límites L6, Ox y Oz fotografiados (0 mm).
+
+Las medidas quedan guardadas en `localStorage` y se pueden restaurar a las
+fotografías o exportar como JSON. La vista técnica incluye diagramas de cotas
+sin inventar perfiles CAD de la máquina. La ilustración del tope Stop en la
+cabina se alimenta de las medidas configuradas. El límite de ancho empleado
+para advertir de una pieza demasiado ancha se recalcula cuando se cambia la
+trancha.
+
+**V16/30° disponible:** referencia real
+[Rolleri TMR100.16.30](https://www.rolleri.es/utillaje-127636/soluciones-de-plegado/utillaje/tipo-r2r3-matrices/tmr1001630),
+ángulo 30°, V16, R1,6, altura total 120 mm, altura útil 100 mm,
+amarre R2/R3 (compatibilidad real con Trumpf V85 NO comprobada). Además
+se incluye **V16/30° · perfil de ensayo**, sin marca ni cotas externas
+atribuidas. El perfil de ambos elementos sigue siendo `provisional`.
+
+La finalidad es utilizar datos reales para avanzar hacia simulación de
+colisiones, pero **todavía no existen sólidos CAD verificados de la trancha,
+mesa, topes y todos los útiles**. No presentar dibujos esquemáticos como una
+verificación física.
+
 ## Diagnóstico preliminar chapa-herramientas y perfiles de catálogo (v0.8)
 
 El motor `tool-collision.js` comprueba geometrías **2D** durante los golpes:
