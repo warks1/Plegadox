@@ -148,6 +148,35 @@ try{
   await page.locator('[data-tab="simulacion"]').click();
   const label=await page.locator('#cockpitAngle').textContent();
   assert.ok(label.includes('-90'),'Se conserva el signo negativo');
+  // Regresión visual real de interferencia CHAPA–CHAPA. Se guarda una pieza
+  // deliberadamente autointersectante, sin contaminar el contexto móvil.
+  await page.evaluate(()=>{
+   const p={name:'Prueba cruces de alas',material:'s235',
+    thickness:2,width:500,die:'v16',punch:'straight88',
+    flanges:[50,50,50,50],angles:[120,120,120],order:[0,1,2],
+    datum:'outside'};
+   localStorage.setItem('plegadox:piece:v1',JSON.stringify(p));
+  });
+  await page.reload({waitUntil:'networkidle'});
+  await page.locator('#machineCanvas').waitFor({state:'visible'});
+  const sheetCross=page.locator('#incidentNavigator .cp-incident-item[data-category="sheet-cross"]');
+  assert.ok(await sheetCross.count()>0,
+   'Los cruces de alas deben aparecer en el navegador de incidencias');
+  const crossButton=sheetCross.first();
+  const sheetTime=Number(await crossButton.getAttribute('data-time'));
+  await crossButton.click();
+  const jumped=await page.evaluate(()=>window.PLEGADOX_STATE());
+  assert.equal(jumped.sim.playing,false);
+  assert.ok(Math.abs(jumped.sim.time-sheetTime)<1e-8);
+  assert.match(await page.locator('#collisionDetails').textContent(),/CRUCE entre las alas/i);
+  const colored=await page.locator('#progressCanvas').evaluate(canvas=>{
+   const ctx=canvas.getContext('2d'),{data}=ctx.getImageData(0,0,canvas.width,canvas.height);
+   let count=0;
+   for(let i=0;i<data.length;i+=4)
+    if(data[i]>220&&data[i+1]<130&&data[i+2]<130&&data[i+3]>200)count++;
+   return count;
+  });
+  assert.ok(colored>20,'Las alas con posible cruce deben destacarse en rojo: '+colored);
   assert.deepEqual(errors,[],'Sin errores JavaScript en escritorio: '+errors.join('; '));
   const mobile=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true});
   const phone=await mobile.newPage(),mobileErrors=[];

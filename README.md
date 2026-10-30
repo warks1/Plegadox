@@ -441,3 +441,8 @@ Las incidencias entre chapa y utillaje permanecen independientes.
 La posición de la muestra y la geometría siguen siendo aproximadas:
 un muestreo sin avisos no garantiza ausencia de colisiones 3D, y no
 incluye las rotaciones reales de preparación ni deformaciones.
+
+Las pruebas de navegador abren una pieza de ensayo con alas que se cruzan,
+acceden al golpe señalado y comprueban que la simulación se pausa, que
+aparece el diagnóstico del cruce y que los tramos se colorean de rojo en
+el lienzo. Esta pieza se usa sólo para pruebas, no como pieza fabricable.
