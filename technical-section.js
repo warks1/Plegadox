@@ -102,8 +102,7 @@ export function drawTechnicalSection(ctx,w,h,piece,sim,view={}){
  [[0,'#24576b'],[.24,'#85b6c5'],[.52,'#356e82'],[.75,'#9bcbd5'],[1,'#244359']]);
  ctx.save();ctx.shadowBlur=16;ctx.shadowColor='#000b';
  polygon(ctx,dp,dieFill,'#a2d5e9',1.7);ctx.restore();
- const tip=map(mPoint(0,result.punchPolygon[3].y));
- const pp=poly(result.punchPolygon),punchFill=gradient(ctx,pp[0].x,0,pp[1].x,0,
+  const pp=poly(result.punchPolygon),punchFill=gradient(ctx,pp[0].x,0,pp[1].x,0,
  [[0,'#435d6f'],[.17,'#d7ebf2'],[.4,'#809cac'],[.55,'#e7f5f9'],[.8,'#637f95'],[1,'#253f57']]);
  ctx.save();ctx.globalAlpha=view.transparent?.34:1;
  ctx.shadowColor='#000b';ctx.shadowBlur=11;
@@ -133,15 +132,18 @@ export function drawTechnicalSection(ctx,w,h,piece,sim,view={}){
  badge('MATRIZ V'+d.opening+' / '+d.dieAngle+'°',9,49,'#1a5a69db');
  if(w>=400)badge('CHAPA '+d.thickness+' mm',9,76,'#7c531cdb');
  drawLabel(ctx,st.phase+' · pliegue '+(st.activeBend+1),w-11,18,'#d6eefb',11,'right');
+ // En móvil se reserva una banda inferior para los mandos táctiles:
+ // ni la escala ni la advertencia quedan debajo de los botones.
+ const compact=w<500,footerY=compact?h-58:h-8,scaleBarY=compact?h-76:h-23;
  if(presentation.flipped)drawLabel(ctx,'Presentación volteada: '+result.piece.angles[st.activeBend]+'°',
-  w-10,h-33,'#ffca79',10,'right');
+  w-10,compact?h-103:h-33,'#ffca79',10,'right');
  if(w>=310){
-  const x=14,y=h-23,bar=20*scale;
+  const x=14,y=scaleBarY,bar=20*scale;
   ctx.strokeStyle='#e5f4ff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+bar,y);ctx.stroke();
   drawLabel(ctx,'20 mm',x+bar/2,y-6,'#b9dbee',10,'center');
  }
  drawLabel(ctx,'SECCIÓN PARAMÉTRICA · CONTACTO NO CERTIFICADO',
-  w/2,h-8,'#93bbcc',Math.max(8,Math.min(11,w/44)),'center');
+  w/2,footerY,'#93bbcc',Math.max(8,Math.min(11,w/44)),'center');
  ctx.restore();
  return result;
 }
