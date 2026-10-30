@@ -216,10 +216,11 @@ function drawProfile(id,fractions,labels=false){
  if(labels){
   const check=geometryReport(),alerts=new Map();
   for(const warn of check.issues){
-   if(!['final-cross','final-clearance'].includes(warn.code)||!warn.segments)continue;
+   if(!['final-cross','final-overlap','final-touch','final-clearance'].includes(warn.code)||!warn.segments)continue;
    for(const index of warn.segments){
-    if(warn.code==='final-cross'||!alerts.has(index))
-     alerts.set(index,warn.code==='final-cross'?'cross':'close');
+    const serious=warn.code==='final-cross'||warn.code==='final-overlap';
+    if(serious||!alerts.has(index))
+     alerts.set(index,serious?'cross':'close');
    }
   }
   if(alerts.size){
@@ -253,11 +254,11 @@ function drawProfile(id,fractions,labels=false){
   // cerca o se cruzan. NO son contactos CAD ni tiempos exactos del útil.
   const frame=inspectSheetFrame(piece,sim.time);
   for(const hit of frame.issues){
-   const color=hit.kind==='cross'?'#ef554a':'#f5af42';
+   const color=['cross','overlap'].includes(hit.kind)?'#ef554a':'#f5af42';
    for(const i of hit.segments){
     const a=pts[i],b=pts[i+1];if(!a||!b)continue;
     ctx.save();ctx.strokeStyle=color;ctx.lineWidth=5;
-    ctx.setLineDash(hit.kind==='close'?[6,3]:[]);
+    ctx.setLineDash(['touch','close'].includes(hit.kind)?[6,3]:[]);
     ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
     ctx.restore();
    }
@@ -530,6 +531,8 @@ function renderIncidentNavigator(check,st){
    severity.textContent=row.category==='penetration'?'PENETRACIÓN 2D':
       row.category==='clearance'?'HOLGURA 2D':
       row.category==='sheet-cross'?'CRUCE DE ALAS 2D':
+      row.category==='sheet-overlap'?'ALAS SOLAPADAS 2D':
+      row.category==='sheet-touch'?'CONTACTO PUNTUAL 2D':
       row.category==='sheet-close'?'ALAS MUY PRÓXIMAS':
       row.category==='geometry'?'REVISAR GEOMETRÍA':'SIN AVISO MUESTREADO';
    const detail=document.createElement('small');

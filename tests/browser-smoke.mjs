@@ -153,7 +153,7 @@ try{
   await page.evaluate(()=>{
    const p={name:'Prueba cruces de alas',material:'s235',
     thickness:2,width:500,die:'v16',punch:'straight88',
-    flanges:[50,50,50,50],angles:[120,120,120],order:[0,1,2],
+    flanges:[50,50,50,50],angles:[140,140,140],order:[0,1,2],
     datum:'outside'};
    localStorage.setItem('plegadox:piece:v1',JSON.stringify(p));
   });

@@ -450,3 +450,15 @@ el lienzo. Esta pieza se usa sólo para pruebas, no como pieza fabricable.
 El **perfil final** también distingue cruces entre alas en rojo y
 separaciones menores al espesor en ámbar; un cruce prevalece sobre un
 aviso de proximidad en el mismo tramo.
+
+### Clasificación precisa de auto-interferencias de chapa
+
+Antes, un simple contacto de extremos se clasificaba como «cruce». El
+detector ahora distingue cuatro resultados: **cruce interior** de dos
+fibras, **solapamiento colineal** con longitud compartida, **contacto
+puntual** en un extremo y **proximidad** con luz inferior al espesor.
+Se señalan en rojo los dos primeros y en ámbar los dos últimos, también
+en el perfil final. El navegador de incidencias distingue las cuatro
+etiquetas y no identifica un mero contacto como una penetración. Estos
+son diagnósticos de fibra 2D con tolerancia geométrica, no una
+certificación de colisión de la chapa de espesor real en 3D.

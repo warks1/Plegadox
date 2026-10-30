@@ -16,17 +16,22 @@ export function incidentReviewRows(piece,geometry,toolReview){
   const self=sheet?.example?.finding;
   const toolSeverity=op?.example?.category==='penetration'?3:
     op?.example?.category==='clearance'?1:0;
-  const selfSeverity=self?.kind==='cross'?4:self?.kind==='close'?2:0;
+  const selfSeverity=({cross:5,overlap:4,touch:2,close:1.5})[self?.kind]||0;
   const useSheet=selfSeverity>toolSeverity;
-  const category=useSheet?
-    (self.kind==='cross'?'sheet-cross':'sheet-close'):
+  const category=useSheet?({
+    cross:'sheet-cross',overlap:'sheet-overlap',touch:'sheet-touch',
+    close:'sheet-close'
+   })[self.kind]:
     op?.example?.category||(
      geometryOp?.toolAngleWarning||geometryOp?.vSupportWarning||
      geometryOp?.potentialInterference||geometricIssue?'geometry':'none');
   const tool=op?.example?.kind==='punch'?'punzón':
     op?.example?.kind==='die'?'matriz':null;
-  const summary=category==='sheet-cross'?'Posible cruce 2D de alas '+self.segments.map(x=>x+1).join(' y '):
-   category==='sheet-close'?'Posible contacto entre alas '+self.segments.map(x=>x+1).join(' y ')+
+  const sheetPair=self?.segments?.map(x=>x+1).join(' y ')||'';
+  const summary=category==='sheet-cross'?'Posible cruce 2D de alas '+sheetPair:
+   category==='sheet-overlap'?'Posible solapamiento 2D de alas '+sheetPair:
+   category==='sheet-touch'?'Contacto puntual 2D de alas '+sheetPair:
+   category==='sheet-close'?'Posible proximidad entre alas '+sheetPair+
      ' (separación '+self.clearance+' mm)':
    category==='penetration'?'Posible penetración de chapa en '+tool:
    category==='clearance'?'Posible holgura insuficiente con '+tool:

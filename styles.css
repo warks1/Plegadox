@@ -35,3 +35,6 @@
 
 .cp-incident-item[data-category="sheet-cross"] .cp-incident-status{color:#ff6963;}
 .cp-incident-item[data-category="sheet-close"] .cp-incident-status{color:#f9bd5d;}
+
+.cp-incident-item[data-category="sheet-overlap"] .cp-incident-status{color:#ff6963;}
+.cp-incident-item[data-category="sheet-touch"] .cp-incident-status{color:#f9bd5d;}

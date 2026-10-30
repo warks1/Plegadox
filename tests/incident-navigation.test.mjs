@@ -63,3 +63,18 @@ test('una penetración de útil prevalece frente a mera cercanía entre alas',()
  assert.equal(row.time,2.5);
  assert.equal(row.hasSheetSample,false);
 });
+
+test('distingue solapamiento y contacto puntual sin etiquetarlos como cruce',()=>{
+ const geometry={issues:[],perOperation:[],sheetScan:{operations:[
+  {exampleTime:2.45,example:{finding:{kind:'overlap',segments:[0,2]}}},
+  {exampleTime:7.35,example:{finding:{kind:'touch',segments:[0,3]}}}
+ ]}};
+ const rows=incidentReviewRows(EXAMPLE,geometry,{operations:[]});
+ assert.equal(rows[0].category,'sheet-overlap');
+ assert.match(rows[0].summary,/solapamiento/);
+ assert.equal(rows[0].time,2.45);
+ assert.equal(rows[1].category,'sheet-touch');
+ assert.match(rows[1].summary,/Contacto puntual/);
+ assert.equal(rows[1].time,7.35);
+ assert.ok(rows.every(row=>row.verified===false));
+});
