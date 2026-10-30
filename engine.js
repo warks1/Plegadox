@@ -74,10 +74,11 @@ export function stage(piece,time){
 }
 export function orientedForMachine(piece,fractions,activeBend){
  const {points}=profile(piece,fractions),pivot=points[activeBend+1],before=points[activeBend],theta=Math.atan2(pivot.y-before.y,pivot.x-before.x),c=Math.cos(-theta),s=Math.sin(-theta);
- // El signo es relativo a la pieza: en máquina un ángulo negativo requiere
- // cambiar la cara de presentación de la chapa antes del golpe.
- const face=normalized(piece).angles[activeBend]<0?-1:1;
- return points.map(pt=>{const x=pt.x-pivot.x,y=pt.y-pivot.y;return {x:x*c-y*s,y:(x*s+y*c)*face};});
+ // La orientación se calcula desde la arista de apoyo, pero NO se refleja
+ // artificialmente la pieza para los ángulos negativos. Reflejar Y convertía
+ // −90° en +90° en la vista de máquina, contradiciendo la pieza programada.
+ // El volteo físico real es otra operación, aún pendiente de modelar.
+ return points.map(pt=>{const x=pt.x-pivot.x,y=pt.y-pivot.y;return {x:x*c-y*s,y:x*s+y*c};});
 }
 function cross(a,b,c){return (b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);}
 export function selfIntersects(points){
