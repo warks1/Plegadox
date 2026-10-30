@@ -12,7 +12,7 @@ try{
   const page=await desktop.newPage(),errors=[];
   page.on('pageerror',err=>errors.push(err.message));
   await page.goto('http://127.0.0.1:4173/',{waitUntil:'networkidle',timeout:30000});
-  await page.getByRole('heading',{name:'Simulación de plegado'}).waitFor();
+  await page.locator('#machineCanvas').waitFor({state:'visible'});
   assert.ok(await page.locator('#cockpitTools .cp-tool-card').count()>0,'Hay tarjetas de herramientas');
   await page.locator('#showTool3D').click();
   assert.ok(await page.locator('#cockpitSelectedTool3D').isVisible(),'Visor 3D de herramienta se abre');
@@ -42,7 +42,7 @@ try{
   const phone=await mobile.newPage(),mobileErrors=[];
   phone.on('pageerror',err=>mobileErrors.push(err.message));
   await phone.goto('http://127.0.0.1:4173/',{waitUntil:'networkidle',timeout:30000});
-  await phone.getByRole('heading',{name:'Simulación de plegado'}).waitFor();
+  await phone.locator('#machineCanvas').waitFor({state:'visible'});
   await phone.locator('#cpBrandTabs button[data-brand="Bystronic"]').click();
   assert.ok(await phone.locator('#cockpitTools .cp-tool-card').count()>0,'Herramientas Bystronic visibles en móvil');
   const scroll=await phone.evaluate(()=>({actual:document.documentElement.scrollWidth,viewport:window.innerWidth}));
