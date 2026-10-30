@@ -124,3 +124,11 @@ test('valida por separado ancho nominal de trancha y portaútiles',()=>{
  assert.ok(report.issues.some(x=>x.code==='machine-width'));
  assert.ok(report.issues.some(x=>x.code==='machine-holder-width'));
 });
+
+test('el informe conserva ambas advertencias si punzón y matriz son cortos',()=>{
+ const p={...EXAMPLE,width:1000,punch:'amada-831',die:'rolleri-tmr100-16-30'};
+ const issues=analyzeSequence(p).issues.filter(x=>x.code==='tool-length');
+ assert.equal(issues.length,2);
+ assert.equal(new Set(issues.map(x=>x.kind)).size,2);
+ assert.deepEqual(issues.map(x=>x.availableLength),[415,500]);
+});

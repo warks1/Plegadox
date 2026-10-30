@@ -67,7 +67,10 @@ function issue(code,level,bend,message,extra={}){
 function unique(issues){
  const map=new Map();
  for(const x of issues){
-  const key=x.code+':'+(x.bend??'overall')+':'+(x.segments?.join(',')||'');
+  // Dos avisos de "longitud" pueden corresponder a un punzón y una
+  // matriz distintos: no borrar el segundo por compartir código y pliegue.
+  const key=[x.code,x.bend??'overall',x.kind||'',x.reference||'',
+    x.segments?.join(',')||''].join(':');
   if(!map.has(key))map.set(key,x);
  }
  return [...map.values()];
