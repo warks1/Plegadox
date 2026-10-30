@@ -192,7 +192,7 @@ function stageScene(ctx,w,h,piece,sim,machineView){
  // tiny badges in-frame visual signifiers
  // Los textos de contexto no deben tapar el punzón ni el estado cuando
  // la vista ocupa sólo ~300px en un smartphone.
- if(w>=660){
+ if(w>=900){
   ctx.font='700 10px system-ui';
   ctx.fillStyle='#87b6d6';ctx.textAlign='left';
   ctx.fillText('SIMULACIÓN · PERFIL',12,h-14);
