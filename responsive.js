@@ -15,9 +15,9 @@ function deviceState(){
  const height=Math.max(1,window.innerHeight||root.clientHeight||640);
  const coarse=matchMedia('(pointer:coarse)').matches || matchMedia('(hover:none)').matches;
  const landscape=width>height;
- // En horizontal, un móvil de 390×844 tiene 844 px de anchura CSS; sigue
- // necesitando la versión móvil, no la de tablet o PC.
- const phoneLandscape=coarse&&landscape&&height<=560&&width<1200;
+ // Una ventana horizontal de poca altura también necesita modo móvil:
+ // adaptamos según el espacio, aunque el navegador no declare pantalla táctil.
+ const phoneLandscape=landscape&&height<=560&&width<1200;
  const layout=width<700||phoneLandscape?'mobile':width<1200?'tablet':'desktop';
  const orientation=landscape?'landscape':'portrait';
  return {width,height,layout,orientation,input:coarse?'touch':'pointer',dpr:Math.min(window.devicePixelRatio||1,4)};
