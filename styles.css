@@ -32,3 +32,6 @@
 .dxf-fold-toggle{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:650;max-width:100%;}
 .dxf-fold-toggle input{width:18px;height:18px;min-height:18px;flex:none;accent-color:#1685c7;}
 #flatBendRows td{white-space:nowrap;font-variant-numeric:tabular-nums;}
+
+.cp-incident-item[data-category="sheet-cross"] .cp-incident-status{color:#ff6963;}
+.cp-incident-item[data-category="sheet-close"] .cp-incident-status{color:#f9bd5d;}

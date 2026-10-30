@@ -22,7 +22,16 @@ let touchOrderEnabled=false,chosenTouchOrder=[];
 const geometryCache={key:null,result:null};
 function geometryReport(){
  const key=JSON.stringify([piece.flanges,piece.angles,piece.order,piece.thickness,piece.width,piece.material,piece.rmMPa,piece.punch,piece.die,getV85().ramWidth,getV85().holderWidth]);
- if(key!==geometryCache.key){geometryCache.key=key;geometryCache.result={...analyzeSequence(piece),tools:inspectSequenceTools(piece,6),sheetScan:scanSheetSequence(piece,15)};}
+ if(key!==geometryCache.key){
+  const report=analyzeSequence(piece),tools=inspectSequenceTools(piece,6),
+   sheetScan=scanSheetSequence(piece,15);
+  geometryCache.key=key;
+  geometryCache.result={...report,tools,sheetScan,
+   hasGeometryWarning:report.hasGeometryWarning||sheetScan.warningCount>0,
+   summary:sheetScan.warningCount?
+    '⚠ Posible auto-interferencia entre alas en al menos un golpe. Revisar muestras 2D, orden y geometría.':
+    report.summary};
+ }
  return geometryCache.result;
 }
 const numbers=(n,d=1)=>Number(n).toLocaleString('es-ES',{maximumFractionDigits:d,minimumFractionDigits:d});

@@ -169,6 +169,8 @@ try{
   assert.equal(jumped.sim.playing,false);
   assert.ok(Math.abs(jumped.sim.time-sheetTime)<1e-8);
   assert.match(await page.locator('#collisionDetails').textContent(),/CRUCE entre las alas/i);
+  assert.match(await page.locator('#validity').textContent(),/Revisar geometría/,
+    'Los cruces entre alas deben activar el aviso global de geometría');
   const colored=await page.locator('#progressCanvas').evaluate(canvas=>{
    const ctx=canvas.getContext('2d'),{data}=ctx.getImageData(0,0,canvas.width,canvas.height);
    let count=0;
