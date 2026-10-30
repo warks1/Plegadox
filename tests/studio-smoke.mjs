@@ -17,7 +17,11 @@ try{
  assert.equal(await page.locator('.cp-kind-tabs [data-kind="all"]').getAttribute('aria-pressed'),'true');
  assert.equal(await page.locator('#cockpitTools [data-category="punch"]').count(),1);
  assert.equal(await page.locator('#cockpitTools [data-category="die"]').count(),1);
- assert.ok(await page.locator('#cockpitTools .cp-tool-card').count()>=12,'Herramientas de ambos tipos visibles');
+ assert.equal(await page.locator('#cockpitTools .cp-tool-card').count(),12,'Vista inicial de cuatro punzones y ocho matrices');
+ await page.locator('#cpShowAllTools').click();
+ assert.ok(await page.locator('#cockpitTools .cp-tool-card').count()>24,'Catálogo completo accesible con el botón');
+ await page.locator('#cpShowAllTools').click();
+ assert.equal(await page.locator('#cockpitTools .cp-tool-card').count(),12,'Volver a vista compacta conserva catálogo');
  assert.ok(await page.locator('#machineGraphicMode').textContent()==='PERSPECTIVA 2.5D');
  await page.screenshot({path:'test-results/studio-desktop.png',fullPage:true});
  const before=await page.evaluate(()=>window.PLEGADOX_STATE().piece.flanges.length);
