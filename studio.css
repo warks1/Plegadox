@@ -271,3 +271,23 @@ html{background:#020913}
  .collision-details{max-height:none;min-height:50px;font-size:12px;padding:10px}
  .cp-checks{overflow:visible!important}
 }
+
+/* Programación directa de la secuencia pulsando los vértices de la pieza */
+.touch-order-controls{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:7px 0 12px}
+#touchOrderMode{
+ min-height:42px;padding:8px 12px;
+ background:linear-gradient(115deg,#103b5b,#0a263f);color:#bde8fd;
+ border:1px solid #2782b5;border-radius:9px;font-size:12px;
+}
+#touchOrderMode.selected,#touchOrderMode[aria-pressed="true"]{
+ border-color:#ffc458;background:linear-gradient(120deg,#6a4416,#3b2a16);
+ color:#ffe6ac;box-shadow:0 0 12px #ffb83f45
+}
+#touchOrderHint{flex:1;min-width:140px;font-size:11px;color:#91b5ce;margin:0;line-height:1.5}
+#touchOrderMode[aria-pressed="true"]~#touchOrderHint{color:#ffdc9c}
+#finalCanvas{cursor:crosshair}
+@media(max-width:699px){
+ .touch-order-controls{display:grid;grid-template-columns:1fr}
+ #touchOrderMode{font-size:13px;min-height:45px}
+ #touchOrderHint{font-size:12px}
+}
