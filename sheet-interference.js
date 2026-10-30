@@ -4,13 +4,13 @@
  * separación es inferior al espesor, hay posible contacto entre volúmenes.
  * NO modela radio real, geometría 3D, holgura de montaje ni deformación.
  */
-import {normalized,profile,stage,clamp} from './engine.js';
+import {normalized,profile,stage} from './engine.js';
 import {inspectProfile} from './validation.js';
-const severity=hit=>hit.kind==='cross'?2:hit.kind==='close'?1:0;
+const severity=hit=>({cross:4,overlap:3,touch:2,close:1})[hit.kind]||0;
 function compare(a,b){
  const sa=severity(a),sb=severity(b);
  if(sa!==sb)return sb-sa;
- if(a.kind==='close')return a.clearance-b.clearance;
+ if(a.kind==='close'&&b.kind==='close')return a.clearance-b.clearance;
  return a.segments[0]-b.segments[0]||a.segments[1]-b.segments[1];
 }
 /** Frame determinista que usa exactamente el mismo tiempo que la animación. */
@@ -20,8 +20,8 @@ export function inspectSheetFrame(piece,time=0){
  const issues=inspectProfile(points,p.thickness).sort(compare);
  return {time:st.time,operation:st.activeOperation,bend:st.activeBend,
   phase:st.phase,issues,
-  hasCross:issues.some(x=>x.kind==='cross'),
-  hasNear:issues.some(x=>x.kind==='close'),
+  hasCross:issues.some(x=>x.kind==='cross'||x.kind==='overlap'),
+  hasNear:issues.some(x=>x.kind==='touch'||x.kind==='close'),
   hasWarning:issues.length>0,verified:false};
 }
 /**
@@ -44,7 +44,7 @@ export function scanSheetSequence(piece,samplesPerOperation=15){
   }
   operations.push({operation:op,bend:p.order[op],
    samples:samples+1,possibleSheetInterference:!!selected,
-   possibleCross:selected?.finding?.kind==='cross',
+   possibleCross:['cross','overlap'].includes(selected?.finding?.kind),
    example:selected,exampleTime:selected?.time??null,verified:false});
  }
  return {operations,warningCount:operations.filter(o=>o.possibleSheetInterference).length,
@@ -55,7 +55,11 @@ export function describeSheetIssue(hit){
  const [a,b]=hit.segments.map(n=>n+1);
  if(hit.kind==='cross')return '⚠ Posible CRUCE entre las alas '+a+' y '+b+
   ' de la chapa en el perfil 2D. Revisar orden y geometría.';
- return '⚠ Posible CONTACTO entre alas '+a+' y '+b+
+ if(hit.kind==='overlap')return '⚠ Posible SOLAPAMIENTO de alas '+a+' y '+b+
+  ' sobre la misma línea en sección 2D. Revisar montaje y secuencia.';
+ if(hit.kind==='touch')return '⚠ CONTACTO PUNTUAL entre alas '+a+' y '+b+
+  ' en la sección 2D. No se ha detectado que las fibras se atraviesen.';
+ return '⚠ Posible PROXIMIDAD entre alas '+a+' y '+b+
   ' de la chapa: luz entre fibras '+hit.clearance+
   ' mm, inferior al espesor nominal. Revisar en máquina.';
 }

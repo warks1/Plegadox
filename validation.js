@@ -22,16 +22,35 @@ function between(a,b,v){
 function onSegment(a,b,p){
  return Math.abs(orient(a,b,p))<EPS && between(a.x,b.x,p.x) && between(a.y,b.y,p.y);
 }
-/** Includes real crossing, collinear overlap and endpoint contact. */
-export function segmentsIntersect(a,b,c,d){
+/**
+ * Relaciones entre segmentos NO adyacentes de fibra media:
+ * - cross: atraviesan el INTERIOR de ambos;
+ * - overlap: comparten un tramo colineal de longitud positiva;
+ * - touch: sólo comparten un punto (incluido extremo).
+ * No confundir un extremo que toca con dos alas que se atraviesan.
+ */
+export function segmentContactKind(a,b,c,d){
  const s1=orient(a,b,c),s2=orient(a,b,d),s3=orient(c,d,a),s4=orient(c,d,b);
  if(((s1>EPS&&s2< -EPS)||(s1< -EPS&&s2>EPS)) &&
-    ((s3>EPS&&s4< -EPS)||(s3< -EPS&&s4>EPS)))return true;
- if(Math.abs(s1)<=EPS&&onSegment(a,b,c))return true;
- if(Math.abs(s2)<=EPS&&onSegment(a,b,d))return true;
- if(Math.abs(s3)<=EPS&&onSegment(c,d,a))return true;
- if(Math.abs(s4)<=EPS&&onSegment(c,d,b))return true;
- return false;
+    ((s3>EPS&&s4< -EPS)||(s3< -EPS&&s4>EPS)))return 'cross';
+ const collinear=[s1,s2,s3,s4].every(v=>Math.abs(v)<=EPS);
+ if(collinear){
+  const useX=Math.max(Math.abs(b.x-a.x),Math.abs(d.x-c.x))>=
+    Math.max(Math.abs(b.y-a.y),Math.abs(d.y-c.y));
+  const v=p=>useX?p.x:p.y;
+  const lo=Math.max(Math.min(v(a),v(b)),Math.min(v(c),v(d)));
+  const hi=Math.min(Math.max(v(a),v(b)),Math.max(v(c),v(d)));
+  return hi-lo>EPS?'overlap':hi-lo>=-EPS?'touch':null;
+ }
+ if(Math.abs(s1)<=EPS&&onSegment(a,b,c))return 'touch';
+ if(Math.abs(s2)<=EPS&&onSegment(a,b,d))return 'touch';
+ if(Math.abs(s3)<=EPS&&onSegment(c,d,a))return 'touch';
+ if(Math.abs(s4)<=EPS&&onSegment(c,d,b))return 'touch';
+ return null;
+}
+/** Compatibilidad: las tres relaciones suponen intersección geométrica. */
+export function segmentsIntersect(a,b,c,d){
+ return segmentContactKind(a,b,c,d)!==null;
 }
 function pointToSegment(p,a,b){
  const ab=subtract(b,a),ap=subtract(p,a),len2=dot(ab,ab);
@@ -50,10 +69,10 @@ export function inspectProfile(points,thickness=0){
  for(let i=0;i<n;i++){
   for(let j=i+2;j<n;j++){
    const a=points[i],b=points[i+1],c=points[j],d=points[j+1];
-   const intersect=segmentsIntersect(a,b,c,d);
-   const clearance=intersect?0:segmentClearance(a,b,c,d);
-   if(intersect){
-    findings.push({kind:'cross',segments:[i,j],clearance:0});
+   const relation=segmentContactKind(a,b,c,d);
+   const clearance=relation?0:segmentClearance(a,b,c,d);
+   if(relation){
+    findings.push({kind:relation,segments:[i,j],clearance:0});
    }else if(t>0&&clearance<t-EPS){
     findings.push({kind:'close',segments:[i,j],clearance:round(clearance,3)});
    }
@@ -86,11 +105,15 @@ export function analyzeSequence(raw){
  const finished=profile(p,p.angles.map(()=>1));
  for(const finding of inspectProfile(finished.points,p.thickness)){
   const segments=finding.segments.map(i=>i+1);
-  issues.push(issue(finding.kind==='cross'?'final-cross':'final-clearance','warning',null,
-    finding.kind==='cross'
-      ?'Cruce de tramos '+segments.join(' y ')+' en la pieza final (perfil 2D).'
-      :'Separación menor que el espesor entre tramos '+segments.join(' y ')+'.',
-    {...finding}));
+  const category={
+   cross:['final-cross','Cruce real de fibras'],
+   overlap:['final-overlap','Solapamiento colineal de alas'],
+   touch:['final-touch','Contacto puntual de alas'],
+   close:['final-clearance','Separación menor que el espesor']
+  }[finding.kind];
+  issues.push(issue(category[0],'warning',null,
+   category[1]+' entre tramos '+segments.join(' y ')+
+    ' en la pieza final (perfil 2D preliminar).',{...finding}));
  }
  const perOperation=[];
  for(let op=0;op<p.order.length;op++){
@@ -170,9 +193,9 @@ export function analyzeSequence(raw){
  return {
   piece:p.name,issues:dedup,perOperation,
   hasGeometryWarning:dedup.some(x=>x.level==='warning'&&
-    ['final-cross','final-clearance','operation-geometry','machine-width','machine-holder-width','tool-angle','v-support','tool-length'].includes(x.code)),
+    ['final-cross','final-overlap','final-touch','final-clearance','operation-geometry','machine-width','machine-holder-width','tool-angle','v-support','tool-length'].includes(x.code)),
   verifiedMachineClearance:false,
-  summary:dedup.some(x=>x.code==='operation-geometry'||x.code==='final-cross'||x.code==='final-clearance')
+  summary:dedup.some(x=>x.code==='operation-geometry'||x.code==='final-cross'||x.code==='final-overlap'||x.code==='final-touch'||x.code==='final-clearance')
     ?'Posibles interferencias geométricas 2D. Revisar operaciones.'
     :dedup.some(x=>['tool-angle','v-support','tool-length','machine-width','machine-holder-width'].includes(x.code))
       ?'Revisar la configuración de máquina, longitud de herramientas y geometría de los pliegues.'

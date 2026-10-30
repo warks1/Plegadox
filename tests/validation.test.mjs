@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {EXAMPLE,profile,stage,orientedForMachine} from '../engine.js';
-import {segmentsIntersect,segmentClearance,inspectProfile,analyzeSequence} from '../validation.js';
+import {segmentsIntersect,segmentContactKind,segmentClearance,inspectProfile,analyzeSequence} from '../validation.js';
 
 const p=(x,y)=>({x,y});
 test('detecta cruce entre dos segmentos no adyacentes',()=>{
@@ -131,4 +131,30 @@ test('el informe conserva ambas advertencias si punzón y matriz son cortos',()=
  assert.equal(issues.length,2);
  assert.equal(new Set(issues.map(x=>x.kind)).size,2);
  assert.deepEqual(issues.map(x=>x.availableLength),[415,500]);
+});
+
+test('diferencia cruce interior, solapamiento colineal y contacto en extremo',()=>{
+ const a=p(0,0),b=p(20,0);
+ assert.equal(segmentContactKind(a,b,p(10,-10),p(10,10)),'cross');
+ assert.equal(segmentContactKind(a,b,p(10,0),p(30,0)),'overlap');
+ assert.equal(segmentContactKind(a,b,p(20,0),p(30,10)),'touch');
+ assert.equal(segmentContactKind(a,b,p(25,0),p(35,0)),null);
+ assert.equal(segmentContactKind(a,b,p(5,1),p(15,1)),null);
+ assert.equal(segmentsIntersect(a,b,p(20,0),p(30,10)),true);
+});
+test('identifica el tipo correcto en perfiles sin alas consecutivas',()=>{
+ const crossing=inspectProfile([p(0,0),p(10,10),p(0,10),p(10,0)],2);
+ assert.equal(crossing[0].kind,'cross');
+ const touching=inspectProfile([p(0,0),p(10,0),p(10,10),p(0,10),p(0,0)],2);
+ assert.ok(touching.some(i=>i.kind==='touch'&&i.segments[0]===0&&i.segments[1]===3));
+ assert.ok(!touching.some(i=>i.kind==='cross'),'Un extremo no es cruce interior');
+ const overlapping=inspectProfile([p(0,0),p(20,0),p(20,10),p(10,0),p(30,0)],2);
+ assert.ok(overlapping.some(i=>i.kind==='overlap'&&i.segments[0]===0&&i.segments[1]===3));
+});
+test('informe final etiqueta el contacto puntual sin llamarlo cruce',()=>{
+ const shape={flanges:[50,50,50,50],angles:[120,120,120],order:[0,1,2],thickness:2};
+ const report=analyzeSequence(shape);
+ assert.ok(report.issues.some(i=>i.code==='final-touch'));
+ assert.ok(!report.issues.some(i=>i.code==='final-cross'));
+ assert.match(report.summary,/interferencias geométricas/);
 });
