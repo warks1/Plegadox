@@ -475,3 +475,10 @@ solapamiento, vértice de contacto o punto medio de las dos fibras más
 próximas. Para contactos cercanos se conservan también ambos puntos de
 medición. **Son posiciones de fibra media en una sección 2D, no puntos
 certificados de contacto de sólidos ni colisiones físicas.**
+
+Ahora, en la vista de perfil final y de pieza en curso, el punto calculado
+de la incidencia se representa con un **círculo blanco con borde rojo o
+ámbar**. Para una proximidad se dibuja además la línea entre las dos
+posiciones de mínima distancia. El panel de diagnóstico muestra las
+coordenadas estimadas **X/Y en mm** de la fibra media, sin confundirlas
+con un contacto real de la chapa deformada.

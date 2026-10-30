@@ -175,6 +175,8 @@ try{
   assert.equal(jumped.sim.playing,false);
   assert.ok(Math.abs(jumped.sim.time-sheetTime)<1e-8);
   assert.match(await page.locator('#collisionDetails').textContent(),/CRUCE entre las alas/i);
+  assert.match(await page.locator('#collisionDetails').textContent(),/punto aproximado X .* mm, Y .* mm/,
+   'El diagnóstico indica coordenadas 2D en milímetros del cruce');
   assert.match(await page.locator('#validity').textContent(),/Revisar geometría/,
     'Los cruces entre alas deben activar el aviso global de geometría');
   const colored=await page.locator('#progressCanvas').evaluate(canvas=>{

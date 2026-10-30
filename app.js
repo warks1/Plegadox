@@ -203,6 +203,27 @@ function line(ctx,pts,color,width=2){if(pts.length<2)return;ctx.beginPath();ctx.
 function text(ctx,s,x,y,color='#49667b',size=12,align='left'){ctx.fillStyle=color;ctx.font='600 '+size+'px system-ui';ctx.textAlign=align;ctx.fillText(s,x,y);}
 function drawGrid(ctx,w,h,space=32){ctx.beginPath();for(let x=0;x<=w;x+=space){ctx.moveTo(x,0);ctx.lineTo(x,h);}for(let y=0;y<=h;y+=space){ctx.moveTo(0,y);ctx.lineTo(w,y);}ctx.strokeStyle='#dbeaf366';ctx.lineWidth=1;ctx.stroke();}
 function fit(points,w,h,padding=42){const b=bounds(points),rw=Math.max(b.maxX-b.minX,25),rh=Math.max(b.maxY-b.minY,25),sc=Math.min((w-2*padding)/rw,(h-2*padding)/rh,5);return pt=>({x:w/2+(pt.x-(b.minX+b.maxX)/2)*sc,y:h/2-(pt.y-(b.minY+b.maxY)/2)*sc});}
+/** Dibuja el punto o la luz mínima en la misma escala 2D de la chapa.
+ * Marcador de diagnóstico, no contacto real de sólidos.
+ */
+function markSheetIssue(ctx,map,issue){
+ const p=issue.point;
+ if(!p||!Number.isFinite(p.x)||!Number.isFinite(p.y))return;
+ const serious=issue.kind==='cross'||issue.kind==='overlap'||
+   issue.code==='final-cross'||issue.code==='final-overlap';
+ const color=serious?'#ef554a':'#f5af42';
+ ctx.save();
+ if(issue.kind==='close'&&issue.pointA&&issue.pointB){
+  const a=map(issue.pointA),b=map(issue.pointB);
+  ctx.beginPath();ctx.setLineDash([3,3]);ctx.strokeStyle=color;ctx.lineWidth=2;
+  ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.setLineDash([]);
+ }
+ const m=map(p);
+ ctx.beginPath();ctx.arc(m.x,m.y,7,0,Math.PI*2);
+ ctx.fillStyle='#ffffff';ctx.fill();ctx.strokeStyle=color;ctx.lineWidth=3;ctx.stroke();
+ ctx.beginPath();ctx.arc(m.x,m.y,2.5,0,Math.PI*2);
+ ctx.fillStyle=color;ctx.fill();ctx.restore();
+}
 function drawProfile(id,fractions,labels=false){
  const canvas=canvas2d(id);if(!canvas)return;const {ctx,w,h}=canvas;drawGrid(ctx,w,h);
  const p=profile(piece,fractions),map=fit(p.points,w,h,43),pts=p.points.map(map);
@@ -232,6 +253,10 @@ function drawProfile(id,fractions,labels=false){
     ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
    }
    ctx.restore();
+   for(const issue of check.issues){
+    if(['final-cross','final-overlap','final-touch','final-clearance'].includes(issue.code))
+     markSheetIssue(ctx,map,issue);
+   }
    const crossed=[...alerts.values()].includes('cross');
    text(ctx,crossed?'⚠ Cruce en el perfil final · revisión 2D':
     '⚠ Separación inferior al espesor · revisión 2D',
@@ -262,6 +287,7 @@ function drawProfile(id,fractions,labels=false){
     ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
     ctx.restore();
    }
+   markSheetIssue(ctx,map,hit);
   }
   text(ctx,frame.issues.length?'⚠ Interferencia entre alas · 2D':
     'PIEZA EN PROCESO · revisión 2D no certificada',

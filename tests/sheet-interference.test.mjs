@@ -63,3 +63,13 @@ test('el regreso sobre un tramo previo se clasifica como solapamiento colineal',
  assert.ok(frame.issues.some(x=>x.kind==='overlap'));
  assert.match(describeSheetIssue(frame.issues.find(x=>x.kind==='overlap')),/SOLAPAMIENTO/);
 });
+
+test('el diagnóstico incorpora coordenadas 2D si existe una localización geométrica',()=>{
+ const msg=describeSheetIssue({kind:'cross',segments:[0,2],point:{x:12.3456,y:-4.5678}});
+ assert.match(msg,/CRUCE/);
+ assert.match(msg,/X 12.35 mm, Y -4.57 mm/);
+ assert.match(msg,/fibra media 2D/);
+ const missing=describeSheetIssue({kind:'touch',segments:[0,3]});
+ assert.match(missing,/CONTACTO PUNTUAL/);
+ assert.doesNotMatch(missing,/undefined|NaN/);
+});

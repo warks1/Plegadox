@@ -53,13 +53,16 @@ export function scanSheetSequence(piece,samplesPerOperation=15){
 export function describeSheetIssue(hit){
  if(!hit)return 'Sin auto-interferencia entre alas no consecutivas detectada en este instante; NO equivale a seguridad verificada.';
  const [a,b]=hit.segments.map(n=>n+1);
+ const position=hit.point&&Number.isFinite(hit.point.x)&&Number.isFinite(hit.point.y)?
+  ' · punto aproximado X '+Number(hit.point.x.toFixed(2))+
+  ' mm, Y '+Number(hit.point.y.toFixed(2))+' mm (fibra media 2D)':'';
  if(hit.kind==='cross')return '⚠ Posible CRUCE entre las alas '+a+' y '+b+
-  ' de la chapa en el perfil 2D. Revisar orden y geometría.';
+  ' de la chapa en el perfil 2D. Revisar orden y geometría.'+position;
  if(hit.kind==='overlap')return '⚠ Posible SOLAPAMIENTO de alas '+a+' y '+b+
-  ' sobre la misma línea en sección 2D. Revisar montaje y secuencia.';
+  ' sobre la misma línea en sección 2D. Revisar montaje y secuencia.'+position;
  if(hit.kind==='touch')return '⚠ CONTACTO PUNTUAL entre alas '+a+' y '+b+
-  ' en la sección 2D. No se ha detectado que las fibras se atraviesen.';
+  ' en la sección 2D. No se ha detectado que las fibras se atraviesen.'+position;
  return '⚠ Posible PROXIMIDAD entre alas '+a+' y '+b+
   ' de la chapa: luz entre fibras '+hit.clearance+
-  ' mm, inferior al espesor nominal. Revisar en máquina.';
+  ' mm, inferior al espesor nominal. Revisar en máquina.'+position;
 }
