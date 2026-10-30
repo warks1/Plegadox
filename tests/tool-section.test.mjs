@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {EXAMPLE,stage,profile,orientedForMachine,presentedForMachine} from '../engine.js';
+import {EXAMPLE,stage,profile,orientedForMachine,presentedForMachine,presentedAtStage} from '../engine.js';
 import {sectionPunch,sectionDie} from '../tool-profiles.js';
 
 const approximate=(x,y,tolerance=.03)=>assert.ok(Math.abs(x-y)<tolerance,`Esperado ${y}; recibido ${x}`);
@@ -50,4 +50,23 @@ test('el proceso aún empieza con chapa recta y no aplica pliegue antes del golp
 test('para la matriz y el punzón se usan geometrías identificadas como provisionales',()=>{
  assert.equal(sectionPunch({angle:88,profileAccuracy:'provisional'}).provisional,true);
  assert.equal(sectionDie({opening:16,angle:88}).provisional,true);
+});
+
+test('en el cambio de golpe 1 a 2 el movimiento de presentación es continuo',()=>{
+ const before=presentedAtStage(EXAMPLE,stage(EXAMPLE,4.999));
+ const after=presentedAtStage(EXAMPLE,stage(EXAMPLE,5.001));
+ assert.equal(before.repositioning,true);
+ assert.equal(after.repositioning,false);
+ const worst=Math.max(...before.points.map((p,i)=>
+   Math.hypot(p.x-after.points[i].x,p.y-after.points[i].y)));
+ assert.ok(worst<1,'La posición física no debe teleportarse entre golpes; salto '+worst);
+});
+test('la reorientación cambia la cara con una proyección de volteo sin deformar las alas 2D del desarrollo',()=>{
+ const input=EXAMPLE;
+ const mid=presentedAtStage(input,stage(input,4.6));
+ assert.equal(mid.repositioning,true);
+ assert.ok(mid.progress>0&&mid.progress<1);
+ const final=profile(input,[1,1,1,1]);
+ assert.equal(final.points.length,input.flanges.length+1);
+ assert.equal(input.angles[1],-90);
 });
