@@ -195,3 +195,47 @@ html{background:#020913}
  .cp-library .cp-brand-tabs button{font-size:10px}
  .cp-library .cp-tool-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+/* Compactar catálogo inicial: 4 punzones + 8 matrices visibles en la misma
+   biblioteca; el listado completo permanece disponible con un botón. */
+.cp-library .cp-tool-grid{
+ display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;
+ max-height:325px;overflow-y:auto;align-content:start;
+}
+.cp-library .cp-tool-card{min-height:91px;max-height:103px;padding:3px 2px;gap:3px}
+.cp-library .cp-tool-card canvas{height:48px;min-height:48px}
+.cp-library .cp-tool-card b{font-size:9px;line-height:1.1;max-height:22px;overflow:hidden}
+.cp-library .cp-tool-card small{font-size:8px;line-height:1.1}
+.cp-library .cp-tool-card em{display:none}
+.cp-library .cp-library-group-label{
+ font-size:10px;padding:4px 7px;margin:2px 0 0;min-height:24px
+}
+.cp-expand-tools{
+ display:block;width:100%;min-height:27px;border:1px solid #22608a;
+ background:linear-gradient(135deg,#123858,#071d31);
+ color:#a9defc;font-size:10px;font-weight:750;
+ padding:4px 8px;border-radius:6px;margin:6px 0 3px;
+}
+.cp-expand-tools[hidden]{display:none!important}
+.cp-expand-tools:hover{border-color:#30bfff;background:#135081}
+.cp-library #cockpitToolInfo{max-height:47px;margin-top:4px;font-size:9px;padding:5px 7px}
+@media(min-width:1200px) and (max-width:1400px){
+ .cp-library .cp-tool-grid{grid-template-columns:repeat(3,minmax(0,1fr));max-height:320px}
+}
+@media(min-width:700px) and (max-width:1199px){
+ .cp-library .cp-tool-grid{grid-template-columns:repeat(auto-fit,minmax(105px,1fr));max-height:320px}
+ .cp-library .cp-tool-card{min-height:110px;max-height:none}
+ .cp-library .cp-tool-card canvas{height:59px;min-height:59px}
+}
+@media(max-width:699px){
+ .cp-library .cp-tool-grid{grid-template-columns:repeat(3,minmax(0,1fr));max-height:330px}
+ .cp-library .cp-tool-card{min-height:120px;max-height:none;padding:7px 5px}
+ .cp-library .cp-tool-card canvas{height:65px;min-height:65px}
+ .cp-library .cp-tool-card b{font-size:11px;max-height:none}
+ .cp-library .cp-tool-card small{font-size:10px}
+ .cp-library #cockpitToolInfo{max-height:none;font-size:10px;padding:9px}
+ .cp-expand-tools{min-height:44px;font-size:12px}
+}
+@media(max-width:359px){
+ .cp-library .cp-tool-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
