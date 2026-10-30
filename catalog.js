@@ -39,10 +39,6 @@ export const CATALOG_DIES = [
   name:"V16 / 30° · Rolleri TMR100",opening:16,angle:30,height:120,workingHeight:100,
   length:500,shoulderRadius:1.6,mount:"Rolleri R2/R3",verifiedSpecs:true,
   profileAccuracy:"provisional",source:"rolleriTMR1001630"},
- // Opción paramétrica sin fabricante, para ensayar V16/30 SIN afirmar que
- // coincide con un utillaje realmente disponible en la máquina.
- {id:"v16-30",name:"V16 / 30° · perfil de ensayo",opening:16,angle:30,
-  height:80,verifiedSpecs:false,profileAccuracy:"provisional"},
 
  // Matrices de 30° del catálogo CONIC tipo AMADA, pág. 29.
  {id:"conic-v006-30-s",manufacturer:"CONIC (tipo Amada)",reference:"V006-30-S",name:"Matriz 30° V6 · R1",opening:6,angle:30,height:60,length:835,shoulderRadius:1,outerWidth:17,dimensionA:11.5,mount:"Amada/Promecam",verifiedSpecs:true,profileAccuracy:"provisional",source:"conicAmadaType2022"},
