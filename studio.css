@@ -350,3 +350,43 @@ html{background:#020913}
  .cp-library.viewer-open .cp-viewer-wrap .tool-inspector-meta{font-size:11px}
  .cp-library.viewer-open .cp-viewer-wrap .tool-inspector-note{font-size:10px}
 }
+
+/* Sección métrica: quitar rótulos y cuadros que duplican datos o tapan
+   la herramienta. La sección técnica ya incluye leyenda propia. */
+.cp-simulation.is-technical .cp-machine-floats,
+.cp-simulation.is-technical .cp-overlay-right{display:none!important}
+.cp-simulation.is-technical .cp-machine-frame::before{opacity:.16!important}
+.cp-simulation.is-technical .cp-floating-options{
+ border-color:#3177a0!important;
+ box-shadow:0 4px 17px #000b!important;
+}
+.cp-simulation.is-technical #machineSection{
+ border-color:#ffbd51!important;color:#fff!important;
+ background:linear-gradient(120deg,#975b14,#4c3519)!important;
+}
+@media(max-width:699px){
+ .cp-simulation.is-technical .cp-floating-options{
+  position:absolute!important;top:auto!important;bottom:5px!important;
+  left:7px!important;right:7px!important;
+  display:flex!important;flex-direction:row!important;
+  align-items:center!important;justify-content:space-between!important;
+  gap:4px!important;max-width:none!important;width:auto!important;
+  height:49px!important;max-height:49px!important;
+  padding:4px!important;overflow-x:auto!important;overflow-y:hidden!important;
+  background:#051a2eea!important;scrollbar-width:none;
+ }
+ .cp-simulation.is-technical .cp-floating-options>span{display:none!important}
+ .cp-simulation.is-technical .cp-floating-options button{
+  display:flex;align-items:center;justify-content:center;
+  min-width:38px!important;width:auto!important;
+  flex:1 1 38px!important;max-width:none!important;
+  min-height:39px!important;height:39px!important;
+  padding:3px 2px!important;font-size:10px!important;
+  border-radius:6px!important;white-space:nowrap!important;
+ }
+}
+@media(min-width:700px) and (max-width:900px){
+ .cp-simulation.is-technical .cp-floating-options{
+  right:6px!important;top:6px!important;
+ }
+}
