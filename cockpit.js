@@ -2,6 +2,7 @@
 // se distingue de los perfiles tridimensionales aproximados.
 import {DIES,PUNCHES,MATERIALS,normalized,development,stage,getTooling} from './engine.js';
 import {CATALOG_SOURCES,toolMatchesBrand,selectionCompatibility} from './catalog.js';
+import {sectionPunch,sectionDie} from './tool-profiles.js';
 const $=id=>document.getElementById(id);
 const state={brand:'Todos',kind:'all',search:'',selectedTool:null,selectedToolKind:'punch',showAll:false,yaw:-.6,pitch:.34,zoom:1};
 const format=(n,d=1)=>Number(n).toLocaleString('es-ES',{minimumFractionDigits:d,maximumFractionDigits:d});
@@ -79,21 +80,12 @@ function renderCatalogue(){
  drawToolViewer();
 }
 function shape(tool,kind){
- // Silueta orientativa de sección transversal, NO un CAD de fabricante.
- if(kind==='die'){
-   const w=Math.max(32,(tool.opening||16)*2.2),h=62,v=(tool.opening||16)*.78;
-   const half=(tool.opening||16)/2;
-   return [[-w/2,h/2],[-half,h/2],[0,h/2-v*.58],[half,h/2],[w/2,h/2],[w/2,-h/2],[-w/2,-h/2]];
- }
- const height=88,tip=(tool.tip||1)/2;
- if(tool.type==='cabra'){
-   return [[-25,44],[20,44],[20,30],[-4,30],[-4,12],[21,12],[21,-13],[8,-13],[4,-26],[tip,-44],[-tip,-44],[-7,-29],[-11,-15],[-25,-15],[-25,-2],[-8,5],[-25,21]];
- }
- if(tool.angle<=45){
-   return [[-22,44],[22,44],[22,15],[9,-16],[tip,-44],[-tip,-44],[-9,-16],[-22,15]];
- }
- return [[-22,44],[22,44],[22,14],[16,-5],[tip,-44],[-tip,-44],[-16,-5],[-22,14]];
+ // Geometría realmente diferenciada por ángulo nominal y abertura V.
+ // Sigue siendo un perfil PARAMÉTRICO, no una ficha CAD de fabricante.
+ const section=kind==='die'?sectionDie(tool):sectionPunch(tool);
+ return section.points.map(([x,y])=>[x,y-section.height/2]);
 }
+
 function drawThumbnail(canvas,tool,kind){
  // Modelado paramétrico 2.5D: la silueta depende de la herramienta seleccionada.
  // Ilustración, no CAD acotado ni documentación para mecanizado.
