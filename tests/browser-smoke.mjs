@@ -40,6 +40,15 @@ try{
   assert.equal(await page.locator('#die').inputValue(),'v32');
   await page.locator('#vComparisonRows tr[data-die-id="v16"] button').click();
   assert.equal(await page.evaluate(()=>window.PLEGADOX_STATE().piece.die),'v16');
+  const [profileDXF]=await Promise.all([
+    page.waitForEvent('download'),page.locator('#exportDxfProfile').click()
+  ]);
+  assert.match(profileDXF.suggestedFilename(),/perfil-2D-aproximado\.dxf$/);
+  const [flatDXF]=await Promise.all([
+    page.waitForEvent('download'),page.locator('#exportDxfFlat').click()
+  ]);
+  assert.match(flatDXF.suggestedFilename(),/desarrollo-ORIENTATIVO\.dxf$/);
+  assert.match(await page.locator('#dxfStatus').textContent(),/No es un plano validado/);
   await page.locator('[data-tab="simulacion"]').click();
   assert.ok(await page.locator('#cockpitTools .cp-tool-card').count()>0,'Hay tarjetas de herramientas');
   await page.locator('[data-tab="herramientas"]').click();

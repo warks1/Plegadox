@@ -35,6 +35,7 @@ try{
  await page.locator('#timeline').evaluate(input=>{
   input.value='1000';input.dispatchEvent(new Event('input',{bubbles:true}));
  });
+ await page.locator('[data-tab="simulacion"]').click();
  const thick=await page.locator('#sceneCanvas').evaluate(c=>c.toDataURL());
  assert.notEqual(sceneFinal,thick,'El canto 3D debe reaccionar al espesor programado');
  await page.locator('[data-tab="programacion"]').click();
