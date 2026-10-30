@@ -111,6 +111,15 @@ export function inspectToolContact(piece,instant=0){
  };
  return result;
 }
+// A shared small cache prevents 2D polygon checks at every animation frame.
+let cachedKey='',cachedContact=null;
+export function currentToolContact(piece,time=0){
+ const p=normalized(piece);
+ const t=Math.round(Math.max(0,Number(time)||0)*10)/10;
+ const key=JSON.stringify([p.flanges,p.angles,p.order,p.punch,p.die,p.thickness,t]);
+ if(key!==cachedKey){cachedKey=key;cachedContact=inspectToolContact(p,t);}
+ return cachedContact;
+}
 export function inspectSequenceTools(piece,samplesPerOperation=9){
  const p=normalized(piece),out=[];
  for(let op=0;op<p.order.length;op++){
