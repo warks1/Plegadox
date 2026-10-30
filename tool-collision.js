@@ -34,6 +34,61 @@ function polygonDistance(p,verts){
   closest=Math.min(closest,distanceSegment(p,verts[i],verts[(i+1)%verts.length]));
  return closest;
 }
+/**
+ * Distancia exacta entre dos segmentos de sección 2D, con los puntos
+ * más próximos de ambos. Detecta cruces de la ENVOLVENTE de espesor
+ * incluso si la fibra media no corta el útil y las muestras son lejanas.
+ */
+function segmentNearestPoints(a,b,c,d){
+ const closest=(p,v,w)=>{
+  const dx=w.x-v.x,dy=w.y-v.y,len=dx*dx+dy*dy;
+  const t=len<EPS?0:Math.max(0,Math.min(1,((p.x-v.x)*dx+(p.y-v.y)*dy)/len));
+  return {point:{x:v.x+dx*t,y:v.y+dy*t},t};
+ };
+ const candidates=[];
+ for(const p of [a,b]){
+  const q=closest(p,c,d);candidates.push({sheet:p,tool:q.point,dist:distance(p,q.point)});
+ }
+ for(const p of [c,d]){
+  const q=closest(p,a,b);candidates.push({sheet:q.point,tool:p,dist:distance(q.point,p)});
+ }
+ return candidates.reduce((best,item)=>item.dist<best.dist?item:best);
+}
+/**
+ * Para cada ala, comprueba la distancia mínima de su fibra a TODAS las
+ * aristas de cada herramienta. La muestra espaciada a 100 mm puede fallar
+ * ante una arista de solo 1 mm. Este método no necesita muestras.
+ *
+ * Se omite el apoyo esperado sobre el plano Y=0 de la matriz cuando la
+ * fibra se encuentra a medio espesor sobre ese plano.
+ */
+function segmentPolygonClearances(sheet,scene,kind){
+ const polygon=kind==='punch'?scene.punchPolygon:scene.diePolygon;
+ const half=Math.max(0,Number(scene.piece.thickness)||0)/2,issues=[];
+ if(!Array.isArray(polygon)||polygon.length<3||half<=.18)return issues;
+ for(let segment=0;segment<sheet.length-1;segment++){
+  const a=sheet[segment],b=sheet[segment+1];
+  let best=null;
+  for(let j=0;j<polygon.length;j++){
+   const near=segmentNearestPoints(a,b,polygon[j],polygon[(j+1)%polygon.length]);
+   if(!best||near.dist<best.dist)best=near;
+  }
+  if(!best||best.dist>=half-.18)continue;
+  // Un punto con fibra central dentro del material es penetración, no holgura.
+  // Ya se analiza con los cortes exactos segmento/polígono.
+  if(insidePolygon(best.sheet,polygon) &&
+    polygonDistance(best.sheet,polygon)>1e-6)continue;
+  const support=kind==='die' && Math.abs(best.tool.y)<.15 &&
+    Math.abs(best.sheet.y-half)<.15;
+  const punchContact=kind==='punch' &&
+    (segment===scene.stage.activeBend||segment===scene.stage.activeBend+1) &&
+    Math.abs(best.sheet.x)<Math.max(half*1.3,1.2);
+  if(support||punchContact)continue;
+  issues.push({kind,category:'clearance',point:best.sheet,segment,
+   depth:half-best.dist});
+ }
+ return issues;
+}
 function sampleSheet(sheet,step){
  const samples=[];
  for(let i=0;i<sheet.length-1;i++){
@@ -123,7 +178,8 @@ export function inspectSheetAgainstPolygon(sheet,polygon,thickness=2,kind='punch
   piece:{thickness}};
  const samples=sampleSheet(sheet,Math.max(.5,Math.min(3,thickness*.65)));
  return [...samples.map(sample=>classifySample(sample,scene,kind)).filter(Boolean),
-  ...segmentPolygonPenetrations(sheet,scene,kind)];
+  ...segmentPolygonPenetrations(sheet,scene,kind),
+  ...segmentPolygonClearances(sheet,scene,kind)];
 }
 export function inspectToolContact(piece,instant=0){
  const scene=technicalScene(piece,instant),samples=sampleSheet(scene.sheet,
@@ -137,7 +193,10 @@ export function inspectToolContact(piece,instant=0){
  }
  // Detectar también penetraciones entre puntos muestreados, por ejemplo
  // un perfil estrecho en un ala de varios metros.
- for(const kind of ['punch','die'])all.push(...segmentPolygonPenetrations(scene.sheet,scene,kind));
+ for(const kind of ['punch','die']){
+  all.push(...segmentPolygonPenetrations(scene.sheet,scene,kind));
+  all.push(...segmentPolygonClearances(scene.sheet,scene,kind));
+ }
  // Keep the deepest issue per tool and segment, avoiding dozens of repeated
  // warnings and huge per-frame DOM updates.
  const grouped=new Map();

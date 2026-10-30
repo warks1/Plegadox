@@ -52,3 +52,25 @@ test('un roce tangencial no se clasifica como penetración de la fibra media',()
  const conflicts=inspectSheetAgainstPolygon(tangent,narrow,2,'die');
  assert.equal(conflicts.filter(hit=>hit.category==='penetration').length,0);
 });
+
+test('detecta roce de espesor entre puntos de muestreo aunque la fibra no cruce el útil',()=>{
+ const tool=[point(45,-3),point(47,-3),point(47,3),point(45,3)];
+ const sheet=[point(-5000,4),point(5000,4)];
+ const hits=inspectSheetAgainstPolygon(sheet,tool,3,'die');
+ assert.ok(hits.some(x=>x.category==='clearance'&&
+  x.point.x>=45&&x.point.x<=47), 'Avisar de la envolvente de chapa: d=1 mm < 1,5 mm');
+ assert.equal(hits.filter(x=>x.category==='penetration').length,0,
+  'Fibra central fuera del cuerpo; no inventar una penetración de línea central');
+});
+test('no avisa al superar la holgura nominal con el mismo útil',()=>{
+ const tool=[point(45,-3),point(47,-3),point(47,3),point(45,3)];
+ const sheet=[point(-5000,8),point(5000,8)];
+ assert.equal(inspectSheetAgainstPolygon(sheet,tool,3,'die').length,0);
+});
+test('contacto de apoyo a medio espesor en Y=0 de una matriz no genera falsa alarma',()=>{
+ const tool=[point(-30,0),point(-8,0),point(0,-8),
+             point(8,0),point(30,0),point(30,-50),point(-30,-50)];
+ const sheet=[point(-100,1),point(-10,1)];
+ const hits=inspectSheetAgainstPolygon(sheet,tool,2,'die');
+ assert.equal(hits.length,0);
+});
