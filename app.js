@@ -1,4 +1,6 @@
 import {MATERIALS,DIES,PUNCHES,EXAMPLE,normalized,profile,bounds,development,stage,orientedForMachine,getTooling,selfIntersects,clamp,finite} from './engine.js';
+import {registerCatalogue} from './catalog.js';
+registerCatalogue(DIES,PUNCHES);
 const $=id=>document.getElementById(id);
 const storeKey='plegadox:piece:v1';
 let piece=restore();
@@ -10,7 +12,7 @@ function restore(){try{const saved=localStorage.getItem(storeKey);return normali
 function persist(){try{localStorage.setItem(storeKey,JSON.stringify(piece));}catch{}}
 function save(){persist();$('saveBtn').textContent='✓ Guardado';setTimeout(()=>$('saveBtn').textContent='Guardar pieza',1500);}
 function resetPlayback(){sim.time=0;sim.last=null;sim.playing=false;$('playBtn').textContent='▶ Reproducir';}
-function changePiece(p,structural=false){piece=normalized(p);persist();if(structural)resetPlayback();renderEditor();renderSetup();paintAll();}
+function changePiece(p,structural=false){piece=normalized(p);persist();if(structural)resetPlayback();renderEditor();renderSetup();paintAll();window.dispatchEvent(new CustomEvent('plegadox:pieceChanged',{detail:piece}));}
 function configure(){
  const options=(select,items,current)=>{select.replaceChildren(...items.map(item=>{const o=document.createElement('option');o.value=item.id;o.textContent=item.name;return o;}));select.value=current;};
  options($('material'),MATERIALS,piece.material);options($('die'),DIES,piece.die);options($('punch'),PUNCHES,piece.punch);
@@ -194,3 +196,4 @@ function tick(now){
  requestAnimationFrame(tick);
 }
 configure();
+window.PLEGADOX_STATE=()=>({piece,sim});
