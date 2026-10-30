@@ -42,7 +42,8 @@ try{
     layout:body.dataset.layout,orientation:body.dataset.orientation,input:body.dataset.input,
     machine:rect('#machineCanvas'),viewer:rect('.cp-simulation'),sidebar:rect('.sidebar'),navScroll:nav.scrollWidth,
     navClient:nav.clientWidth,play:rect('#playBtn'),toolbar:rect('.cp-player .controls'),
-    library:rect('.cp-library'),program:rect('#tab-simulacion'),cards:cards.map(c=>({width:c.getBoundingClientRect().width,x:c.getBoundingClientRect().x,right:c.getBoundingClientRect().right})),
+    library:rect('.cp-library'),operations:rect('.cp-operations'),main:rect('main'),
+    program:rect('#tab-simulacion'),cards:cards.map(c=>({width:c.getBoundingClientRect().width,x:c.getBoundingClientRect().x,right:c.getBoundingClientRect().right})),
     pixelWidth:canvas.width,pixelHeight:canvas.height
    };
   });
@@ -54,6 +55,14 @@ try{
   assert.ok(result.library.right<=result.viewport+2,item.name+': biblioteca recortada '+JSON.stringify(result.library));
   assert.ok(result.cards.every(c=>c.width>70&&c.right<=result.viewport+2),item.name+': panel inferior desbordado '+JSON.stringify(result.cards));
   assert.ok(result.pixelWidth>0&&result.pixelHeight>0,item.name+': canvas no redimensionado');
+  if(item.expected==='mobile'){
+   assert.ok(result.sidebar.w>=item.w-3,item.name+': menú móvil no ocupa ancho '+JSON.stringify(result.sidebar));
+   assert.ok(result.sidebar.h<=80,item.name+': menú móvil se quedó vertical '+JSON.stringify(result.sidebar));
+   assert.ok(result.machine.y<result.operations.y,item.name+': simulación no aparece antes de la secuencia');
+  }else{
+   assert.ok(result.sidebar.w<=108,item.name+': menú lateral demasiado ancho '+JSON.stringify(result.sidebar));
+   assert.ok(result.main.x>=result.sidebar.right-3,item.name+': contenido no queda a la derecha del menú '+JSON.stringify({sidebar:result.sidebar,main:result.main}));
+  }
   assert.deepEqual(errors,[],item.name+': errores de JS '+errors.join('; '));
   if(['telefono-mini','iphone','telefono-horizontal','tableta-pequena','tableta-horizontal','ordenador','monitor-fullhd'].includes(item.name)){
    await page.screenshot({path:'test-results/responsive-'+item.name+'.png',fullPage:true});
