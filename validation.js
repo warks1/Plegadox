@@ -105,6 +105,20 @@ export function analyzeSequence(raw){
     ' (comprobar '+first.phase.toLowerCase()+').',
     {operation:op,example:first}));
   }
+  // En una V convencional simétrica, los hombros están a V/2 del eje
+  // central. Una ala nominal menor no alcanza su hombro correspondiente.
+  // No es el cálculo de ala mínima de catálogo ni considera radio/amarre.
+  const halfV=die.opening/2;
+  const shortWings=[
+   {side:'anterior',length:p.flanges[bend]},
+   {side:'posterior',length:p.flanges[bend+1]}
+  ].filter(item=>item.length+1e-7<halfV);
+  if(shortWings.length){
+   issues.push(issue('v-support','warning',bend,
+    'Pliegue '+(bend+1)+': ala '+shortWings.map(w=>w.side+' '+round(w.length,1)+' mm').join(' y ')+
+    ' menor que V/2 ('+round(halfV,1)+' mm). No alcanza el apoyo nominal del hombro; revisar utillaje o método.',
+    {operation:op,halfV,shortWings}));
+  }
   const compatibility=toolAngleCompatibility(p,bend);
   if(compatibility.warning){
    issues.push(issue('tool-angle','warning',bend,
@@ -115,7 +129,7 @@ export function analyzeSequence(raw){
   }
   perOperation.push({operation:op,bend,angle:p.angles[bend],
     sampledStates:samples.length,potentialInterference:problemSamples.length>0,
-    toolAngleWarning:compatibility.warning});
+    toolAngleWarning:compatibility.warning,vSupportWarning:shortWings.length>0});
  }
  const ratio=die.opening/p.thickness;
  // V/t is guidance only; no physical tonnage or tooling certification.
@@ -137,12 +151,12 @@ export function analyzeSequence(raw){
  return {
   piece:p.name,issues:dedup,perOperation,
   hasGeometryWarning:dedup.some(x=>x.level==='warning'&&
-    ['final-cross','final-clearance','operation-geometry','machine-width','tool-angle'].includes(x.code)),
+    ['final-cross','final-clearance','operation-geometry','machine-width','tool-angle','v-support'].includes(x.code)),
   verifiedMachineClearance:false,
   summary:dedup.some(x=>x.code==='operation-geometry'||x.code==='final-cross'||x.code==='final-clearance')
     ?'Posibles interferencias geométricas 2D. Revisar operaciones.'
-    :dedup.some(x=>x.code==='tool-angle')
-      ?'Hay pliegues con ángulos interiores más cerrados que la abertura nominal de los útiles. Revisar.'
+    :dedup.some(x=>x.code==='tool-angle'||x.code==='v-support')
+      ?'Revisar compatibilidad geométrica de pliegues, herramientas y apoyo nominal sobre la V.'
       :'Sin cruces 2D detectados en las posiciones muestreadas. Colisiones físicas no verificadas.',
   limitations:'No considera deformación plástica, radio real, cinemática de volteo, profundidad de mordazas, herramientas CAD ni todas las posiciones entre muestras.'
  };

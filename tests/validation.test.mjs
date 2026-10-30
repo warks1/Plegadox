@@ -75,3 +75,28 @@ test('la limitación se evalúa tanto para el signo positivo como para el negati
  assert.ok(positive.issues.some(i=>i.code==='tool-angle'&&i.bend===0));
  assert.ok(negative.issues.some(i=>i.code==='tool-angle'&&i.bend===0));
 });
+
+test('alerta cuando un ala no alcanza medio ancho de la V',()=>{
+ const p={...EXAMPLE,flanges:[4,50,50,50,50],die:'v16'};
+ const report=analyzeSequence(p);
+ const issue=report.issues.find(x=>x.code==='v-support'&&x.bend===0);
+ assert.ok(issue,'V16 necesita al menos 8 mm para llegar al hombro en el esquema');
+ assert.equal(issue.halfV,8);
+ assert.deepEqual(issue.shortWings.map(x=>x.side),['anterior']);
+ assert.equal(report.perOperation[0].vSupportWarning,true);
+ assert.equal(report.hasGeometryWarning,true);
+});
+test('no lanza advertencia de apoyo a V/2 exacto ni por el signo del ángulo',()=>{
+ const p={...EXAMPLE,die:'v16',flanges:[8,50,50,50,50],angles:[-90,-90,-90,90]};
+ assert.equal(analyzeSequence(p).issues.filter(x=>x.code==='v-support').length,0);
+});
+test('compara el apoyo de ambas alas sin asignar incompatibilidad certificada',()=>{
+ const p={...EXAMPLE,flanges:[8,3,50,50,50],die:'v16'};
+ const report=analyzeSequence(p);
+ const first=report.issues.find(x=>x.code==='v-support'&&x.bend===0);
+ const second=report.issues.find(x=>x.code==='v-support'&&x.bend===1);
+ assert.ok(first&&second);
+ assert.equal(first.shortWings[0].side,'posterior');
+ assert.equal(second.shortWings[0].side,'anterior');
+ assert.equal(report.verifiedMachineClearance,false);
+});

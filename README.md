@@ -261,3 +261,13 @@ En la **biblioteca de cabina** las referencias agudas de 30°, las patas de
 cabra GN6/GN9 y algunas matrices V de 30° se muestran en la selección
 inicial, además de las herramientas ya activas. El catálogo completo
 permanece disponible en el botón correspondiente o mediante filtros.
+
+### Advertencia de apoyo mínimo en una matriz V
+
+Para un apoyo simétrico esquemático, Plegadox compara cada ala adyacente
+con la semianchura V/2. Por ejemplo, una ala de 4 mm junto a un pliegue
+sobre V16 no alcanza el hombro situado a 8 mm de la línea de plegado:
+se avisa en la operación correspondiente. Es un prechequeo de
+**geometría nominal, NO una fórmula certificada de ala mínima**.
+El radio, el utillaje especial, el método de plegado, la recuperación,
+las tolerancias y las dimensiones exteriores pueden cambiar la viabilidad.
