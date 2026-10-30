@@ -1,0 +1,47 @@
+import assert from 'node:assert/strict';
+import {spawn} from 'node:child_process';
+import {chromium} from 'playwright';
+
+const server=spawn('python3',['-m','http.server','4173','--bind','127.0.0.1'],{stdio:'ignore'});
+let browser;
+try{
+  browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+  const desktop=await browser.newContext({viewport:{width:1536,height:900},deviceScaleFactor:1});
+  const page=await desktop.newPage(),errors=[];
+  page.on('pageerror',err=>errors.push(err.message));
+  await page.goto('http://127.0.0.1:4173/',{waitUntil:'networkidle',timeout:30000});
+  await page.getByRole('heading',{name:'Simulación industrial'}).waitFor();
+  assert.ok(await page.locator('#cockpitTools .cp-tool-card').count()>0,'Hay tarjetas de herramientas');
+  assert.ok(await page.locator('#cockpitSelectedTool3D').isVisible(),'Visor de herramienta 3D visible');
+  await page.locator('#cpBrandTabs button[data-brand="Amada"]').click();
+  assert.ok(await page.locator('#cockpitTools .cp-tool-card').count()>=7,'Punzones Amada cargados');
+  await page.locator('#cockpitTools .cp-tool-card').first().click();
+  await page.locator('#playBtn').click();
+  await page.waitForTimeout(800);
+  assert.ok(Number(await page.locator('#timeline').inputValue())>0,'El tiempo de simulación avanza');
+  await page.locator('#pauseBtn').click();
+  await page.screenshot({path:'test-results/plegadox-desktop.png',fullPage:true});
+  await page.locator('[data-tab="programacion"]').click();
+  await page.locator('.angle-input').first().fill('-90');
+  await page.locator('.angle-input').first().dispatchEvent('change');
+  assert.equal(await page.locator('.angle-input').first().inputValue(),'-90');
+  await page.locator('[data-tab="simulacion"]').click();
+  const label=await page.locator('#cockpitAngle').textContent();
+  assert.ok(label.includes('-90'),'Se conserva el signo negativo');
+  assert.deepEqual(errors,[],'Sin errores JavaScript en escritorio: '+errors.join('; '));
+  const mobile=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true});
+  const phone=await mobile.newPage(),mobileErrors=[];
+  phone.on('pageerror',err=>mobileErrors.push(err.message));
+  await phone.goto('http://127.0.0.1:4173/',{waitUntil:'networkidle',timeout:30000});
+  await phone.getByRole('heading',{name:'Simulación industrial'}).waitFor();
+  await phone.locator('#cpBrandTabs button[data-brand="Bystronic"]').click();
+  assert.ok(await phone.locator('#cockpitTools .cp-tool-card').count()>0,'Herramientas Bystronic visibles en móvil');
+  const scroll=await phone.evaluate(()=>({actual:document.documentElement.scrollWidth,viewport:window.innerWidth}));
+  assert.ok(scroll.actual<=scroll.viewport+4,'Sin desbordamiento horizontal global en móvil: '+JSON.stringify(scroll));
+  await phone.screenshot({path:'test-results/plegadox-mobile.png',fullPage:true});
+  assert.deepEqual(mobileErrors,[],'Sin errores JavaScript en móvil: '+mobileErrors.join('; '));
+  console.log('OK: escritorio, móvil, catálogo, selección y animación sin errores JS');
+}finally{
+ await browser?.close();
+ server.kill();
+}
