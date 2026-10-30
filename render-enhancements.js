@@ -1,3 +1,4 @@
+import {sectionPunch} from './tool-profiles.js';
 // Plegadox Studio · capas decorativas parametrizadas de la máquina.
 // Vista 2.5D ilustrativa: NO es una simulación de contacto, no aporta una
 // verificación de colisiones ni una geometría CAD de herramienta.
@@ -78,28 +79,34 @@ export function dieDepth(ctx,location,opening,enabled){
  ctx.restore();
  for(const frac of [.2,.5,.8])screw(ctx,cx+half+forward*.65,cy+depth*frac-up*.65,2.2*s);
 }
-export function ramDepth(ctx,location,tipY,angle,enabled){
+export function ramDepth(ctx,location,tipY,punch,enabled){
  if(!enabled)return;
- const {cx,s}=location,depth=30*s,raise=17*s,top=tipY-202*s;
- const shoulder=angle<=45?100:60;
- const side=[
- [cx+43*s,top+12*s],
- [cx+43*s+depth,top+(12*s-raise)],
- [cx+40*s+depth,top+shoulder*s-raise],
- [cx+depth*.45,tipY-raise],
- [cx,tipY],
- [cx+40*s,top+shoulder*s]
- ];
- ctx.save();ctx.shadowBlur=17*s;ctx.shadowColor='#000a';
- path(ctx,side,grad(ctx,cx+40*s,top,cx+43*s+depth,top,[[0,'#b8ccd9'],[.4,'#6c899e'],[1,'#142c40']]),'#2f5e79',1.3*s);
+ const {cx,s}=location;
+ const section=sectionPunch(punch);
+ // Use the SAME section polygon as the 2D drawing, not a hard-coded
+ // triangular side that incorrectly turns a gooseneck into a straight punch.
+ const factor=s*Math.min(1.7,205/section.height);
+ const offsetX=25*s,offsetY=-15*s;
+ const pts=section.points.map(([x,y])=>[cx+x*factor,tipY-y*factor]);
+ ctx.save();ctx.shadowBlur=13*s;ctx.shadowColor='#000c';
+ for(let i=0;i<pts.length;i++){
+  const j=(i+1)%pts.length,a=pts[i],b=pts[j];
+  // Extrusion gives genuine 3D depth while retaining the punch cutouts.
+  const face=[a,b,[b[0]+offsetX,b[1]+offsetY],[a[0]+offsetX,a[1]+offsetY]];
+  const g=grad(ctx,a[0],a[1],b[0]+offsetX,b[1]+offsetY,
+      [[0,'#bbceda'],[.35,'#55778e'],[.75,'#29475e'],[1,'#a0c1d5']]);
+  path(ctx,face,g,'#2a5871',.8*s);
+ }
  ctx.restore();
+ const top=tipY-section.height*factor;
  const housing=[
  [cx-57*s,top-65*s],
- [cx-57*s+depth,top-(65*s+raise)],
- [cx+63*s+depth,top-(65*s+raise)],
+ [cx-57*s+offsetX,top-65*s+offsetY],
+ [cx+63*s+offsetX,top-65*s+offsetY],
  [cx+63*s,top-65*s]
  ];
- path(ctx,housing,grad(ctx,cx,top-65*s,cx,top-95*s,[[0,'#edf6fa'],[.34,'#738b9e'],[1,'#284259']]),'#50718b',1.4*s);
+ path(ctx,housing,grad(ctx,cx,top-65*s,cx,top-80*s,
+  [[0,'#edf6fa'],[.34,'#738b9e'],[1,'#284259']]),'#50718b',1.3*s);
 }
 export function sheetDepth(ctx,points,location,thickness,enabled){
  if(!enabled||points.length<2)return;
