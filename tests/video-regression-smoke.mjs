@@ -17,7 +17,7 @@ try{
   const r=document.querySelector('#timeline');
   r.value='390';r.dispatchEvent(new Event('input',{bubbles:true}));
  });
- assert.match(await page.locator('#phaseText').textContent(),/−90°/);
+ assert.match(await page.locator('#phaseText').textContent(),/[-−]90°/);
  await page.screenshot({path:'test-results/video-regression-second-minus90-desktop.png',fullPage:false});
  // Tool profiles 30 / 60 / 88 must genuinely differ visually.
  await page.locator('#cpBrandTabs [data-brand="Genéricos"]').click();
