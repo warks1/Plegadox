@@ -15,7 +15,7 @@ let machineView={panX:0,panY:0,zoom:1};
 let touchOrderEnabled=false,chosenTouchOrder=[];
 const geometryCache={key:null,result:null};
 function geometryReport(){
- const key=JSON.stringify([piece.flanges,piece.angles,piece.order,piece.thickness,piece.width,piece.material,piece.rmMPa,piece.punch,piece.die,getV85().ramWidth]);
+ const key=JSON.stringify([piece.flanges,piece.angles,piece.order,piece.thickness,piece.width,piece.material,piece.rmMPa,piece.punch,piece.die,getV85().ramWidth,getV85().holderWidth]);
  if(key!==geometryCache.key){geometryCache.key=key;geometryCache.result={...analyzeSequence(piece),tools:inspectSequenceTools(piece,6)};}
  return geometryCache.result;
 }
@@ -398,7 +398,7 @@ function renderDevelopment(){
  $('devRows').replaceChildren(...d.perBend.map(b=>{const tr=document.createElement('tr');for(const val of [b.index+1,(b.angle>0?'+':'')+b.angle+'°',numbers(b.ba,2),numbers(b.bd,2)]){const td=document.createElement('td');td.textContent=val;tr.append(td);}return tr;}));
  const out=[['Alas',piece.flanges.length],['Pliegues',piece.angles.length],['L. nominal',numbers(d.nominal,1)+' mm']];
  $('geometrySummary').replaceChildren(...out.map(([name,val])=>{const e=document.createElement('div');e.className='stat';const b=document.createElement('b');b.textContent=String(val);const s=document.createElement('span');s.textContent=name;e.append(b,s);return e;}));
- $('validity').textContent=check.hasGeometryWarning?'Revisar geometría 2D':'Perfil calculado · sin validación física';
+ $('validity').textContent=check.hasGeometryWarning?'Revisar geometría y configuración':'Perfil calculado · sin validación física';
  $('validity').style.background=check.hasGeometryWarning?'#5b351b':'#173c54';
  $('validity').style.color=check.hasGeometryWarning?'#ffd89c':'#b9e5ff';
 }

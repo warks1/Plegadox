@@ -329,3 +329,13 @@ una profundidad geométrica superior. La comparación es por herramienta y
 tramo de chapa; un aviso no debe ocultar a otro más grave del mismo tramo.
 El cálculo sigue basado en secciones paramétricas y **no certifica** colisiones
 reales con la máquina ni ausencia de interferencias 3D.
+
+### Longitud de los segmentos y ancho del portaútiles
+
+Cuando hay **longitud nominal de segmento** documentada, Plegadox señala
+si el ancho de pieza supera la longitud de **una sola pieza** del punzón
+o matriz seleccionado. Puede ser posible ensamblar varios segmentos,
+pero debe verificarse su instalación, alineación, reparto de carga y
+compatibilidad con las mordazas reales. También se comprueba de forma
+independiente la anchura configurada de la trancha y del portaútiles.
+No se simula un juego de segmentos ni se valida un montaje industrial.

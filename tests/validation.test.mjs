@@ -100,3 +100,27 @@ test('compara el apoyo de ambas alas sin asignar incompatibilidad certificada',(
  assert.equal(second.shortWings[0].side,'anterior');
  assert.equal(report.verifiedMachineClearance,false);
 });
+
+test('avisa cuando la longitud de un segmento de punzón no cubre el ancho de pieza',()=>{
+ const p={...EXAMPLE,width:1000,punch:'amada-831',die:'conic-v010-30-s'};
+ const report=analyzeSequence(p);
+ const punch=report.issues.find(x=>x.code==='tool-length'&&x.kind==='punzón');
+ assert.ok(punch,'Debe revisar el montaje de 415 mm en pieza de 1000 mm');
+ assert.equal(punch.availableLength,415);
+ assert.equal(punch.requiredLength,1000);
+ assert.match(punch.message,/montaje de varios segmentos/);
+ assert.ok(report.hasGeometryWarning,'La cobertura del útil necesita revisión');
+ assert.equal(report.verifiedMachineClearance,false);
+});
+test('distingue segmentos de punzón y de matriz sin afirmar que el montaje es imposible',()=>{
+ const report=analyzeSequence({...EXAMPLE,width:1000,punch:'amada-831',die:'rolleri-tmr100-16-30'});
+ assert.deepEqual(report.issues.filter(x=>x.code==='tool-length').map(x=>x.kind),
+  ['punzón','matriz']);
+ assert.equal(analyzeSequence({...EXAMPLE,width:400,punch:'amada-831',die:'rolleri-tmr100-16-30'})
+  .issues.some(x=>x.code==='tool-length'),false);
+});
+test('valida por separado ancho nominal de trancha y portaútiles',()=>{
+ const report=analyzeSequence({...EXAMPLE,width:2100});
+ assert.ok(report.issues.some(x=>x.code==='machine-width'));
+ assert.ok(report.issues.some(x=>x.code==='machine-holder-width'));
+});

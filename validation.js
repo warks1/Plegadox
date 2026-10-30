@@ -138,10 +138,26 @@ export function analyzeSequence(raw){
    'Relación V/espesor '+round(ratio,1)+' fuera del intervalo orientativo 5–14; revisar matriz, material y radio.',
    {ratio:round(ratio,2)}));
  }
- const configuredWidth=getV85().ramWidth;
- if(p.width>configuredWidth){
+ // Las longitudes en catálogo describen UNA sola pieza de útil. No
+ // afirmar que pueda cubrirse una longitud mayor sin un montaje segmentado.
+ for(const [kind,tool] of [['punzón',punch],['matriz',die]]){
+  const length=Number(tool.length);
+  if(Number.isFinite(length)&&length>0&&p.width>length+1e-6){
+   issues.push(issue('tool-length','warning',null,
+    'La pieza mide '+round(p.width,1)+' mm; un único segmento de '+
+    kind+' '+(tool.reference||tool.name)+' tiene '+round(length,1)+
+    ' mm nominales. Se requiere comprobar montaje de varios segmentos, amarre y reparto de carga.',
+    {kind,reference:tool.reference||tool.name,availableLength:length,requiredLength:p.width}));
+  }
+ }
+ const machine=getV85();
+ if(p.width>machine.ramWidth){
   issues.push(issue('machine-width','warning',null,
-   'La pieza excede la anchura configurada de la trancha: '+configuredWidth+' mm.'));
+   'La pieza excede el ancho configurado de la trancha: '+machine.ramWidth+' mm.'));
+ }
+ if(p.width>machine.holderWidth){
+  issues.push(issue('machine-holder-width','warning',null,
+   'La pieza excede el ancho configurado del portaútiles: '+machine.holderWidth+' mm.'));
  }
  if(!die.verifiedSpecs||!punch.verifiedSpecs||die.profileAccuracy==='provisional'||punch.profileAccuracy==='provisional'){
   issues.push(issue('provisional-tools','advisory',null,
@@ -151,12 +167,12 @@ export function analyzeSequence(raw){
  return {
   piece:p.name,issues:dedup,perOperation,
   hasGeometryWarning:dedup.some(x=>x.level==='warning'&&
-    ['final-cross','final-clearance','operation-geometry','machine-width','tool-angle','v-support'].includes(x.code)),
+    ['final-cross','final-clearance','operation-geometry','machine-width','machine-holder-width','tool-angle','v-support','tool-length'].includes(x.code)),
   verifiedMachineClearance:false,
   summary:dedup.some(x=>x.code==='operation-geometry'||x.code==='final-cross'||x.code==='final-clearance')
     ?'Posibles interferencias geométricas 2D. Revisar operaciones.'
-    :dedup.some(x=>x.code==='tool-angle'||x.code==='v-support')
-      ?'Revisar compatibilidad geométrica de pliegues, herramientas y apoyo nominal sobre la V.'
+    :dedup.some(x=>['tool-angle','v-support','tool-length','machine-width','machine-holder-width'].includes(x.code))
+      ?'Revisar la configuración de máquina, longitud de herramientas y geometría de los pliegues.'
       :'Sin cruces 2D detectados en las posiciones muestreadas. Colisiones físicas no verificadas.',
   limitations:'No considera deformación plástica, radio real, cinemática de volteo, profundidad de mordazas, herramientas CAD ni todas las posiciones entre muestras.'
  };
