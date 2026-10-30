@@ -8,7 +8,7 @@ test('un punzón de 30°, 60° y 88° tiene transiciones diferentes',()=>{
  const tool=a=>sectionPunch({angle:a,height:120,tip:.6,type:'recto'});
  const p30=tool(30),p60=tool(60),p88=tool(88);
  const taper=p=>p.points[2][1];
- assert.ok(taper(p30)<taper(p60) && taper(p60)<taper(p88));
+ assert.ok(taper(p30)>taper(p60) && taper(p60)>taper(p88),'30° debe tener la punta más larga');
  assert.ok(p30.points[0][1]===p88.points[0][1]);
  assert.notDeepEqual(p30.points,p60.points);
  assert.notDeepEqual(p60.points,p88.points);
