@@ -156,6 +156,6 @@ test('la matriz V16/30 con R1,6 de hombros conserva perfil simétrico provisiona
  approximate(m.depth,8/Math.tan(15*Math.PI/180),1e-9);
  const n=m.points.length;
  assert.equal(n,23);
- approximate(m.points[1][0],-m.points[n-5][0],1e-9);
+ approximate(m.points[1][0],-m.points[n-4][0],1e-9);
  assert.equal(m.provisional,true);
 });

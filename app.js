@@ -307,7 +307,9 @@ function toolCard(tool,kind){
  const meta=document.createElement('span');meta.className='tool-card-measure';
  meta.textContent=kind==='punch'?
   tool.angle+'° · R'+numbers((Number(tool.tip)||0)/2,2)+' · H'+tool.height+' mm'+(tool.type==='cabra'?' · Pata de cabra':''):
-  'V'+tool.opening+' · '+tool.angle+'° · H'+tool.height+' mm';
+  'V'+tool.opening+' · '+tool.angle+'°'+
+  (tool.shoulderRadius?' · R'+numbers(tool.shoulderRadius,2):'')+
+  ' · H'+tool.height+' mm';
  const brand=document.createElement('span');brand.className='tool-card-brand';
  brand.textContent=tool.manufacturer||'Genérico';
  const notice=document.createElement('span');notice.className='tool-card-notice';

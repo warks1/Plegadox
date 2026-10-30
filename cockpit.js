@@ -75,7 +75,9 @@ function renderCatalogue(){
    b.title=(tool.reference||tool.name)+(tool.verifiedSpecs?' · Especificaciones verificadas':' · Modelo provisional');
    const canvas=document.createElement('canvas');canvas.setAttribute('aria-hidden','true');
    const title=document.createElement('b');title.textContent=tool.reference||tool.name;
-   const detail=document.createElement('small');detail.textContent=kind==='punch'?tool.angle+'° · R'+tipR(tool)+' · H'+tool.height:'V'+tool.opening+' · '+tool.angle+'° · H'+tool.height;
+   const detail=document.createElement('small');detail.textContent=kind==='punch'?tool.angle+'° · R'+tipR(tool)+' · H'+tool.height:'V'+tool.opening+' · '+tool.angle+'°'+
+ (tool.shoulderRadius?' · R'+format(tool.shoulderRadius,2):'')+
+ ' · H'+tool.height;
    const flag=document.createElement('em');flag.textContent=tool.verifiedSpecs?'Ficha documentada':'Geometría provisional';
    b.append(canvas,title,detail,flag);b.onclick=()=>toolPicked(tool);
    container.append(b);drawThumbnail(canvas,tool,kind);
@@ -175,7 +177,9 @@ function drawToolViewer(){
  const meta=$('toolInspectorMeta');
  if(meta)meta.textContent=[tool.manufacturer||'Herramienta genérica',
   tool.reference||tool.name,kind==='punch'?'Ángulo '+tool.angle+'° · Altura '+tool.height+' mm · Punta R'+tipR(tool):
-  'V '+tool.opening+' mm · '+tool.angle+'° · Altura '+tool.height+' mm',
+  'V '+tool.opening+' mm · '+tool.angle+'°'+
+   (tool.shoulderRadius?' · Hombros R'+format(tool.shoulderRadius,2):'')+
+   ' · Altura '+tool.height+' mm',
   tool.profileAccuracy==='verified'?'Geometría verificada':'Perfil provisional sin cotas CAD completas'
  ].join('  |  ');
  const w=canvas.clientWidth||260,h=canvas.clientHeight||170,d=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(w*d);canvas.height=Math.round(h*d);
