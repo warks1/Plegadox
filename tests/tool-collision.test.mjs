@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {EXAMPLE} from '../engine.js';
-import {insidePolygon,inspectSheetAgainstPolygon,inspectToolContact,inspectSequenceTools,describeToolIssue} from '../tool-collision.js';
+import {insidePolygon,inspectSheetAgainstPolygon,inspectToolContact,inspectSequenceTools,describeToolIssue,consolidateToolIssues} from '../tool-collision.js';
 const point=(x,y)=>({x,y});
 const block=[point(-4,8),point(4,8),point(4,0),point(-4,0)];
 test('un punto dentro de un punzón es intrusión, uno fuera no',()=>{
@@ -96,4 +96,30 @@ test('la secuencia prioriza penetraciones y diferencia los avisos de holgura',()
   if(op.example?.category==='penetration')assert.equal(op.possibleToolIntrusion,true);
   assert.equal(op.verified,false);
  }
+});
+
+test('una penetración leve no puede ser ocultada por una holgura más profunda del mismo tramo',()=>{
+ const entries=[
+  {kind:'die',category:'clearance',segment:3,depth:9,point:point(2,4)},
+  {kind:'die',category:'penetration',segment:3,depth:.25,point:point(2,3)},
+  {kind:'die',category:'clearance',segment:1,depth:12,point:point(1,1)},
+  {kind:'punch',category:'penetration',segment:2,depth:.12,point:point(3,1)}
+ ];
+ const chosen=consolidateToolIssues(entries);
+ assert.equal(chosen.length,3,'Se conserva una incidencia por útil y tramo');
+ assert.equal(chosen[0].category,'penetration');
+ assert.equal(chosen[1].category,'penetration');
+ assert.equal(chosen[2].category,'clearance');
+ assert.equal(chosen.find(x=>x.kind==='die'&&x.segment===3).depth,.25);
+ assert.deepEqual(consolidateToolIssues([...entries].reverse()),chosen,
+  'El diagnóstico no debe cambiar por el orden de los muestreos');
+});
+test('para una categoría idéntica se muestra el caso con mayor profundidad',()=>{
+ const out=consolidateToolIssues([
+  {kind:'punch',segment:0,category:'penetration',depth:.1},
+  {kind:'punch',segment:0,category:'penetration',depth:.8},
+  {kind:'punch',segment:1,category:'clearance',depth:.4}
+ ]);
+ assert.equal(out[0].depth,.8);
+ assert.equal(out[1].segment,1);
 });

@@ -320,3 +320,12 @@ V/espesor, radio interior estimado, desarrollo calculado, diferencia respecto a
 la V activa y fuerza orientativa. **Elegir** cambia la matriz de la programación
 y actualiza las vistas vinculadas; no aprueba compatibilidad mecánica ni CAD.
 La fórmula de fuerza solo se aproxima al plegado al aire convencional de 90°.
+
+### Prioridad de avisos de interferencia
+
+El detector 2D conserva ahora la **penetración de la fibra media** con mayor
+prioridad que la falta de holgura debida al espesor, aunque esta última tenga
+una profundidad geométrica superior. La comparación es por herramienta y
+tramo de chapa; un aviso no debe ocultar a otro más grave del mismo tramo.
+El cálculo sigue basado en secciones paramétricas y **no certifica** colisiones
+reales con la máquina ni ausencia de interferencias 3D.

@@ -181,6 +181,27 @@ export function inspectSheetAgainstPolygon(sheet,polygon,thickness=2,kind='punch
   ...segmentPolygonPenetrations(sheet,scene,kind),
   ...segmentPolygonClearances(sheet,scene,kind)];
 }
+/**
+ * Un aviso de penetración de la fibra SIEMPRE prevalece sobre un aviso de
+ * holgura por espesor para el mismo tramo y herramienta. La profundidad
+ * sólo ordena incidencias de la misma gravedad. Determinista y sin
+ * descartar los demás tramos.
+ */
+export function consolidateToolIssues(issues=[]){
+ const severity=issue=>issue.category==='penetration'?2:1;
+ const grouped=new Map();
+ for(const issue of issues){
+  const key=issue.kind+':'+issue.segment;
+  const previous=grouped.get(key);
+  if(!previous||severity(issue)>severity(previous)||
+   (severity(issue)===severity(previous)&&issue.depth>previous.depth)){
+    grouped.set(key,issue);
+  }
+ }
+ return [...grouped.values()].sort((a,b)=>
+  severity(b)-severity(a)||b.depth-a.depth||
+  a.kind.localeCompare(b.kind)||a.segment-b.segment);
+}
 export function inspectToolContact(piece,instant=0){
  const scene=technicalScene(piece,instant),samples=sampleSheet(scene.sheet,
   Math.max(.5,Math.min(3,scene.piece.thickness*.65)));
@@ -197,15 +218,9 @@ export function inspectToolContact(piece,instant=0){
   all.push(...segmentPolygonPenetrations(scene.sheet,scene,kind));
   all.push(...segmentPolygonClearances(scene.sheet,scene,kind));
  }
- // Keep the deepest issue per tool and segment, avoiding dozens of repeated
- // warnings and huge per-frame DOM updates.
- const grouped=new Map();
- for(const issue of all){
-  const key=issue.kind+':'+issue.segment;
-  const old=grouped.get(key);
-  if(!old||issue.depth>old.depth)grouped.set(key,issue);
- }
- const warnings=[...grouped.values()].sort((a,b)=>b.depth-a.depth);
+ // Retener la SEVERIDAD antes que la profundidad: un roce profundo no
+ // puede ocultar una intrusión de fibra más superficial en el mismo tramo.
+ const warnings=consolidateToolIssues(all);
  const hard=warnings.filter(i=>i.category==='penetration');
  const result={
   stage:scene.stage,issues:warnings,
