@@ -127,8 +127,18 @@ function drawMachine(){
  rectWorld(72,-11,78,15,'#dc9a45','#b67e31');rectWorld(78,-11,111,-5,'#e6b670','#ba8a47');
  // Punzón parametrizado (se desplaza en Y); el extremo baja hasta tocar la chapa.
  const tip=t+63*(1-st.press);
- const halfTip= Math.max(.6,punch.tip/2),halfShoulder=21;
- const punchPoly=[P(-halfShoulder,tip+83),P(halfShoulder,tip+83),P(halfShoulder*.85,tip+52),P(halfTip,tip),P(-halfTip,tip),P(-halfShoulder*.85,tip+52)];
+ const halfTip=Math.max(.5,punch.tip/2),halfShoulder=21;
+ // Punzón de perfil distinto según tipo; geometría aproximada hasta
+ // cargar los polígonos acotados del catálogo técnico.
+ let outline;
+ if(punch.type==='cabra'){
+   outline=[[-25,83],[18,83],[18,68],[-2,68],[-2,51],[19,51],[19,36],[9,36],[4,13],[halfTip,0],[-halfTip,0],[-7,13],[-24,37],[-25,57]];
+ }else if(punch.angle<=45){
+   outline=[[-halfShoulder,83],[halfShoulder,83],[halfShoulder,36],[halfTip,0],[-halfTip,0],[-halfShoulder,36]];
+ }else{
+   outline=[[-halfShoulder,83],[halfShoulder,83],[halfShoulder,52],[halfTip,0],[-halfTip,0],[-halfShoulder,52]];
+ }
+ const punchPoly=outline.map(([x,y])=>P(x,tip+y));
  ctx.beginPath();punchPoly.forEach((pt,i)=>i?ctx.lineTo(pt.x,pt.y):ctx.moveTo(pt.x,pt.y));ctx.closePath();ctx.fillStyle='#8ea1af';ctx.strokeStyle='#4f667a';ctx.lineWidth=1.4;ctx.fill();ctx.stroke();
  rectWorld(-80,tip+83,80,tip+92,'#6c8798');
  rectWorld(-111,tip+92,111,tip+111,'#c0cdd7','#7b91a0');
