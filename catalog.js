@@ -7,12 +7,19 @@ export const CATALOG_SOURCES = {
   trumpfES2025: {title:"TRUMPF — Catálogo útiles plegado 2025 ES",url:"https://www.trumpf.com/filestorage/TRUMPF_ES/user_upload/2025_Catalogo_Utiles_plegado_ES.pdf",scope:"EV001 V6, EV001/H V6"},
   trumpfTechnical: {title:"TRUMPF — TruBend 2100, herramientas iniciales",url:"https://www.trumpf.com/filestorage/TRUMPF_US/Landingpages/TruBend_2100/TRUMPF_Inc_TruBend_2100_Technical_Quote_3_11_2025.pdf",scope:"OW200/K, EVW10/84 y EVW20/84"},
   amada2025: {title:"AMADA — Semi-standard tooling",url:"https://cdn.amada.eu/fileadmin/Repository/Amada_Tooling_price_list_2021_BENDING1.pdf",scope:"punzones 831, 841 W55/W95, 846 W110 y 804"},
-  bystronic: {title:"Bystronic — sistemas RF-A / XPT",url:"https://www.bystronic.com/usa/en-us/lp/press-brakes-tooling",scope:"sistema y compatibilidad, no cotas del perfil"}
+  bystronic: {title:"Bystronic — sistemas RF-A / XPT",url:"https://www.bystronic.com/usa/en-us/lp/press-brakes-tooling",scope:"sistema y compatibilidad, no cotas del perfil"},
+  conicAmadaType2022: {title:"CONIC — catálogo de utillaje TIPO AMADA, páginas 12–15, 20–21, 29",url:"https://www.conic.co.jp/es/bending/pdf/amada_sbt_tooling_202206.pdf",scope:"referencias GN9/GN6/ACT y matrices V004–V012 de 30°, dimensiones publicadas; no CAD completo"}
 };
 
 // verifiedSpecs significa que las dimensiones indicadas están respaldadas,
 // no que el perfil 2D/3D provisional esté validado.
 export const CATALOG_PUNCHES = [
+ // CONIC fabrica utillaje *tipo Amada*, NO son artículos originales AMADA.
+ // Ángulo, altura, radio y referencia están publicados; la silueta es provisional.
+ {id:"conic-act-12-3006",manufacturer:"CONIC (tipo Amada)",reference:"ACT-12-3006",name:"Agudo 30° H120 · R0,6",angle:30,tip:1.2,height:120,length:835,type:"recto",mount:"Amada/Promecam",verifiedSpecs:true,profileAccuracy:"provisional",source:"conicAmadaType2022"},
+ {id:"conic-act-09-3006",manufacturer:"CONIC (tipo Amada)",reference:"ACT-09-3006",name:"Agudo 30° H90 · R0,6",angle:30,tip:1.2,height:90,length:835,type:"recto",mount:"Amada/Promecam",verifiedSpecs:true,profileAccuracy:"provisional",source:"conicAmadaType2022"},
+ {id:"conic-gn9-12-8806",manufacturer:"CONIC (tipo Amada)",reference:"GN9-12-8806",name:"Pata de cabra GN9 88° H120 R0,6",angle:88,tip:1.2,height:120,length:835,type:"cabra",neckOffset:9,mount:"Amada/Promecam",verifiedSpecs:true,profileAccuracy:"provisional",source:"conicAmadaType2022"},
+ {id:"conic-gn6-12-8806",manufacturer:"CONIC (tipo Amada)",reference:"GN6-12-8806",name:"Pata de cabra GN6 88° H120 R0,6",angle:88,tip:1.2,height:120,length:835,type:"cabra",neckOffset:6,mount:"Amada/Promecam",verifiedSpecs:true,profileAccuracy:"provisional",source:"conicAmadaType2022"},
  {id:"trumpf-ow200-k",manufacturer:"Trumpf",reference:"OW200/K",name:"OW200/K · 86°",angle:86,tip:1,height:120,length:415,type:"recto",mount:"TRUMPF",verifiedSpecs:true,source:"trumpfTechnical",profileAccuracy:"provisional"},
  {id:"amada-831",manufacturer:"Amada",reference:"831",name:"831 · 30° H200",angle:30,tip:.6,height:200,length:415,type:"recto",mount:"Amada/Promecam",verifiedSpecs:true,source:"amada2025",profileAccuracy:"provisional"},
  {id:"amada-841-w55",manufacturer:"Amada",reference:"841 W55",name:"841 W55 · 60°",angle:60,tip:.6,height:200,length:415,type:"cabra",mount:"Amada/Promecam",verifiedSpecs:true,source:"amada2025",profileAccuracy:"provisional"},
@@ -25,6 +32,11 @@ export const CATALOG_PUNCHES = [
  {id:"bystronic-r-demo",manufacturer:"Bystronic",reference:"Beyeler R (ejemplo)",name:"Beyeler R · PROVISIONAL",angle:30,tip:.8,height:120,length:415,type:"cabra",mount:"Bystronic R",verifiedSpecs:false,source:"mecosTooling2022",profileAccuracy:"provisional"}
 ];
 export const CATALOG_DIES = [
+ // Matrices de 30° del catálogo CONIC tipo AMADA, pág. 29.
+ {id:"conic-v006-30-s",manufacturer:"CONIC (tipo Amada)",reference:"V006-30-S",name:"Matriz 30° V6 · R1",opening:6,angle:30,height:60,length:835,shoulderRadius:1,outerWidth:17,dimensionA:11.5,mount:"Amada/Promecam",verifiedSpecs:true,profileAccuracy:"provisional",source:"conicAmadaType2022"},
+ {id:"conic-v008-30-s",manufacturer:"CONIC (tipo Amada)",reference:"V008-30-S",name:"Matriz 30° V8 · R1,5",opening:8,angle:30,height:60,length:835,shoulderRadius:1.5,outerWidth:20,dimensionA:15,mount:"Amada/Promecam",verifiedSpecs:true,profileAccuracy:"provisional",source:"conicAmadaType2022"},
+ {id:"conic-v010-30-s",manufacturer:"CONIC (tipo Amada)",reference:"V010-30-S",name:"Matriz 30° V10 · R2",opening:10,angle:30,height:60,length:835,shoulderRadius:2,outerWidth:25,dimensionA:20,mount:"Amada/Promecam",verifiedSpecs:true,profileAccuracy:"provisional",source:"conicAmadaType2022"},
+ {id:"conic-v012-30-s",manufacturer:"CONIC (tipo Amada)",reference:"V012-30-S",name:"Matriz 30° V12 · R2,5",opening:12,angle:30,height:60,length:835,shoulderRadius:2.5,outerWidth:30,dimensionA:23,mount:"Amada/Promecam",verifiedSpecs:true,profileAccuracy:"provisional",source:"conicAmadaType2022"},
  {id:"trumpf-ev001",manufacturer:"Trumpf",reference:"EV001",name:"EV001 · V6 30°",opening:6,angle:30,height:100,length:2050,mount:"TRUMPF",verifiedSpecs:true,source:"trumpfES2025",profileAccuracy:"provisional"},
  {id:"trumpf-ev001-h",manufacturer:"Trumpf",reference:"EV001/H",name:"EV001/H · V6 30°",opening:6,angle:30,height:150,length:2050,mount:"TRUMPF",verifiedSpecs:true,source:"trumpfES2025",profileAccuracy:"provisional"},
  {id:"trumpf-evw10-84",manufacturer:"Trumpf",reference:"EVW10/84",name:"EVW10/84 · V10",opening:10,angle:84,height:100,length:3050,mount:"TRUMPF",verifiedSpecs:true,source:"trumpfTechnical",profileAccuracy:"provisional"},
@@ -39,7 +51,10 @@ export function registerCatalogue(dies,punches){
  for(const item of CATALOG_PUNCHES)if(!punches.some(p=>p.id===item.id))punches.push({...item});
 }
 export function toolMatchesBrand(tool,brand){
- return brand==="Todos" || (brand==="Genéricos"?!tool.manufacturer:tool.manufacturer===brand);
+ return brand==="Todos" ||
+  (brand==="Genéricos"?!tool.manufacturer:
+    brand==="Amada"?tool.manufacturer==="Amada"||tool.manufacturer==="CONIC (tipo Amada)":
+     tool.manufacturer===brand);
 }
 export function selectionCompatibility(punch,die){
  if(!punch||!die)return {compatible:false,reason:"Falta herramienta"};
