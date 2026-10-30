@@ -33,12 +33,14 @@ test('no se presume compatibilidad de montajes cruzados',()=>{
  assert.equal(selectionCompatibility(punch,die).compatible,false);
  assert.equal(selectionCompatibility(CATALOG_PUNCHES[0],CATALOG_DIES[0]).compatible,null);
 });
-test('−90 conserva forma negativa final, pero se invierte cara en máquina',()=>{
+test('−90 conserva dirección negativa también en la vista de máquina',()=>{
  const piece=normalized({...EXAMPLE,flanges:[50,50],angles:[-90],order:[0]});
  const final=profile(piece,[1]).points;
  assert.ok(final[2].y<0);
  const machine=orientedForMachine(piece,[1],0);
- assert.ok(machine[2].y>0);
+ assert.ok(machine[2].y<0,'La vista de máquina no puede transformar −90° en +90°');
+ const opposite=orientedForMachine({...piece,angles:[90]},[1],0);
+ assert.ok(opposite[2].y>0,'+90° y −90° quedan en lados opuestos');
 });
 test('interfaz está conectada y presenta los módulos y mandos reales',()=>{
  const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
