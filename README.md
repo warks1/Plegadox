@@ -339,3 +339,9 @@ pero debe verificarse su instalación, alineación, reparto de carga y
 compatibilidad con las mordazas reales. También se comprueba de forma
 independiente la anchura configurada de la trancha y del portaútiles.
 No se simula un juego de segmentos ni se valida un montaje industrial.
+
+Los avisos generales de montaje y anchura se muestran ahora con prioridad
+sobre advertencias orientativas de baja gravedad. La cabina también indica
+cuando la pieza supera la longitud nominal de un solo segmento de punzón o
+matriz; **no presume** que puedan unirse herramientas sin verificar su
+sistema de amarre, distribución de cargas y disponibilidad real.

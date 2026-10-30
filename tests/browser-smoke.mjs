@@ -73,6 +73,11 @@ try{
   await page.locator('.cp-kind-tabs [data-kind="punch"]').click();
   assert.ok(await page.locator('#cockpitTools .cp-tool-card').count()>=7,'Punzones Amada cargados');
   await page.locator('#cockpitTools .cp-tool-card').first().click();
+  assert.match(await page.locator('#cockpitCompatibility').textContent(),/revisar montaje de varios segmentos/,
+   'Un punzón de 415 mm en pieza de 500 mm exige revisar segmentos adicionales');
+  assert.match(await page.locator('#collisionDetails').textContent(),/un único segmento de punzón/i,
+   'El panel de avisos no debe esconder la limitación de longitud del punzón');
+
   const selectedIcon=await page.locator('.cp-float-tool:first-child svg > path').getAttribute('d');
   assert.notEqual(selectedIcon,initialIcon,'El pictograma debe reflejar el punzón seleccionado');
 

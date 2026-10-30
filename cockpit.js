@@ -247,7 +247,13 @@ function refresh(){
  updateFloatingToolIcon('punch',punch);
  updateFloatingToolIcon('die',die);
  const ready=$('cockpitReady');ready.textContent=st.completed?'● Pieza simulada':'● '+st.phase;
+ const shortTools=[
+  {kind:'Punzón',tool:punch},{kind:'Matriz',tool:die}
+ ].filter(x=>Number.isFinite(Number(x.tool.length))&&Number(x.tool.length)>0&&piece.width>Number(x.tool.length));
+ const lengthNotice=shortTools.map(x=>' · ⚠ '+x.kind+': '+piece.width+
+   ' mm de pieza superan segmento '+x.tool.length+' mm; revisar montaje de varios segmentos').join('');
  const comp=selectionCompatibility(punch,die),msg=comp.reason+(punch.profileAccuracy==='provisional'||die.profileAccuracy==='provisional'?' · Geometría paramétrica no validada':'')+
+ lengthNotice+
  (force.exceedsNominal?' · ⚠ Fuerza estimada excede las 85 t nominales':'')+
  (!force.conventionalAirBend90?' · Fuerza fuera de método nominal aire 90°':'');
  if($('cockpitCompatibility').textContent!==msg)$('cockpitCompatibility').textContent=msg;

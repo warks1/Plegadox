@@ -448,7 +448,16 @@ function renderSimulationText(){
  if(details){
    const active=check.issues.filter(x=>x.bend===st.activeBend);
    const main=active.length?active[0].message:check.summary;
-   const other=check.issues.filter(x=>x.code!=='provisional-tools'&&x.bend==null).slice(0,1).map(x=>x.message);
+   // Mostrar primero TODAS las advertencias generales más relevantes.
+   // El orden anterior enseñaba sólo la primera incidencia, que podía ser
+   // un aviso leve de V/t y ocultar limitaciones de amarre o longitud.
+   const global=check.issues.filter(x=>x.bend==null&&x.code!=='provisional-tools');
+   const warnings=global.filter(x=>x.level==='warning');
+   const advisories=global.filter(x=>x.level!=='warning');
+   const selected=[...warnings,...(warnings.length?[]:advisories)].slice(0,3);
+   const remaining=(warnings.length||advisories.length)-selected.length;
+   const other=[...selected.map(x=>x.message),
+    ...(remaining>0?['Hay '+remaining+' advertencias adicionales; revisar configuración y operaciones.']:[])];
    const toolStep=check.tools.operations[st.activeOperation];
    const currentIssue=toolNow.issues[0];
    const toolWarning=currentIssue?describeToolIssue(currentIssue):
