@@ -14,6 +14,24 @@ try{
   await page.goto('http://127.0.0.1:4173/',{waitUntil:'networkidle',timeout:30000});
   await page.locator('#machineCanvas').waitFor({state:'visible'});
   assert.ok(await page.locator('#cockpitTools .cp-tool-card').count()>0,'Hay tarjetas de herramientas');
+  await page.locator('[data-tab="herramientas"]').click();
+  const card= id=>page.locator('#punchCards .tool[data-tool-id="'+id+'"]');
+  const shape30=await card('straight30').locator('svg path').getAttribute('d');
+  const shapeGoose=await card('ref-goose-50-100-r1').locator('svg path').getAttribute('d');
+  const shapeGn9=await card('conic-gn9-12-8806').locator('svg path').getAttribute('d');
+  const shapeGn6=await card('conic-gn6-12-8806').locator('svg path').getAttribute('d');
+  assert.notEqual(shape30,shapeGoose,'La pata de cabra no puede dibujarse como punzón recto');
+  assert.notEqual(shapeGn9,shapeGn6,'GN9 y GN6 tienen escotes diferentes');
+  assert.equal(await page.locator('#punchCards .tool svg.tool-geometry').count(),
+    await page.locator('#punchCards .tool').count(),'Todas las fichas de punzón deben tener su dibujo');
+  assert.equal(await page.locator('#dieCards .tool svg.tool-geometry').count(),
+    await page.locator('#dieCards .tool').count(),'Todas las matrices deben tener dibujo');
+  await page.locator('#dieCards .tool[data-tool-id="conic-v006-30-s"]').click();
+  assert.equal(await page.evaluate(()=>window.PLEGADOX_STATE().piece.die),'conic-v006-30-s',
+    'La selección de V6/30 debe modificar la matriz del programa');
+  assert.match(await page.locator('#dieCards .tool[data-tool-id="conic-v006-30-s"]').getAttribute('class'),/selected/);
+  await page.locator('[data-tab="simulacion"]').click();
+
   await page.locator('#showTool3D').click();
   assert.ok(await page.locator('#cockpitSelectedTool3D').isVisible(),'Visor 3D de herramienta se abre');
   await page.locator('#closeTool3D').click();
@@ -48,6 +66,10 @@ try{
   phone.on('pageerror',err=>mobileErrors.push(err.message));
   await phone.goto('http://127.0.0.1:4173/',{waitUntil:'networkidle',timeout:30000});
   await phone.locator('#machineCanvas').waitFor({state:'visible'});
+  await phone.locator('[data-tab="herramientas"]').click();
+  assert.ok(await phone.locator('#punchCards .tool svg.tool-geometry').count()>5,
+    'Los punzones deben tener su propio dibujo también en móvil');
+  await phone.locator('[data-tab="simulacion"]').click();
   await phone.locator('#cpBrandTabs button[data-brand="Bystronic"]').click();
   assert.ok(await phone.locator('#cockpitTools .cp-tool-card').count()>0,'Herramientas Bystronic visibles en móvil');
   const scroll=await phone.evaluate(()=>({actual:document.documentElement.scrollWidth,viewport:window.innerWidth}));

@@ -247,3 +247,12 @@ El modo de **perspectiva ilustrativa 2.5D** utiliza además la componente
 Z calculada durante el cambio de cara: muestra una proyección oblicua del
 volteo, en lugar de colapsar visualmente todas las alas en el plano lateral.
 La proyección no equivale a un sólido cinemático verificado.
+
+### Dibujos individuales en la biblioteca de herramientas
+
+La pestaña **Herramientas** ofrece ahora una ficha con silueta SVG para cada
+punzón y matriz, reutilizando el mismo polígono paramétrico que las vistas
+de máquina, miniaturas e inspector. Se distingue el punzón recto del de pata
+de cabra y se diferencian V y ángulos de apertura. Incluye referencia,
+medidas nominales disponibles y marca de geometría provisional. Los dibujos
+no equivalen a un catálogo CAD oficial acotado.

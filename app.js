@@ -267,9 +267,59 @@ function toolDrawing(){
  text(ctx,punch.name,10,18,'#9ecfee',12);
  text(ctx,'MODELO PARAMÉTRICO · NO CAD',w-9,18,'#c49b65',9,'right');
 }
+/**
+ * Cada ficha de la biblioteca usa la MISMA sección del útil que la máquina,
+ * la cabina y el inspector orbital. No confundir "ficha documentada" con
+ * polígono CAD completo: los perfiles actuales siguen siendo provisionales.
+ */
+function toolCardPreview(tool,kind){
+ const section=kind==='punch'?sectionPunch(tool):sectionDie(tool);
+ const pts=section.points;
+ const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);
+ const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
+ const padX=Math.max(3,(maxX-minX)*.12),padY=Math.max(3,(maxY-minY)*.09);
+ const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+ svg.setAttribute('class','tool-geometry');
+ svg.setAttribute('viewBox',[minX-padX,-maxY-padY,maxX-minX+padX*2,maxY-minY+padY*2].join(' '));
+ svg.setAttribute('preserveAspectRatio','xMidYMid meet');
+ svg.setAttribute('aria-hidden','true');
+ const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+ path.setAttribute('d',pts.map(([x,y],i)=>(i?'L':'M')+x.toFixed(3)+' '+(-y).toFixed(3)).join(' ')+' Z');
+ path.setAttribute('fill',kind==='punch'?'#86b6d1':'#688fa8');
+ path.setAttribute('stroke','#e4f7ff');
+ path.setAttribute('stroke-width',String(Math.max(.4,Math.min(1.5,(maxX-minX)/55))));
+ path.setAttribute('stroke-linejoin','round');
+ svg.append(path);
+ return svg;
+}
+function toolCard(tool,kind){
+ const selected=kind==='punch'?piece.punch===tool.id:piece.die===tool.id;
+ const button=document.createElement('button');
+ button.type='button';
+ button.className='tool'+(selected?' selected':'');
+ button.dataset.toolId=tool.id;
+ button.dataset.toolKind=kind;
+ button.setAttribute('aria-pressed',String(selected));
+ button.setAttribute('aria-label',(kind==='punch'?'Elegir punzón ':'Elegir matriz ')+
+  (tool.reference||tool.name));
+ const image=toolCardPreview(tool,kind);
+ const title=document.createElement('b');title.textContent=tool.reference||tool.name;
+ const meta=document.createElement('span');meta.className='tool-card-measure';
+ meta.textContent=kind==='punch'?
+  tool.angle+'° · H'+tool.height+' mm'+(tool.type==='cabra'?' · Pata de cabra':''):
+  'V'+tool.opening+' · '+tool.angle+'° · H'+tool.height+' mm';
+ const brand=document.createElement('span');brand.className='tool-card-brand';
+ brand.textContent=tool.manufacturer||'Genérico';
+ const notice=document.createElement('span');notice.className='tool-card-notice';
+ notice.textContent='Contorno provisional · no CAD';
+ button.append(image,title,meta,brand,notice);
+ button.onclick=()=>changePiece({...piece,[kind==='punch'?'punch':'die']:tool.id},true);
+ return button;
+}
 function renderToolCards(){
- const dies=$('dieCards');dies.replaceChildren(...DIES.map(d=>{const b=document.createElement('button');b.className='tool'+(d.id===piece.die?' selected':'');b.innerHTML='<b>'+d.name+'</b><span>Abertura '+d.opening+' mm</span>';b.onclick=()=>changePiece({...piece,die:d.id},true);return b;}));
- const punches=$('punchCards');punches.replaceChildren(...PUNCHES.map(p=>{const b=document.createElement('button');b.className='tool'+(p.id===piece.punch?' selected':'');b.innerHTML='<b>'+p.name+'</b><span>Altura nominal '+p.height+' mm</span>';b.onclick=()=>changePiece({...piece,punch:p.id},true);return b;}));
+ const dies=$('dieCards'),punches=$('punchCards');
+ dies.replaceChildren(...DIES.map(d=>toolCard(d,'die')));
+ punches.replaceChildren(...PUNCHES.map(p=>toolCard(p,'punch')));
 }
 function renderDevelopment(){
  const d=development(piece),check=geometryReport();
