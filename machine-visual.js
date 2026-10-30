@@ -2,7 +2,7 @@
 // Geometría ilustrativa, no modelo CAD certificado ni calculador de colisiones.
 import {stage,presentedAtStage,getTooling} from './engine.js';
 import {sectionPunch,sectionDie} from './tool-profiles.js';
-import {drawTechnicalSection} from './technical-section.js';
+import {drawTechnicalSection,technicalScene} from './technical-section.js';
 import {currentToolContact} from './tool-collision.js';
 import {sceneAtmosphere,dieDepth,ramDepth,sheetDepth,surfaceDetail,sectionOverlay} from './render-enhancements.js';
 
@@ -242,6 +242,26 @@ function stageScene(ctx,w,h,piece,sim,machineView){
 function drawWarningHud(ctx,w,h,piece,sim,view){
  const diagnostic=currentToolContact(piece,sim.time);
  if(!diagnostic.hasWarning)return;
+ if(view?.section){
+  const scene=technicalScene(piece,diagnostic.stage),world=scene.world;
+  const reserve=w<500?67:0,usable=h-reserve;
+  const padW=Math.max(28,w*.07),padH=Math.max(30,usable*.095);
+  const xrange=Math.max(60,world.maxX-world.minX),
+        yrange=Math.max(100,world.maxY-world.minY);
+  const scale=Math.max(.08,Math.min((w-padW*2)/xrange,(usable-padH*2)/yrange))*(view.zoom||1);
+  const cx=(world.minX+world.maxX)/2,cy=(world.minY+world.maxY)/2;
+  ctx.save();
+  for(const issue of diagnostic.issues.slice(0,7)){
+   const x=w*.5+(issue.point.x-cx)*scale+(view.panX||0);
+   const y=usable*.5-(issue.point.y-cy)*scale+(view.panY||0);
+   if(y<0||y>usable||x<0||x>w)continue;
+   ctx.fillStyle='#ff663b4b';ctx.strokeStyle='#ff784f';ctx.lineWidth=2;
+   ctx.beginPath();ctx.arc(x,y,8,0,Math.PI*2);ctx.fill();ctx.stroke();
+   ctx.beginPath();ctx.moveTo(x-4,y-4);ctx.lineTo(x+4,y+4);
+   ctx.moveTo(x+4,y-4);ctx.lineTo(x-4,y+4);ctx.stroke();
+  }
+  ctx.restore();
+ }
  const dominant=diagnostic.issues[0],tool=dominant.kind==='punch'?'PUNZÓN':'MATRIZ';
  const message='⚠ POSIBLE INTERFERENCIA 2D · '+tool;
  ctx.save();
