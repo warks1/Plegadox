@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {EXAMPLE} from '../engine.js';
-import {insidePolygon,inspectSheetAgainstPolygon,inspectToolContact,inspectSequenceTools} from '../tool-collision.js';
+import {insidePolygon,inspectSheetAgainstPolygon,inspectToolContact,inspectSequenceTools,describeToolIssue} from '../tool-collision.js';
 const point=(x,y)=>({x,y});
 const block=[point(-4,8),point(4,8),point(4,0),point(-4,0)];
 test('un punto dentro de un punzón es intrusión, uno fuera no',()=>{
@@ -73,4 +73,16 @@ test('contacto de apoyo a medio espesor en Y=0 de una matriz no genera falsa ala
  const sheet=[point(-100,1),point(-10,1)];
  const hits=inspectSheetAgainstPolygon(sheet,tool,2,'die');
  assert.equal(hits.length,0);
+});
+
+test('el aviso diferencia holgura por espesor y penetración de la fibra',()=>{
+ const clearance=describeToolIssue({kind:'die',category:'clearance',segment:2});
+ assert.match(clearance,/HOLGURA INSUFICIENTE/);
+ assert.match(clearance,/MATRIZ/);
+ assert.match(clearance,/tramo 3/);
+ assert.doesNotMatch(clearance,/PENETRACIÓN 2D/);
+ const penetration=describeToolIssue({kind:'punch',category:'penetration',segment:0});
+ assert.match(penetration,/PENETRACIÓN 2D/);
+ assert.match(penetration,/PUNZÓN/);
+ assert.match(describeToolIssue(null),/NO está verificada/);
 });

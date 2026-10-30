@@ -216,6 +216,17 @@ export function inspectToolContact(piece,instant=0){
  };
  return result;
 }
+/** Expresar correctamente la diferencia entre penetración y holgura de chapa. */
+export function describeToolIssue(hit){
+ if(!hit)return 'Sin interferencia 2D detectada en esta muestra; la seguridad física NO está verificada.';
+ const name=hit.kind==='punch'?'PUNZÓN':'MATRIZ';
+ const segment=Number.isInteger(hit.segment)?' (tramo '+(hit.segment+1)+')':'';
+ if(hit.category==='penetration')
+  return '⚠ Posible PENETRACIÓN 2D de la fibra de chapa en '+name+segment+
+    '. Revisar el perfil del útil en «▥ mm».';
+ return '⚠ Posible HOLGURA INSUFICIENTE entre espesor de chapa y '+name+segment+
+    '. Revisar en «▥ mm»; la fibra central puede no penetrar.';
+}
 // A shared small cache prevents 2D polygon checks at every animation frame.
 let cachedKey='',cachedContact=null;
 export function currentToolContact(piece,time=0){

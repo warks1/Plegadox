@@ -2,7 +2,7 @@ import {MATERIALS,DIES,PUNCHES,EXAMPLE,normalized,profile,bounds,development,sta
 import {drawIndustrialMachine} from './machine-visual.js';
 import {registerCatalogue} from './catalog.js';
 import {analyzeSequence} from './validation.js';
-import {inspectSequenceTools,currentToolContact} from './tool-collision.js';
+import {inspectSequenceTools,currentToolContact,describeToolIssue} from './tool-collision.js';
 import {sectionPunch,sectionDie} from './tool-profiles.js';
 import {getV85} from './machine-config.js';
 registerCatalogue(DIES,PUNCHES);
@@ -327,12 +327,10 @@ function renderSimulationText(){
    const other=check.issues.filter(x=>x.code!=='provisional-tools'&&x.bend==null).slice(0,1).map(x=>x.message);
    const toolStep=check.tools.operations[st.activeOperation];
    const currentIssue=toolNow.issues[0];
-   const toolWarning=currentIssue?
-     '⚠ Posible penetración 2D de chapa en '+(currentIssue.kind==='punch'?'PUNZÓN':'MATRIZ')+
-     ' (tramo '+(currentIssue.segment+1)+'). Ver puntos rojos en «▥ mm».':
+   const toolWarning=currentIssue?describeToolIssue(currentIssue):
      toolStep?.possibleToolIntrusion?
        '⚠ En este golpe aparecen posibles interferencias con herramientas en otras posiciones.':
-       'Sin penetración 2D detectada en esta muestra; NO certifica ausencia de colisiones.';
+       describeToolIssue(null);
    const messages=[toolWarning,main,...other];
    const signature=JSON.stringify(messages);
    if(details.dataset.signature!==signature){
