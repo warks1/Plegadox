@@ -12,13 +12,15 @@ function syncControls(){
  for(const [id,key]of buttons){
   const b=$(id);if(b)b.setAttribute('aria-pressed',String(Boolean(view[key])));
  }
- const label=view.perspective?'PERSPECTIVA 2.5D':'PERFIL 2D';
- if($('machineViewLabel'))$('machineViewLabel').textContent=view.perspective?'PERSPECTIVA':'VISTA LATERAL';
+ const label=view.section?'SECCIÓN EN MM':view.perspective?'PERSPECTIVA 2.5D':'PERFIL 2D';
+ if($('machineViewLabel'))$('machineViewLabel').textContent=view.section?'SECCIÓN MM':view.perspective?'PERSPECTIVA':'VISTA LATERAL';
  if($('machineGraphicMode'))$('machineGraphicMode').textContent=label;
  if($('machineModeNote')){
-  $('machineModeNote').textContent=view.perspective?
-   'Vista ilustrativa con profundidad · geometría de pliegues calculada en perfil':
-   'Punzón, chapa, matriz y topes · vista de perfil';
+  $('machineModeNote').textContent=view.section
+   ?'Sección paramétrica en milímetros · chapa y utillaje a escala común · no valida colisiones'
+   :view.perspective
+     ?'Vista ilustrativa con profundidad · geometría de pliegues calculada en perfil'
+     :'Punzón, chapa, matriz y topes · vista de perfil';
  }
 }
 function repaint(){
