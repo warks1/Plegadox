@@ -19,6 +19,7 @@ jobs:
           node --check cockpit.js
           node --check boceto2.js
           node --check machine-visual.js
+          node --check tool-profiles.js
           node --check responsive.js
           node --check studio.js
           node --check render-enhancements.js
@@ -44,6 +45,7 @@ jobs:
           node tests/responsive-smoke.mjs
           node tests/studio-smoke.mjs
           node tests/touch-order-smoke.mjs
+          node tests/video-regression-smoke.mjs
       - name: Guardar capturas de escritorio y móvil
         if: always()
         uses: actions/upload-artifact@v4
