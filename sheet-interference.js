@@ -34,8 +34,16 @@ export function scanSheetSequence(piece,samplesPerOperation=15){
  const operations=[];
  for(let op=0;op<p.order.length;op++){
   let selected=null;
+  let lastSampleTime=5*op;
   for(let i=0;i<=samples;i++){
-   const time=5*op+(i/samples)*5;
+   // Justo en 5, 10, 15... s el motor stage() ya asigna el
+   // instante a la operación SIGUIENTE. Muestrear una millonésima
+   // antes evita atribuir su fase y alertas al golpe anterior.
+   // El último golpe sí incluye el tiempo de pieza terminada.
+   const nominal=5*op+(i/samples)*5;
+   const time=i===samples&&op<p.order.length-1?
+    5*(op+1)-1e-6:nominal;
+   lastSampleTime=time;
    const frame=inspectSheetFrame(p,time);
    const hit=frame.issues[0];
    if(!hit)continue;
@@ -43,7 +51,7 @@ export function scanSheetSequence(piece,samplesPerOperation=15){
     selected={time,phase:frame.phase,finding:hit,segments:hit.segments};
   }
   operations.push({operation:op,bend:p.order[op],
-   samples:samples+1,possibleSheetInterference:!!selected,
+   samples:samples+1,lastSampleTime,possibleSheetInterference:!!selected,
    possibleCross:['cross','overlap'].includes(selected?.finding?.kind),
    example:selected,exampleTime:selected?.time??null,verified:false});
  }

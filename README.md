@@ -482,3 +482,9 @@ de la incidencia se representa con un **círculo blanco con borde rojo o
 posiciones de mínima distancia. El panel de diagnóstico muestra las
 coordenadas estimadas **X/Y en mm** de la fibra media, sin confundirlas
 con un contacto real de la chapa deformada.
+
+El muestreo de interferencias evita ahora asignar la posición exacta
+5, 10 o 15 segundos al golpe anterior: en esos límites el motor ya ha
+comenzado la operación siguiente. Las muestras finales de cada golpe
+se toman justo antes de la transición y se conserva la muestra de
+pieza terminada en el último golpe.

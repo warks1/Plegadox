@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {EXAMPLE,profile} from '../engine.js';
+import {EXAMPLE,profile,stage} from '../engine.js';
 import {inspectSheetFrame,scanSheetSequence,describeSheetIssue} from '../sheet-interference.js';
 
 test('la omega estándar comienza plana y sin cruces',()=>{
@@ -72,4 +72,20 @@ test('el diagnóstico incorpora coordenadas 2D si existe una localización geom�
  const missing=describeSheetIssue({kind:'touch',segments:[0,3]});
  assert.match(missing,/CONTACTO PUNTUAL/);
  assert.doesNotMatch(missing,/undefined|NaN/);
+});
+
+test('el último muestreo antes de cada cambio de golpe se atribuye al golpe correcto',()=>{
+ const result=scanSheetSequence(EXAMPLE,6);
+ const entries=result.operations;
+ assert.equal(entries.length,4);
+ for(let i=0;i<entries.length;i++){
+  const t=entries[i].lastSampleTime;
+  assert.equal(stage(EXAMPLE,t).activeOperation,i,
+   'No convertir el final del golpe G'+(i+1)+' en el inicio de G'+(i+2));
+  if(i<entries.length-1){
+   assert.ok(t<(i+1)*5,'Muestra final anterior a frontera');
+   assert.ok((i+1)*5-t<.00001,'Muestra suficientemente próxima al final');
+  }else assert.equal(t,20,'Último golpe incluye la pieza terminada');
+ }
+ assert.ok(entries.every(x=>x.samples===7));
 });
