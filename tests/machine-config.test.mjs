@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {DIES,PUNCHES} from '../engine.js';
 import {registerCatalogue,CATALOG_SOURCES} from '../catalog.js';
-import {V85_FACTORY,normalizeV85,gaugeOutline,dimensionSeries} from '../machine-config.js';
+import {V85_FACTORY,normalizeV85,gaugeOutline,gaugeBounds,dimensionSeries} from '../machine-config.js';
 import {sectionDie} from '../tool-profiles.js';
 registerCatalogue(DIES,PUNCHES);
 
@@ -64,4 +64,17 @@ test('lista técnica conserva los cuatro grupos de cotas',()=>{
  const groups=dimensionSeries(V85_FACTORY);
  assert.deepEqual(groups.map(g=>g.values.length),[10,7,6,6]);
  assert.equal(groups[3].values.at(-1).value,8);
+});
+
+test('la envolvente del dibujo Stop respeta L1>L2 y L3>L4 editados',()=>{
+ const modified=[180,100,40,25,12,0],bounds=gaugeBounds(modified);
+ assert.equal(bounds.minX,0);
+ assert.equal(bounds.maxX,180);
+ assert.equal(bounds.minY,-40);
+ assert.equal(bounds.maxY,0);
+ assert.equal(bounds.width,180);
+ assert.equal(bounds.height,40);
+ const original=gaugeBounds(V85_FACTORY.stop);
+ assert.equal(original.width,100);
+ assert.equal(original.height,25);
 });

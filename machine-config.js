@@ -91,6 +91,13 @@ export function gaugeOutline(values){
   {x:0,y:-height+notch}
  ];
 }
+/** Envolvente del perfil esquemático, sin interpretar una cota L como CAD. */
+export function gaugeBounds(values){
+ const outline=gaugeOutline(values);
+ const xs=outline.map(p=>p.x),ys=outline.map(p=>p.y);
+ const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
+ return {minX,maxX,minY,maxY,width:maxX-minX,height:maxY-minY};
+}
 /** Values are drawn as a bar chart by row, not an invented CAD profile. */
 export function dimensionSeries(config){
  const p=normalizeV85(config);

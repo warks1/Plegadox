@@ -1,6 +1,6 @@
 // Plegadox · editor funcional de las cotas de Cybelec 30a / 29.
 // Las dimensiones editadas también actualizan la máquina dibujada en cabina.
-import {V85_FACTORY,getV85,updateV85,resetV85,gaugeOutline} from './machine-config.js';
+import {V85_FACTORY,getV85,updateV85,resetV85,gaugeOutline,gaugeBounds} from './machine-config.js';
 
 const $=id=>document.getElementById(id);
 const locale=n=>Number(n).toLocaleString('es-ES',{minimumFractionDigits:0,maximumFractionDigits:2});
@@ -61,17 +61,21 @@ function arrow(ctx,a,b,color='#91d7ff'){
  ctx.strokeStyle=color;ctx.lineWidth=1;ctx.stroke();
 }
 function gaugeCanvas(ctx,w,h,cfg,key){
- const values=cfg[key],outline=gaugeOutline(values),maxX=Math.max(values[1],1),
-   maxY=Math.max(values[3],1);
- const pad=46,s=Math.min((w-2*pad)/maxX,(h-2*pad)/maxY);
- const xy=p=>({x:pad+p.x*s,y:pad+maxY*s+p.y*s});
+ const values=cfg[key],outline=gaugeOutline(values),bounds=gaugeBounds(values);
+ // L1 y L3 también pueden ser mayores que L2 y L4 tras editar Cybelec.
+ // Ajustar a la envolvente REAL del esquema evita cortar el tope en pantalla.
+ const pad=46,plotW=Math.max(1,w-2*pad),plotH=Math.max(1,h-2*pad);
+ const s=Math.min(plotW/Math.max(1,bounds.width),plotH/Math.max(1,bounds.height));
+ const ox=pad+(plotW-bounds.width*s)/2,oy=pad+(plotH-bounds.height*s)/2;
+ const xy=p=>({x:ox+(p.x-bounds.minX)*s,y:oy+(p.y-bounds.minY)*s});
  ctx.save();
  ctx.beginPath();outline.forEach((p,i)=>{const q=xy(p);i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y);});
- ctx.closePath();const g=ctx.createLinearGradient(pad,0,pad+maxX*s,h);
+ ctx.closePath();const g=ctx.createLinearGradient(ox,0,ox+bounds.width*s,h);
  g.addColorStop(0,'#b4d8e5');g.addColorStop(.45,'#31556a');g.addColorStop(1,'#163249');
  ctx.fillStyle=g;ctx.fill();ctx.strokeStyle='#bfe9fa';ctx.lineWidth=2;ctx.stroke();
- const x0=pad,x1=pad+values[0]*s,x2=pad+values[1]*s;
- const yy=pad+maxY*s;
+ const x0=xy({x:0,y:0}).x,x1=xy({x:values[0],y:0}).x,
+  x2=xy({x:values[1],y:0}).x;
+ const yy=xy({x:0,y:0}).y;
  arrow(ctx,{x:x0,y:yy+16},{x:x2,y:yy+16});
  label(ctx,'L2 '+locale(values[1]),(x0+x2)/2,yy+30,10,'#8edbfa','center');
  arrow(ctx,{x:x0,y:pad-16},{x:x1,y:pad-16});
