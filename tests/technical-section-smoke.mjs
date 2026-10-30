@@ -25,6 +25,22 @@ try{
   assert.equal(await page.locator('#machineSection').getAttribute('aria-pressed'),'true');
   assert.match(await page.locator('#machineGraphicMode').textContent(),/SECCIÓN EN MM/);
   assert.match(await page.locator('#machineModeNote').textContent(),/escala común/);
+  assert.ok(await page.locator('.cp-machine-floats').isHidden(),
+    'Las miniaturas flotantes deben ocultarse al leer cotas técnicas');
+  assert.ok(await page.locator('.cp-overlay-right').isHidden(),
+    'El estado flotante no debe tapar los dibujos técnicos');
+  if(v.name==='movil'){
+   const sizes=await page.evaluate(()=>{
+    const frame=document.querySelector('.cp-machine-frame').getBoundingClientRect();
+    const controls=document.querySelector('.cp-floating-options').getBoundingClientRect();
+    return {frame:{x:frame.x,right:frame.right,bottom:frame.bottom},
+      controls:{x:controls.x,right:controls.right,bottom:controls.bottom,width:controls.width,height:controls.height}};
+   });
+   assert.ok(sizes.controls.x>=sizes.frame.x-2 && sizes.controls.right<=sizes.frame.right+2,
+     'Los mandos deben quedar dentro de la pantalla móvil '+JSON.stringify(sizes));
+   assert.ok(sizes.controls.height<60 && sizes.controls.width>200,
+     'La botonera de la sección debe pasar a una fila horizontal '+JSON.stringify(sizes));
+  }
   const after=await page.locator('#machineCanvas').evaluate(c=>c.toDataURL());
   assert.notEqual(before,after,'El modo técnico debe dibujar geometría diferente');
   const width=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,width:innerWidth}));
