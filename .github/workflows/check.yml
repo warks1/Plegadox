@@ -24,6 +24,7 @@ jobs:
           node --check tool-collision.js
           node --check machine-config.js
           node --check machine-editor.js
+          node --check bend-contact.js
           node --check responsive.js
           node --check studio.js
           node --check render-enhancements.js
