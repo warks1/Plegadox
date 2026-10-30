@@ -22,6 +22,8 @@ jobs:
           node --check tool-profiles.js
           node --check technical-section.js
           node --check tool-collision.js
+          node --check machine-config.js
+          node --check machine-editor.js
           node --check responsive.js
           node --check studio.js
           node --check render-enhancements.js
@@ -50,6 +52,7 @@ jobs:
           node tests/video-regression-smoke.mjs
           node tests/technical-section-smoke.mjs
           node tests/catalog-contact-smoke.mjs
+          node tests/machine-editor-smoke.mjs
       - name: Guardar capturas de escritorio y móvil
         if: always()
         uses: actions/upload-artifact@v4
