@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {EXAMPLE,profile,stage,orientedForMachine} from '../engine.js';
-import {segmentsIntersect,segmentContactKind,segmentClearance,inspectProfile,analyzeSequence} from '../validation.js';
+import {segmentsIntersect,segmentContactKind,segmentContactGeometry,segmentClearance,inspectProfile,analyzeSequence} from '../validation.js';
 
 const p=(x,y)=>({x,y});
 test('detecta cruce entre dos segmentos no adyacentes',()=>{
@@ -157,4 +157,38 @@ test('informe final etiqueta el contacto puntual sin llamarlo cruce',()=>{
  assert.ok(report.issues.some(i=>i.code==='final-touch'));
  assert.ok(!report.issues.some(i=>i.code==='final-cross'));
  assert.match(report.summary,/interferencias geométricas/);
+});
+
+test('sitúa el punto de cruce interior en coordenadas milimétricas',()=>{
+ const found=segmentContactGeometry(p(0,0),p(20,0),p(12,-15),p(12,15));
+ assert.equal(found.kind,'cross');
+ assert.ok(Math.abs(found.point.x-12)<1e-9);
+ assert.ok(Math.abs(found.point.y)<1e-9);
+ assert.equal(found.clearance,0);
+ const hits=inspectProfile([p(0,0),p(20,0),p(20,15),p(12,-15)],2);
+ assert.ok(hits.find(h=>h.kind==='cross'&&Number.isFinite(h.point.x)));
+});
+test('sitúa en el centro la longitud de solapamiento, sin dibujar falso cruce',()=>{
+ const g=segmentContactGeometry(p(0,0),p(20,0),p(12,0),p(26,0));
+ assert.equal(g.kind,'overlap');
+ assert.ok(Math.abs(g.point.x-16)<1e-9);
+ assert.ok(Math.abs(g.point.y)<1e-9);
+});
+test('el contacto puntual señala el vértice común',()=>{
+ const g=segmentContactGeometry(p(0,0),p(20,0),p(20,0),p(25,10));
+ assert.equal(g.kind,'touch');
+ assert.deepEqual(g.point,p(20,0));
+});
+test('la proximidad devuelve los dos puntos más cercanos y distancia real',()=>{
+ const g=segmentContactGeometry(p(0,0),p(20,0),p(20.5,0.8),p(20.5,20));
+ assert.equal(g.kind,null);
+ assert.ok(Math.abs(g.clearance-Math.hypot(.5,.8))<1e-9);
+ assert.deepEqual(g.pointA,p(20,0));
+ assert.deepEqual(g.pointB,p(20.5,.8));
+ assert.ok(Math.abs(g.point.x-20.25)<1e-9);
+ assert.ok(Math.abs(g.point.y-.4)<1e-9);
+});
+test('la fibra plana no produce marcas y sus extremos siguen intactos',()=>{
+ const pts=profile(EXAMPLE).points;
+ assert.deepEqual(inspectProfile(pts,EXAMPLE.thickness),[]);
 });

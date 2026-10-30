@@ -63,18 +63,75 @@ export function segmentClearance(a,b,c,d){
  return Math.min(pointToSegment(a,c,d),pointToSegment(b,c,d),
                  pointToSegment(c,a,b),pointToSegment(d,a,b));
 }
+/**
+ * Localización geométrica de incidencia entre dos segmentos 2D, en mm.
+ * - cross/touch: un punto de intersección;
+ * - overlap: centro del solapamiento (no se confunde con una penetración);
+ * - sin intersección: par más próximo entre las dos fibras.
+ * Sólo sirve para diagnóstico de fibra media; NO es contacto de sólidos 3D.
+ */
+export function segmentContactGeometry(a,b,c,d){
+ const kind=segmentContactKind(a,b,c,d);
+ const ab=subtract(b,a),cd=subtract(d,c);
+ const denom=cross(ab,cd);
+ const mix=(p,v,t)=>({x:p.x+v.x*t,y:p.y+v.y*t});
+ const project=(p,u,v)=>{
+  const vec=subtract(v,u),l2=dot(vec,vec);
+  const t=l2<=EPS*EPS?0:Math.max(0,Math.min(1,dot(subtract(p,u),vec)/l2));
+  return mix(u,vec,t);
+ };
+ if(kind==='cross'){
+  const t=cross(subtract(c,a),cd)/denom;
+  const point=mix(a,ab,t);
+  return {kind,clearance:0,point,pointA:point,pointB:point};
+ }
+ if(kind==='overlap'){
+  const useX=Math.max(Math.abs(ab.x),Math.abs(cd.x))>=
+   Math.max(Math.abs(ab.y),Math.abs(cd.y));
+  const scalar=p=>useX?p.x:p.y;
+  const lo=Math.max(Math.min(scalar(a),scalar(b)),Math.min(scalar(c),scalar(d)));
+  const hi=Math.min(Math.max(scalar(a),scalar(b)),Math.max(scalar(c),scalar(d)));
+  const mid=(lo+hi)/2,axis=useX?'x':'y';
+  const t=Math.abs(ab[axis])>EPS?(mid-a[axis])/ab[axis]:
+    Math.abs(cd[axis])>EPS?(mid-c[axis])/cd[axis]:0;
+  const point=Math.abs(ab[axis])>EPS?mix(a,ab,t):mix(c,cd,t);
+  return {kind,clearance:0,point,pointA:point,pointB:point};
+ }
+ if(kind==='touch'){
+  const candidates=[c,d,a,b];
+  const point=candidates.find(p=>onSegment(a,b,p)&&onSegment(c,d,p));
+  if(point){
+   const located={x:point.x,y:point.y};
+   return {kind,clearance:0,point:located,pointA:located,pointB:located};
+  }
+  // Si el umbral de orientación detectó contacto, pero ningún vértice
+  // coincide exactamente, proyectar el extremo más cercano.
+ }
+ const choices=[
+  {pointA:a,pointB:project(a,c,d)},
+  {pointA:b,pointB:project(b,c,d)},
+  {pointA:project(c,a,b),pointB:c},
+  {pointA:project(d,a,b),pointB:d}
+ ];
+ choices.sort((u,v)=>dist(u.pointA,u.pointB)-dist(v.pointA,v.pointB));
+ const {pointA,pointB}=choices[0];
+ const point={x:(pointA.x+pointB.x)/2,y:(pointA.y+pointB.y)/2};
+ return {kind,clearance:kind?0:dist(pointA,pointB),point,pointA,pointB};
+}
 /** Ignore neighboring lengths sharing the intended bend vertex. */
 export function inspectProfile(points,thickness=0){
  const findings=[],n=points.length-1,t=Math.max(0,Number(thickness)||0);
  for(let i=0;i<n;i++){
   for(let j=i+2;j<n;j++){
    const a=points[i],b=points[i+1],c=points[j],d=points[j+1];
-   const relation=segmentContactKind(a,b,c,d);
-   const clearance=relation?0:segmentClearance(a,b,c,d);
-   if(relation){
-    findings.push({kind:relation,segments:[i,j],clearance:0});
-   }else if(t>0&&clearance<t-EPS){
-    findings.push({kind:'close',segments:[i,j],clearance:round(clearance,3)});
+   const geometry=segmentContactGeometry(a,b,c,d);
+   if(geometry.kind){
+    findings.push({kind:geometry.kind,segments:[i,j],clearance:0,
+     point:geometry.point,pointA:geometry.pointA,pointB:geometry.pointB});
+   }else if(t>0&&geometry.clearance<t-EPS){
+    findings.push({kind:'close',segments:[i,j],
+     clearance:round(geometry.clearance,3),
+     point:geometry.point,pointA:geometry.pointA,pointB:geometry.pointB});
    }
   }
  }

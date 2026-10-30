@@ -466,3 +466,12 @@ certificación de colisión de la chapa de espesor real en 3D.
 La leyenda de colores aparece junto al **perfil de programación** y a la
 **pieza en proceso** y aclara explícitamente que el dibujo 2D no valida
 colisiones reales de máquina ni de útiles.
+
+### Ubicación de las interferencias 2D
+
+Cada aviso geométrico entre alas almacena su punto representativo en mm:
+intersección para un cruce, punto medio del tramo compartido si existe
+solapamiento, vértice de contacto o punto medio de las dos fibras más
+próximas. Para contactos cercanos se conservan también ambos puntos de
+medición. **Son posiciones de fibra media en una sección 2D, no puntos
+certificados de contacto de sólidos ni colisiones físicas.**
