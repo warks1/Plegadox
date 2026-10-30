@@ -235,3 +235,14 @@ footer{background:#020b15;color:#587d97;border-color:#17384f;font-size:9px}
  .cp-check-list span{font-size:9px}
  .cp-run-primary{font-size:10px}
 }
+
+/* Ajustes verificados contra captura real de Chromium 1536 × 900. */
+.sidebar .nav .nav-picto{display:block;font-size:27px!important;line-height:1!important;width:auto!important;max-width:100%;flex:none}
+.sidebar .nav span:last-child:not(.nav-picto){font-size:9px!important;font-weight:700!important;line-height:1.15!important;width:100%!important;max-width:100%!important;text-align:center!important;white-space:normal!important;overflow-wrap:normal;letter-spacing:0!important}
+.sidebar .nav{overflow:hidden;word-break:normal}
+.sidebar .side-action span{font-size:9px!important;line-height:1!important;width:auto!important}
+.cp-player .controls #playBtn{font-size:20px!important;min-width:42px;max-width:42px;white-space:nowrap;overflow:hidden;text-overflow:clip;padding:4px}
+.cp-player .controls #pauseBtn,.cp-player .controls #stepBtn,.cp-player .controls #restartBtn{min-width:37px;max-width:39px;font-size:15px}
+.cp-machine-frame .cp-overlay-right span:nth-child(2){color:#ffab3b;text-shadow:0 0 11px #ff9d2b66}
+.cp-product-card .scene{background:radial-gradient(ellipse at 52% 47%,#153b55,#041323 85%)}
+@media(max-width:820px){.sidebar .nav .nav-picto{font-size:19px!important}.sidebar .nav span:last-child:not(.nav-picto){font-size:8px!important}}
