@@ -1,4 +1,4 @@
-import {MATERIALS,DIES,PUNCHES,EXAMPLE,normalized,profile,bounds,development,stage,orientedForMachine,getTooling,selfIntersects,clamp,finite} from './engine.js';
+import {MATERIALS,DIES,PUNCHES,EXAMPLE,normalized,profile,bounds,development,estimateAirBendForce,REFERENCE_RM_MPA,stage,orientedForMachine,getTooling,selfIntersects,clamp,finite} from './engine.js';
 import {drawIndustrialMachine} from './machine-visual.js';
 import {registerCatalogue} from './catalog.js';
 import {analyzeSequence} from './validation.js';
@@ -15,7 +15,7 @@ let machineView={panX:0,panY:0,zoom:1};
 let touchOrderEnabled=false,chosenTouchOrder=[];
 const geometryCache={key:null,result:null};
 function geometryReport(){
- const key=JSON.stringify([piece.flanges,piece.angles,piece.order,piece.thickness,piece.width,piece.punch,piece.die,getV85().ramWidth]);
+ const key=JSON.stringify([piece.flanges,piece.angles,piece.order,piece.thickness,piece.width,piece.material,piece.rmMPa,piece.punch,piece.die,getV85().ramWidth]);
  if(key!==geometryCache.key){geometryCache.key=key;geometryCache.result={...analyzeSequence(piece),tools:inspectSequenceTools(piece,6)};}
  return geometryCache.result;
 }
@@ -33,6 +33,13 @@ function configure(){
  for(const [id,key] of entries)$(id).addEventListener('change',e=>{const v=key==='thickness'||key==='width'?finite(e.target.value,2):e.target.value;changePiece({...piece,[key]:v},true);});
  $('kFactor').addEventListener('change',e=>changePiece({...piece,kFactor:e.target.value===''?null:finite(e.target.value,.36)}));
  $('insideRadius').addEventListener('change',e=>changePiece({...piece,radius:e.target.value===''?null:finite(e.target.value,2)}));
+ $('rmMPa').addEventListener('change',e=>{
+  const raw=e.target.value.trim().replace(',','.');
+  if(raw!==''&&(!Number.isFinite(Number(raw))||Number(raw)<50||Number(raw)>1800)){
+   e.target.value=piece.rmMPa==null?'':String(piece.rmMPa);return;
+  }
+  changePiece({...piece,rmMPa:raw===''?null:Number(raw)});
+ });
  $('newBtn').onclick=()=>changePiece({name:'Nueva pieza',flanges:[100,100],angles:[90],order:[0],material:'s235',thickness:2,width:500,die:'v16',punch:'straight88'},true);
  $('sampleBtn').onclick=()=>changePiece(EXAMPLE,true);
  $('addFlange').onclick=()=>{if(piece.flanges.length>=20)return;changePiece({...piece,flanges:[...piece.flanges,50],angles:[...piece.angles,90],order:[...piece.order,piece.angles.length]},true);};
@@ -85,6 +92,8 @@ function renderSetup(){
  $('datum').value=piece.datum;
  $('kFactor').value=piece.kFactor??getTooling(piece).material.k;
  $('insideRadius').value=piece.radius??numbers(development(piece).radius,2).replace(',','.');
+ $('rmMPa').value=piece.rmMPa??'';
+ $('rmMPa').placeholder=String(REFERENCE_RM_MPA[piece.material]||450)+' (referencia)';
 }
 function renderEditor(){
  const tb=$('flangeRows');tb.replaceChildren();
@@ -324,9 +333,27 @@ function renderToolCards(){
  punches.replaceChildren(...PUNCHES.map(p=>toolCard(p,'punch')));
 }
 function renderDevelopment(){
- const d=development(piece),check=geometryReport();
- const items=[['Nominal',d.nominal],['Desarrollo',d.length],['Deducción total',d.totalBD],['Radio interior',d.radius]];
- $('devSummary').replaceChildren(...items.map(([name,val])=>{const el=document.createElement('div');el.className='result-item';const b=document.createElement('b');b.textContent=numbers(val,2)+' mm';const s=document.createElement('span');s.textContent=name;el.append(b,s);return el;}));
+ const d=development(piece),check=geometryReport(),force=estimateAirBendForce(piece);
+ const items=[['Nominal',d.nominal,'mm'],['Desarrollo',d.length,'mm'],
+  ['Deducción total',d.totalBD,'mm'],['Radio interior',d.radius,'mm'],
+  ['Fuerza aire aprox.',force.tonneForce,'t'],
+  ['Carga lineal aprox.',force.kNPerMetre,'kN/m']];
+ $('devSummary').replaceChildren(...items.map(([name,val,unit])=>{
+  const el=document.createElement('div');el.className='result-item';
+  const b=document.createElement('b');b.textContent=Number.isFinite(val)?numbers(val,2)+' '+unit:'—';
+  const s=document.createElement('span');s.textContent=name;el.append(b,s);return el;
+ }));
+ const notes=[
+  'Rm '+numbers(force.rmMPa,0)+' MPa ('+(force.materialReference?'SUPUESTA de referencia':'introducida')+')',
+  'V'+numbers(force.opening,1)+' · espesor '+numbers(force.thickness,2)+' mm · longitud '+numbers(force.width,0)+' mm',
+  force.conventionalAirBend90?'Referencia de aire a 90°':'FUERA del método típico de aire 90°',
+  force.exceedsNominal?'⚠ Supera las '+numbers(force.nominalCapacity,0)+' t nominales de V85':
+   'Comparación con '+numbers(force.nominalCapacity,0)+' t nominales; NO certifica la operación',
+  'Verificar carga por metro y límites de todas las herramientas.'
+ ].join(' · ');
+ if($('forceDetails').textContent!==notes)$('forceDetails').textContent=notes;
+ $('forceDetails').style.color=force.exceedsNominal?'#ffbd90':'';
+
  $('devRows').replaceChildren(...d.perBend.map(b=>{const tr=document.createElement('tr');for(const val of [b.index+1,(b.angle>0?'+':'')+b.angle+'°',numbers(b.ba,2),numbers(b.bd,2)]){const td=document.createElement('td');td.textContent=val;tr.append(td);}return tr;}));
  const out=[['Alas',piece.flanges.length],['Pliegues',piece.angles.length],['L. nominal',numbers(d.nominal,1)+' mm']];
  $('geometrySummary').replaceChildren(...out.map(([name,val])=>{const e=document.createElement('div');e.className='stat';const b=document.createElement('b');b.textContent=String(val);const s=document.createElement('span');s.textContent=name;e.append(b,s);return e;}));

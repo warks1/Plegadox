@@ -1,6 +1,6 @@
 // Vista de cabina: boceto 2. La información industrial documentada
 // se distingue de los perfiles tridimensionales aproximados.
-import {DIES,PUNCHES,MATERIALS,normalized,development,stage,getTooling} from './engine.js';
+import {DIES,PUNCHES,MATERIALS,normalized,development,estimateAirBendForce,stage,getTooling} from './engine.js';
 import {CATALOG_SOURCES,toolMatchesBrand,selectionCompatibility} from './catalog.js';
 import {sectionPunch,sectionDie} from './tool-profiles.js';
 const $=id=>document.getElementById(id);
@@ -241,15 +241,17 @@ function updateFloatingToolIcon(kind,tool){
  svg.appendChild(path);svg.dataset.toolId=tool.id;
 }
 function refresh(){
- const {piece,sim}=current(),st=stage(piece,sim.time),data=development(piece),{die,punch,material}=getTooling(piece);
+ const {piece,sim}=current(),st=stage(piece,sim.time),data=development(piece),force=estimateAirBendForce(piece),{die,punch,material}=getTooling(piece);
  const top=[['cockpitPieceName',piece.name],['cockpitMaterial',material.name],['cockpitThickness',format(piece.thickness,2)+' mm'],['cockpitAngle',(piece.angles[st.activeBend]>0?'+':'')+piece.angles[st.activeBend]+'°'],['cockpitDie',die.name],['cpPunchLabel','Punzón: '+punch.name],['cpDieLabel','Matriz: '+die.name],['cpCurrentAngle',(piece.angles[st.activeBend]>0?'+':'')+piece.angles[st.activeBend]+'°']];
  for(const [id,value] of top)if($(id)&&$(id).textContent!==value)$(id).textContent=value;
  updateFloatingToolIcon('punch',punch);
  updateFloatingToolIcon('die',die);
  const ready=$('cockpitReady');ready.textContent=st.completed?'● Pieza simulada':'● '+st.phase;
- const comp=selectionCompatibility(punch,die),msg=comp.reason+(punch.profileAccuracy==='provisional'||die.profileAccuracy==='provisional'?' · Geometría paramétrica no validada':'');
+ const comp=selectionCompatibility(punch,die),msg=comp.reason+(punch.profileAccuracy==='provisional'||die.profileAccuracy==='provisional'?' · Geometría paramétrica no validada':'')+
+ (force.exceedsNominal?' · ⚠ Fuerza estimada excede las 85 t nominales':'')+
+ (!force.conventionalAirBend90?' · Fuerza fuera de método nominal aire 90°':'');
  if($('cockpitCompatibility').textContent!==msg)$('cockpitCompatibility').textContent=msg;
- const results=[['Desarrollo estimado',format(data.length,2)+' mm'],['Radio interior aprox.',format(data.radius,2)+' mm'],['Pliegues realizados',st.finished+' / '+st.count],['Ángulo de operación',(piece.angles[st.activeBend]>0?'+':'')+piece.angles[st.activeBend]+'°']];
+ const results=[['Desarrollo estimado',format(data.length,2)+' mm'],['Radio interior aprox.',format(data.radius,2)+' mm'],['Fuerza aire orientativa',format(force.tonneForce,1)+' t · no validada'],['Pliegues realizados',st.finished+' / '+st.count],['Ángulo de operación',(piece.angles[st.activeBend]>0?'+':'')+piece.angles[st.activeBend]+'°']];
  const box=$('cockpitResults');if(box.dataset.key!==JSON.stringify(results)){box.dataset.key=JSON.stringify(results);box.replaceChildren(...results.map(([label,value])=>{const row=document.createElement('div');row.className='cp-result-line';const a=document.createElement('span');a.textContent=label;const b=document.createElement('strong');b.textContent=value;row.append(a,b);return row;}));}
 }
 function init(){

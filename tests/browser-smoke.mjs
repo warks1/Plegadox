@@ -13,6 +13,15 @@ try{
   page.on('pageerror',err=>errors.push(err.message));
   await page.goto('http://127.0.0.1:4173/',{waitUntil:'networkidle',timeout:30000});
   await page.locator('#machineCanvas').waitFor({state:'visible'});
+  await page.locator('[data-tab="desarrollo"]').click();
+  assert.match(await page.locator('#forceDetails').textContent(),/Rm 450 MPa/);
+  const startForce=await page.locator('#devSummary .result-item').filter({hasText:'Fuerza aire aprox.'}).locator('b').textContent();
+  await page.locator('#rmMPa').fill('600');
+  await page.locator('#rmMPa').dispatchEvent('change');
+  const newForce=await page.locator('#devSummary .result-item').filter({hasText:'Fuerza aire aprox.'}).locator('b').textContent();
+  assert.notEqual(newForce,startForce,'La resistencia Rm introducida debe cambiar la fuerza');
+  assert.equal(await page.evaluate(()=>window.PLEGADOX_STATE().piece.rmMPa),600);
+  await page.locator('[data-tab="simulacion"]').click();
   assert.ok(await page.locator('#cockpitTools .cp-tool-card').count()>0,'Hay tarjetas de herramientas');
   await page.locator('[data-tab="herramientas"]').click();
   const card= id=>page.locator('#punchCards .tool[data-tool-id="'+id+'"]');

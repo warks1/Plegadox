@@ -34,7 +34,7 @@ export function normalized(input){
  const order=[...new Set(requested.filter(i=>Number.isInteger(i)&&i>=0&&i<n))];
  for(let i=0;i<n;i++)if(!order.includes(i))order.push(i);
  const id= MATERIALS.some(m=>m.id===input?.material)?input.material:'s235';
- return {name:String(input?.name||'Nueva pieza').slice(0,80),material:id,thickness:clamp(finite(input?.thickness,2),0.2,30),width:clamp(finite(input?.width,500),1,10000),die:DIES.some(d=>d.id===input?.die)?input.die:'v16',punch:PUNCHES.some(p=>p.id===input?.punch)?input.punch:'straight88',flanges:f,angles:a,order,kFactor:input?.kFactor==null?null:clamp(finite(input.kFactor,.36),.15,.6),radius:input?.radius==null?null:clamp(finite(input.radius,2),.1,100),datum:input?.datum==='neutral'?'neutral':'outside'};
+ return {name:String(input?.name||'Nueva pieza').slice(0,80),material:id,thickness:clamp(finite(input?.thickness,2),0.2,30),width:clamp(finite(input?.width,500),1,10000),die:DIES.some(d=>d.id===input?.die)?input.die:'v16',punch:PUNCHES.some(p=>p.id===input?.punch)?input.punch:'straight88',flanges:f,angles:a,order,kFactor:input?.kFactor==null?null:clamp(finite(input.kFactor,.36),.15,.6),radius:input?.radius==null?null:clamp(finite(input.radius,2),.1,100),rmMPa:input?.rmMPa==null||input.rmMPa===''?null:clamp(finite(input.rmMPa,450),50,1800),datum:input?.datum==='neutral'?'neutral':'outside'};
 }
 /** Todos los pliegues parten de una chapa recta. +90 y -90 giran en sentidos contrarios. */
 export function profile(piece,fractions=[]){
@@ -72,6 +72,32 @@ export function toolAngleCompatibility(piece,bendIndex){
  return {bend:bendIndex,requestedAngle:requested,interiorAngle:interior,
   dieAngle:die.angle,punchAngle:punch.angle,limitingAngle,limitingTools,
   warning:interior+1e-6<limitingAngle,verified:false};
+}
+/** Estimación no certificada para aire a ~90°: F(kN)=1,42 Rm L t²/(1000 V).
+ * Rm por material son HIPÓTESIS editables, no datos certificados del lote.
+ */
+export const REFERENCE_RM_MPA=Object.freeze({
+ s235:450,s275:500,s355:550,inox304:620,alu5754:260,
+ alu1050:110,galva:450,zincor:450
+});
+export function estimateAirBendForce(piece,options={}){
+ const p=normalized(piece),{die}=getTooling(p);
+ const override=options.rmMPa??p.rmMPa;
+ const rm=override==null?REFERENCE_RM_MPA[p.material]:Number(override);
+ if(!Number.isFinite(rm)||rm<=0||die.opening<=0)
+  return {estimated:false,verified:false,reason:'Rm/V no válidos'};
+ const kN=1.42*rm*p.width*p.thickness**2/(1000*die.opening);
+ const tonneForce=kN/9.80665;
+ const nominalCapacity=Number(options.tonnage??MACHINE.tonnage);
+ const ratio=die.opening/p.thickness;
+ const conventional=p.angles.every(a=>Math.abs(Math.abs(a)-90)<=5)&&
+  die.angle>=80&&die.angle<=100&&ratio>=5&&ratio<=14;
+ return {estimated:true,kN,tonneForce,kNPerMetre:kN*1000/p.width,
+  rmMPa:rm,materialReference:override==null,width:p.width,
+  thickness:p.thickness,opening:die.opening,
+  nominalCapacity,loadPercent:100*tonneForce/nominalCapacity,
+  exceedsNominal:tonneForce>nominalCapacity,
+  conventionalAirBend90:conventional,verified:false};
 }
 export function development(piece){
  const p=normalized(piece),t=p.thickness,{die,material}=getTooling(p);

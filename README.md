@@ -290,3 +290,23 @@ flancos de la V, conservando la apertura y la profundidad **teóricas**.
 Las matrices sin cota de radio se mantienen sin fillete inventado.
 La forma restante y la geometría de amarre siguen siendo provisionales:
 ninguna referencia pasa a ser CAD verificado por esta mejora.
+
+## Fuerza de plegado al aire (estimación NO certificada)
+
+En el módulo **Desarrollo** se muestra fuerza aproximada en toneladas-fuerza
+y carga lineal en kN/m, usando Rm, espesor, abertura V y longitud del pliegue.
+**F (kN) ≈ 1,42 × Rm (MPa) × L (mm) × t² (mm²) / [1.000 × V (mm)]**.
+
+Rm es editable: si queda vacío se usa una resistencia **SUPUESTA** del material,
+no la del certificado de colada (S235 450, S275 500, S355 550, AISI304 620,
+Al5754 260, Al1050 110, galvanizado y zincor 450 MPa). El cálculo compara
+la demanda estimada con las 85 t nominales configuradas para la V85.
+**Una fuerza inferior a 85 t NO aprueba el plegado**: hay que revisar longitud
+útil, resistencia real del lote, límites por metro, cargas concentradas,
+portaherramientas, radios, método y documentación original de la máquina.
+La fórmula es una referencia para **aire a aproximadamente 90°**, no
+fondo, acuñado ni utillajes especiales.
+
+Fuentes de consulta:
+- [TRUMPF — tabla de fuerza de plegado](https://www.trumpf.com/filestorage/TRUMPF_Master/Products/Services/01_brochures/TRUMPF-bending-tools-brochure-EN.pdf)
+- [CONIC — cálculo de fuerza y V/t](https://www.conic.co.jp/en/tech/press_brake/pdf/pb_vol4.pdf)
