@@ -50,3 +50,13 @@
 .sequence-advisor p{font-size:12px;line-height:1.55;margin:0;overflow-wrap:anywhere;}
 .sequence-advisor small{color:#64879d;font-size:11px;line-height:1.45;}
 .sequence-advisor button:disabled{opacity:.48;cursor:not-allowed;}
+
+/* Selector táctil de apoyo Stop / Support por operación, sin posición X CNC. */
+.backgauge-choice{display:grid;gap:9px;padding:12px 14px;margin:8px 0 12px;border:1px solid #4f8b97;border-radius:10px;background:rgba(30,88,106,.13);}
+.backgauge-choice-title{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:12px;}
+.backgauge-choice-title span{font-size:11px;color:#73dbbb;}
+.backgauge-buttons{display:flex;gap:8px;flex-wrap:wrap;}
+.backgauge-buttons button{min-height:43px;min-width:130px;flex:1 1 150px;border:1px solid #43899a;border-radius:8px;background:#163e51;color:#dcf7fc;font-size:12px;font-weight:750;touch-action:manipulation;}
+.backgauge-buttons button.selected,.backgauge-buttons button[aria-pressed="true"]{border-color:#59c99a;background:#248568;color:#fff;box-shadow:0 0 0 2px #64e9ae55 inset;}
+.backgauge-choice small{font-size:11px;line-height:1.4;color:#a6c9d6;}
+.bend-stop-select{min-width:140px;font-size:12px;max-width:180px;}
