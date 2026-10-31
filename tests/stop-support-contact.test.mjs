@@ -98,3 +98,15 @@ test('Automático P4 de omega toma borde libre posterior, nunca vértice interio
  const manual=normalized({...p,gaugeSideByBend:['auto','auto','auto','before']});
  assert.equal(gaugeReference(manual,3).side,'before','No anular elección manual');
 });
+
+test('Tope sólo se anuncia en contacto durante presentación: no perseguir ala en plegado',()=>{
+ const p=normalized(EXAMPLE);
+ const early=gaugePlacement(technicalScene(p,.6),1);
+ const late=gaugePlacement(technicalScene(p,2.9),1);
+ assert.equal(early.alignedToSheet,true);
+ assert.equal(early.contactEngaged,true);
+ assert.equal(late.alignedToSheet,false);
+ assert.equal(late.contactEngaged,false);
+ assert.deepEqual(early.point,late.point,'La referencia X/R del tope no debe perseguir el ala');
+ assert.match(late.state,/sin contacto actual/);
+});
