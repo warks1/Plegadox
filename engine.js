@@ -36,10 +36,12 @@ export function normalized(input){
  if(f.length<2)f.push(50);
  const a=Array.from({length:f.length-1},(_,i)=>clamp(finite(input?.angles?.[i],90),-179,179));
  const n=a.length,requested=Array.isArray(input?.order)?input.order:[];
+ // Elección de apoyo trasero por pliegue: 1 Stop o 2 Support.
+ const stopByBend=Array.from({length:n},(_,i)=>String(input?.stopByBend?.[i])==='2'?2:1);
  const order=[...new Set(requested.filter(i=>Number.isInteger(i)&&i>=0&&i<n))];
  for(let i=0;i<n;i++)if(!order.includes(i))order.push(i);
  const id= MATERIALS.some(m=>m.id===input?.material)?input.material:'s235';
- return {name:String(input?.name||'Nueva pieza').slice(0,80),material:id,thickness:clamp(finite(input?.thickness,2),0.2,30),width:clamp(finite(input?.width,500),1,10000),die:DIES.some(d=>d.id===input?.die)?input.die:'v16',punch:PUNCHES.some(p=>p.id===input?.punch)?input.punch:'straight88',flanges:f,angles:a,order,kFactor:input?.kFactor==null?null:clamp(finite(input.kFactor,.36),.15,.6),radius:input?.radius==null?null:clamp(finite(input.radius,2),.1,100),rmMPa:input?.rmMPa==null||input.rmMPa===''?null:clamp(finite(input.rmMPa,450),50,1800),datum:input?.datum==='neutral'?'neutral':'outside'};
+ return {name:String(input?.name||'Nueva pieza').slice(0,80),material:id,thickness:clamp(finite(input?.thickness,2),0.2,30),width:clamp(finite(input?.width,500),1,10000),die:DIES.some(d=>d.id===input?.die)?input.die:'v16',punch:PUNCHES.some(p=>p.id===input?.punch)?input.punch:'straight88',flanges:f,angles:a,order,stopByBend,kFactor:input?.kFactor==null?null:clamp(finite(input.kFactor,.36),.15,.6),radius:input?.radius==null?null:clamp(finite(input.radius,2),.1,100),rmMPa:input?.rmMPa==null||input.rmMPa===''?null:clamp(finite(input.rmMPa,450),50,1800),datum:input?.datum==='neutral'?'neutral':'outside'};
 }
 /** Todos los pliegues parten de una chapa recta. +90 y -90 giran en sentidos contrarios. */
 export function profile(piece,fractions=[]){
@@ -125,6 +127,13 @@ export function development(piece){
  });
  const nominal=p.flanges.reduce((a,b)=>a+b,0),totalBA=perBend.reduce((a,b)=>a+b.ba,0),totalBD=perBend.reduce((a,b)=>a+b.bd,0);
  return {radius:r,k,nominal,totalBA,totalBD,length:p.datum==='neutral'?nominal+totalBA:nominal-totalBD,perBend,estimated:true};
+}
+/** Tope actual por golpe; contorno ilustrativo, no posición X de CNC. */
+export function stopAtStage(piece,time){
+ const p=normalized(piece),st=stage(p,time),bend=st.activeBend;
+ const value=p.stopByBend[bend]===2?2:1;
+ return {operation:st.activeOperation,bend,value,
+  key:value===2?'support':'stop',label:value===2?'TOPE 2 · SUPPORT':'TOPE 1 · STOP',verified:false};
 }
 export function stage(piece,time){
  const p=normalized(piece),count=p.order.length,loop=count*5,t=clamp(finite(time,0),0,loop),index=Math.min(count-1,Math.floor(t/5)),sub=t===loop?1:(t%5)/5;
