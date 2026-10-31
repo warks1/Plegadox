@@ -15,9 +15,14 @@ export function gaugePlacement(scene,stopNumber=1){
  const feature=gaugeContactFeature(dimensions,selected);
  const contactAt=edge=>{
   const origin={x:edge.x-feature.point.x,y:edge.y-feature.point.y};
-  const toWorld=pt=>({x:origin.x+pt.x,y:origin.y+pt.y});
+  // Dedo trasero a la derecha: la cara del escalón apunta hacia la chapa.
+  // El croquis Cybelec se espeja en el eje X sólo en la presentación Support.
+  const mirrorX=selected===2;
+  const toWorld=pt=>({x:origin.x+(mirrorX?2*feature.point.x-pt.x:pt.x),
+    y:origin.y+pt.y});
   return {kind:feature.kind,label:feature.label,usable:feature.usable,
-   origin,from:toWorld(feature.from),to:toWorld(feature.to),
+   origin,mirrorX,localContactX:feature.point.x,
+   from:toWorld(feature.from),to:toWorld(feature.to),
    point:{...edge},verified:false};
  };
  // Nuevo modo: lado de apoyo elegido POR PLIEGUE, independiente de tipo
