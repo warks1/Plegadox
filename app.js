@@ -725,8 +725,13 @@ function renderSimulationText(){
   $('gaugeSideReview').textContent='Golpe '+(st.activeOperation+1)+
    ': elige el ala de apoyo o compara ambos lados. Colisiones reales no verificadas.';
  }
- $('activeGaugeReference').textContent=gauge.reference.label+' · '+numbers(gauge.reference.distance,1)+
-  ' mm nominales desde el pliegue · '+(gauge.reference.side==='before'?'presentación invertida':'presentación directa')+
+ const ref=gauge.reference;
+ $('chooseSideBefore').textContent='← Ala anterior · '+numbers(piece.flanges[gauge.bend],1)+' mm';
+ $('chooseSideAfter').textContent='Ala siguiente · '+numbers(piece.flanges[gauge.bend+1],1)+' mm →';
+ const freeEnd=ref.sourceIndex===0||ref.sourceIndex===piece.flanges.length;
+ $('activeGaugeReference').textContent=ref.label+' · '+numbers(ref.distance,1)+
+  ' mm nominales desde el pliegue · '+(ref.side==='before'?'presentación invertida':'presentación directa')+
+  (freeEnd?' · borde libre':' · ⚠ vértice interior: verificar apoyo')+
   ' · sin ejes X/R/Z calibrados';
  for(const mode of ['auto','before','after']){
   const suffix=mode==='auto'?'Auto':mode==='before'?'Before':'After';
