@@ -4,8 +4,8 @@ import {stage,presentedAtStage,getTooling} from './engine.js';
 import {sectionPunch,sectionDie} from './tool-profiles.js';
 import {drawTechnicalSection,technicalScene} from './technical-section.js';
 import {currentToolContact} from './tool-collision.js';
-import {getV85,gaugeOutline} from './machine-config.js';
-import {gaugePlacement} from './backgauge-placement.js';
+import {getV85} from './machine-config.js';
+import {gaugePlacement,gaugeContourAtContact} from './backgauge-placement.js';
 import {sceneAtmosphere,dieDepth,ramDepth,sheetDepth,surfaceDetail,sectionOverlay} from './render-enhancements.js';
 
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -114,14 +114,12 @@ function rearMachine(ctx,w,h,cx,cy,scale,placement){
  // hacia el borde trasero de la chapa. Esta referencia se deriva del
  // borde presentado, no de una distancia fija inventada.
  const gauge=placement.profile==='support'?getV85().support:getV85().stop;
- const outline=gaugeOutline(gauge),origin=placement.contact?.origin||placement.point;
+ const origin=placement.contact?.origin||placement.point;
  const ox=cx+origin.x*scale,oy=cy-origin.y*scale;
- // Escala 1 mm = 1 unidad de sección para Stop y Support.
- // El origen del perfil NO es el borde de chapa: al elegir Support,
- // el escalón de L6 queda en contacto y el resto del dedo se desplaza.
- const xf=p=>placement.contact?.mirrorX?
-  2*placement.contact.localContactX-p.x:p.x;
- const gg=outline.map(p=>[ox+xf(p)*scale,oy-p.y*scale]);
+ // La geometría del dedo y el punto de contacto están en el mismo
+ // sistema de mm que chapa, punzón y matriz.
+ const gg=gaugeContourAtContact(placement,gauge).map(p=>[
+  cx+p.x*scale,cy-p.y*scale]);
  const faceX=cx+placement.point.x*scale;
  const rodEnd=faceX+Math.max(110,gauge[1]+20)*scale;
  steelRect(ctx,faceX,cy-placement.point.y*scale+4*scale,
