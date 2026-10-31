@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {V85_FACTORY,gaugeOutline,gaugeContactFeature,getV85} from '../machine-config.js';
-import {EXAMPLE,normalized,stage} from '../engine.js';
+import {EXAMPLE,normalized,stage,gaugeReference} from '../engine.js';
 import {technicalScene} from '../technical-section.js';
 import {gaugePlacement,gaugeContourAtContact} from '../backgauge-placement.js';
 
@@ -83,4 +83,18 @@ test('L5/L6 no modifican silenciosamente la cara CAD al faltar cota inequívoca'
  assert.deepEqual(a,b);
  assert.equal(gaugeContactFeature([70,100,8,25,12,8],2).point.x,
   gaugeContactFeature([70,100,8,25,16,14],2).point.x);
+});
+
+test('Automático P4 de omega toma borde libre posterior, nunca vértice interior anterior',()=>{
+ const p=normalized({...EXAMPLE,gaugeSideByBend:['auto','auto','auto','auto']});
+ assert.equal(gaugeReference(p,0).side,'before','G1 por ala libre de 50');
+ assert.equal(gaugeReference(p,3).side,'after','G3→P4 por ala libre de 50');
+ assert.equal(gaugeReference(p,3).distance,50);
+ const st=stage(p,10.2),view=technicalScene(p,st);
+ const place=gaugePlacement(view,1);
+ assert.equal(place.sourceIndex,p.flanges.length);
+ assert.equal(place.freeEdge,true);
+ assert.equal(place.referenceSide,'after');
+ const manual=normalized({...p,gaugeSideByBend:['auto','auto','auto','before']});
+ assert.equal(gaugeReference(manual,3).side,'before','No anular elección manual');
 });
