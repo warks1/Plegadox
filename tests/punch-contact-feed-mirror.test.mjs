@@ -57,3 +57,18 @@ test('La alimentación por lado contrario conserva secuencia, signos y tipo Stop
  const report=inspectToolContact(p,2.9);
  assert.equal(report.verified,false,'Advertencias ilustrativas, no certificación industrial');
 });
+
+test('Inspección del punzón por golpes: los cruces remotos siguen siendo avisos, no aprobación CNC',()=>{
+ const p=normalized(EXAMPLE),summary=[];
+ for(let op=0;op<p.order.length;op++){
+  let collisions=0;const kinds=new Set();
+  for(const offset of [2.0,2.4,2.8,3.2]){
+   const report=inspectToolContact(p,op*5+offset);
+   const hits=report.issues.filter(hit=>hit.kind==='punch'&&hit.category==='penetration');
+   collisions+=hits.length;for(const hit of hits)kinds.add('tramo '+hit.segment);
+  }
+  summary.push({operation:op+1,bend:p.order[op]+1,punchPenetrations:collisions,segments:[...kinds]});
+ }
+ console.log('DIAGNOSTICO_PUNZON_VISTA_2D',JSON.stringify(summary));
+ assert.deepEqual(p.order,[0,1,3,2]);
+});
