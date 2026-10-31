@@ -60,6 +60,7 @@ jobs:
           node tests/technical-section-smoke.mjs
           node tests/catalog-contact-smoke.mjs
           node tests/machine-editor-smoke.mjs
+          node tests/backgauge-smoke.mjs
       - name: Guardar capturas de escritorio y móvil
         if: always()
         uses: actions/upload-artifact@v4
