@@ -64,6 +64,7 @@ jobs:
           node tests/backgauge-smoke.mjs
           node tests/gauge-side-smoke.mjs
           node tests/punch-stop-visibility-smoke.mjs
+          node tests/stop-support-contact-smoke.mjs
           node tests/punch-guard-smoke.mjs
       - name: Guardar capturas de escritorio y móvil
         if: always()
