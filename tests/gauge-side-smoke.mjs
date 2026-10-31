@@ -22,6 +22,11 @@ try{
   const initial=await page.evaluate(()=>window.PLEGADOX_STATE().piece.angles);
   await page.locator('[data-tab="simulacion"]').click();
   assert.match(await page.locator('#activeGaugeReference').textContent(),/Ala anterior · 50,0 mm/);
+  await page.locator('#compareGaugeSides').click();
+  assert.match(await page.locator('#gaugeSideReview').textContent(),/Ala anterior \(50,0 mm\)/);
+  assert.match(await page.locator('#gaugeSideReview').textContent(),/Ala siguiente \(50,0 mm\)/);
+  assert.match(await page.locator('#gaugeSideReview').textContent(),/NO valida la joroba real/);
+
   const a=await page.locator('#machineCanvas').evaluate(c=>c.toDataURL());
   await page.locator('#chooseSideAfter').click();
   const b=await page.locator('#machineCanvas').evaluate(c=>c.toDataURL());
