@@ -43,6 +43,7 @@ export function technicalScene(piece,instant=0){
   opening:die.opening,dieDepth:die.depth,thickness:t,
   phase:st.phase,press:st.press,
   insideRadius:development(p).radius,
+  feedMirrored:feedMirror,
   presentationLift:presentation.clearanceLift??0
  });
  const sheet=kinematics.sheet;
