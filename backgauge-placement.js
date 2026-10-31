@@ -20,7 +20,7 @@ export function gaugePlacement(scene,stopNumber=1){
    point:{x:a.x,y:a.y},nominalDistance:reference.distance,
    referenceSide:reference.side,referenceLabel:reference.label,
    feedMirrored:!!scene.feedMirrored,sourceIndex:index,
-   sheetEdgeFound:valid,alignedToSheet:valid&&a.x>0,
+   sheetEdgeFound:valid&&freeEdge,alignedToSheet:valid&&a.x>0&&freeEdge,
    freeEdge,referenceKind:freeEdge?'extremo libre':'vértice interior plegado',
    state:!valid?'sin cota válida':!freeEdge?'apoyo sobre vértice interior: revisar':'referencia nominal previa al golpe',
    verified:false};
