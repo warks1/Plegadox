@@ -1,0 +1,26 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {EXAMPLE,normalized} from '../engine.js';
+import {technicalScene} from '../technical-section.js';
+import {machineSheetProjection} from '../machine-visual.js';
+test('Diagnóstico cuantitativo 09:33: saltos en bordes de golpe y cambio de tope sin reescribir pieza',()=>{
+ const p=normalized(EXAMPLE),snap=structuredClone(p);
+ const times=[4.1999,4.2,4.9999,5,9.1999,9.2,9.9999,10,
+  14.1999,14.2,14.9999,15,19.1999,19.2,19.9999,20];
+ let peaks=[];
+ for(let i=0;i<times.length;i+=2){
+  const s=technicalScene(p,times[i]),t=technicalScene(p,times[i+1]);
+  const gap=Math.max(...s.sheet.map((pt,k)=>Math.hypot(pt.x-t.sheet[k].x,pt.y-t.sheet[k].y)));
+  const deltaTip=Math.abs(s.kinematics.tipHeight-t.kinematics.tipHeight);
+  const p2=machineSheetProjection(s,200,350,1,true);
+  const p3=machineSheetProjection(t,200,350,1,true);
+  assert.equal(p2.length,s.sheetDisplay.length);
+  assert.equal(p3.length,t.sheetDisplay.length);
+  assert.ok(Number.isFinite(gap)&&Number.isFinite(deltaTip));
+  peaks.push({from:times[i],to:times[i+1],maxShiftMm:Math.round(gap*100)/100,
+   punchShiftMm:Math.round(deltaTip*100)/100,
+   phaseFrom:s.stage.phase,phaseTo:t.stage.phase});
+ }
+ console.log('DIAGNOSTICO_CAMBIO_GOLPES_0933',JSON.stringify(peaks));
+ assert.deepEqual(p,snap);
+});
