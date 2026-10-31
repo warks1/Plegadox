@@ -15,7 +15,7 @@ const lerp=(a,b,t)=>a+(b-a)*t;
 export function contactKinematics({
  points,activeBend,angle=0,opening=16,dieDepth=8,thickness=2,
  phase='Posicionamiento',press=0,approachGap=null,presentationLift=0,
- insideRadius=null
+ insideRadius=null,feedMirrored=false,repositionProgress=1
 }){
  const input=Array.isArray(points)?points:[];
  if(input.length<2)return {sheet:[],rounded:[],tipHeight:0,
@@ -32,7 +32,15 @@ export function contactKinematics({
  const dieLimit=!isTransition&&sagTarget>limit+1e-5;
  // A real V bend rotates BOTH sides around the nose. Incoming and outgoing
  // flats share a symmetric pair of slopes, unlike the old one-sided hinge.
- const theta=isTransition?0:-angleRad/2;
+ // Al alimentar desde el ala anterior se invierte X. Esa reflexión
+ // cambia también el signo del giro local sobre la V: ambas alas deben
+ // elevarse a cada lado de la punta, no barrer por dentro del punzón.
+ // El signo del plano y el orden de los golpes NO se cambian.
+ const intendedTurn=(feedMirrored?1:-1)*angleRad/2;
+ // Al iniciar la recolocación se conserva la orientación del último golpe.
+ // Se desvanece a medida que presentedAtStage orienta la pieza al siguiente B.
+ const theta=phase==='Reposicionamiento'?intendedTurn*(1-clamp(repositionProgress,0,1)):
+  phase==='Pieza terminada'?0:intendedTurn;
  const c=Math.cos(theta),s=Math.sin(theta);
  const center={x:bend.x,y:bend.y};
  const moved=input.map(pt=>{
@@ -49,11 +57,16 @@ export function contactKinematics({
  const centerHeight=thickness/2-sag+lift+repositionLift;
  const sheet=moved.map(pt=>({x:pt.x,y:pt.y+centerHeight}));
  const gap=approachGap??Math.max(14,opening*1.7);
+ // En la retirada, la punta debe superar la cota superior de las alas
+ // presentes en la sección ANTES de rotar la chapa, no sólo dejar 27 mm
+ // desde el centro. Esta es una holgura ilustrativa, NO una cota CNC.
+ const sheetTop=Math.max(...sheet.map(p=>p.y))+thickness/2;
+ const retractGap=Math.max(gap,sheetTop-(centerHeight+thickness/2)+Math.max(5,thickness*2));
  let tipHeight;
  if(phase==='Plegado')tipHeight=centerHeight+thickness/2;
- else if(phase==='Retorno')tipHeight=centerHeight+thickness/2+gap*clamp(1-press,0,1);
+ else if(phase==='Retorno')tipHeight=centerHeight+thickness/2+retractGap*clamp(1-press,0,1);
  else tipHeight=thickness+gap*clamp(1-press/.45,0,1);
- if(isTransition)tipHeight=thickness+gap;
+ if(isTransition)tipHeight=Math.max(thickness+gap,sheetTop+Math.max(5,thickness*2));
  // La fibra media dibujada se desplaza aproximadamente medio espesor
  // desde el radio interior programado. La deformación real no se calcula.
  const requestedCenterlineRadius=insideRadius==null?

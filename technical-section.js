@@ -33,6 +33,19 @@ export function technicalScene(piece,instant=0){
   feedMirrored:feedMirror};
  // Referencia FIJA de presentación: se mide antes de que baje el punzón.
  // No seguir el extremo de la chapa durante la deformación del golpe.
+ // El margen de retirada debe calcularse DESPUÉS de la orientación
+ // que conserva el último plegado. Antes se calculaba sobre la posición
+ // previa y el giro simétrico podía meter una esquina bajo la matriz.
+ // No se mueve el tope: su referencia se toma del estado previo al golpe.
+ if(presentation.repositioning){
+  const half=Math.abs(p.angles[st.activeBend]*st.fractions[st.activeBend])*Math.PI/360;
+  const theta=(feedMirror?1:-1)*half*(1-(presentation.progress??0));
+  const c=Math.cos(theta),s=Math.sin(theta);
+  const pivot=presentation.points[st.activeBend+1];
+  const low=Math.min(...presentation.points.map(pt=>(pt.x-pivot.x)*s+(pt.y-pivot.y)*c));
+  const factor=Math.max(0,Math.min(1,presentation.liftFactor??0));
+  presentation.clearanceLift=Math.max(presentation.clearanceLift??0,Math.max(0,5-low)*factor);
+ }
  const setupFractions=[...st.fractions];setupFractions[st.activeBend]=0;
  const setup=presentedForMachine(p,setupFractions,st.activeBend);
  const setupPoint=mirror(setup.points[reference.sourceIndex]);
@@ -43,6 +56,8 @@ export function technicalScene(piece,instant=0){
   opening:die.opening,dieDepth:die.depth,thickness:t,
   phase:st.phase,press:st.press,
   insideRadius:development(p).radius,
+  feedMirrored:feedMirror,
+  repositionProgress:presentation.repositioning?presentation.progress:1,
   presentationLift:presentation.clearanceLift??0
  });
  const sheet=kinematics.sheet;
