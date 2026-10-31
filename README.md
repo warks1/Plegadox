@@ -545,3 +545,32 @@ calibrada de X/R/Z ni de las caras de contacto CAD completas** para
 reproducir a escala real la posición de apoyo que muestra el control
 del vídeo. El contorno, la distancia al pliegue y los límites de
 carrera deben verificarse; no se certifican colisiones físicas.
+
+### Visibilidad del punzón y apoyo posterior (vídeos del 31-10-2026)
+
+En la vista de máquina el cuerpo y filo del **punzón** se vuelven a
+representar en primer plano tras pintar la chapa. Se han reforzado
+el brillo del acero, el contorno claro/oscuro y la punta para evitar
+que desaparezcan contra la trancha, la bancada o las alas plegadas.
+En **▥ mm** se repasa también su silueta por delante de la línea de
+chapa. No se ha modificado la geometría paramétrica nominal del útil.
+
+A partir del vídeo real **IMG_9033(1).mp4**, el apoyo Stop/Support
+se presenta ahora **por detrás y a la derecha del borde de la chapa**
+en el alzado, y no a una distancia fija desde el centro de la V.
+La ubicación visual procede de los extremos del perfil de chapa del
+golpe actual; el sistema distingue cuando el borde está elevado,
+inclinado o no se detecta un extremo posterior presentable. La cara
+del tope se dibuja en verde y el borde de contacto orientativo se
+identifica cuando existe alineación visual.
+
+Los vídeos **ScreenRecording_10-31-2026 01-17-05_1.mp4** y
+**ScreenRecording_10-31-2026 01-17-39_1.mp4** muestran la vista
+previa demasiado oscura y la secuencia con volteos; el arreglo de
+capas protege la lectura del punzón durante acercamiento, plegado y
+reposicionamiento sin alterar el signo del ángulo.
+
+**Pendiente de calibración:** el apoyo visible no constituye una
+cota X, ni el modelo permite deducir automáticamente qué dedo hace
+contacto real. Para ello hacen falta caras del tope y datos de ejes
+X/R/Z de la máquina y una comprobación real sobre la pieza.
