@@ -9,6 +9,8 @@
 import {normalized,stage,presentedAtStage,getTooling,development,clamp} from './engine.js';
 import {sectionPunch,sectionDie,sectionBounds} from './tool-profiles.js';
 import {contactKinematics} from './bend-contact.js';
+import {gaugePlacement} from './backgauge-placement.js';
+import {getV85,gaugeOutline} from './machine-config.js';
 
 const mm=v=>Number.isFinite(+v)?+v:0;
 const mPoint=(x,y)=>({x:mm(x),y:mm(y)});
@@ -109,6 +111,20 @@ export function drawTechnicalSection(ctx,w,h,piece,sim,view={}){
  [[0,'#24576b'],[.24,'#85b6c5'],[.52,'#356e82'],[.75,'#9bcbd5'],[1,'#244359']]);
  ctx.save();ctx.shadowBlur=16;ctx.shadowColor='#000b';
  polygon(ctx,dp,dieFill,'#a2d5e9',1.7);ctx.restore();
+ // Tope seleccionado detrás de la chapa, como en la foto de taller.
+ // Sin reconstrucción CAD ni posición de los ejes X/R/Z de la máquina.
+ const stopNumber=result.piece.stopByBend?.[st.activeBend]===2?2:1;
+ const place=gaugePlacement(result,stopNumber);
+ const v85=getV85(),dimensions=place.profile==='support'?v85.support:v85.stop;
+ const gp=gaugeOutline(dimensions).map(p=>map(mPoint(
+  place.point.x+p.x*.62,place.point.y-p.y*.62)));
+ ctx.save();ctx.lineWidth=1.8;
+ const gaugeFill=place.alignedToSheet?'#37865f':'#265746';
+ polygon(ctx,gp,gaugeFill,'#a1f4c7',1.8);
+ ctx.strokeStyle='#dbffe7';ctx.lineWidth=2.3;
+ const nose=map(place.point);
+ ctx.beginPath();ctx.moveTo(nose.x,nose.y-6);ctx.lineTo(nose.x,nose.y+6);ctx.stroke();
+ ctx.restore();
   const pp=poly(result.punchPolygon),punchFill=gradient(ctx,pp[0].x,0,pp[1].x,0,
  [[0,'#435d6f'],[.17,'#d7ebf2'],[.4,'#809cac'],[.55,'#e7f5f9'],[.8,'#637f95'],[1,'#253f57']]);
  ctx.save();ctx.globalAlpha=view.transparent?.34:1;
@@ -120,6 +136,13 @@ export function drawTechnicalSection(ctx,w,h,piece,sim,view={}){
  ctx.lineJoin='round';ctx.lineCap='round';ctx.lineWidth=Math.max(1.4,d.thickness*scale);
  ctx.strokeStyle='#f6aa4e';ctx.shadowColor='#ffb15377';ctx.shadowBlur=5;
  ctx.stroke();ctx.lineWidth=.9;ctx.strokeStyle='#ffe7aa';ctx.stroke();ctx.restore();
+ // Remarcar el perímetro del punzón SOBRE la chapa, para que su filo
+ // no se esconda por el trazo de la pieza ni se confunda con la trancha.
+ ctx.save();ctx.lineJoin='round';ctx.lineWidth=2.4;
+ ctx.shadowColor='#9fe8ff';ctx.shadowBlur=9;
+ ctx.strokeStyle='#ffffff';ctx.beginPath();
+ pp.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));
+ ctx.closePath();ctx.stroke();ctx.restore();
  // Contact marker: graphic, not a load/force calculation.
  if(st.press>=.45&&st.press<.84){
   const cp=map(mPoint(0,result.sheet[st.activeBend+1]?.y??d.thickness/2));
@@ -140,10 +163,12 @@ export function drawTechnicalSection(ctx,w,h,piece,sim,view={}){
   badge('P '+d.punchAngle+'°',9,17,'#315878de');
   badge('V'+d.opening+'/'+d.dieAngle+'°',9,39,'#1a5a69db');
   badge('e '+d.thickness+' mm',9,61,'#7c531cdb');
+  badge('TOPE '+stopNumber,9,83,'#176445db');
  }else{
   badge('PUNZÓN '+d.punchAngle+'°',9,22,'#315878de');
   badge('MATRIZ V'+d.opening+' / '+d.dieAngle+'°',9,49,'#1a5a69db');
   badge('CHAPA '+d.thickness+' mm',9,76,'#7c531cdb');
+  badge('TOPE '+stopNumber+' · REFERENCIA',9,103,'#176445db');
  }
  drawLabel(ctx,st.phase+' · pliegue '+(st.activeBend+1),w-11,18,'#d6eefb',11,'right');
  // En móvil se reserva una banda inferior para los mandos táctiles:
