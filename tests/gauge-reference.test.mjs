@@ -72,3 +72,14 @@ test('al reordenar golpes se mantiene el lado seleccionado por pliegue físico',
  assert.equal(stopAtStage(alt,5.5).reference.side,'after');
  assert.deepEqual(alt.angles,p.angles);
 });
+
+test('no anuncia contacto verificado al apoyar en un vértice interior',()=>{
+ const p=normalized(EXAMPLE);
+ const scene=technicalScene(p,5.2);
+ const placement=gaugePlacement(scene,1);
+ assert.equal(placement.sourceIndex,1);
+ assert.equal(placement.freeEdge,false);
+ assert.equal(placement.alignedToSheet,false);
+ assert.match(placement.state,/vértice interior/);
+ assert.equal(placement.verified,false);
+});
