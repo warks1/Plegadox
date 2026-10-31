@@ -114,28 +114,38 @@ function rearMachine(ctx,w,h,cx,cy,scale,placement){
  // hacia el borde trasero de la chapa. Esta referencia se deriva del
  // borde presentado, no de una distancia fija inventada.
  const gauge=placement.profile==='support'?getV85().support:getV85().stop;
- const outline=gaugeOutline(gauge),gaugeScale=scale*.62;
- const ox=cx+placement.point.x*scale,oy=cy-placement.point.y*scale;
- // El extremo izquierdo de la silueta coincide visualmente con el borde.
- // La varilla y el carro se prolongan hacia la derecha de la chapa.
- const gg=outline.map(p=>[ox+p.x*gaugeScale,oy+p.y*gaugeScale]);
- const rodEnd=ox+Math.max(110,gauge[1]+20)*gaugeScale;
+ const outline=gaugeOutline(gauge),origin=placement.contact?.origin||placement.point;
+ const ox=cx+origin.x*scale,oy=cy-origin.y*scale;
+ // Escala 1 mm = 1 unidad de sección para Stop y Support.
+ // El origen del perfil NO es el borde de chapa: al elegir Support,
+ // el escalón de L6 queda en contacto y el resto del dedo se desplaza.
+ const gg=outline.map(p=>[ox+p.x*scale,oy-p.y*scale]);
+ const rodEnd=ox+Math.max(110,gauge[1]+20)*scale;
  steelRect(ctx,ox,oy+4*scale,Math.max(8,rodEnd-ox),6*scale,false);
  poly(ctx,gg,
   gradient(ctx,ox,oy,rodEnd,oy,
    [[0,'#9ff6b7'],[.28,'#44b975'],[.76,'#235a48'],[1,'#112f31']]),
   '#c8ffe0',Math.max(1.2,1.9*scale));
- // Cara activa del tope orientada al borde, identificable incluso al
- // reducir la escena en móvil. Sin indicación de apoyo confirmado.
- ctx.save();ctx.lineWidth=Math.max(2,2.4*scale);
- ctx.strokeStyle='#dbfff0';ctx.shadowBlur=11*scale;ctx.shadowColor='#4fffb6';
- ctx.beginPath();ctx.moveTo(ox,oy-7*scale);ctx.lineTo(ox,oy+8*scale);ctx.stroke();ctx.restore();
- for(const frac of [.24,.58])bolt(ctx,ox+gauge[0]*gaugeScale*frac,oy-10*scale,2.4*scale);
+ // Resaltar la cara real del dedo: STOP frontal o escalón SUPPORT.
+ // Un vértice interior de la chapa no constituye un apoyo fiable.
+ const contact=placement.contact,valid=placement.alignedToSheet;
+ const screen=pt=>[cx+pt.x*scale,cy-pt.y*scale];
+ if(contact){
+  const a=screen(contact.from),b=screen(contact.to);
+  ctx.save();ctx.lineWidth=Math.max(3,3.6*scale);
+  ctx.strokeStyle=valid?'#c1ffe2':'#ffd18d';
+  ctx.shadowBlur=11*scale;ctx.shadowColor=valid?'#4fffb6':'#ffad56';
+  ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();
+  const cp=screen(contact.point);
+  ctx.beginPath();ctx.arc(...cp,Math.max(2.5,3*scale),0,Math.PI*2);
+  ctx.fillStyle=valid?'#e1fff1':'#ffd18d';ctx.fill();ctx.restore();
+ }
+ for(const frac of [.24,.58])bolt(ctx,ox+gauge[0]*scale*frac,oy-10*scale,2.4*scale);
  ctx.font='800 '+Math.max(8,11*scale)+'px system-ui';
  ctx.fillStyle='#a5ffcc';ctx.textAlign='left';
- const label=placement.stopNumber===2?'TOPE 2 · SUPPORT':'TOPE 1 · STOP';
+ const label=placement.stopNumber===2?'TOPE 2 · ESCALÓN':'TOPE 1 · CARA STOP';
  ctx.fillText(label,Math.min(Math.max(8,ox+3*scale),w-145*scale),
-  Math.max(20,oy-28*scale));
+  Math.max(20,cy-placement.point.y*scale-24*scale));
  // Left support and machine rails
  steelRect(ctx,0,cy+26*scale,w*.3,40*scale,false);
  for(let i=0;i<4;i++){shape(ctx,20+i*32*scale,cy+28*scale,8*scale,34*scale,'#20394e','#435b6b');}
