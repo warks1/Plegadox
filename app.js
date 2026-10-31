@@ -731,7 +731,8 @@ function renderSimulationText(){
  $('chooseSideAfter').textContent='Ala siguiente · '+numbers(piece.flanges[gauge.bend+1],1)+' mm →';
  const freeEnd=ref.sourceIndex===0||ref.sourceIndex===piece.flanges.length;
  $('activeGaugeReference').textContent=ref.label+' · '+numbers(ref.distance,1)+
-  ' mm nominales desde el pliegue · '+(ref.side==='before'?'presentación invertida':'presentación directa')+
+  ' mm nominales desde el pliegue · '+(gauge.value===2?'contacto en escalón SUPPORT 2':'contacto en cara frontal STOP 1')+
+   ' · '+(ref.side==='before'?'presentación invertida':'presentación directa')+
   (freeEnd?' · borde libre':' · ⚠ vértice interior: verificar apoyo')+
   ' · sin ejes X/R/Z calibrados';
  for(const mode of ['auto','before','after']){

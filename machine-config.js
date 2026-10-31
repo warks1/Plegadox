@@ -75,21 +75,41 @@ export function resetV85(){return updateV85(V85_FACTORY);}
  * contour or a collision geometry.
  */
 export function gaugeOutline(values){
- const [l1,l2,l3,l4,l5,l6]=values;
- const outer=Math.max(l1,l2,1),height=Math.max(l3,l4,1);
- const shoulder=Math.max(1,l1);
- const level=Math.max(1,Math.min(height,l3));
- const notch=Math.max(0,Math.min(level,l5));
- const tail=Math.max(0,Math.min(outer,l6));
+ const [l1,l2,l3,l4]=values;
+ // Alzado de la fotografía Cybelec: L2 = longitud superior,
+ // L1 = posición horizontal del ESCALÓN inferior,
+ // L3 = altura de rebaje y L4 = altura total.
+ // L5 y L6 se conservan como cotas editables, pero no hay evidencia
+ // suficiente para asignarles aquí caras CAD o offsets de contacto.
+ const outer=Math.max(1,Number(l1)||0,Number(l2)||0);
+ const shoulder=Math.max(0,Math.min(outer,Number(l1)||0));
+ const height=Math.max(1,Number(l3)||0,Number(l4)||0);
+ const stepDepth=Math.max(0,Math.min(height,Number(l3)||0));
  return [
-  {x:0,y:0},{x:shoulder,y:0},
-  {x:shoulder,y:-Math.max(1,height-level)},
-  {x:outer,y:-Math.max(1,height-level)},
-  {x:outer,y:-height},
-  {x:tail,y:-height},
-  {x:tail,y:-height+notch},
-  {x:0,y:-height+notch}
+  {x:0,y:0},{x:outer,y:0},
+  {x:outer,y:-stepDepth},{x:shoulder,y:-stepDepth},
+  {x:shoulder,y:-height},{x:0,y:-height}
  ];
+}
+/**
+ * Caras de contacto diferenciadas en el croquis del control:
+ * Stop 1 contra la cara frontal izquierda;
+ * Support 2 contra el escalón de L1 (la cara vertical inferior).
+ * Perfil orientativo, sin garantía de accesibilidad ni cinemática CNC.
+ */
+export function gaugeContactFeature(values,stopNumber=1){
+ const outline=gaugeOutline(values);
+ const height=-Math.min(...outline.map(p=>p.y));
+ const outer=Math.max(...outline.map(p=>p.x));
+ const shoulder=outline[3].x,stepDepth=-outline[3].y;
+ const support=Number(stopNumber)===2;
+ const from=support?{x:shoulder,y:-stepDepth}:{x:0,y:0};
+ const to=support?{x:shoulder,y:-height}:{x:0,y:-height};
+ const point={x:from.x,y:(from.y+to.y)/2};
+ const usable=from.y!==to.y && (support?shoulder>0&&shoulder<outer:true);
+ return {kind:support?'support-step':'stop-face',
+  label:support?'TOPE 2 · ESCALÓN SUPPORT':'TOPE 1 · CARA STOP',
+  from,to,point,usable,verified:false};
 }
 /** Envolvente del perfil esquemático, sin interpretar una cota L como CAD. */
 export function gaugeBounds(values){

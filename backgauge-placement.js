@@ -2,12 +2,29 @@
  * Posición VISUAL del tope respecto al borde trasero de la chapa.
  * Sección 2D ilustrativa, no programa CNC X/R ni garantía de apoyo.
  */
+import {getV85,gaugeContactFeature,gaugeOutline} from './machine-config.js';
+
+/** Mismo contacto nominal de la chapa, pero distinta cara física del dedo. */
 export function gaugePlacement(scene,stopNumber=1){
  const points=(scene?.sheetDisplay||[]).filter(p=>
   Number.isFinite(p.x)&&Number.isFinite(p.y));
  const opening=Math.max(0,Number(scene?.die?.opening)||16);
  const thickness=Math.max(.2,Number(scene?.piece?.thickness)||2);
  const selected=stopNumber===2?2:1;
+ const dimensions=selected===2?getV85().support:getV85().stop;
+ const feature=gaugeContactFeature(dimensions,selected);
+ const contactAt=edge=>{
+  const origin={x:edge.x-feature.point.x,y:edge.y-feature.point.y};
+  // Dedo trasero a la derecha: la cara del escalón apunta hacia la chapa.
+  // El croquis Cybelec se espeja en el eje X sólo en la presentación Support.
+  const mirrorX=selected===2;
+  const toWorld=pt=>({x:origin.x+(mirrorX?2*feature.point.x-pt.x:pt.x),
+    y:origin.y+pt.y});
+  return {kind:feature.kind,label:feature.label,usable:feature.usable,
+   origin,mirrorX,localContactX:feature.point.x,
+   from:toWorld(feature.from),to:toWorld(feature.to),
+   point:{...edge},verified:false};
+ };
  // Nuevo modo: lado de apoyo elegido POR PLIEGUE, independiente de tipo
  // de dedo Stop/Support. La referencia es la chapa ANTES de deformarla:
  // la distancia nominal (p.ej. 50 mm) no salta a los 200 del otro extremo.
@@ -16,13 +33,22 @@ export function gaugePlacement(scene,stopNumber=1){
   const index=reference.sourceIndex;
   const freeEdge=index===0||index===(scene.sheet?.length||0)-1;
   const valid=[a.x,a.y,reference.distance].every(Number.isFinite);
+  const edge=scene.sheet?.[index];
+  const gap=edge?Math.hypot(edge.x-a.x,edge.y-a.y):Infinity;
+  const approaching=['Posicionamiento','Aproximación'].includes(scene.stage?.phase);
+  const contactEngaged=valid&&freeEdge&&feature.usable&&a.x>0&&
+    approaching&&gap<=Math.max(.4,thickness*.28);
   return {stopNumber:selected,profile:selected===2?'support':'stop',
-   point:{x:a.x,y:a.y},nominalDistance:reference.distance,
+   point:{x:a.x,y:a.y},contact:contactAt(a),nominalDistance:reference.distance,
    referenceSide:reference.side,referenceLabel:reference.label,
    feedMirrored:!!scene.feedMirrored,sourceIndex:index,
-   sheetEdgeFound:valid&&freeEdge,alignedToSheet:valid&&a.x>0&&freeEdge,
+   sheetEdgeFound:valid&&freeEdge,alignedToSheet:contactEngaged,
+   contactEngaged,contactGap:gap,
    freeEdge,referenceKind:freeEdge?'extremo libre':'vértice interior plegado',
-   state:!valid?'sin cota válida':!freeEdge?'apoyo sobre vértice interior: revisar':'referencia nominal previa al golpe',
+   state:!valid?'sin cota válida':!feature.usable?'sin cara física de apoyo definida':
+    !freeEdge?'apoyo sobre vértice interior: revisar':
+    contactEngaged?'borde presentado contra la cara seleccionada':
+    'referencia nominal fijada antes del golpe (sin contacto actual)',
    verified:false};
  }
 
@@ -36,7 +62,23 @@ export function gaugePlacement(scene,stopNumber=1){
  const parkedX=Math.max(opening/2+25,40);
  return {stopNumber:selected,profile:selected===2?'support':'stop',
   point:visible?{x:visible.x,y:visible.y}:{x:parkedX,y:thickness/2},
-  sheetEdgeFound:!!rear,alignedToSheet:validEdge,
+  contact:contactAt(visible||{x:parkedX,y:thickness/2}),
+  sheetEdgeFound:!!rear,alignedToSheet:validEdge&&feature.usable,
   state:validEdge?'borde visible orientativo':rear?'borde inclinado o elevado':'sin borde trasero accesible',
   verified:false};
+}
+
+/**
+ * Perfil métrico único usado por la cabina, la sección 2D y las pruebas.
+ * La cara activa queda exactamente sobre la referencia de chapa; no
+ * desplazamos la chapa ni cambiamos la longitud nominal del ala.
+ */
+export function gaugeContourAtContact(placement,values){
+ const origin=placement.contact?.origin||placement.point;
+ const mirror=!!placement.contact?.mirrorX;
+ const center=placement.contact?.localContactX||0;
+ return gaugeOutline(values).map(p=>({
+  x:origin.x+(mirror?2*center-p.x:p.x),
+  y:origin.y+p.y
+ }));
 }

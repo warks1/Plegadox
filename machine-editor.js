@@ -1,6 +1,6 @@
 // Plegadox · editor funcional de las cotas de Cybelec 30a / 29.
 // Las dimensiones editadas también actualizan la máquina dibujada en cabina.
-import {V85_FACTORY,getV85,updateV85,resetV85,gaugeOutline,gaugeBounds} from './machine-config.js';
+import {V85_FACTORY,getV85,updateV85,resetV85,gaugeOutline,gaugeBounds,gaugeContactFeature} from './machine-config.js';
 
 const $=id=>document.getElementById(id);
 const locale=n=>Number(n).toLocaleString('es-ES',{minimumFractionDigits:0,maximumFractionDigits:2});
@@ -67,7 +67,7 @@ function gaugeCanvas(ctx,w,h,cfg,key){
  const pad=46,plotW=Math.max(1,w-2*pad),plotH=Math.max(1,h-2*pad);
  const s=Math.min(plotW/Math.max(1,bounds.width),plotH/Math.max(1,bounds.height));
  const ox=pad+(plotW-bounds.width*s)/2,oy=pad+(plotH-bounds.height*s)/2;
- const xy=p=>({x:ox+(p.x-bounds.minX)*s,y:oy+(p.y-bounds.minY)*s});
+ const xy=p=>({x:ox+(p.x-bounds.minX)*s,y:oy+(bounds.maxY-p.y)*s});
  ctx.save();
  ctx.beginPath();outline.forEach((p,i)=>{const q=xy(p);i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y);});
  ctx.closePath();const g=ctx.createLinearGradient(ox,0,ox+bounds.width*s,h);
@@ -83,6 +83,16 @@ function gaugeCanvas(ctx,w,h,cfg,key){
  label(ctx,'L3 '+locale(values[2]),Math.max(pad,w-8),pad+24,10,'#d9eef8','right');
  label(ctx,'L4 '+locale(values[3]),Math.max(pad,w-8),pad+40,10,'#d9eef8','right');
  label(ctx,'L5 '+locale(values[4])+' · L6 '+locale(values[5]),pad+8,Math.max(pad+15,yy-6),10);
+ // Señalar la superficie activa, no el origen genérico del dibujo.
+ const finger=gaugeContactFeature(values,key==='support'?2:1);
+ const a=xy(finger.from),b=xy(finger.to),p=xy(finger.point);
+ ctx.save();ctx.lineCap='round';ctx.shadowBlur=8;ctx.shadowColor='#4dfabd';
+ ctx.lineWidth=4;ctx.strokeStyle='#b4ffe3';
+ ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+ ctx.shadowBlur=0;ctx.beginPath();ctx.arc(p.x,p.y,3.2,0,Math.PI*2);
+ ctx.fillStyle='#d4ffe9';ctx.fill();ctx.restore();
+ label(ctx,key==='support'?'2 · CONTACTO EN ESCALÓN':'1 · CONTACTO EN CARA STOP',
+  w/2,h-10,Math.min(11,Math.max(8,w/40)),'#b8ffe0','center');
  ctx.restore();
 }
 function barCanvas(ctx,w,h,cfg,key){

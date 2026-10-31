@@ -9,8 +9,8 @@
 import {normalized,stage,presentedAtStage,presentedForMachine,gaugeReference,getTooling,development,clamp} from './engine.js';
 import {sectionPunch,sectionDie,sectionBounds} from './tool-profiles.js';
 import {contactKinematics} from './bend-contact.js';
-import {gaugePlacement} from './backgauge-placement.js';
-import {getV85,gaugeOutline} from './machine-config.js';
+import {gaugePlacement,gaugeContourAtContact} from './backgauge-placement.js';
+import {getV85} from './machine-config.js';
 
 const mm=v=>Number.isFinite(+v)?+v:0;
 const mPoint=(x,y)=>({x:mm(x),y:mm(y)});
@@ -147,14 +147,20 @@ export function drawTechnicalSection(ctx,w,h,piece,sim,view={}){
  const stopNumber=result.piece.stopByBend?.[st.activeBend]===2?2:1;
  const place=gaugePlacement(result,stopNumber);
  const v85=getV85(),dimensions=place.profile==='support'?v85.support:v85.stop;
- const gp=gaugeOutline(dimensions).map(p=>map(mPoint(
-  place.point.x+p.x*.62,place.point.y-p.y*.62)));
+ const gp=gaugeContourAtContact(place,dimensions).map(map);
  ctx.save();ctx.lineWidth=1.8;
  const gaugeFill=place.alignedToSheet?'#37865f':'#265746';
  polygon(ctx,gp,gaugeFill,'#a1f4c7',1.8);
- ctx.strokeStyle='#dbffe7';ctx.lineWidth=2.3;
+ // La sección técnica usa la misma CARA STOP / ESCALÓN SUPPORT
+ // y la misma escala en mm que la vista de máquina.
+ if(place.contact){
+  const a=map(place.contact.from),b=map(place.contact.to);
+  ctx.lineWidth=3.2;ctx.strokeStyle=place.alignedToSheet?'#dbffe7':'#ffca8d';
+  ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+ }
  const nose=map(place.point);
- ctx.beginPath();ctx.moveTo(nose.x,nose.y-6);ctx.lineTo(nose.x,nose.y+6);ctx.stroke();
+ ctx.beginPath();ctx.arc(nose.x,nose.y,3.2,0,Math.PI*2);
+ ctx.fillStyle=place.alignedToSheet?'#c7ffe7':'#ffb567';ctx.fill();
  ctx.restore();
   const pp=poly(result.punchPolygon),punchFill=gradient(ctx,pp[0].x,0,pp[1].x,0,
  [[0,'#435d6f'],[.17,'#d7ebf2'],[.4,'#809cac'],[.55,'#e7f5f9'],[.8,'#637f95'],[1,'#253f57']]);
