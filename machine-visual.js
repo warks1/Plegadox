@@ -124,13 +124,15 @@ function rearMachine(ctx,w,h,cx,cy,scale,placement){
  const rodEnd=faceX+Math.max(110,gauge[1]+20)*scale;
  steelRect(ctx,faceX,cy-placement.point.y*scale+4*scale,
   Math.max(8,rodEnd-faceX),6*scale,false);
+ const valid=placement.alignedToSheet;
  poly(ctx,gg,
-  gradient(ctx,ox,oy,rodEnd,oy,
-   [[0,'#9ff6b7'],[.28,'#44b975'],[.76,'#235a48'],[1,'#112f31']]),
-  '#c8ffe0',Math.max(1.2,1.9*scale));
+  gradient(ctx,ox,oy,rodEnd,oy,valid?
+   [[0,'#9ff6b7'],[.28,'#44b975'],[.76,'#235a48'],[1,'#112f31']]:
+   [[0,'#c5d1dc'],[.28,'#7890a4'],[.76,'#475b6c'],[1,'#1e3447']]),
+  valid?'#c8ffe0':'#9ab5c8',Math.max(1.2,1.9*scale));
  // Resaltar la cara real del dedo: STOP frontal o escalón SUPPORT.
  // Un vértice interior de la chapa no constituye un apoyo fiable.
- const contact=placement.contact,valid=placement.alignedToSheet;
+ const contact=placement.contact;
  const screen=pt=>[cx+pt.x*scale,cy-pt.y*scale];
  if(contact){
   const a=screen(contact.from),b=screen(contact.to);
