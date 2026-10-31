@@ -1,4 +1,4 @@
-import {MATERIALS,DIES,PUNCHES,EXAMPLE,normalized,profile,bendPreviewPath,bounds,development,estimateAirBendForce,REFERENCE_RM_MPA,stage,orientedForMachine,getTooling,selfIntersects,clamp,finite} from './engine.js';
+import {MATERIALS,DIES,PUNCHES,EXAMPLE,normalized,profile,bendPreviewPath,bounds,development,estimateAirBendForce,REFERENCE_RM_MPA,stage,stopAtStage,orientedForMachine,getTooling,selfIntersects,clamp,finite} from './engine.js';
 import {drawIndustrialMachine} from './machine-visual.js';
 import {registerCatalogue} from './catalog.js';
 import {analyzeSequence} from './validation.js';
@@ -75,8 +75,13 @@ function configure(){
  });
  $('newBtn').onclick=()=>changePiece({name:'Nueva pieza',flanges:[100,100],angles:[90],order:[0],material:'s235',thickness:2,width:500,die:'v16',punch:'straight88'},true);
  $('sampleBtn').onclick=()=>changePiece(EXAMPLE,true);
- $('addFlange').onclick=()=>{if(piece.flanges.length>=20)return;changePiece({...piece,flanges:[...piece.flanges,50],angles:[...piece.angles,90],order:[...piece.order,piece.angles.length]},true);};
+ $('addFlange').onclick=()=>{if(piece.flanges.length>=20)return;changePiece({...piece,flanges:[...piece.flanges,50],angles:[...piece.angles,90],order:[...piece.order,piece.angles.length],stopByBend:[...piece.stopByBend,1]},true);};
  $('resetOrder').onclick=()=>changePiece({...piece,order:piece.angles.map((_,i)=>i)},true);
+ for(const value of [1,2])$('chooseGauge'+value).onclick=()=>{
+  const current=stopAtStage(piece,sim.time),modes=[...piece.stopByBend];
+  modes[current.bend]=value;
+  changePiece({...piece,stopByBend:modes},false);
+ };
  $('evaluateOrder').onclick=()=>{
   const message=$('sequenceAdvice'),apply=$('applySuggestedOrder');
   apply.disabled=true;pendingSequenceAdvice=null;
@@ -209,8 +214,28 @@ function renderEditor(){
  const lenCell=document.createElement('td'),len=document.createElement('input');len.type='number';len.min='1';len.max='10000';len.step='0.1';len.inputMode='decimal';len.value=v;len.setAttribute('aria-label','Longitud ala '+(i+1));len.addEventListener('change',()=>{const f=[...piece.flanges];f[i]=finite(len.value,v);changePiece({...piece,flanges:f},true);});lenCell.append(len);row.append(lenCell);
  const angleCell=document.createElement('td');
  if(i){const wrap=document.createElement('div');wrap.style.cssText='display:flex;align-items:center;gap:5px';const a=document.createElement('input');a.className='angle-input';a.type='text';a.inputMode='text';a.value=String(piece.angles[i-1]);a.setAttribute('aria-label','Ángulo firmado pliegue '+i);a.addEventListener('change',()=>{const val=Number(a.value.replace(',','.'));if(!Number.isFinite(val)){a.value=String(piece.angles[i-1]);return;}const angles=[...piece.angles];angles[i-1]=val;changePiece({...piece,angles},true);});const flip=document.createElement('button');flip.type='button';flip.textContent='±';flip.title='Cambiar sentido del pliegue';flip.addEventListener('click',()=>{const angles=[...piece.angles];angles[i-1]=-angles[i-1];changePiece({...piece,angles},true);});wrap.append(a,flip);angleCell.append(wrap);}else angleCell.textContent='—';
- row.append(angleCell);const orderCell=document.createElement('td');orderCell.textContent=i?String(piece.order.indexOf(i-1)+1):'—';row.append(orderCell);
- const actionCell=document.createElement('td');if(i>=2){const remove=document.createElement('button');remove.className='mini';remove.textContent='×';remove.title='Eliminar ala';remove.onclick=()=>{const flanges=[...piece.flanges],angles=[...piece.angles];flanges.splice(i,1);angles.splice(i-1,1);const order=piece.order.filter(x=>x!==i-1).map(x=>x>i-1?x-1:x);changePiece({...piece,flanges,angles,order},true);};actionCell.append(remove);}row.append(actionCell);tb.append(row);
+ row.append(angleCell);
+  const stopCell=document.createElement('td');
+  if(i){
+   const select=document.createElement('select');select.className='bend-stop-select';
+   select.dataset.bend=String(i-1);
+   select.setAttribute('aria-label','Tope para pliegue '+i);
+   for(const [value,label] of [['1','Tope 1 · Stop'],['2','Tope 2 · Support']]){
+    const option=document.createElement('option');option.value=value;option.textContent=label;
+    select.append(option);
+   }
+   select.value=String(piece.stopByBend[i-1]);
+   select.addEventListener('change',()=>{
+    const modes=[...piece.stopByBend];modes[i-1]=Number(select.value);
+    changePiece({...piece,stopByBend:modes},false);
+   });
+   stopCell.append(select);
+  }else stopCell.textContent='—';
+  row.append(stopCell);
+  const orderCell=document.createElement('td');orderCell.textContent=i?String(piece.order.indexOf(i-1)+1):'—';row.append(orderCell);
+ const actionCell=document.createElement('td');if(i>=2){const remove=document.createElement('button');remove.className='mini';remove.textContent='×';remove.title='Eliminar ala';remove.onclick=()=>{const flanges=[...piece.flanges],angles=[...piece.angles];flanges.splice(i,1);angles.splice(i-1,1);const order=piece.order.filter(x=>x!==i-1).map(x=>x>i-1?x-1:x);
+  const stopByBend=[...piece.stopByBend];stopByBend.splice(i-1,1);
+  changePiece({...piece,flanges,angles,order,stopByBend},true);};actionCell.append(remove);}row.append(actionCell);tb.append(row);
  });
  const seq=$('sequence');seq.replaceChildren();
  piece.order.forEach((id,i)=>{const c=document.createElement('div');c.className='seq-card';const text=document.createElement('div');const b=document.createElement('b');b.textContent=(i+1)+'. Pliegue '+(id+1);const small=document.createElement('span');small.textContent=' '+(piece.angles[id]>0?'+':'')+piece.angles[id]+'°';text.append(b,small);const up=document.createElement('button');up.textContent='←';up.title='Hacer antes';up.disabled=!i;up.onclick=()=>reorder(i,-1);const down=document.createElement('button');down.textContent='→';down.title='Hacer después';down.disabled=i===piece.order.length-1;down.onclick=()=>reorder(i,1);c.append(text,up,down);seq.append(c);});
@@ -649,13 +674,21 @@ function renderSimulationText(){
  const st=stage(piece,sim.time),a=piece.angles[st.activeBend],check=geometryReport(),toolNow=currentToolContact(piece,sim.time);
  renderIncidentNavigator(check,st);
  $('simStatus').textContent=st.phase;
+ const gauge=stopAtStage(piece,sim.time);
+ $('activeGaugeLabel').textContent=gauge.label+' · pliegue '+(gauge.bend+1)+
+  ' · referencia visual sin X calibrada';
+ for(const n of [1,2]){
+  const btn=$('chooseGauge'+n),active=gauge.value===n;
+  btn.classList.toggle('selected',active);btn.setAttribute('aria-pressed',String(active));
+ }
+
  $('phaseText').textContent=st.completed?'Pieza final · secuencia completada':st.phase+' · pliegue '+(st.activeBend+1)+' ('+(a>0?'+':'')+a+'°)';
  $('stepText').textContent='Golpe '+st.finished+'/'+st.count;
  $('foldedCount').textContent=st.finished+' de '+st.count+' pliegues';
  $('timeline').value=Math.round(1000*st.time/st.duration);
  const root=$('simSequence');
  const key=JSON.stringify({order:piece.order,angles:piece.angles,flanges:piece.flanges,
-  issues:check.perOperation.map((x,i)=>x.potentialInterference||x.toolAngleWarning||
+  stopByBend:piece.stopByBend,issues:check.perOperation.map((x,i)=>x.potentialInterference||x.toolAngleWarning||
    x.vSupportWarning||check.tools.operations[i]?.possibleToolInterference||
    check.sheetScan.operations[i]?.possibleSheetInterference)});
  if(root.dataset.key!==key){
@@ -672,7 +705,8 @@ function renderSimulationText(){
      const values=document.createElement('span');values.className='op-values';
      const a=document.createElement('strong');a.textContent=(angle>0?'+':'')+angle+'°';
      const l=document.createElement('small');l.textContent='L = '+numbers(piece.flanges[bend+1],1)+' mm';
-     values.append(a,l);const menu=document.createElement('span');menu.className='op-more';menu.textContent='⋮';
+     const g=document.createElement('small');g.textContent='Tope '+piece.stopByBend[bend];
+     values.append(a,l,g);const menu=document.createElement('span');menu.className='op-more';menu.textContent='⋮';
      if(check.perOperation[i]?.potentialInterference||check.perOperation[i]?.toolAngleWarning||check.perOperation[i]?.vSupportWarning||check.tools.operations[i]?.possibleToolInterference||check.sheetScan.operations[i]?.possibleSheetInterference){
        el.classList.add('suspect');el.title=check.perOperation[i]?.toolAngleWarning?
           'Revisar apertura nominal de punzón/matriz para este ángulo':
