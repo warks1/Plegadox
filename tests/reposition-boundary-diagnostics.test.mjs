@@ -37,3 +37,22 @@ test('Diagnóstico coordenadas de saltos: extremo, pivote, reflejo y pliegue act
   console.log('DIAGNOSTICO_EXTREMOS_0933',JSON.stringify({a,b,one:brief(one),two:brief(two)}));
  }
 });
+
+test('Reparación 09:33: no teletransportar alas ni punzón entre golpes (1-2-4-3)',()=>{
+ const p=normalized(EXAMPLE),before=structuredClone(p);
+ for(const [left,right] of [[4.9999,5],[9.9999,10],[14.9999,15]]){
+  const a=technicalScene(p,left),b=technicalScene(p,right);
+  assert.equal(a.sheet.length,b.sheet.length);
+  const delta=Math.max(...a.sheet.map((pt,i)=>
+   Math.hypot(pt.x-b.sheet[i].x,pt.y-b.sheet[i].y)));
+  const punch=Math.abs(a.kinematics.tipHeight-b.kinematics.tipHeight);
+  assert.ok(delta<.2,'Salto de chapa '+delta+' mm en t='+right+' s');
+  assert.ok(punch<1.5,'Salto de punzón '+punch+' mm en t='+right+' s');
+  const viewA=machineSheetProjection(a,0,0,1,true);
+  const viewB=machineSheetProjection(b,0,0,1,true);
+  const visual=Math.max(...viewA.map((pt,i)=>
+   Math.hypot(pt[0]-viewB[i][0],pt[1]-viewB[i][1])));
+  assert.ok(visual<.2,'La vista tampoco puede saltar '+visual+' mm en t='+right);
+ }
+ assert.deepEqual(p,before,'No cambiar programas/topes para ocultar el fallo');
+});
