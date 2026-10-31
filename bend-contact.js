@@ -15,7 +15,7 @@ const lerp=(a,b,t)=>a+(b-a)*t;
 export function contactKinematics({
  points,activeBend,angle=0,opening=16,dieDepth=8,thickness=2,
  phase='Posicionamiento',press=0,approachGap=null,presentationLift=0,
- insideRadius=null
+ insideRadius=null,feedMirrored=false
 }){
  const input=Array.isArray(points)?points:[];
  if(input.length<2)return {sheet:[],rounded:[],tipHeight:0,
@@ -32,7 +32,11 @@ export function contactKinematics({
  const dieLimit=!isTransition&&sagTarget>limit+1e-5;
  // A real V bend rotates BOTH sides around the nose. Incoming and outgoing
  // flats share a symmetric pair of slopes, unlike the old one-sided hinge.
- const theta=isTransition?0:-angleRad/2;
+ // Al alimentar desde el ala anterior se invierte X. Esa reflexión
+ // cambia también el signo del giro local sobre la V: ambas alas deben
+ // elevarse a cada lado de la punta, no barrer por dentro del punzón.
+ // El signo del plano y el orden de los golpes NO se cambian.
+ const theta=isTransition?0:(feedMirrored?1:-1)*angleRad/2;
  const c=Math.cos(theta),s=Math.sin(theta);
  const center={x:bend.x,y:bend.y};
  const moved=input.map(pt=>{
