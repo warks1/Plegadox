@@ -21,21 +21,19 @@ export function machineToolProjection(scene,cx,datumY,scale){
  return {die:transform(scene.diePolygon),punch:transform(scene.punchPolygon)};
 }
 /**
- * Proyección oblicua de la chapa mientras cambia de cara. Sólo se usa
- * cuando el usuario activa el modo 3D ilustrativo de cabina. La sección mm
- * sigue mostrando el alzado puro. La componente Z procede del giro rígido
- * de presentedAtStage, no de una deformación del ala.
+ * Proyección ÚNICA de la chapa en la cabina.
+ * En el vídeo 09:33 la perspectiva usaba points3D, distintos de la chapa
+ * utilizada por punzón, matriz, topes y detector de interferencias.
+ * Mientras no exista una transferencia 3D física, el volumen lateral puede
+ * ser decorativo pero la sección visible debe ser la misma para todos.
  */
 export function machineSheetProjection(scene,cx,datumY,scale,perspective=false){
  if(!Number.isFinite(scale)||scale<=0||![cx,datumY].every(Number.isFinite))
   throw Error('Transformación de chapa inválida');
- const presentation=scene.presentation;
- const point3D=perspective&&presentation?.repositioning&&
-  Array.isArray(presentation.points3D)?presentation.points3D:null;
- const positions=point3D?
-  point3D.map(p=>({x:p.x+.48*p.z,
-   y:p.y+scene.kinematics.centerHeight+.19*p.z})):
-  scene.sheetDisplay;
+ const positions=scene.sheetDisplay;
+ if(!Array.isArray(positions)||positions.length<2||
+    positions.some(p=>![p.x,p.y].every(Number.isFinite)))
+  throw Error('Perfil de chapa inválido para la vista de máquina');
  return positions.map(p=>[cx+p.x*scale,datumY-p.y*scale]);
 }
 function gradient(ctx,x1,y1,x2,y2,colors){
@@ -306,8 +304,8 @@ function stageScene(ctx,w,h,piece,sim,machineView){
   ctx.save();ctx.fillStyle='#9dd8ff';
   ctx.font='700 '+Math.max(9,11*scale)+'px system-ui';ctx.textAlign='center';
   ctx.fillText(machineView?.perspective?
-    'RETIRADA → VOLTEO 3D PROYECTADO → PRESENTACIÓN':
-    'RETIRADA → GIRO → PRESENTACIÓN (ESQUEMA)',w/2,h-48*scale);
+    'RETIRADA → RECOLOCACIÓN ORIENTATIVA (SIN TRAYECTORIA 3D)':
+    'RETIRADA → RECOLOCACIÓN (SIN TRAYECTORIA VERIFICADA)',w/2,h-48*scale);
   ctx.restore();
  }
  // El signo del plano no se cambia: sólo cambia la CARA de presentación
