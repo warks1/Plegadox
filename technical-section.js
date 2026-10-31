@@ -149,7 +149,8 @@ export function drawTechnicalSection(ctx,w,h,piece,sim,view={}){
  const v85=getV85(),dimensions=place.profile==='support'?v85.support:v85.stop;
  const origin=place.contact?.origin||place.point;
  const gp=gaugeOutline(dimensions).map(p=>map(mPoint(
-  origin.x+p.x,origin.y+p.y)));
+  origin.x+(place.contact?.mirrorX?2*place.contact.localContactX-p.x:p.x),
+  origin.y+p.y)));
  ctx.save();ctx.lineWidth=1.8;
  const gaugeFill=place.alignedToSheet?'#37865f':'#265746';
  polygon(ctx,gp,gaugeFill,'#a1f4c7',1.8);
