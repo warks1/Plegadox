@@ -6,7 +6,7 @@
  * es un perfil de fibra media con espesor nominal; el contacto es orientativo.
  * No usar esta vista para verificar colisiones o seguridad de máquina.
  */
-import {normalized,stage,presentedAtStage,getTooling,development,clamp} from './engine.js';
+import {normalized,stage,presentedAtStage,presentedForMachine,gaugeReference,getTooling,development,clamp} from './engine.js';
 import {sectionPunch,sectionDie,sectionBounds} from './tool-profiles.js';
 import {contactKinematics} from './bend-contact.js';
 import {gaugePlacement} from './backgauge-placement.js';
@@ -21,7 +21,22 @@ export function technicalScene(piece,instant=0){
  const t=p.thickness;
  // One real-world coordinate system (millimetres, matrix top at y=0).
  // Symmetric bend presentation uses both shoulders of the V as supports.
- const presentation=presentedAtStage(p,st);
+ const reference=gaugeReference(p,st.activeBend);
+ // La máquina tiene el tope trasero a la derecha del eje de perfil.
+ // Para apoyar el ala ANTERIOR hay que alimentar desde el lado contrario;
+ // no se cambia el signo firmado del pliegue en el programa.
+ const feedMirror=reference.side==='before';
+ const from=presentedAtStage(p,st);
+ const mirror=pt=>feedMirror?{...pt,x:-pt.x}:{...pt};
+ const presentation={...from,points:from.points.map(mirror),
+  points3D:from.points3D?.map(mirror),gaugeSide:reference.side,
+  feedMirrored:feedMirror};
+ // Referencia FIJA de presentación: se mide antes de que baje el punzón.
+ // No seguir el extremo de la chapa durante la deformación del golpe.
+ const setupFractions=[...st.fractions];setupFractions[st.activeBend]=0;
+ const setup=presentedForMachine(p,setupFractions,st.activeBend);
+ const setupPoint=mirror(setup.points[reference.sourceIndex]);
+ const gaugeAnchor={x:setupPoint.x,y:setupPoint.y+p.thickness/2};
  const kinematics=contactKinematics({
   points:presentation.points,activeBend:st.activeBend,
   angle:p.angles[st.activeBend]*st.fractions[st.activeBend],
@@ -41,6 +56,7 @@ export function technicalScene(piece,instant=0){
  const world={minX:Math.min(...bx),maxX:Math.max(...bx),
    minY:Math.min(...by),maxY:Math.max(...by)};
  return {piece:p,stage:st,presentation,sheet,sheetDisplay,kinematics,diePolygon,punchPolygon,die,punch,
+         gaugeReference:reference,gaugeAnchor,feedMirrored:feedMirror,
          dimensions:{opening:die.opening,dieAngle:die.angle,depth:die.depth,
            punchAngle:punch.angle,punchHeight:punch.height,
            punchTipDiameter:tooling.punch.tip,thickness:t,engagement},
