@@ -91,6 +91,29 @@ export function gaugeOutline(values){
   {x:0,y:-height+notch}
  ];
 }
+/**
+ * Identifica la CARA que debe detener el borde de la chapa en cada dedo.
+ *
+ * Perfil esquemático (no CAD):
+ *   Stop 1: cara frontal de la primera altura.
+ *   Support 2: cara del ESCALÓN INFERIOR de la segunda altura.
+ * No confundir punto de apoyo con origen del dibujo; al cambiar dedo el
+ * carro debe trasladar su silueta hasta poner esa cara en la cota nominal.
+ */
+export function gaugeContactFeature(values,stopNumber=1){
+ const outline=gaugeOutline(values);
+ const height=-Math.min(...outline.map(p=>p.y));
+ const notch=Math.max(0,Math.min(height,Number(values?.[4])||0));
+ const tail=Math.max(0,Number(values?.[5])||0);
+ const support=Number(stopNumber)===2;
+ const from=support?{x:tail,y:-height}:{x:0,y:0};
+ const to=support?{x:tail,y:-height+notch}:{x:0,y:-height+notch};
+ const point={x:from.x,y:(from.y+to.y)/2};
+ const usable=(from.y!==to.y)&&(support?tail>0:true);
+ return {kind:support?'support-step':'stop-face',
+  label:support?'TOPE 2 · ESCALÓN SUPPORT':'TOPE 1 · CARA STOP',
+  from,to,point,usable,verified:false};
+}
 /** Envolvente del perfil esquemático, sin interpretar una cota L como CAD. */
 export function gaugeBounds(values){
  const outline=gaugeOutline(values);
