@@ -1,4 +1,4 @@
-import {MATERIALS,DIES,PUNCHES,EXAMPLE,normalized,profile,bendPreviewPath,bounds,development,estimateAirBendForce,REFERENCE_RM_MPA,stage,stopAtStage,orientedForMachine,getTooling,selfIntersects,clamp,finite} from './engine.js';
+import {MATERIALS,DIES,PUNCHES,EXAMPLE,normalized,profile,bendPreviewPath,bounds,development,estimateAirBendForce,REFERENCE_RM_MPA,stage,stopAtStage,gaugeReference,orientedForMachine,getTooling,selfIntersects,clamp,finite} from './engine.js';
 import {drawIndustrialMachine} from './machine-visual.js';
 import {registerCatalogue} from './catalog.js';
 import {analyzeSequence} from './validation.js';
@@ -23,7 +23,7 @@ let touchOrderEnabled=false,chosenTouchOrder=[];
 let pendingSequenceAdvice=null;
 const geometryCache={key:null,result:null};
 function geometryReport(){
- const key=JSON.stringify([piece.flanges,piece.angles,piece.order,piece.thickness,piece.width,piece.material,piece.rmMPa,piece.punch,piece.die,getV85().ramWidth,getV85().holderWidth]);
+ const key=JSON.stringify([piece.flanges,piece.angles,piece.order,piece.thickness,piece.width,piece.material,piece.rmMPa,piece.punch,piece.die,piece.gaugeSideByBend,getV85().ramWidth,getV85().holderWidth]);
  if(key!==geometryCache.key){
   const report=analyzeSequence(piece),tools=inspectSequenceTools(piece,6),
    sheetScan=scanSheetSequence(piece,15);
@@ -75,13 +75,21 @@ function configure(){
  });
  $('newBtn').onclick=()=>changePiece({name:'Nueva pieza',flanges:[100,100],angles:[90],order:[0],material:'s235',thickness:2,width:500,die:'v16',punch:'straight88'},true);
  $('sampleBtn').onclick=()=>changePiece(EXAMPLE,true);
- $('addFlange').onclick=()=>{if(piece.flanges.length>=20)return;changePiece({...piece,flanges:[...piece.flanges,50],angles:[...piece.angles,90],order:[...piece.order,piece.angles.length],stopByBend:[...piece.stopByBend,1]},true);};
+ $('addFlange').onclick=()=>{if(piece.flanges.length>=20)return;changePiece({...piece,flanges:[...piece.flanges,50],angles:[...piece.angles,90],order:[...piece.order,piece.angles.length],stopByBend:[...piece.stopByBend,1],gaugeSideByBend:[...piece.gaugeSideByBend,'auto']},true);};
  $('resetOrder').onclick=()=>changePiece({...piece,order:piece.angles.map((_,i)=>i)},true);
  for(const value of [1,2])$('chooseGauge'+value).onclick=()=>{
   const current=stopAtStage(piece,sim.time),modes=[...piece.stopByBend];
   modes[current.bend]=value;
   changePiece({...piece,stopByBend:modes},false);
  };
+ for(const mode of ['auto','before','after']){
+  const suffix=mode==='auto'?'Auto':mode==='before'?'Before':'After';
+  $('chooseSide'+suffix).onclick=()=>{
+   const current=stopAtStage(piece,sim.time),sides=[...piece.gaugeSideByBend];
+   sides[current.bend]=mode;
+   changePiece({...piece,gaugeSideByBend:sides},false);
+  };
+ }
  $('evaluateOrder').onclick=()=>{
   const message=$('sequenceAdvice'),apply=$('applySuggestedOrder');
   apply.disabled=true;pendingSequenceAdvice=null;
@@ -232,10 +240,29 @@ function renderEditor(){
    stopCell.append(select);
   }else stopCell.textContent='—';
   row.append(stopCell);
+  const sideCell=document.createElement('td');
+  if(i){
+   const side=document.createElement('select');side.className='bend-side-select';
+   side.dataset.bend=String(i-1);side.setAttribute('aria-label','Ala de apoyo para pliegue '+i);
+   const choices=[['auto','Automático · ala corta'],['before','Ala anterior'],['after','Ala siguiente']];
+   for(const [value,label] of choices){const option=document.createElement('option');option.value=value;option.textContent=label;side.append(option);}
+   side.value=piece.gaugeSideByBend[i-1];
+   side.addEventListener('change',()=>{
+    const gaugeSideByBend=[...piece.gaugeSideByBend];gaugeSideByBend[i-1]=side.value;
+    changePiece({...piece,gaugeSideByBend},false);
+   });
+   sideCell.append(side);
+   const estimate=document.createElement('small');estimate.className='gauge-nominal-hint';
+   const ref=gaugeReference(piece,i-1);
+   estimate.textContent='Referencia '+numbers(ref.distance,1)+' mm · '+ref.label;
+   sideCell.append(estimate);
+  }else sideCell.textContent='—';
+  row.append(sideCell);
   const orderCell=document.createElement('td');orderCell.textContent=i?String(piece.order.indexOf(i-1)+1):'—';row.append(orderCell);
  const actionCell=document.createElement('td');if(i>=2){const remove=document.createElement('button');remove.className='mini';remove.textContent='×';remove.title='Eliminar ala';remove.onclick=()=>{const flanges=[...piece.flanges],angles=[...piece.angles];flanges.splice(i,1);angles.splice(i-1,1);const order=piece.order.filter(x=>x!==i-1).map(x=>x>i-1?x-1:x);
   const stopByBend=[...piece.stopByBend];stopByBend.splice(i-1,1);
-  changePiece({...piece,flanges,angles,order,stopByBend},true);};actionCell.append(remove);}row.append(actionCell);tb.append(row);
+  const gaugeSideByBend=[...piece.gaugeSideByBend];gaugeSideByBend.splice(i-1,1);
+  changePiece({...piece,flanges,angles,order,stopByBend,gaugeSideByBend},true);};actionCell.append(remove);}row.append(actionCell);tb.append(row);
  });
  const seq=$('sequence');seq.replaceChildren();
  piece.order.forEach((id,i)=>{const c=document.createElement('div');c.className='seq-card';const text=document.createElement('div');const b=document.createElement('b');b.textContent=(i+1)+'. Pliegue '+(id+1);const small=document.createElement('span');small.textContent=' '+(piece.angles[id]>0?'+':'')+piece.angles[id]+'°';text.append(b,small);const up=document.createElement('button');up.textContent='←';up.title='Hacer antes';up.disabled=!i;up.onclick=()=>reorder(i,-1);const down=document.createElement('button');down.textContent='→';down.title='Hacer después';down.disabled=i===piece.order.length-1;down.onclick=()=>reorder(i,1);c.append(text,up,down);seq.append(c);});
@@ -675,8 +702,15 @@ function renderSimulationText(){
  renderIncidentNavigator(check,st);
  $('simStatus').textContent=st.phase;
  const gauge=stopAtStage(piece,sim.time);
- $('activeGaugeLabel').textContent=gauge.label+' · pliegue '+(gauge.bend+1)+
-  ' · referencia visual sin X calibrada';
+ $('activeGaugeLabel').textContent=gauge.label+' · pliegue '+(gauge.bend+1);
+ $('activeGaugeReference').textContent=gauge.reference.label+' · '+numbers(gauge.reference.distance,1)+
+  ' mm nominales desde el pliegue · '+(gauge.reference.side==='before'?'presentación invertida':'presentación directa')+
+  ' · sin ejes X/R/Z calibrados';
+ for(const mode of ['auto','before','after']){
+  const suffix=mode==='auto'?'Auto':mode==='before'?'Before':'After';
+  const btn=$('chooseSide'+suffix),active=gauge.reference.choice===mode;
+  btn.classList.toggle('selected',active);btn.setAttribute('aria-pressed',String(active));
+ }
  for(const n of [1,2]){
   const btn=$('chooseGauge'+n),active=gauge.value===n;
   btn.classList.toggle('selected',active);btn.setAttribute('aria-pressed',String(active));
@@ -688,7 +722,7 @@ function renderSimulationText(){
  $('timeline').value=Math.round(1000*st.time/st.duration);
  const root=$('simSequence');
  const key=JSON.stringify({order:piece.order,angles:piece.angles,flanges:piece.flanges,
-  stopByBend:piece.stopByBend,issues:check.perOperation.map((x,i)=>x.potentialInterference||x.toolAngleWarning||
+  stopByBend:piece.stopByBend,gaugeSideByBend:piece.gaugeSideByBend,issues:check.perOperation.map((x,i)=>x.potentialInterference||x.toolAngleWarning||
    x.vSupportWarning||check.tools.operations[i]?.possibleToolInterference||
    check.sheetScan.operations[i]?.possibleSheetInterference)});
  if(root.dataset.key!==key){
@@ -705,7 +739,9 @@ function renderSimulationText(){
      const values=document.createElement('span');values.className='op-values';
      const a=document.createElement('strong');a.textContent=(angle>0?'+':'')+angle+'°';
      const l=document.createElement('small');l.textContent='L = '+numbers(piece.flanges[bend+1],1)+' mm';
-     const g=document.createElement('small');g.textContent='Tope '+piece.stopByBend[bend];
+     const g=document.createElement('small');
+     const r=gaugeReference(piece,bend);
+     g.textContent='Tope '+piece.stopByBend[bend]+' · '+r.label+' '+numbers(r.distance,1)+' mm';
      values.append(a,l,g);const menu=document.createElement('span');menu.className='op-more';menu.textContent='⋮';
      if(check.perOperation[i]?.potentialInterference||check.perOperation[i]?.toolAngleWarning||check.perOperation[i]?.vSupportWarning||check.tools.operations[i]?.possibleToolInterference||check.sheetScan.operations[i]?.possibleSheetInterference){
        el.classList.add('suspect');el.title=check.perOperation[i]?.toolAngleWarning?
