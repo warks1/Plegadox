@@ -2,7 +2,7 @@
  * Posición VISUAL del tope respecto al borde trasero de la chapa.
  * Sección 2D ilustrativa, no programa CNC X/R ni garantía de apoyo.
  */
-import {getV85,gaugeContactFeature} from './machine-config.js';
+import {getV85,gaugeContactFeature,gaugeOutline} from './machine-config.js';
 
 /** Mismo contacto nominal de la chapa, pero distinta cara física del dedo. */
 export function gaugePlacement(scene,stopNumber=1){
@@ -58,4 +58,19 @@ export function gaugePlacement(scene,stopNumber=1){
   sheetEdgeFound:!!rear,alignedToSheet:validEdge&&feature.usable,
   state:validEdge?'borde visible orientativo':rear?'borde inclinado o elevado':'sin borde trasero accesible',
   verified:false};
+}
+
+/**
+ * Perfil métrico único usado por la cabina, la sección 2D y las pruebas.
+ * La cara activa queda exactamente sobre la referencia de chapa; no
+ * desplazamos la chapa ni cambiamos la longitud nominal del ala.
+ */
+export function gaugeContourAtContact(placement,values){
+ const origin=placement.contact?.origin||placement.point;
+ const mirror=!!placement.contact?.mirrorX;
+ const center=placement.contact?.localContactX||0;
+ return gaugeOutline(values).map(p=>({
+  x:origin.x+(mirror?2*center-p.x:p.x),
+  y:origin.y+p.y
+ }));
 }
