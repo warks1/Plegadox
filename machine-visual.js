@@ -1,6 +1,7 @@
 // Plegadox · Render de taller en vista lateral con materiales pulidos.
 // Geometría ilustrativa, no modelo CAD certificado ni calculador de colisiones.
 import {stage,presentedAtStage,getTooling} from './engine.js';
+import {roundedRectPath} from './canvas-path.js';
 import {sectionPunch,sectionDie} from './tool-profiles.js';
 import {drawTechnicalSection,technicalScene} from './technical-section.js';
 import {currentToolContact} from './tool-collision.js';
@@ -52,7 +53,7 @@ function poly(ctx,pts,fill,stroke='#6c8596',line=1){
 }
 function shape(ctx,x,y,w,h,fill,stroke='#283a49',r=0){
  ctx.beginPath();
- if(r)ctx.roundRect(x,y,w,h,r);else ctx.rect(x,y,w,h);
+ if(r)roundedRectPath(ctx,x,y,w,h,r);else ctx.rect(x,y,w,h);
  ctx.fillStyle=fill;ctx.fill();
  if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1;ctx.stroke();}
 }
@@ -376,7 +377,7 @@ function drawWarningHud(ctx,w,h,piece,sim,view){
  ctx.font='800 '+font+'px system-ui';const width=Math.min(w-16,ctx.measureText(message).width+19);
  const x=8,y=view?.section?(w<500?h-133:h-57):h-61;
  ctx.fillStyle='#632416e9';ctx.strokeStyle='#ffab50';ctx.lineWidth=1.2;
- ctx.beginPath();ctx.roundRect(x,y,width,26,5);ctx.fill();ctx.stroke();
+ ctx.beginPath();roundedRectPath(ctx,x,y,width,26,5);ctx.fill();ctx.stroke();
  ctx.fillStyle='#ffdda3';ctx.fillText(message,x+9,y+18);
  ctx.restore();
 }

@@ -4,7 +4,7 @@ import {DIES,PUNCHES,MATERIALS,normalized,development,estimateAirBendForce,stage
 import {CATALOG_SOURCES,toolMatchesBrand,selectionCompatibility} from './catalog.js';
 import {sectionPunch,sectionDie} from './tool-profiles.js';
 const $=id=>document.getElementById(id);
-const state={brand:'Todos',kind:'all',search:'',selectedTool:null,selectedToolKind:'punch',showAll:false,yaw:-.6,pitch:.34,zoom:1};
+const state={brand:'Todos',kind:'all',search:'',selectedTool:null,selectedToolKind:'punch',showAll:false,yaw:-.6,pitch:.34,zoom:1,fullLength:false};
 const format=(n,d=1)=>Number(n).toLocaleString('es-ES',{minimumFractionDigits:d,maximumFractionDigits:d});
 const tipR=tool=>format((Number(tool.tip)||0)/2,2);
 function current(){const s=window.PLEGADOX_STATE?.();if(s)return s;let p=null;try{p=JSON.parse(localStorage.getItem('plegadox:piece:v1'));}catch{}return {piece:normalized(p),sim:{time:0}};}
@@ -165,10 +165,26 @@ function drawToolViewer(){
   const info=document.createElement('div');info.id='toolInspectorMeta';info.className='tool-inspector-meta';
   canvas=document.createElement('canvas');canvas.id='cockpitSelectedTool3D';
   canvas.className='cp-3d-viewer';
-  canvas.style.cssText='width:100%;height:170px;display:block;background:radial-gradient(ellipse,#153b59,#061626);border:1px solid #1b4968;border-radius:8px;touch-action:none';
+  canvas.style.cssText='width:100%;height:210px;display:block;background:radial-gradient(ellipse,#153b59,#061626);border:1px solid #1b4968;border-radius:8px;touch-action:none';
+  const controls=document.createElement('div');controls.className='cp-viewer-controls';
+  for(const [id,label] of [['iso','Isométrica'],['front','Perfil'],['back','Reverso'],
+                           ['top','Superior'],['flip','Voltear'],['length','Longitud real']]){
+   const button=document.createElement('button');
+   button.type='button';button.dataset.view=id;button.textContent=label;
+   button.setAttribute('aria-label','Vista '+label.toLowerCase()+' de herramienta');
+   button.addEventListener('click',()=>{
+    if(id==='iso'){state.yaw=-.6;state.pitch=.34;state.zoom=1;}
+    else if(id==='front'){state.yaw=0;state.pitch=0;}
+    else if(id==='back'){state.yaw=Math.PI;state.pitch=0;}
+    else if(id==='top'){state.yaw=0;state.pitch=Math.PI/2;}
+    else if(id==='flip')state.pitch=state.pitch<=0?state.pitch+Math.PI:state.pitch-Math.PI;
+    else if(id==='length')state.fullLength=!state.fullLength;
+    drawToolViewer();
+   });
+   controls.append(button);
+  }
   const note=document.createElement('p');note.className='tool-inspector-note';
-  note.textContent='Arrastra para girar · pellizca o usa la rueda para ampliar · perfil paramétrico, no CAD verificado';
-  wrap.append(header,close,info,canvas,note);$('cockpitToolInfo').after(wrap);
+  wrap.append(header,close,info,controls,canvas,note);$('cockpitToolInfo').after(wrap);
   attachViewer(canvas);
  }
  const p=current().piece,kind=state.kind==='all'?state.selectedToolKind:state.kind;
@@ -180,11 +196,22 @@ function drawToolViewer(){
   'V '+tool.opening+' mm · '+tool.angle+'°'+
    (tool.shoulderRadius?' · Hombros R'+format(tool.shoulderRadius,2):'')+
    ' · Altura '+tool.height+' mm',
-  tool.profileAccuracy==='verified'?'Geometría verificada':'Perfil provisional sin cotas CAD completas'
+  tool.profileAccuracy==='verified'?'Geometría verificada':'Perfil provisional sin cotas CAD completas',
+  tool.length?'Longitud nominal '+tool.length+' mm':'Longitud no especificada'
  ].join('  |  ');
  const w=canvas.clientWidth||260,h=canvas.clientHeight||170,d=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(w*d);canvas.height=Math.round(h*d);
  const ctx=canvas.getContext('2d');ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,w,h);
- const polygon=shape(tool,kind),depth=65;
+ const polygon=shape(tool,kind);
+ const knownLength=Number(tool.length);
+ const lengthAvailable=Number.isFinite(knownLength)&&knownLength>0;
+ const depth=state.fullLength&&lengthAvailable?knownLength:Math.min(120,Math.max(55,tool.height*.9));
+ const lengthButton=document.querySelector('.cp-viewer-controls [data-view="length"]');
+ if(lengthButton){lengthButton.disabled=!lengthAvailable;
+  lengthButton.setAttribute('aria-pressed',String(state.fullLength&&lengthAvailable));}
+ const note=document.querySelector('.tool-inspector-note');
+ if(note)note.textContent=state.fullLength&&lengthAvailable?
+  'Longitud nominal a escala en el modelo · gira, voltea y amplía con los dedos · no CAD verificado':
+  'Perfil transversal ampliado (profundidad ilustrativa) · activa «Longitud real» para mostrar la longitud nominal';
  const project=(point)=>{
    const [xx,yy,zz]=point;
    const yaw=state.yaw,pitch=state.pitch;
@@ -211,7 +238,7 @@ function attachViewer(canvas){
  const points=new Map();let lastDistance=0;
  canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);points.set(e.pointerId,{x:e.clientX,y:e.clientY});});
  canvas.addEventListener('pointermove',e=>{if(!points.has(e.pointerId))return;const p=points.get(e.pointerId);points.set(e.pointerId,{x:e.clientX,y:e.clientY});
- if(points.size===1){state.yaw+=(e.clientX-p.x)*.012;state.pitch=Math.max(-1.2,Math.min(1.2,state.pitch+(e.clientY-p.y)*.009));}
+ if(points.size===1){state.yaw+=(e.clientX-p.x)*.012;state.pitch=Math.max(-Math.PI,Math.min(Math.PI,state.pitch+(e.clientY-p.y)*.009));}
  else if(points.size===2){const xy=[...points.values()],dist=Math.hypot(xy[0].x-xy[1].x,xy[0].y-xy[1].y);if(lastDistance)state.zoom=Math.max(.3,Math.min(4,state.zoom*dist/lastDistance));lastDistance=dist;}
  drawToolViewer();});
  for(const name of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(name,e=>{points.delete(e.pointerId);lastDistance=0;});

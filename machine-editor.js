@@ -1,6 +1,7 @@
 // Plegadox · editor funcional de las cotas de Cybelec 30a / 29.
 // Las dimensiones editadas también actualizan la máquina dibujada en cabina.
 import {V85_FACTORY,getV85,updateV85,resetV85,gaugeOutline,gaugeBounds,gaugeContactFeature} from './machine-config.js';
+import {roundedRectPath} from './canvas-path.js';
 
 const $=id=>document.getElementById(id);
 const locale=n=>Number(n).toLocaleString('es-ES',{minimumFractionDigits:0,maximumFractionDigits:2});
@@ -57,15 +58,7 @@ function fields(){
 }
 function roundedRect(ctx,x,y,w,h,r){
  ctx.beginPath();
- if(typeof ctx.roundRect==='function'){ctx.roundRect(x,y,w,h,r);return;}
- // Safari <16 y Firefox <112.
- const z=Math.min(Math.max(0,r),Math.abs(w)/2,Math.abs(h)/2);
- ctx.moveTo(x+z,y);ctx.lineTo(x+w-z,y);
- ctx.quadraticCurveTo(x+w,y,x+w,y+z);
- ctx.lineTo(x+w,y+h-z);ctx.quadraticCurveTo(x+w,y+h,x+w-z,y+h);
- ctx.lineTo(x+z,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-z);
- ctx.lineTo(x,y+z);ctx.quadraticCurveTo(x,y,x+z,y);
- ctx.closePath();
+ roundedRectPath(ctx,x,y,w,h,r);
 }
 function label(ctx,text,x,y,size=11,color='#b9ddf2',align='left'){
  ctx.fillStyle=color;ctx.font='600 '+size+'px system-ui';ctx.textAlign=align;ctx.fillText(text,x,y);
