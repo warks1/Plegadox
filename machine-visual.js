@@ -96,7 +96,7 @@ function backdrop(ctx,w,h){
  // Ambient cyan illumination around tool
  shape(ctx,0,0,w,h,radial(ctx,w*.53,h*.48,w*.6,[[0,'#0b4b7c48'],[.45,'#0e285b24'],[1,'#02081400']]),null);
 }
-function rearMachine(ctx,w,h,cx,cy,scale){
+function rearMachine(ctx,w,h,cx,cy,scale,stopNumber=1,referenceDistance=80){
  ctx.save();
  // Horizontal steel rails across the background
  const y=cy+18*scale;
@@ -109,20 +109,25 @@ function rearMachine(ctx,w,h,cx,cy,scale){
   const x=w*.69+(w*.26*i/4);
   steelRect(ctx,x,cy+23*scale,4*scale,25*scale,false);
  }
- // Tope Stop: geometría ESQUEMÁTICA derivada de L1–L6 editadas en
- // Máquina, no un CAD de tope ni posición X real de la plegadora.
- const gauge=getV85().stop,outline=gaugeOutline(gauge);
- const gaugeScale=scale*.82,ox=cx+145*scale,oy=cy-8*scale;
- const gg=outline.map(p=>[ox+p.x*gaugeScale,oy+p.y*gaugeScale]);
- steelRect(ctx,ox-22*scale,oy-7*scale,Math.max(24,gauge[1]*gaugeScale+24*scale),7*scale,false);
+ // Contorno esquemático del apoyo elegido para ESTE golpe.
+ // Ni la posición X ni los contactos de los útiles están calibrados.
+ const isSupport=stopNumber===2;
+ const gauge=isSupport?getV85().support:getV85().stop;
+ const outline=gaugeOutline(gauge);
+ const gaugeScale=scale*.72;
+ const ox=cx-Math.max(24,Math.min(145,referenceDistance))*scale,oy=cy-8*scale;
+ const gg=outline.map(p=>[ox-p.x*gaugeScale,oy+p.y*gaugeScale]);
+ steelRect(ctx,ox-(Math.max(100,gauge[1])*gaugeScale+18*scale),oy-6*scale,
+  Math.max(100,gauge[1])*gaugeScale+22*scale,7*scale,false);
  poly(ctx,gg,
-  gradient(ctx,ox,oy,ox+Math.max(50,gauge[1]*gaugeScale),oy,
-   [[0,'#a5bfce'],[.33,'#4c6a7c'],[.72,'#c2d6e0'],[1,'#3a596e']]),
-  '#b2d7e8',1.2*scale);
- for(const frac of [.24,.58])bolt(ctx,ox+gauge[0]*gaugeScale*frac,oy-10*scale,2.4*scale);
- ctx.font='700 '+Math.max(8,11*scale)+'px system-ui';
- ctx.fillStyle='#89b5d0';ctx.textAlign='left';
- ctx.fillText('TOPE STOP (esquema)',ox,oy-31*scale);
+  gradient(ctx,ox-100*gaugeScale,oy,ox,oy,
+   [[0,'#2c6550'],[.35,'#55b787'],[.8,'#a4f0bd'],[1,'#296f58']]),
+  '#b1ffd2',1.5*scale);
+ for(const frac of [.24,.58])bolt(ctx,ox-gauge[0]*gaugeScale*frac,oy-10*scale,2.4*scale);
+ ctx.font='700 '+Math.max(9,11*scale)+'px system-ui';
+ ctx.fillStyle='#9be6bf';ctx.textAlign='left';
+ const label=isSupport?'TOPE 2 · SUPPORT':'TOPE 1 · STOP';
+ ctx.fillText(label,Math.max(10,ox-135*scale),oy-29*scale);
  // Left support and machine rails
  steelRect(ctx,0,cy+26*scale,w*.3,40*scale,false);
  for(let i=0;i<4;i++){shape(ctx,20+i*32*scale,cy+28*scale,8*scale,34*scale,'#20394e','#435b6b');}
@@ -205,7 +210,9 @@ function stageScene(ctx,w,h,piece,sim,machineView){
  const opening=die.opening||16;
  backdrop(ctx,w,h);
  sceneAtmosphere(ctx,w,h,{cx,cy:baseY,s:scale});
- rearMachine(ctx,w,h,cx,baseY,scale);
+ const stopNumber=piece.stopByBend?.[st.activeBend]===2?2:1;
+ const referenceDistance=piece.flanges[st.activeBend]||80;
+ rearMachine(ctx,w,h,cx,baseY,scale,stopNumber,referenceDistance);
  dieDepth(ctx,{cx,cy:baseY,s:scale},opening,Boolean(machineView?.perspective),scene.die);
  drawDie(ctx,scene,cx,baseY,scale);
  // Los reflejos de la matriz se recortan a su contorno real en drawDie.
