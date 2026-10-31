@@ -132,8 +132,15 @@ export function development(piece){
 /** Referencia de apoyo por pliegue: el lado de chapa NO es el tipo Stop/Support. */
 export function gaugeReference(piece,bend){
  const p=normalized(piece),b=Math.max(0,Math.min(p.angles.length-1,Math.trunc(bend)||0));
- const choice=p.gaugeSideByBend[b],side=choice==='auto'?
-  (p.flanges[b]<=p.flanges[b+1]?'before':'after'):choice;
+ const choice=p.gaugeSideByBend[b];
+ // El modo automático no debe elegir un vértice interior si al otro
+ // lado hay un extremo libre alcanzable. G3→P4 de la Omega 1-2-4-3
+ // tiene 50 mm en ambos lados: debe presentarse por el borde libre.
+ // Sin CAD de topes no se garantiza que el extremo sea accesible.
+ const beforeFree=b===0,afterFree=b+2===p.flanges.length;
+ const shorter=p.flanges[b]<=p.flanges[b+1]?'before':'after';
+ const side=choice!=='auto'?choice:
+   beforeFree!==afterFree?(beforeFree?'before':'after'):shorter;
  return {bend:b,choice,side,distance:p.flanges[b+(side==='after'?1:0)],
   sourceIndex:side==='before'?b:b+2,
   label:side==='before'?'Ala anterior':'Ala siguiente',verified:false};
