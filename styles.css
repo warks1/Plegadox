@@ -60,3 +60,11 @@
 .backgauge-buttons button.selected,.backgauge-buttons button[aria-pressed="true"]{border-color:#59c99a;background:#248568;color:#fff;box-shadow:0 0 0 2px #64e9ae55 inset;}
 .backgauge-choice small{font-size:11px;line-height:1.4;color:#a6c9d6;}
 .bend-stop-select{min-width:140px;font-size:12px;max-width:180px;}
+
+/* Elección real del LADO DE APOYO de la chapa (independiente de Stop/Support). */
+.backgauge-side{display:grid;gap:8px;padding:10px;border:1px solid #316b7a;border-radius:9px;background:rgba(5,44,66,.42);}
+.backgauge-side strong{font-size:11px;letter-spacing:.03em;color:#d4f5ff;}
+.backgauge-side .backgauge-buttons button{flex:1 1 130px;min-width:0;white-space:normal;}
+.backgauge-side #activeGaugeReference{margin:0;color:#c9f1dc;font-size:12px;line-height:1.5;}
+.bend-side-select{min-width:145px;max-width:215px;font-size:12px;}
+.gauge-nominal-hint{display:block;margin-top:5px;font-size:10px;line-height:1.25;color:#9bc7d9;white-space:normal;max-width:210px;}
