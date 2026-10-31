@@ -23,17 +23,22 @@ function control(label,value,path){
  const input=document.createElement('input');
  input.type='number';input.step='0.01';input.inputMode='decimal';
  input.value=String(value);
+ input.dataset.lastValue=String(value);
  input.dataset.path=path;
  input.setAttribute('aria-label',label+(path.includes('.')?' de '+path.split('.')[0]:'')+' en '+(label.includes('%')?'porcentaje':'milímetros'));
  input.addEventListener('change',()=>{
   const next=getV85();
-  const n=Number(input.value.replace(',','.'));
-  if(!Number.isFinite(n)){render();return;}
+  const raw=input.value.trim().replace(',','.');
+  const n=raw===''?NaN:Number(raw);
+  if(!Number.isFinite(n)){input.value=input.dataset.lastValue;return;}
   const parts=path.split('.');
   if(parts.length===2){
    const key=parts[0],index=Number(parts[1]);next[key][index]=n;
   }else next[parts[0]]=n;
-  updateV85(next);dirty=true;render();
+  const actual=updateV85(next);dirty=true;
+  input.value=String(parts.length===2?actual[parts[0]][Number(parts[1])]:actual[parts[0]]);
+  input.dataset.lastValue=input.value;
+  render(false); // No sustituir el campo enfocado en cada cambio.
   const state=$('machineSaveState');
   if(state)state.textContent='Configuración guardada en este dispositivo. Comprueba las cotas antes de trabajar.';
  });
@@ -51,7 +56,16 @@ function fields(){
  }
 }
 function roundedRect(ctx,x,y,w,h,r){
- ctx.beginPath();ctx.roundRect(x,y,w,h,r);
+ ctx.beginPath();
+ if(typeof ctx.roundRect==='function'){ctx.roundRect(x,y,w,h,r);return;}
+ // Safari <16 y Firefox <112.
+ const z=Math.min(Math.max(0,r),Math.abs(w)/2,Math.abs(h)/2);
+ ctx.moveTo(x+z,y);ctx.lineTo(x+w-z,y);
+ ctx.quadraticCurveTo(x+w,y,x+w,y+z);
+ ctx.lineTo(x+w,y+h-z);ctx.quadraticCurveTo(x+w,y+h,x+w-z,y+h);
+ ctx.lineTo(x+z,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-z);
+ ctx.lineTo(x,y+z);ctx.quadraticCurveTo(x,y,x+z,y);
+ ctx.closePath();
 }
 function label(ctx,text,x,y,size=11,color='#b9ddf2',align='left'){
  ctx.fillStyle=color;ctx.font='600 '+size+'px system-ui';ctx.textAlign=align;ctx.fillText(text,x,y);
@@ -123,8 +137,8 @@ function draw(canvas,key){
  if(key==='ram'||key==='bed')barCanvas(ctx,w,h,cfg,key);
  else gaugeCanvas(ctx,w,h,cfg,key);
 }
-function render(){
- fields();const cfg=getV85();
+function render(refreshFields=true){
+ if(refreshFields)fields();const cfg=getV85();
  const text=$('machineSummary');
  if(text){
   text.replaceChildren(...[

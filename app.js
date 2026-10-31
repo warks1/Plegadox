@@ -18,7 +18,7 @@ registerCatalogue(DIES,PUNCHES);
 const $=id=>document.getElementById(id);
 const storeKey='plegadox:piece:v1';
 let piece=restore();
-let sim={playing:false,time:0,last:null,speed:1,blocked:null};
+let sim={playing:false,time:0,last:null,speed:1,blocked:null,error:null};
 let camera={yaw:-.62,pitch:.45,zoom:1};
 let machineView={panX:0,panY:0,zoom:1};
 let touchOrderEnabled=false,chosenTouchOrder=[];
@@ -42,9 +42,9 @@ const numbers=(n,d=1)=>Number(n).toLocaleString('es-ES',{maximumFractionDigits:d
 function restore(){try{const saved=localStorage.getItem(storeKey);return normalized(saved?JSON.parse(saved):EXAMPLE);}catch{return normalized(EXAMPLE);}}
 function persist(){try{localStorage.setItem(storeKey,JSON.stringify(piece));}catch{}}
 function save(){persist();$('saveBtn').textContent='✓';$('saveBtn').title='Guardado en este dispositivo';setTimeout(()=>{$('saveBtn').textContent='▣';$('saveBtn').title='Guardar pieza';},1500);}
-function resetPlayback(){sim.time=0;sim.last=null;sim.playing=false;sim.blocked=null;$('playBtn').textContent='▶';$('playBtn').title='Reproducir simulación';}
+function resetPlayback(){sim.time=0;sim.last=null;sim.playing=false;sim.blocked=null;sim.error=null;$('playBtn').textContent='▶';$('playBtn').title='Reproducir simulación';}
 function changePiece(p,structural=false){
- piece=normalized(p);persist();sim.blocked=null;
+ piece=normalized(p);persist();sim.blocked=null;sim.error=null;
  // Una edición invalida la comparación anterior y evita aplicar resultados obsoletos.
  pendingSequenceAdvice=null;
  if($('applySuggestedOrder'))$('applySuggestedOrder').disabled=true;
@@ -61,7 +61,7 @@ function configure(){
  document.querySelectorAll('.nav').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.nav').forEach(n=>n.classList.toggle('active',n===btn));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id==='tab-'+btn.dataset.tab));paintAll();}));
  const entries=[['pieceName','name'],['material','material'],['thickness','thickness'],['width','width'],['die','die'],['punch','punch'],['datum','datum']];
  for(const [id,key] of entries)$(id).addEventListener('change',e=>{
-  const v=key==='thickness'||key==='width'?finite(e.target.value,2):e.target.value;
+  const v=key==='thickness'||key==='width'?finite(e.target.value,piece[key]):e.target.value;
   const updated={...piece,[key]:v};
   // La Rm introducida sólo corresponde al material para el que se eligió.
   // Al cambiar de material se vuelve a la referencia orientativa visible.
@@ -194,7 +194,7 @@ function configure(){
  const file=e.target.files?.[0];if(!file)return;
  try{if(file.size>1024*1024)throw new Error('Archivo demasiado grande');const data=JSON.parse(await file.text());if(!Array.isArray(data.flanges)||!Array.isArray(data.angles))throw new Error('El JSON no contiene alas y pliegues');changePiece(data,true);}catch(err){alert('No se pudo cargar la pieza: '+err.message);}e.target.value='';
  };
- $('playBtn').onclick=()=>{if(sim.time>=piece.order.length*5)sim.time=0;sim.blocked=null;sim.playing=true;sim.last=null;$('playBtn').textContent='▶';$('playBtn').title='Reproduciendo';};
+ $('playBtn').onclick=()=>{if(sim.time>=piece.order.length*5)sim.time=0;sim.blocked=null;sim.error=null;sim.playing=true;sim.last=null;$('playBtn').textContent='▶';$('playBtn').title='Reproduciendo';};
  $('pauseBtn').onclick=()=>{sim.playing=false;sim.last=null;$('playBtn').textContent='▶';$('playBtn').title='Continuar simulación';};
  $('restartBtn').onclick=()=>{resetPlayback();paintAll();};
  $('stepBtn').onclick=()=>{sim.playing=false;sim.last=null;sim.blocked=null;const i=Math.floor(sim.time/5);sim.time=Math.min(piece.order.length*5,(i+1)*5);paintAll();};
@@ -239,7 +239,7 @@ function renderEditor(){
  const row=document.createElement('tr');const label=document.createElement('td');label.textContent=String(i+1);row.append(label);
  const lenCell=document.createElement('td'),len=document.createElement('input');len.type='number';len.min='1';len.max='10000';len.step='0.1';len.inputMode='decimal';len.value=v;len.setAttribute('aria-label','Longitud ala '+(i+1));len.addEventListener('change',()=>{const f=[...piece.flanges];f[i]=finite(len.value,v);changePiece({...piece,flanges:f},true);});lenCell.append(len);row.append(lenCell);
  const angleCell=document.createElement('td');
- if(i){const wrap=document.createElement('div');wrap.style.cssText='display:flex;align-items:center;gap:5px';const a=document.createElement('input');a.className='angle-input';a.type='text';a.inputMode='text';a.value=String(piece.angles[i-1]);a.setAttribute('aria-label','Ángulo firmado pliegue '+i);a.addEventListener('change',()=>{const val=Number(a.value.replace(',','.'));if(!Number.isFinite(val)){a.value=String(piece.angles[i-1]);return;}const angles=[...piece.angles];angles[i-1]=val;changePiece({...piece,angles},true);});const flip=document.createElement('button');flip.type='button';flip.textContent='±';flip.title='Cambiar sentido del pliegue';flip.addEventListener('click',()=>{const angles=[...piece.angles];angles[i-1]=-angles[i-1];changePiece({...piece,angles},true);});wrap.append(a,flip);angleCell.append(wrap);}else angleCell.textContent='—';
+ if(i){const wrap=document.createElement('div');wrap.style.cssText='display:flex;align-items:center;gap:5px';const a=document.createElement('input');a.className='angle-input';a.type='text';a.inputMode='text';a.value=String(piece.angles[i-1]);a.setAttribute('aria-label','Ángulo firmado pliegue '+i);a.addEventListener('change',()=>{const raw=a.value.trim().replace(',','.');const val=raw===''?NaN:Number(raw);if(!Number.isFinite(val)){a.value=String(piece.angles[i-1]);return;}const angles=[...piece.angles];angles[i-1]=val;changePiece({...piece,angles},true);});const flip=document.createElement('button');flip.type='button';flip.textContent='±';flip.title='Cambiar sentido del pliegue';flip.addEventListener('click',()=>{const angles=[...piece.angles];angles[i-1]=-angles[i-1];changePiece({...piece,angles},true);});wrap.append(a,flip);angleCell.append(wrap);}else angleCell.textContent='—';
  row.append(angleCell);
   const stopCell=document.createElement('td');
   if(i){
@@ -813,18 +813,19 @@ function renderSimulationText(){
        describeToolIssue(null);
    const sheetNow=inspectSheetFrame(piece,sim.time);
    const sheetWarning=sheetNow.issues.length?describeSheetIssue(sheetNow.issues[0]):null;
-   const messages=[...(sim.blocked?['⛔ Reproducción detenida ANTES de una penetración 2D de la chapa en el punzón. Revisar lado de apoyo, herramienta y secuencia. No equivale a validación real de colisiones.']:[]),toolWarning,...(sheetWarning?[sheetWarning]:[]),main,...other];
+   const messages=[...(sim.error?['⛔ Error de simulación: '+sim.error+'. Revisa la configuración.']:[]),...(sim.blocked?['⛔ Reproducción detenida ANTES de una penetración 2D de la chapa en el punzón. Revisar lado de apoyo, herramienta y secuencia. No equivale a validación real de colisiones.']:[]),toolWarning,...(sheetWarning?[sheetWarning]:[]),main,...other];
    const signature=JSON.stringify(messages);
    if(details.dataset.signature!==signature){
      details.dataset.signature=signature;
      details.replaceChildren(...messages.map((m,i)=>{const line=document.createElement('p');line.textContent=(i?'• ':'')+m;return line;}));
      details.title=check.limitations;
    }
-   details.classList.toggle('has-warning',check.hasGeometryWarning||toolNow.hasWarning||sheetNow.hasWarning||!!toolStep?.possibleToolInterference);
+   details.classList.toggle('has-warning',check.hasGeometryWarning||toolNow.hasWarning||sheetNow.hasWarning||!!toolStep?.possibleToolInterference||!!sim.error);
  }
 }
 function paintAll(){drawProfile('finalCanvas',piece.angles.map(()=>1),true);drawMachine();drawProfile('progressCanvas',stage(piece,sim.time).fractions,false);drawScene();toolDrawing();renderDevelopment();renderToolCards();renderSimulationText();}
 function tick(now){
+ try{
  if(sim.playing){
   if(sim.last!=null){
    const dt=Math.min((now-sim.last)/1000,.12)*sim.speed;
@@ -841,7 +842,17 @@ function tick(now){
   drawMachine();drawProfile('progressCanvas',stage(piece,sim.time).fractions);
   drawScene();renderSimulationText();
  }
- requestAnimationFrame(tick);
+ }catch(error){
+  sim.playing=false;sim.last=null;
+  sim.error=error instanceof Error?error.message:String(error);
+  const play=$('playBtn');
+  if(play){play.textContent='▶';play.title='Simulación detenida: revisar error';}
+  const details=$('collisionDetails');
+  if(details){details.classList.add('has-warning');
+   details.textContent='⛔ Error de simulación: '+sim.error+'. Revisa los parámetros.';}
+ }finally{
+  requestAnimationFrame(tick);
+ }
 }
 configure();
 window.PLEGADOX_STATE=()=>({piece,sim});

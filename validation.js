@@ -5,7 +5,7 @@
  * tramos no adyacentes y proximidades inferiores al espesor durante la
  * secuencia seleccionada. No certifica que una operación sea segura.
  */
-import { normalized, profile, stage, getTooling, toolAngleCompatibility, MACHINE } from './engine.js';
+import { normalized, profile, stage, getTooling, toolAngleCompatibility } from './engine.js';
 import {getV85} from './machine-config.js';
 
 const EPS=1e-7;
