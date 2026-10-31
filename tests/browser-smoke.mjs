@@ -22,6 +22,20 @@ try{
   assert.notEqual(newForce,startForce,'La resistencia Rm introducida debe cambiar la fuerza');
   assert.equal(await page.evaluate(()=>window.PLEGADOX_STATE().piece.rmMPa),600);
   await page.locator('[data-tab="programacion"]').click();
+  const beforeEmpty=await page.evaluate(()=>({width:window.PLEGADOX_STATE().piece.width,
+   thickness:window.PLEGADOX_STATE().piece.thickness,
+   angle:window.PLEGADOX_STATE().piece.angles[0]}));
+  for(const field of ['#width','#thickness']){
+   await page.locator(field).fill('');
+   await page.locator(field).dispatchEvent('change');
+  }
+  await page.locator('.angle-input').first().fill('');
+  await page.locator('.angle-input').first().dispatchEvent('change');
+  const afterEmpty=await page.evaluate(()=>({width:window.PLEGADOX_STATE().piece.width,
+   thickness:window.PLEGADOX_STATE().piece.thickness,
+   angle:window.PLEGADOX_STATE().piece.angles[0]}));
+  assert.deepEqual(afterEmpty,beforeEmpty,'No guardar cero al vaciar campos de pieza');
+
   await page.locator('#material').selectOption('alu5754');
   assert.equal(await page.evaluate(()=>window.PLEGADOX_STATE().piece.rmMPa),null,
     'La resistencia manual de acero NO se arrastra al aluminio');

@@ -260,7 +260,8 @@ export function describeToolIssue(hit){
 let cachedKey='',cachedContact=null;
 export function currentToolContact(piece,time=0){
  const p=normalized(piece);
- const t=Math.round(Math.max(0,Number(time)||0)*10)/10;
+ // No anticipar el golpe siguiente al redondear el último instante.
+ const t=Math.floor(Math.max(0,Number(time)||0)*10+1e-9)/10;
  const key=JSON.stringify([p.flanges,p.angles,p.order,p.punch,p.die,p.thickness,
   p.gaugeSideByBend,t]);
  if(key!==cachedKey){cachedKey=key;cachedContact=inspectToolContact(p,t);}

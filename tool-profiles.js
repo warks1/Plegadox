@@ -40,10 +40,15 @@ export function sectionPunch(tool={}){
   const recessY=Math.max(shoulderY+9,height*.72);
   const outerW=Math.max(18,halfTop+3);
   const rearW=outerW+7;
+  // Para ángulos agudos (Beyeler R) el rebaje superaba la altura del cuello;
+  // invertir estas alturas elimina el cruce. Modelo PROVISIONAL, no CAD.
+  const highShoulder=recessY>=height-20;
+  const neckY=highShoulder?recessY:height-20;
+  const notchY=highShoulder?shoulderY+Math.min(4,(recessY-shoulderY)/2):recessY;
   points=[
    [-rearW,height],[13,height],
-   [13,height-20],[-neckOffset,height-20],
-   [-neckOffset,recessY],[outerW,recessY],
+   [13,neckY],[-neckOffset,neckY],
+   [-neckOffset,notchY],[outerW,notchY],
    [outerW,shoulderY],[halfTop,shoulderY],
    [halfTop,bodyBottom],...noseArc,
    [-halfTop,bodyBottom],[-halfTop,shoulderY-9],

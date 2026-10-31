@@ -36,6 +36,9 @@ jobs:
           node --check sheet-interference.js
           node --check sequence-advisor.js
           node --check backgauge-placement.js
+           node --check collision-playback-guard.js
+           node --check gauge-side-review.js
+           node --check incident-navigation.js
       - name: Pruebas de dirección, secuencia y desarrollo
         run: npm test
 

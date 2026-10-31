@@ -23,7 +23,8 @@ export function contactKinematics({
  const valid=Number.isInteger(activeBend)&&activeBend>=0&&activeBend+1<input.length?
   activeBend+1:1;
  const bend=input[valid],isTransition=phase==='Reposicionamiento'||phase==='Pieza terminada';
- const angleRad=Math.min(170,Math.max(0,Math.abs(angle)))*deg;
+ // El motor admite giros hasta ±179°.
+ const angleRad=Math.min(179,Math.max(0,Math.abs(angle)))*deg;
  const halfOpening=Math.max(.2,opening/2);
  const limit=Math.max(0,dieDepth-Math.max(.15,thickness*.3));
  // Depth that a sharp-corner V would require to put BOTH sides on the shoulders.

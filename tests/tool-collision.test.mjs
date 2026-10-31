@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {EXAMPLE} from '../engine.js';
-import {segmentNearestPoints,insidePolygon,inspectSheetAgainstPolygon,inspectToolContact,inspectSequenceTools,describeToolIssue,consolidateToolIssues} from '../tool-collision.js';
+import {segmentNearestPoints,insidePolygon,inspectSheetAgainstPolygon,inspectToolContact,inspectSequenceTools,describeToolIssue,consolidateToolIssues,currentToolContact} from '../tool-collision.js';
 const point=(x,y)=>({x,y});
 const block=[point(-4,8),point(4,8),point(4,0),point(-4,0)];
 test('un punto dentro de un punzón es intrusión, uno fuera no',()=>{
@@ -148,4 +148,11 @@ test('los tramos colineales superpuestos siguen teniendo distancia cero',()=>{
  const near=segmentNearestPoints({x:0,y:0},{x:20,y:0},
   {x:10,y:0},{x:30,y:0});
  assert.equal(near.dist,0);
+});
+
+test('la alarma de útil corresponde al golpe real en todos los cambios',()=>{
+ for(const t of [4.96,4.999,5,9.96,9.999,10,14.96,15,19.96]){
+  const expected=Math.min(Math.floor(t/5),EXAMPLE.order.length-1);
+  assert.equal(currentToolContact(EXAMPLE,t).stage.activeOperation,expected,'t='+t);
+ }
 });

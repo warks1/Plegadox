@@ -105,3 +105,12 @@ test('cuando la ala es muy corta limita la transición sin mover extremos',()=>{
  assert.ok(arc[1].x>-3,'Radio mayor que ala es limitado para la vista');
  assert.ok(arc.every(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)));
 });
+
+test('la cinemática responde a 170°, 175° y 179°',()=>{
+ const k=angle=>contactKinematics({points:demo,activeBend:0,angle,opening:16,
+  dieDepth:8.29,thickness:2,phase:'Plegado',press:1});
+ const a=k(170),b=k(175),c=k(179);
+ assert.notDeepEqual(a.sheet,b.sheet);assert.notDeepEqual(b.sheet,c.sheet);
+ assert.equal(c.limitedByDie,true);
+ assert.ok([a,b,c].every(v=>v.sheet.every(p=>Number.isFinite(p.x)&&Number.isFinite(p.y))));
+});
