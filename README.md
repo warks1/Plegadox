@@ -526,3 +526,22 @@ que examinaba sólo proyecciones de extremos podía informar de una
 separación inexistente en ese caso. Se añaden pruebas para cruces rectos,
 oblicuos, paralelos y aristas colineales. Sigue siendo comprobación de
 sección 2D paramétrica, no análisis industrial de colisiones.
+
+### Selección del tope trasero por pliegue (vídeo IMG_9031)
+
+Se ha añadido **Tope 1 · Stop** y **Tope 2 · Support** como elección
+**individual por pliegue físico**. La tabla de alas de Programación
+permite seleccionar el tope de P1, P2, P3…; la vista de Simulación
+incluye dos botones táctiles para cambiar el del golpe actual. La
+selección se guarda en la pieza (campo `stopByBend`), se conserva al
+exportar/importar JSON y al recargar, y no se intercambia cuando se
+reordena la secuencia. Al añadir un pliegue se asigna por defecto
+Tope 1 y al eliminar uno se borra su selección.
+
+El alzado de máquina cambia entre las siluetas parametrizadas
+`stop` y `support` definidas en Máquina (cotas L1–L6), con
+identificación visual del tope activo. **No se dispone de la cinemática
+calibrada de X/R/Z ni de las caras de contacto CAD completas** para
+reproducir a escala real la posición de apoyo que muestra el control
+del vídeo. El contorno, la distancia al pliegue y los límites de
+carrera deben verificarse; no se certifican colisiones físicas.
