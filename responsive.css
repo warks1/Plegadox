@@ -352,3 +352,22 @@ footer{padding-inline:max(12px,env(safe-area-inset-left,0px)) max(12px,env(safe-
  .cp-machine-floats .cp-float-tool strong{font-size:9px!important}
  .cp-machine-floats .cp-float-tool span{font-size:9px!important;max-height:29px!important}
 }
+
+/* QA Tope 1/2: los nuevos botones NO pueden encoger el lienzo de máquina.
+   El alto antiguo de .cp-simulation era fijo, también a 320 px. */
+.cp-simulation{height:auto!important;min-height:0!important;}
+.cp-simulation .cp-machine-frame{
+ flex:0 0 auto!important;
+ height:clamp(245px,42vw,430px)!important;
+ min-height:245px!important;
+ max-width:100%;
+}
+.cp-simulation .cp-machine-frame #machineCanvas{
+ display:block;
+ height:100%!important;
+ width:100%!important;
+}
+@media(max-width:699px){
+ .cp-simulation{height:auto!important;min-height:0!important;}
+ .cp-simulation .cp-player{flex:0 0 auto;min-height:100px;height:auto!important;}
+}
