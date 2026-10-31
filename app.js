@@ -3,6 +3,7 @@ import {drawIndustrialMachine} from './machine-visual.js';
 import {registerCatalogue} from './catalog.js';
 import {analyzeSequence} from './validation.js';
 import {inspectSequenceTools,currentToolContact,describeToolIssue} from './tool-collision.js';
+import {guardPunchAdvance} from './collision-playback-guard.js';
 import {incidentReviewRows} from './incident-navigation.js';
 import {inspectSheetFrame,scanSheetSequence,describeSheetIssue} from './sheet-interference.js';
 import {viewerProfile} from './viewer-profile.js';
@@ -17,7 +18,7 @@ registerCatalogue(DIES,PUNCHES);
 const $=id=>document.getElementById(id);
 const storeKey='plegadox:piece:v1';
 let piece=restore();
-let sim={playing:false,time:0,last:null,speed:1};
+let sim={playing:false,time:0,last:null,speed:1,blocked:null};
 let camera={yaw:-.62,pitch:.45,zoom:1};
 let machineView={panX:0,panY:0,zoom:1};
 let touchOrderEnabled=false,chosenTouchOrder=[];
@@ -41,9 +42,9 @@ const numbers=(n,d=1)=>Number(n).toLocaleString('es-ES',{maximumFractionDigits:d
 function restore(){try{const saved=localStorage.getItem(storeKey);return normalized(saved?JSON.parse(saved):EXAMPLE);}catch{return normalized(EXAMPLE);}}
 function persist(){try{localStorage.setItem(storeKey,JSON.stringify(piece));}catch{}}
 function save(){persist();$('saveBtn').textContent='✓';$('saveBtn').title='Guardado en este dispositivo';setTimeout(()=>{$('saveBtn').textContent='▣';$('saveBtn').title='Guardar pieza';},1500);}
-function resetPlayback(){sim.time=0;sim.last=null;sim.playing=false;$('playBtn').textContent='▶';$('playBtn').title='Reproducir simulación';}
+function resetPlayback(){sim.time=0;sim.last=null;sim.playing=false;sim.blocked=null;$('playBtn').textContent='▶';$('playBtn').title='Reproducir simulación';}
 function changePiece(p,structural=false){
- piece=normalized(p);persist();
+ piece=normalized(p);persist();sim.blocked=null;
  // Una edición invalida la comparación anterior y evita aplicar resultados obsoletos.
  pendingSequenceAdvice=null;
  if($('applySuggestedOrder'))$('applySuggestedOrder').disabled=true;
@@ -717,7 +718,7 @@ function renderIncidentNavigator(check,st){
 function renderSimulationText(){
  const st=stage(piece,sim.time),a=piece.angles[st.activeBend],check=geometryReport(),toolNow=currentToolContact(piece,sim.time);
  renderIncidentNavigator(check,st);
- $('simStatus').textContent=st.phase;
+ $('simStatus').textContent=sim.blocked?'⚠ DETENIDO: POSIBLE PENETRACIÓN 2D EN PUNZÓN':st.phase;
  const gauge=stopAtStage(piece,sim.time);
  $('activeGaugeLabel').textContent=gauge.label+' · pliegue '+(gauge.bend+1);
  if($('gaugeSideReview').dataset.bend!==String(st.activeBend)){
@@ -743,7 +744,7 @@ function renderSimulationText(){
   btn.classList.toggle('selected',active);btn.setAttribute('aria-pressed',String(active));
  }
 
- $('phaseText').textContent=st.completed?'Pieza final · secuencia completada':st.phase+' · pliegue '+(st.activeBend+1)+' ('+(a>0?'+':'')+a+'°)';
+ $('phaseText').textContent=sim.blocked?'⚠ CHAPA / PUNZÓN · POSIBLE PENETRACIÓN 2D · REVISAR PRESENTACIÓN':st.completed?'Pieza final · secuencia completada':st.phase+' · pliegue '+(st.activeBend+1)+' ('+(a>0?'+':'')+a+'°)';
  $('stepText').textContent='Golpe '+st.finished+'/'+st.count;
  $('foldedCount').textContent=st.finished+' de '+st.count+' pliegues';
  $('timeline').value=Math.round(1000*st.time/st.duration);
@@ -811,7 +812,7 @@ function renderSimulationText(){
        describeToolIssue(null);
    const sheetNow=inspectSheetFrame(piece,sim.time);
    const sheetWarning=sheetNow.issues.length?describeSheetIssue(sheetNow.issues[0]):null;
-   const messages=[toolWarning,...(sheetWarning?[sheetWarning]:[]),main,...other];
+   const messages=[...(sim.blocked?['⛔ Reproducción detenida ANTES de una penetración 2D de la chapa en el punzón. Revisar lado de apoyo, herramienta y secuencia. No equivale a validación real de colisiones.']:[]),toolWarning,...(sheetWarning?[sheetWarning]:[]),main,...other];
    const signature=JSON.stringify(messages);
    if(details.dataset.signature!==signature){
      details.dataset.signature=signature;
@@ -823,7 +824,22 @@ function renderSimulationText(){
 }
 function paintAll(){drawProfile('finalCanvas',piece.angles.map(()=>1),true);drawMachine();drawProfile('progressCanvas',stage(piece,sim.time).fractions,false);drawScene();toolDrawing();renderDevelopment();renderToolCards();renderSimulationText();}
 function tick(now){
- if(sim.playing){if(sim.last!=null){const dt=Math.min((now-sim.last)/1000,.12)*sim.speed;sim.time+=dt;if(sim.time>=piece.order.length*5){sim.time=0;sim.last=null;}}sim.last=now;drawMachine();drawProfile('progressCanvas',stage(piece,sim.time).fractions);drawScene();renderSimulationText();}
+ if(sim.playing){
+  if(sim.last!=null){
+   const dt=Math.min((now-sim.last)/1000,.12)*sim.speed;
+   const next=Math.min(piece.order.length*5,sim.time+dt);
+   const checked=guardPunchAdvance(piece,sim.time,next);
+   sim.time=checked.time;
+   if(checked.blocked){
+    sim.playing=false;sim.last=null;sim.blocked=checked.issue;
+    $('playBtn').textContent='▶';
+    $('playBtn').title='Detenido por posible penetración 2D con el punzón';
+   }else if(sim.time>=piece.order.length*5){sim.time=0;sim.last=null;}
+  }
+  if(sim.playing)sim.last=now;
+  drawMachine();drawProfile('progressCanvas',stage(piece,sim.time).fractions);
+  drawScene();renderSimulationText();
+ }
  requestAnimationFrame(tick);
 }
 configure();
