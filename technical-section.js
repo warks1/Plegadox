@@ -27,10 +27,20 @@ export function technicalScene(piece,instant=0){
  // no se cambia el signo firmado del pliegue en el programa.
  const feedMirror=reference.side==='before';
  const from=presentedAtStage(p,st);
- const mirror=pt=>feedMirror?{...pt,x:-pt.x}:{...pt};
+ // El final de la recolocación debe estar YA orientado para el lado de
+ // apoyo del siguiente golpe. Antes X se reflejaba de golpe al cambiar
+ // st.activeBend; saltaba 200-250 mm. Esta es la proyección de un giro
+ // rígido 3D de media vuelta alrededor del eje vertical, no un cambio
+ // automático de la selección Stop/Support.
+ const nextBend=st.activeOperation<p.order.length-1?
+  p.order[st.activeOperation+1]:st.activeBend;
+ const nextFeedMirror=gaugeReference(p,nextBend).side==='before';
+ const turnFeed=from.repositioning&&nextFeedMirror!==feedMirror;
+ const spin=turnFeed?Math.cos(Math.PI*(from.progress??0)):1;
+ const mirror=pt=>({...pt,x:(feedMirror?-pt.x:pt.x)*spin});
  const presentation={...from,points:from.points.map(mirror),
   points3D:from.points3D?.map(mirror),gaugeSide:reference.side,
-  feedMirrored:feedMirror};
+  feedMirrored:feedMirror,changingFeedSide:turnFeed};
  // Referencia FIJA de presentación: se mide antes de que baje el punzón.
  // No seguir el extremo de la chapa durante la deformación del golpe.
  // El margen de retirada debe calcularse DESPUÉS de la orientación
