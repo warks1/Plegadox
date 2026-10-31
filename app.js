@@ -194,11 +194,11 @@ function configure(){
  const file=e.target.files?.[0];if(!file)return;
  try{if(file.size>1024*1024)throw new Error('Archivo demasiado grande');const data=JSON.parse(await file.text());if(!Array.isArray(data.flanges)||!Array.isArray(data.angles))throw new Error('El JSON no contiene alas y pliegues');changePiece(data,true);}catch(err){alert('No se pudo cargar la pieza: '+err.message);}e.target.value='';
  };
- $('playBtn').onclick=()=>{if(sim.time>=piece.order.length*5)sim.time=0;sim.playing=true;sim.last=null;$('playBtn').textContent='▶';$('playBtn').title='Reproduciendo';};
+ $('playBtn').onclick=()=>{if(sim.time>=piece.order.length*5)sim.time=0;sim.blocked=null;sim.playing=true;sim.last=null;$('playBtn').textContent='▶';$('playBtn').title='Reproduciendo';};
  $('pauseBtn').onclick=()=>{sim.playing=false;sim.last=null;$('playBtn').textContent='▶';$('playBtn').title='Continuar simulación';};
  $('restartBtn').onclick=()=>{resetPlayback();paintAll();};
- $('stepBtn').onclick=()=>{sim.playing=false;sim.last=null;const i=Math.floor(sim.time/5);sim.time=Math.min(piece.order.length*5,(i+1)*5);paintAll();};
- $('timeline').oninput=e=>{sim.playing=false;sim.last=null;sim.time=piece.order.length*5*Number(e.target.value)/1000;paintAll();};
+ $('stepBtn').onclick=()=>{sim.playing=false;sim.last=null;sim.blocked=null;const i=Math.floor(sim.time/5);sim.time=Math.min(piece.order.length*5,(i+1)*5);paintAll();};
+ $('timeline').oninput=e=>{sim.playing=false;sim.last=null;sim.blocked=null;sim.time=piece.order.length*5*Number(e.target.value)/1000;paintAll();};
  $('speed').onchange=e=>sim.speed=Number(e.target.value)||1;
  $('viewIsometric').onclick=()=>{camera={yaw:-.62,pitch:.45,zoom:1};paintAll();};
  $('viewFront').onclick=()=>{camera={yaw:0,pitch:0,zoom:1};paintAll();};
@@ -703,7 +703,7 @@ function renderIncidentNavigator(check,st){
       ' · vista del golpe '+row.time.toFixed(2)+' s');
    button.append(number,severity,detail);
    button.addEventListener('click',()=>{
-    sim.playing=false;sim.last=null;sim.time=row.time;
+    sim.playing=false;sim.last=null;sim.blocked=null;sim.time=row.time;
     paintAll();
    });
    return button;
@@ -780,7 +780,7 @@ function renderSimulationText(){
        const mark=document.createElement('span');mark.className='op-alert';mark.textContent='!';mark.setAttribute('aria-label','Advertencia geométrica');values.append(mark);
      }
      el.append(n,visual,values,menu);
-     el.addEventListener('click',()=>{sim.playing=false;sim.last=null;sim.time=i*5;paintAll();});
+     el.addEventListener('click',()=>{sim.playing=false;sim.last=null;sim.blocked=null;sim.time=i*5;paintAll();});
      return el;
    }));
  }
