@@ -105,21 +105,28 @@ test('la vista industrial respeta H y fondo nominal de matrices diferentes',()=>
  assert.notDeepEqual(p30,p88);
 });
 
-test('la chapa en perspectiva refleja la profundidad del volteo sin alterar el alzado métrico',()=>{
- const scene=technicalScene(EXAMPLE,4.6);
- assert.equal(scene.presentation.repositioning,true);
- const front=machineSheetProjection(scene,200,200,1,false);
- const oblique=machineSheetProjection(scene,200,200,1,true);
- assert.equal(front.length,scene.sheetDisplay.length);
- assert.equal(oblique.length,scene.presentation.points3D.length);
- assert.ok(oblique.every(p=>p.every(Number.isFinite)));
- assert.notDeepEqual(front,oblique,'el giro de cara utiliza la profundidad Z');
- const normal=technicalScene(EXAMPLE,2.7);
- assert.deepEqual(machineSheetProjection(normal,200,200,1,false),
-  machineSheetProjection(normal,200,200,1,true),
-  'fuera del giro, el 2.5D y el alzado conservan la misma chapa');
+test('La chapa de la cabina coincide con la comprobada en 2D durante los 4 golpes y recolocaciones',()=>{
+ const p=normalized(EXAMPLE);
+ // Retirada, reorientación, presentación, plegado y vuelta a empezar.
+ for(let t=0;t<=20;t+=.075){
+  const s=technicalScene(p,t),origin=[200,320],scale=1.25;
+  const expected=s.sheetDisplay.map(pt=>[origin[0]+pt.x*scale,origin[1]-pt.y*scale]);
+  const front=machineSheetProjection(s,...origin,scale,false);
+  const perspective=machineSheetProjection(s,...origin,scale,true);
+  assert.deepEqual(front,expected,'Escena de chapa 2D t='+t.toFixed(2));
+  assert.deepEqual(perspective,expected,
+   'La perspectiva no puede dibujar otra chapa fuera del detector de colisiones t='+t.toFixed(2));
+ }
 });
-
+test('En la transición entre golpes no se alternan dos perfiles distintos según el modo de cámara',()=>{
+ for(const t of [4.1999,4.2,4.31,4.5,4.7,4.9,4.9999,5,
+   9.1999,9.2,9.6,9.9999,10,14.9999,15,19.9999,20]){
+  const s=technicalScene(EXAMPLE,t);
+  const front=machineSheetProjection(s,200,300,1,false);
+  const perspective=machineSheetProjection(s,200,300,1,true);
+  assert.deepEqual(front,perspective,'No permitir traslación falsa de chapa en t='+t);
+ }
+});
 test('la sección gráfica usa el radio interior elegido sin modificar la fibra central',()=>{
  const p={...EXAMPLE,radius:3},q={...EXAMPLE,radius:9};
  const small=technicalScene(p,2.7),large=technicalScene(q,2.7);
