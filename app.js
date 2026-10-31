@@ -10,6 +10,7 @@ import {sheetSolidMesh} from './sheet-solid.js';
 import {exportProfileDXF,exportFlatDXF} from './dxf-export.js';
 import {flatBendLayout} from './flat-layout.js';
 import {suggestBendOrder} from './sequence-advisor.js';
+import {compareGaugeSides} from './gauge-side-review.js';
 import {sectionPunch,sectionDie} from './tool-profiles.js';
 import {getV85} from './machine-config.js';
 registerCatalogue(DIES,PUNCHES);
@@ -47,6 +48,8 @@ function changePiece(p,structural=false){
  pendingSequenceAdvice=null;
  if($('applySuggestedOrder'))$('applySuggestedOrder').disabled=true;
  if($('sequenceAdvice'))$('sequenceAdvice').textContent='Sin analizar este programa. La secuencia actual se conserva.';
+ if($('gaugeSideReview')){$('gaugeSideReview').dataset.bend='';
+  $('gaugeSideReview').textContent='Referencia modificada. Compara ambos lados si necesitas comprobar los útiles 2D.';}
  if(structural)resetPlayback();
  renderEditor();renderSetup();paintAll();
  window.dispatchEvent(new CustomEvent('plegadox:pieceChanged',{detail:piece}));
@@ -90,6 +93,20 @@ function configure(){
    changePiece({...piece,gaugeSideByBend:sides},false);
   };
  }
+ $('compareGaugeSides').onclick=()=>{
+  const result=compareGaugeSides(piece,sim.time,5);
+  const rows=result.sides.map(side=>
+   (side.side==='before'?'Ala anterior':'Ala siguiente')+' ('+numbers(side.nominalDistance,1)+
+   ' mm): '+side.penetrations+' muestras con posible penetración y '+
+   side.warnings+' con avisos de herramientas.');
+  const recommendation=result.better?
+   ' Menos avisos 2D en '+(result.better==='before'?'ala anterior':'ala siguiente')+
+   '; selección manual necesaria.':
+   ' Sin diferencias detectadas en este muestreo; no equivale a ausencia de colisiones.';
+  const node=$('gaugeSideReview');node.dataset.bend=String(result.bend);
+  node.textContent='Golpe '+(result.operation+1)+' · '+rows.join(' · ')+'.'+recommendation+
+   ' NO valida la joroba real de la pata de cabra, ni topes, mesa o volteos.';
+ };
  $('evaluateOrder').onclick=()=>{
   const message=$('sequenceAdvice'),apply=$('applySuggestedOrder');
   apply.disabled=true;pendingSequenceAdvice=null;
@@ -703,6 +720,11 @@ function renderSimulationText(){
  $('simStatus').textContent=st.phase;
  const gauge=stopAtStage(piece,sim.time);
  $('activeGaugeLabel').textContent=gauge.label+' · pliegue '+(gauge.bend+1);
+ if($('gaugeSideReview').dataset.bend!==String(st.activeBend)){
+  $('gaugeSideReview').dataset.bend=String(st.activeBend);
+  $('gaugeSideReview').textContent='Golpe '+(st.activeOperation+1)+
+   ': elige el ala de apoyo o compara ambos lados. Colisiones reales no verificadas.';
+ }
  $('activeGaugeReference').textContent=gauge.reference.label+' · '+numbers(gauge.reference.distance,1)+
   ' mm nominales desde el pliegue · '+(gauge.reference.side==='before'?'presentación invertida':'presentación directa')+
   ' · sin ejes X/R/Z calibrados';
