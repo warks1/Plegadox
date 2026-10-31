@@ -37,6 +37,16 @@ try {
    'El dibujo Stop debe cambiar cuando cambia L3');
   const persisted=await page.evaluate(()=>JSON.parse(localStorage.getItem('plegadox:trumpf-v85:v1')));
   assert.equal(persisted.stop[2],23,'La cota modificada se guarda');
+  // Vacío no equivale a 0, y editar no debe destruir el input enfocado.
+  await page.locator(path).fill('');
+  await page.locator(path).dispatchEvent('change');
+  assert.equal(await page.locator(path).inputValue(),'23');
+  await page.locator(path).fill('25');
+  await page.locator(path).dispatchEvent('change');
+  assert.equal(await page.locator(path).inputValue(),'25');
+  assert.equal(await page.locator(path).evaluate(el=>document.activeElement===el),true);
+  await page.locator(path).fill('23');
+  await page.locator(path).dispatchEvent('change');
   await page.reload({waitUntil:'networkidle'});
   await page.locator('[data-tab="maquina"]').click();
   assert.equal(await page.locator(path).inputValue(),'23','La cota se mantiene tras recargar');

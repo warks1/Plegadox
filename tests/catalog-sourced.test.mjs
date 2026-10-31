@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {DIES,PUNCHES} from '../engine.js';
 import {registerCatalogue,CATALOG_SOURCES,toolMatchesBrand} from '../catalog.js';
 import {sectionPunch,sectionDie,sectionBounds} from '../tool-profiles.js';
-import {inspectProfile} from '../validation.js';
+import {inspectProfile,segmentContactKind} from '../validation.js';
 registerCatalogue(DIES,PUNCHES);
 
 test('el catálogo presenta pata de cabra GN9 y GN6 con escotes distintos',()=>{
@@ -72,4 +72,21 @@ test('no se inventa radio de hombro en matrices de V genéricas',()=>{
  assert.equal(generic.shoulderRadius,0);
  assert.equal(generic.roundedShoulders,false);
  assert.equal(generic.points.length,7);
+});
+
+test('el catálogo de punzones no contiene aristas cruzadas ni solapadas',()=>{
+ for(const tool of PUNCHES){
+  const vertices=sectionPunch(tool).points.map(([x,y])=>({x,y}));
+  if(vertices.length>1&&vertices[0].x===vertices.at(-1).x&&vertices[0].y===vertices.at(-1).y)vertices.pop();
+  for(let i=0;i<vertices.length;i++){
+   const a=vertices[i],b=vertices[(i+1)%vertices.length];
+   for(let j=i+2;j<vertices.length;j++){
+    if(i===0&&j===vertices.length-1)continue;
+    const c=vertices[j],d=vertices[(j+1)%vertices.length];
+    const kind=segmentContactKind(a,b,c,d);
+    assert.notEqual(kind,'cross',tool.id+': cruce '+i+'/'+j);
+    assert.notEqual(kind,'overlap',tool.id+': solapamiento '+i+'/'+j);
+   }
+  }
+ }
 });
