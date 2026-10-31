@@ -119,9 +119,13 @@ function rearMachine(ctx,w,h,cx,cy,scale,placement){
  // Escala 1 mm = 1 unidad de sección para Stop y Support.
  // El origen del perfil NO es el borde de chapa: al elegir Support,
  // el escalón de L6 queda en contacto y el resto del dedo se desplaza.
- const gg=outline.map(p=>[ox+p.x*scale,oy-p.y*scale]);
- const rodEnd=ox+Math.max(110,gauge[1]+20)*scale;
- steelRect(ctx,ox,oy+4*scale,Math.max(8,rodEnd-ox),6*scale,false);
+ const xf=p=>placement.contact?.mirrorX?
+  2*placement.contact.localContactX-p.x:p.x;
+ const gg=outline.map(p=>[ox+xf(p)*scale,oy-p.y*scale]);
+ const faceX=cx+placement.point.x*scale;
+ const rodEnd=faceX+Math.max(110,gauge[1]+20)*scale;
+ steelRect(ctx,faceX,cy-placement.point.y*scale+4*scale,
+  Math.max(8,rodEnd-faceX),6*scale,false);
  poly(ctx,gg,
   gradient(ctx,ox,oy,rodEnd,oy,
    [[0,'#9ff6b7'],[.28,'#44b975'],[.76,'#235a48'],[1,'#112f31']]),
@@ -140,7 +144,7 @@ function rearMachine(ctx,w,h,cx,cy,scale,placement){
   ctx.beginPath();ctx.arc(...cp,Math.max(2.5,3*scale),0,Math.PI*2);
   ctx.fillStyle=valid?'#e1fff1':'#ffd18d';ctx.fill();ctx.restore();
  }
- for(const frac of [.24,.58])bolt(ctx,ox+gauge[0]*scale*frac,oy-10*scale,2.4*scale);
+ for(const frac of [.24,.58])bolt(ctx,faceX+gauge[0]*scale*frac,cy-placement.point.y*scale-10*scale,2.4*scale);
  ctx.font='800 '+Math.max(8,11*scale)+'px system-ui';
  ctx.fillStyle='#a5ffcc';ctx.textAlign='left';
  const label=placement.stopNumber===2?'TOPE 2 · ESCALÓN':'TOPE 1 · CARA STOP';
