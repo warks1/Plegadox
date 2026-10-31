@@ -41,7 +41,8 @@ export function technicalScene(piece,instant=0){
   const half=Math.abs(p.angles[st.activeBend]*st.fractions[st.activeBend])*Math.PI/360;
   const theta=(feedMirror?1:-1)*half*(1-(presentation.progress??0));
   const c=Math.cos(theta),s=Math.sin(theta);
-  const low=Math.min(...presentation.points.map(pt=>pt.x*s+pt.y*c));
+  const pivot=presentation.points[st.activeBend+1];
+  const low=Math.min(...presentation.points.map(pt=>(pt.x-pivot.x)*s+(pt.y-pivot.y)*c));
   const factor=Math.max(0,Math.min(1,presentation.liftFactor??0));
   presentation.clearanceLift=Math.max(presentation.clearanceLift??0,Math.max(0,5-low)*factor);
  }
