@@ -246,3 +246,12 @@ footer{background:#020b15;color:#587d97;border-color:#17384f;font-size:9px}
 .cp-machine-frame .cp-overlay-right span:nth-child(2){color:#ffab3b;text-shadow:0 0 11px #ff9d2b66}
 .cp-product-card .scene{background:radial-gradient(ellipse at 52% 47%,#153b55,#041323 85%)}
 @media(max-width:820px){.sidebar .nav .nav-picto{font-size:19px!important}.sidebar .nav span:last-child:not(.nav-picto){font-size:8px!important}}
+
+/* Inspector orbital: controles accesibles y lienzo visible en móvil. */
+.cp-viewer-controls{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0}
+.cp-viewer-controls button{background:#123a56;border:1px solid #3b7799;border-radius:6px;
+ color:#d5ecfb;cursor:pointer;font:600 11px system-ui;padding:7px 9px;min-height:32px}
+.cp-viewer-controls button:hover,.cp-viewer-controls button:focus-visible{background:#246185;outline:2px solid #80d9ff}
+.cp-viewer-controls button[aria-pressed="true"]{background:#176993;border-color:#88dfff}
+.cp-viewer-controls button:disabled{opacity:.45;cursor:not-allowed}
+.cp-library.viewer-open #cockpitSelectedTool3D{height:clamp(195px,24vw,270px)!important}

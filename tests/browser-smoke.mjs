@@ -144,6 +144,21 @@ try{
   assert.notEqual(selectedIcon,initialIcon,'El pictograma debe reflejar el punzón seleccionado');
   await page.locator('#cockpitTools .cp-tool-card').filter({hasText:'831'}).first().click();
   assert.equal(await page.evaluate(()=>window.PLEGADOX_STATE().piece.punch),'amada-831');
+  // Inspector 3D: presets y longitud nominal modifican la vista de manera real.
+  await page.locator('#showTool3D').click();
+  const viewer=page.locator('#cockpitSelectedTool3D');
+  const initialViewer=await viewer.evaluate(c=>c.toDataURL());
+  await page.locator('.cp-viewer-controls [data-view="front"]').click();
+  assert.notEqual(await viewer.evaluate(c=>c.toDataURL()),initialViewer,
+    'Perfil e isométrica deben mostrar proyecciones distintas');
+  const lengthMode=page.locator('.cp-viewer-controls [data-view="length"]');
+  assert.equal(await lengthMode.isDisabled(),false,'La herramienta conoce su longitud');
+  await lengthMode.click();
+  assert.equal(await lengthMode.getAttribute('aria-pressed'),'true');
+  assert.match(await page.locator('#toolInspectorMeta').textContent(),/Longitud nominal 415 mm/);
+  assert.match(await page.locator('.tool-inspector-note').textContent(),/Longitud nominal a escala/);
+  await page.locator('.cp-viewer-controls [data-view="flip"]').click();
+  await page.locator('#closeTool3D').click();
   assert.match(await page.locator('#cockpitCompatibility').textContent(),/revisar montaje de varios segmentos/,
    'Un punzón de 415 mm en pieza de 500 mm exige revisar segmentos adicionales');
   assert.match(await page.locator('#collisionDetails').textContent(),/un único segmento de punzón/i,

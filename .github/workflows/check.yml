@@ -35,7 +35,8 @@ jobs:
           node --check flat-layout.js
           node --check sheet-interference.js
           node --check sequence-advisor.js
-          node --check backgauge-placement.js
+          node --check canvas-path.js
+           node --check backgauge-placement.js
            node --check collision-playback-guard.js
            node --check gauge-side-review.js
            node --check incident-navigation.js
@@ -64,6 +65,7 @@ jobs:
           node tests/technical-section-smoke.mjs
           node tests/catalog-contact-smoke.mjs
           node tests/machine-editor-smoke.mjs
+           node tests/legacy-canvas-smoke.mjs
           node tests/backgauge-smoke.mjs
           node tests/gauge-side-smoke.mjs
           node tests/punch-stop-visibility-smoke.mjs

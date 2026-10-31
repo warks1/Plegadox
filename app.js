@@ -1,3 +1,4 @@
+import {roundedRectPath} from './canvas-path.js';
 import {MATERIALS,DIES,PUNCHES,EXAMPLE,normalized,profile,bendPreviewPath,bounds,development,estimateAirBendForce,REFERENCE_RM_MPA,stage,stopAtStage,gaugeReference,orientedForMachine,getTooling,selfIntersects,clamp,finite} from './engine.js';
 import {drawIndustrialMachine} from './machine-visual.js';
 import {registerCatalogue} from './catalog.js';
@@ -334,7 +335,7 @@ function canvas2d(id){
  const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
  return {ctx,w,h};
 }
-function roundRect(ctx,x,y,w,h,r,fill,stroke){ctx.beginPath();ctx.roundRect(x,y,w,h,r);if(fill){ctx.fillStyle=fill;ctx.fill();}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1;ctx.stroke();}}
+function roundRect(ctx,x,y,w,h,r,fill,stroke){ctx.beginPath();roundedRectPath(ctx,x,y,w,h,r);if(fill){ctx.fillStyle=fill;ctx.fill();}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1;ctx.stroke();}}
 function line(ctx,pts,color,width=2){if(pts.length<2)return;ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);for(let i=1;i<pts.length;i++)ctx.lineTo(pts[i].x,pts[i].y);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();}
 function text(ctx,s,x,y,color='#49667b',size=12,align='left'){ctx.fillStyle=color;ctx.font='600 '+size+'px system-ui';ctx.textAlign=align;ctx.fillText(s,x,y);}
 function drawGrid(ctx,w,h,space=32){ctx.beginPath();for(let x=0;x<=w;x+=space){ctx.moveTo(x,0);ctx.lineTo(x,h);}for(let y=0;y<=h;y+=space){ctx.moveTo(0,y);ctx.lineTo(w,y);}ctx.strokeStyle='#dbeaf366';ctx.lineWidth=1;ctx.stroke();}
