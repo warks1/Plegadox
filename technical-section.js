@@ -8,7 +8,7 @@
  */
 import {normalized,stage,presentedAtStage,presentedForMachine,gaugeReference,getTooling,development,clamp} from './engine.js';
 import {sectionPunch,sectionDie,sectionBounds} from './tool-profiles.js';
-import {contactKinematics} from './bend-contact.js';
+import {contactKinematics,roundedCorner} from './bend-contact.js';
 import {gaugePlacement,gaugeContourAtContact} from './backgauge-placement.js';
 import {getV85} from './machine-config.js';
 
@@ -71,7 +71,17 @@ export function technicalScene(piece,instant=0){
   presentationLift:presentation.clearanceLift??0
  });
  const sheet=kinematics.sheet;
- const sheetDisplay=kinematics.rounded;
+ // Conservar los radios de TODOS los pliegues ya realizados.
+ // El esquema anterior sólo redondeaba el B activo; al comenzar el
+ // siguiente golpe desaparecía el radio del anterior y aparecía otro,
+ // causando un cambio brusco incluso con la fibra media continua.
+ // De mayor a menor índice para no alterar los vértices pendientes.
+ let sheetDisplay=sheet;
+ for(let bend=p.angles.length-1;bend>=0;bend--){
+  if(st.fractions[bend]>1e-5)
+   sheetDisplay=roundedCorner(sheetDisplay,bend+1,
+    kinematics.requestedCenterlineRadius);
+ }
  const diePolygon=die.points.map(([x,y])=>mPoint(x,y-die.height));
  const punchPolygon=punch.points.map(([x,y])=>mPoint(x,y+kinematics.tipHeight));
  const engagement=kinematics.sag;
