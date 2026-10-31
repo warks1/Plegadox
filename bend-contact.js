@@ -42,7 +42,11 @@ export function contactKinematics({
  const theta=phase==='Reposicionamiento'?intendedTurn*(1-clamp(repositionProgress,0,1)):
   phase==='Pieza terminada'?0:intendedTurn;
  const c=Math.cos(theta),s=Math.sin(theta);
- const center={x:bend.x,y:bend.y};
+ // Durante el traspaso presentedAtStage ya ha trasladado su pivote
+ // (interpolado del golpe anterior al siguiente) al origen de máquina.
+ // Si aquí se resta OTRA VEZ el pliegue viejo, la pieza salta 50/200/250 mm
+ // justo al cambiar el golpe, como mostró el vídeo de las 09:33.
+ const center=phase==='Reposicionamiento'?{x:0,y:0}:{x:bend.x,y:bend.y};
  const moved=input.map(pt=>{
   const dx=pt.x-center.x,dy=pt.y-center.y;
   return {x:dx*c-dy*s,y:dx*s+dy*c};
@@ -62,11 +66,18 @@ export function contactKinematics({
  // desde el centro. Esta es una holgura ilustrativa, NO una cota CNC.
  const sheetTop=Math.max(...sheet.map(p=>p.y))+thickness/2;
  const retractGap=Math.max(gap,sheetTop-(centerHeight+thickness/2)+Math.max(5,thickness*2));
+ // Punzón elevado por encima de las alas cuando aún hay perfil
+ // ya plegado. En el cambio G3→G4 el montaje anterior lo bajaba unos
+ // 28 mm instantáneamente, llegando a atravesar la pieza en preparación.
+ const setupTip=Math.max(thickness+gap,sheetTop+Math.max(5,thickness*2));
+ const contactTip=centerHeight+thickness/2;
  let tipHeight;
- if(phase==='Plegado')tipHeight=centerHeight+thickness/2;
- else if(phase==='Retorno')tipHeight=centerHeight+thickness/2+retractGap*clamp(1-press,0,1);
- else tipHeight=thickness+gap*clamp(1-press/.45,0,1);
- if(isTransition)tipHeight=Math.max(thickness+gap,sheetTop+Math.max(5,thickness*2));
+ if(phase==='Plegado')tipHeight=contactTip;
+ else if(phase==='Retorno')tipHeight=contactTip+retractGap*clamp(1-press,0,1);
+ else if(phase==='Aproximación')tipHeight=contactTip+
+  (setupTip-contactTip)*clamp(1-press/.45,0,1);
+ else tipHeight=setupTip;
+ if(isTransition)tipHeight=setupTip;
  // La fibra media dibujada se desplaza aproximadamente medio espesor
  // desde el radio interior programado. La deformación real no se calcula.
  const requestedCenterlineRadius=insideRadius==null?
