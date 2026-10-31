@@ -574,3 +574,40 @@ reposicionamiento sin alterar el signo del ángulo.
 cota X, ni el modelo permite deducir automáticamente qué dedo hace
 contacto real. Para ello hacen falta caras del tope y datos de ejes
 X/R/Z de la máquina y una comprobación real sobre la pieza.
+
+### Corrección de referencia de apoyo por pliegue (vídeos IMG_9031(2) e IMG_9033(2))
+
+**Error corregido:** antes se buscaba automáticamente el extremo más
+alejado de la chapa. Eso permitía mostrar 150–250 mm de distancia en
+el primer golpe cuando la referencia elegida por el operario debía
+ser un ala de 50 mm. El apoyo ahora se determina por cada pliegue:
+
+- **Ala anterior**: el tramo que precede al pliegue en el perfil y
+  su longitud nominal, por ejemplo 50 mm. La presentación del perfil
+  en la plegadora se invierte horizontalmente para situar esa cara
+  delante del tope trasero; no se invierte el signo del pliegue.
+- **Ala siguiente**: el tramo posterior al pliegue con su longitud
+  nominal. Se presenta desde el lado opuesto.
+- **Automático · ala corta**: escoge la menor longitud adyacente;
+  **no promete evitar colisiones**.
+- **Stop 1 / Support 2** continúa siendo una selección de tipo de
+  dedo independiente del lado de alimentación.
+
+Las preferencias quedan asociadas a **pliegues físicos**, no al número
+de golpe. En el ejemplo omega 1-2-4-3, el G1 toma el ala anterior de
+50 mm y el G3 (pliegue 4) se presenta por el lado siguiente también
+con 50 mm, en lugar de colocar un tope desde la punta remota de la
+pieza. Durante la deformación la referencia del tope queda **fija en
+la configuración previa al golpe**; no sigue un extremo que cambia de
+posición al doblarse.
+
+La opción **Comparar ambas presentaciones frente al punzón (2D)**
+comprueba posiciones muestreadas de la secuencia con los útiles
+paramétricos y presenta los avisos de penetración y holgura para
+cada cara, sin cambiar la programación. Es orientativa. **No verifica
+la joroba real de la pata de cabra** ni perfiles CAD reales,
+amarres, topes, mesa, rutas de volteo o ejes CNC X/R/Z. Si el
+punto de referencia es un pliegue interior y no un extremo libre,
+hay que confirmar que puede realmente actuar de tope. La distancia
+nominal requiere deducción/radio/compensaciones de taller antes de
+programar una posición X de máquina.
