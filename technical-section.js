@@ -44,6 +44,7 @@ export function technicalScene(piece,instant=0){
   phase:st.phase,press:st.press,
   insideRadius:development(p).radius,
   feedMirrored:feedMirror,
+  repositionProgress:presentation.repositioning?presentation.progress:1,
   presentationLift:presentation.clearanceLift??0
  });
  const sheet=kinematics.sheet;
