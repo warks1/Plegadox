@@ -24,3 +24,16 @@ test('Diagnóstico cuantitativo 09:33: saltos en bordes de golpe y cambio de top
  console.log('DIAGNOSTICO_CAMBIO_GOLPES_0933',JSON.stringify(peaks));
  assert.deepEqual(p,snap);
 });
+
+test('Diagnóstico coordenadas de saltos: extremo, pivote, reflejo y pliegue activo',()=>{
+ const p=normalized(EXAMPLE);
+ for(const [a,b] of [[4.9999,5],[9.9999,10],[14.9999,15]]){
+  const one=technicalScene(p,a),two=technicalScene(p,b);
+  const brief=m=>({phase:m.stage.phase,bend:m.stage.activeBend,
+   mirror:m.feedMirrored,side:m.gaugeReference.side,
+   points:m.sheet.map((q,i)=>[i,Math.round(q.x*100)/100,Math.round(q.y*100)/100]),
+   raw:m.presentation.points.map(q=>[Math.round(q.x*100)/100,Math.round(q.y*100)/100]),
+   tip:m.kinematics.tipHeight});
+  console.log('DIAGNOSTICO_EXTREMOS_0933',JSON.stringify({a,b,one:brief(one),two:brief(two)}));
+ }
+});
