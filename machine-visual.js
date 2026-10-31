@@ -5,6 +5,7 @@ import {sectionPunch,sectionDie} from './tool-profiles.js';
 import {drawTechnicalSection,technicalScene} from './technical-section.js';
 import {currentToolContact} from './tool-collision.js';
 import {getV85,gaugeOutline} from './machine-config.js';
+import {gaugePlacement} from './backgauge-placement.js';
 import {sceneAtmosphere,dieDepth,ramDepth,sheetDepth,surfaceDetail,sectionOverlay} from './render-enhancements.js';
 
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -96,7 +97,7 @@ function backdrop(ctx,w,h){
  // Ambient cyan illumination around tool
  shape(ctx,0,0,w,h,radial(ctx,w*.53,h*.48,w*.6,[[0,'#0b4b7c48'],[.45,'#0e285b24'],[1,'#02081400']]),null);
 }
-function rearMachine(ctx,w,h,cx,cy,scale,stopNumber=1,referenceDistance=80){
+function rearMachine(ctx,w,h,cx,cy,scale,placement){
  ctx.save();
  // Horizontal steel rails across the background
  const y=cy+18*scale;
@@ -109,25 +110,32 @@ function rearMachine(ctx,w,h,cx,cy,scale,stopNumber=1,referenceDistance=80){
   const x=w*.69+(w*.26*i/4);
   steelRect(ctx,x,cy+23*scale,4*scale,25*scale,false);
  }
- // Contorno esquemático del apoyo elegido para ESTE golpe.
- // Ni la posición X ni los contactos de los útiles están calibrados.
- const isSupport=stopNumber===2;
- const gauge=isSupport?getV85().support:getV85().stop;
- const outline=gaugeOutline(gauge);
- const gaugeScale=scale*.72;
- const ox=cx-Math.max(24,Math.min(145,referenceDistance))*scale,oy=cy-8*scale;
- const gg=outline.map(p=>[ox-p.x*gaugeScale,oy+p.y*gaugeScale]);
- steelRect(ctx,ox-(Math.max(100,gauge[1])*gaugeScale+18*scale),oy-6*scale,
-  Math.max(100,gauge[1])*gaugeScale+22*scale,7*scale,false);
+ // En el vídeo real el tope llega DESDE DETRÁS (derecha en perfil)
+ // hacia el borde trasero de la chapa. Esta referencia se deriva del
+ // borde presentado, no de una distancia fija inventada.
+ const gauge=placement.profile==='support'?getV85().support:getV85().stop;
+ const outline=gaugeOutline(gauge),gaugeScale=scale*.62;
+ const ox=cx+placement.point.x*scale,oy=cy-placement.point.y*scale;
+ // El extremo izquierdo de la silueta coincide visualmente con el borde.
+ // La varilla y el carro se prolongan hacia la derecha de la chapa.
+ const gg=outline.map(p=>[ox+p.x*gaugeScale,oy+p.y*gaugeScale]);
+ const rodEnd=ox+Math.max(110,gauge[1]+20)*gaugeScale;
+ steelRect(ctx,ox,oy+4*scale,Math.max(8,rodEnd-ox),6*scale,false);
  poly(ctx,gg,
-  gradient(ctx,ox-100*gaugeScale,oy,ox,oy,
-   [[0,'#2c6550'],[.35,'#55b787'],[.8,'#a4f0bd'],[1,'#296f58']]),
-  '#b1ffd2',1.5*scale);
- for(const frac of [.24,.58])bolt(ctx,ox-gauge[0]*gaugeScale*frac,oy-10*scale,2.4*scale);
- ctx.font='700 '+Math.max(9,11*scale)+'px system-ui';
- ctx.fillStyle='#9be6bf';ctx.textAlign='left';
- const label=isSupport?'TOPE 2 · SUPPORT':'TOPE 1 · STOP';
- ctx.fillText(label,Math.max(10,ox-135*scale),oy-29*scale);
+  gradient(ctx,ox,oy,rodEnd,oy,
+   [[0,'#9ff6b7'],[.28,'#44b975'],[.76,'#235a48'],[1,'#112f31']]),
+  '#c8ffe0',Math.max(1.2,1.9*scale));
+ // Cara activa del tope orientada al borde, identificable incluso al
+ // reducir la escena en móvil. Sin indicación de apoyo confirmado.
+ ctx.save();ctx.lineWidth=Math.max(2,2.4*scale);
+ ctx.strokeStyle='#dbfff0';ctx.shadowBlur=11*scale;ctx.shadowColor='#4fffb6';
+ ctx.beginPath();ctx.moveTo(ox,oy-7*scale);ctx.lineTo(ox,oy+8*scale);ctx.stroke();ctx.restore();
+ for(const frac of [.24,.58])bolt(ctx,ox+gauge[0]*gaugeScale*frac,oy-10*scale,2.4*scale);
+ ctx.font='800 '+Math.max(8,11*scale)+'px system-ui';
+ ctx.fillStyle='#a5ffcc';ctx.textAlign='left';
+ const label=placement.stopNumber===2?'TOPE 2 · SUPPORT':'TOPE 1 · STOP';
+ ctx.fillText(label,Math.min(Math.max(8,ox+3*scale),w-145*scale),
+  Math.max(20,oy-28*scale));
  // Left support and machine rails
  steelRect(ctx,0,cy+26*scale,w*.3,40*scale,false);
  for(let i=0;i<4;i++){shape(ctx,20+i*32*scale,cy+28*scale,8*scale,34*scale,'#20394e','#435b6b');}
@@ -190,6 +198,32 @@ function drawRam(ctx,cx,cy,scale,tipY,punch,scene){
  ctx.beginPath();ctx.moveTo(cx-3*scale,tipY);ctx.lineTo(cx+3*scale,tipY);
  ctx.strokeStyle='#30c3ff';ctx.lineWidth=2*scale;ctx.stroke();ctx.restore();
 }
+/** Reforzar el volumen y el filo del punzón DESPUÉS de la chapa.
+ * El gris oscuro anterior permitía confundirlo con la trancha trasera.
+ * La silueta sigue siendo la misma del motor técnico, no un perfil CAD.
+ */
+export function drawPunchForeground(ctx,scene,cx,cy,scale,transparent=false){
+ const pts=machineToolProjection(scene,cx,cy,scale).punch;
+ if(pts.length<3)return;
+ const xx=pts.map(p=>p[0]),min=Math.min(...xx),max=Math.max(...xx);
+ const fill=gradient(ctx,min,0,max,0,[
+  [0,'#f2faff'],[.19,'#acc4d5'],[.42,'#fffefe'],
+  [.68,'#bed1df'],[.86,'#f5fbff'],[1,'#6a8aa2']]);
+ ctx.save();ctx.lineJoin='round';ctx.lineCap='round';
+ // Brillo exterior y borde oscuro interior: lectura clara sobre blanco,
+ // azul, chapa oscura o texturas de bancada.
+ ctx.shadowBlur=16*Math.max(.6,scale);ctx.shadowColor='#7be2ff';
+ poly(ctx,pts,transparent?'#b4d6e246':fill,'#f4fcff',
+  Math.max(2.4,2.9*scale));
+ ctx.shadowBlur=0;
+ ctx.strokeStyle='#194765';ctx.lineWidth=Math.max(.9,1.1*scale);
+ ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(...p):ctx.moveTo(...p));
+ ctx.closePath();ctx.stroke();
+ const tip=pts.reduce((a,b)=>b[1]>a[1]?b:a,pts[0]);
+ ctx.beginPath();ctx.arc(tip[0],tip[1],Math.max(2,2.6*scale),0,Math.PI*2);
+ ctx.fillStyle='#eeffff';ctx.shadowColor='#55d8ff';ctx.shadowBlur=11*scale;ctx.fill();
+ ctx.restore();
+}
 function drawSheet(ctx,pts,thickness,scale,active){
  if(pts.length<2)return;
  ctx.save();ctx.lineJoin='round';ctx.lineCap='round';
@@ -211,8 +245,8 @@ function stageScene(ctx,w,h,piece,sim,machineView){
  backdrop(ctx,w,h);
  sceneAtmosphere(ctx,w,h,{cx,cy:baseY,s:scale});
  const stopNumber=piece.stopByBend?.[st.activeBend]===2?2:1;
- const referenceDistance=piece.flanges[st.activeBend]||80;
- rearMachine(ctx,w,h,cx,baseY,scale,stopNumber,referenceDistance);
+  const placement=gaugePlacement(scene,stopNumber);
+ rearMachine(ctx,w,h,cx,baseY,scale,placement);
  dieDepth(ctx,{cx,cy:baseY,s:scale},opening,Boolean(machineView?.perspective),scene.die);
  drawDie(ctx,scene,cx,baseY,scale);
  // Los reflejos de la matriz se recortan a su contorno real en drawDie.
@@ -233,6 +267,17 @@ function stageScene(ctx,w,h,piece,sim,machineView){
  const transformed=machineSheetProjection(scene,cx,baseY,scale,Boolean(machineView?.perspective));
  sheetDepth(ctx,transformed,{cx,cy:baseY,s:scale},t,Boolean(machineView?.perspective));
  drawSheet(ctx,transformed,t,scale,st.press>.4);
+ // Punzón en primer plano: el cuerpo de la herramienta NUNCA debe
+ // desaparecer detrás de la chapa o de la textura de la máquina.
+ drawPunchForeground(ctx,scene,cx,baseY,scale,Boolean(machineView?.transparent));
+ // Contacto de tope sólo indicado gráficamente cuando aparece un borde
+ // trasero presentable en la sección; no se certifica el apoyo físico.
+ if(placement.alignedToSheet){
+  const x=cx+placement.point.x*scale,y=baseY-placement.point.y*scale;
+  ctx.save();ctx.beginPath();ctx.arc(x,y,Math.max(3,3.5*scale),0,Math.PI*2);
+  ctx.fillStyle='#b5ffe2';ctx.shadowColor='#4bffb0';ctx.shadowBlur=10*scale;
+  ctx.fill();ctx.strokeStyle='#174e3b';ctx.lineWidth=1.2;ctx.stroke();ctx.restore();
+ }
  sectionOverlay(ctx,{cx,cy:baseY,s:scale},opening,punch.tip||0,Boolean(machineView?.section));
  // Workpiece shadow and hot contact glow along the working tool tip
  if(st.press>.36){
