@@ -28,7 +28,7 @@ export const PUNCHES = [
 // registerCatalogue es idempotente para los módulos que lo reutilizan.
 registerCatalogue(DIES,PUNCHES);
 export const MACHINE = Object.freeze({name:'Trumpf V85',tonnage:85,workingWidth:2040,ram:[1340,28,2,25.4,20,30,125,20,39,28],bed:[820,80,25.25,25.25,50,20,20],stop:[70,100,18,25,12,0],support:[70,100,8,25,12,8]});
-export const EXAMPLE = {name:'Omega · ejemplo geométrico',material:'s235',thickness:2,width:500,die:'v16',punch:'straight88',flanges:[50,50,50,50,50],angles:[90,-90,-90,90],order:[0,1,3,2],kFactor:null,radius:null,datum:'outside'};
+export const EXAMPLE = {name:'Omega · ejemplo geométrico',material:'s235',thickness:2,width:500,die:'v16',punch:'straight88',flanges:[50,50,50,50,50],angles:[90,-90,-90,90],order:[0,1,3,2],gaugeSideByBend:['before','before','before','after'],kFactor:null,radius:null,datum:'outside'};
 export function clamp(x,a,b){return Math.min(b,Math.max(a,x));}
 export function finite(v,fallback=0){const n=typeof v==='string'&&v.trim()===''?NaN:Number(v);return Number.isFinite(n)?n:fallback;}
 export function normalized(input){
@@ -38,10 +38,11 @@ export function normalized(input){
  const n=a.length,requested=Array.isArray(input?.order)?input.order:[];
  // Elección de apoyo trasero por pliegue: 1 Stop o 2 Support.
  const stopByBend=Array.from({length:n},(_,i)=>String(input?.stopByBend?.[i])==='2'?2:1);
+ const gaugeSideByBend=Array.from({length:n},(_,i)=>['before','after'].includes(input?.gaugeSideByBend?.[i])?input.gaugeSideByBend[i]:'auto');
  const order=[...new Set(requested.filter(i=>Number.isInteger(i)&&i>=0&&i<n))];
  for(let i=0;i<n;i++)if(!order.includes(i))order.push(i);
  const id= MATERIALS.some(m=>m.id===input?.material)?input.material:'s235';
- return {name:String(input?.name||'Nueva pieza').slice(0,80),material:id,thickness:clamp(finite(input?.thickness,2),0.2,30),width:clamp(finite(input?.width,500),1,10000),die:DIES.some(d=>d.id===input?.die)?input.die:'v16',punch:PUNCHES.some(p=>p.id===input?.punch)?input.punch:'straight88',flanges:f,angles:a,order,stopByBend,kFactor:input?.kFactor==null?null:clamp(finite(input.kFactor,.36),.15,.6),radius:input?.radius==null?null:clamp(finite(input.radius,2),.1,100),rmMPa:input?.rmMPa==null||input.rmMPa===''?null:clamp(finite(input.rmMPa,450),50,1800),datum:input?.datum==='neutral'?'neutral':'outside'};
+ return {name:String(input?.name||'Nueva pieza').slice(0,80),material:id,thickness:clamp(finite(input?.thickness,2),0.2,30),width:clamp(finite(input?.width,500),1,10000),die:DIES.some(d=>d.id===input?.die)?input.die:'v16',punch:PUNCHES.some(p=>p.id===input?.punch)?input.punch:'straight88',flanges:f,angles:a,order,stopByBend,gaugeSideByBend,kFactor:input?.kFactor==null?null:clamp(finite(input.kFactor,.36),.15,.6),radius:input?.radius==null?null:clamp(finite(input.radius,2),.1,100),rmMPa:input?.rmMPa==null||input.rmMPa===''?null:clamp(finite(input.rmMPa,450),50,1800),datum:input?.datum==='neutral'?'neutral':'outside'};
 }
 /** Todos los pliegues parten de una chapa recta. +90 y -90 giran en sentidos contrarios. */
 export function profile(piece,fractions=[]){
@@ -128,11 +129,21 @@ export function development(piece){
  const nominal=p.flanges.reduce((a,b)=>a+b,0),totalBA=perBend.reduce((a,b)=>a+b.ba,0),totalBD=perBend.reduce((a,b)=>a+b.bd,0);
  return {radius:r,k,nominal,totalBA,totalBD,length:p.datum==='neutral'?nominal+totalBA:nominal-totalBD,perBend,estimated:true};
 }
+/** Referencia de apoyo por pliegue: el lado de chapa NO es el tipo Stop/Support. */
+export function gaugeReference(piece,bend){
+ const p=normalized(piece),b=Math.max(0,Math.min(p.angles.length-1,Math.trunc(bend)||0));
+ const choice=p.gaugeSideByBend[b],side=choice==='auto'?
+  (p.flanges[b]<=p.flanges[b+1]?'before':'after'):choice;
+ return {bend:b,choice,side,distance:p.flanges[b+(side==='after'?1:0)],
+  sourceIndex:side==='before'?b:b+2,
+  label:side==='before'?'Ala anterior':'Ala siguiente',verified:false};
+}
 /** Tope actual por golpe; contorno ilustrativo, no posición X de CNC. */
 export function stopAtStage(piece,time){
  const p=normalized(piece),st=stage(p,time),bend=st.activeBend;
  const value=p.stopByBend[bend]===2?2:1;
- return {operation:st.activeOperation,bend,value,
+ const reference=gaugeReference(p,bend);
+ return {operation:st.activeOperation,bend,value,reference,
   key:value===2?'support':'stop',label:value===2?'TOPE 2 · SUPPORT':'TOPE 1 · STOP',verified:false};
 }
 export function stage(piece,time){
