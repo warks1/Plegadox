@@ -67,7 +67,7 @@ function gaugeCanvas(ctx,w,h,cfg,key){
  const pad=46,plotW=Math.max(1,w-2*pad),plotH=Math.max(1,h-2*pad);
  const s=Math.min(plotW/Math.max(1,bounds.width),plotH/Math.max(1,bounds.height));
  const ox=pad+(plotW-bounds.width*s)/2,oy=pad+(plotH-bounds.height*s)/2;
- const xy=p=>({x:ox+(p.x-bounds.minX)*s,y:oy+(p.y-bounds.minY)*s});
+ const xy=p=>({x:ox+(p.x-bounds.minX)*s,y:oy+(bounds.maxY-p.y)*s});
  ctx.save();
  ctx.beginPath();outline.forEach((p,i)=>{const q=xy(p);i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y);});
  ctx.closePath();const g=ctx.createLinearGradient(ox,0,ox+bounds.width*s,h);
