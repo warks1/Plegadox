@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {EXAMPLE,normalized,profile,stage,development,orientedForMachine,selfIntersects,toolAngleCompatibility,getTooling,bendPreviewPath} from '../engine.js';
+import {EXAMPLE,normalized,profile,stage,development,orientedForMachine,selfIntersects,toolAngleCompatibility,getTooling,bendPreviewPath,stopAtStage} from '../engine.js';
 const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-6, a+' != '+b);
 test('Chapa inicialmente plana, no nace omega ya doblada',()=>{
  const p=profile(EXAMPLE);assert.ok(p.points.every(point=>point.y===0));
@@ -83,4 +83,18 @@ test('miniaturas muestran el ángulo firmado programado y no una escuadra fija',
  near(vertex(0).y,26);
  assert.ok(vertex(120).x<35,'Pliegue superior a 90 vuelve hacia el ala de entrada');
  assert.ok(vertex(-120).y>26);
+});
+
+test('Tope 2 pertenece al pliegue seleccionado incluso en el orden 1-2-4-3',()=>{
+ const p={...EXAMPLE,stopByBend:[1,2,1,2]};
+ const op2=stopAtStage(p,5.3),op3=stopAtStage(p,10.3);
+ assert.equal(op2.bend,1);assert.equal(op2.value,2);assert.equal(op2.key,'support');
+ assert.equal(op3.bend,3);assert.equal(op3.value,2);
+ const newOrder=stopAtStage({...p,order:[3,0,1,2]},.5);
+ assert.equal(newOrder.bend,3);assert.equal(newOrder.value,2);
+ assert.equal(newOrder.verified,false);
+});
+test('la normalización conserva sólo Tope 1 o Tope 2 por pliegue',()=>{
+ assert.deepEqual(normalized({...EXAMPLE,stopByBend:[2,'2',0,99]}).stopByBend,[2,2,1,1]);
+ assert.deepEqual(normalized(EXAMPLE).stopByBend,[1,1,1,1]);
 });
