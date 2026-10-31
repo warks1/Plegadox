@@ -33,14 +33,22 @@ export function gaugePlacement(scene,stopNumber=1){
   const index=reference.sourceIndex;
   const freeEdge=index===0||index===(scene.sheet?.length||0)-1;
   const valid=[a.x,a.y,reference.distance].every(Number.isFinite);
+  const edge=scene.sheet?.[index];
+  const gap=edge?Math.hypot(edge.x-a.x,edge.y-a.y):Infinity;
+  const approaching=['Posicionamiento','Aproximación'].includes(scene.stage?.phase);
+  const contactEngaged=valid&&freeEdge&&feature.usable&&a.x>0&&
+    approaching&&gap<=Math.max(.4,thickness*.28);
   return {stopNumber:selected,profile:selected===2?'support':'stop',
    point:{x:a.x,y:a.y},contact:contactAt(a),nominalDistance:reference.distance,
    referenceSide:reference.side,referenceLabel:reference.label,
    feedMirrored:!!scene.feedMirrored,sourceIndex:index,
-   sheetEdgeFound:valid&&freeEdge,alignedToSheet:valid&&a.x>0&&freeEdge&&feature.usable,
+   sheetEdgeFound:valid&&freeEdge,alignedToSheet:contactEngaged,
+   contactEngaged,contactGap:gap,
    freeEdge,referenceKind:freeEdge?'extremo libre':'vértice interior plegado',
    state:!valid?'sin cota válida':!feature.usable?'sin cara física de apoyo definida':
-    !freeEdge?'apoyo sobre vértice interior: revisar':'referencia nominal previa al golpe',
+    !freeEdge?'apoyo sobre vértice interior: revisar':
+    contactEngaged?'borde presentado contra la cara seleccionada':
+    'referencia nominal fijada antes del golpe (sin contacto actual)',
    verified:false};
  }
 
