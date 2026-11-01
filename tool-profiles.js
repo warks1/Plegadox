@@ -29,7 +29,7 @@ export function photoGooseneckOutline(tool,{height,tipRadius,noseArc}){
  const workingHeight=height;
  const projectedExtension=Math.max(0,Number(tool.headProjection)||37);
  const overallHeight=workingHeight+projectedExtension;
- const span=Number(tool.topWidth)||50;
+ const span=Number(tool.referenceSpan)||Number(tool.topWidth)||50;
  const rightX=9.5,leftX=rightX-span;
  const stemLeft=-11,neckX=-21;
  const points=[
