@@ -15,6 +15,8 @@ import {suggestBendOrder} from './sequence-advisor.js';
 import {compareGaugeSides} from './gauge-side-review.js';
 import {sectionPunch,sectionDie} from './tool-profiles.js';
 import {getV85} from './machine-config.js';
+import {gaugePlacement} from './backgauge-placement.js';
+import {technicalScene} from './technical-section.js';
 import {loadImportedTools,registerImportedTools,persistImportedTool} from './tool-dxf.js';
 import {setupToolDxfImporter} from './tool-import-ui.js';
 registerCatalogue(DIES,PUNCHES);
@@ -761,11 +763,17 @@ function renderSimulationText(){
  $('chooseSideBefore').textContent='← Ala anterior · '+numbers(piece.flanges[gauge.bend],1)+' mm';
  $('chooseSideAfter').textContent='Ala siguiente · '+numbers(piece.flanges[gauge.bend+1],1)+' mm →';
  const freeEnd=ref.sourceIndex===0||ref.sourceIndex===piece.flanges.length;
+ const chosenGauge=gaugePlacement(technicalScene(piece,sim.time),gauge.value);
  $('activeGaugeReference').textContent=ref.label+' · '+numbers(ref.distance,1)+
   ' mm nominales desde el pliegue · '+(gauge.value===2?'contacto en escalón SUPPORT 2':'contacto en cara frontal STOP 1')+
    ' · '+(ref.side==='before'?'presentación invertida':'presentación directa')+
   (freeEnd?' · borde libre':' · ⚠ vértice interior: verificar apoyo')+
+  (chosenGauge.gaugeInterference?.warning?
+   ' · ⚠ POSIBLE INTERFERENCIA 2D DEL TOPE CON LA CHAPA: revisar apoyo y retirada':
+   !chosenGauge.contactEngaged?' · sin contacto confirmado en esta fase':' · contacto nominal 2D')+
   ' · sin ejes X/R/Z calibrados';
+ $('activeGaugeReference').dataset.interference=String(
+  !!chosenGauge.gaugeInterference?.warning);
  for(const mode of ['auto','before','after']){
   const suffix=mode==='auto'?'Auto':mode==='before'?'Before':'After';
   const btn=$('chooseSide'+suffix),active=gauge.reference.choice===mode;

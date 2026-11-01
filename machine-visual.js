@@ -118,15 +118,20 @@ function rearMachine(ctx,w,h,cx,cy,scale,placement){
  const gg=gaugeContourAtContact(placement,gauge).map(p=>[
   cx+p.x*scale,cy-p.y*scale]);
  const faceX=cx+placement.point.x*scale;
- const rodEnd=faceX+Math.max(110,gauge[1]+20)*scale;
- steelRect(ctx,faceX,cy-placement.point.y*scale+4*scale,
-  Math.max(8,rodEnd-faceX),6*scale,false);
+ // El brazo viene por DETRÁS del dedo: no debe atravesar el propio perfil
+ // ni nacer en el punto de contacto chapa/dedo (fallo visible en vídeo).
+ const bodyRear=Math.max(...gg.map(p=>p[0]));
+ const rodStart=Math.max(faceX,bodyRear);
+ const rodEnd=rodStart+Math.max(35,gauge[0]*.45)*scale;
+ steelRect(ctx,rodStart,cy-placement.point.y*scale+4*scale,
+  Math.max(8,rodEnd-rodStart),6*scale,false);
+ const conflict=!!placement.gaugeInterference?.warning;
  const valid=placement.alignedToSheet;
  poly(ctx,gg,
   gradient(ctx,ox,oy,rodEnd,oy,valid?
    [[0,'#9ff6b7'],[.28,'#44b975'],[.76,'#235a48'],[1,'#112f31']]:
    [[0,'#c5d1dc'],[.28,'#7890a4'],[.76,'#475b6c'],[1,'#1e3447']]),
-  valid?'#c8ffe0':'#9ab5c8',Math.max(1.2,1.9*scale));
+  conflict?'#ff906f':valid?'#c8ffe0':'#9ab5c8',Math.max(1.2,1.9*scale));
  // Resaltar la cara real del dedo: STOP frontal o escalón SUPPORT.
  // Un vértice interior de la chapa no constituye un apoyo fiable.
  const contact=placement.contact;
@@ -134,17 +139,19 @@ function rearMachine(ctx,w,h,cx,cy,scale,placement){
  if(contact){
   const a=screen(contact.from),b=screen(contact.to);
   ctx.save();ctx.lineWidth=Math.max(3,3.6*scale);
-  ctx.strokeStyle=valid?'#c1ffe2':'#ffd18d';
-  ctx.shadowBlur=11*scale;ctx.shadowColor=valid?'#4fffb6':'#ffad56';
+  ctx.strokeStyle=conflict?'#ff856e':valid?'#c1ffe2':'#ffd18d';
+  ctx.shadowBlur=11*scale;ctx.shadowColor=conflict?'#ff4b37':valid?'#4fffb6':'#ffad56';
   ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();
   const cp=screen(contact.point);
   ctx.beginPath();ctx.arc(...cp,Math.max(2.5,3*scale),0,Math.PI*2);
-  ctx.fillStyle=valid?'#e1fff1':'#ffd18d';ctx.fill();ctx.restore();
+  ctx.fillStyle=conflict?'#ff7769':valid?'#e1fff1':'#ffd18d';ctx.fill();ctx.restore();
  }
- for(const frac of [.24,.58])bolt(ctx,faceX+gauge[0]*scale*frac,cy-placement.point.y*scale-10*scale,2.4*scale);
+ for(const frac of [.24,.58])bolt(ctx,rodStart+(rodEnd-rodStart)*frac,
+  cy-placement.point.y*scale-10*scale,2.4*scale);
  ctx.font='800 '+Math.max(8,11*scale)+'px system-ui';
  ctx.fillStyle='#a5ffcc';ctx.textAlign='left';
- const label=placement.stopNumber===2?'TOPE 2 · ESCALÓN':'TOPE 1 · CARA STOP';
+ const label=conflict?'⚠ TOPE '+placement.stopNumber+' · REVISAR INTERFERENCIA':
+  placement.stopNumber===2?'TOPE 2 · ESCALÓN':'TOPE 1 · CARA STOP';
  ctx.fillText(label,Math.min(Math.max(8,ox+3*scale),w-145*scale),
   Math.max(20,cy-placement.point.y*scale-24*scale));
  // Left support and machine rails

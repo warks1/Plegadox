@@ -24,3 +24,13 @@ test('manifest para instalación y caché local versionada',()=>{
  assert.ok(get('sw.js').includes("./app.js"));
  assert.ok(get('sw.js').includes("./styles.css"));
 });
+
+test('la PWA busca código nuevo en red y permite abrir la última caché offline',()=>{
+ const sw=get('sw.js'),pwa=get('pwa.js');
+ const iNetwork=sw.indexOf('const response=await fetch(request);');
+ const iCached=sw.lastIndexOf('await caches.match(request)');
+ assert.ok(iNetwork>=0&&iCached>iNetwork,
+  'Actualizar módulos online primero y conservar respaldo offline');
+ assert.match(pwa,/controllerchange/);
+ assert.match(pwa,/updateViaCache:'none'/);
+});

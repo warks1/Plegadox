@@ -1,5 +1,5 @@
 // PlegadoX · caché offline estática. Se versiona para no arrastrar JS obsoleto.
-const CACHE='plegadox-static-0.9.0-dxf-2';
+const CACHE='plegadox-static-0.9.0-gauge-3';
 const APP_FILES=[
  "./",
  "./app.js",
@@ -15,6 +15,7 @@ const APP_FILES=[
  "./favicon.svg",
  "./flat-layout.js",
  "./gauge-side-review.js",
+ "./gauge-interference.js",
  "./icons.svg",
  "./incident-navigation.js",
  "./index.html",
@@ -65,14 +66,19 @@ self.addEventListener('fetch',event=>{
   })());
   return;
  }
+ // Estrategia network-first para los módulos de la app: el navegador
+ // obtiene la versión actual cuando hay red, con respaldo offline.
+ // Antes se servía siempre desde caché y podía mostrar un tope antiguo.
  event.respondWith((async()=>{
-  const saved=await caches.match(request);
-  if(saved)return saved;
-  const response=await fetch(request);
-  if(response.ok){
-   const cache=await caches.open(CACHE);
-   await cache.put(request,response.clone());
+  try{
+   const response=await fetch(request);
+   if(response.ok){
+    const cache=await caches.open(CACHE);
+    await cache.put(request,response.clone());
+   }
+   return response;
+  }catch{
+   return (await caches.match(request))||Response.error();
   }
-  return response;
  })());
 });

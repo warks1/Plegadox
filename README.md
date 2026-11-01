@@ -663,3 +663,11 @@ y la utilizan la pantalla **Máquina**, la presentación de la plegadora
 y el contacto esquemático con la chapa. Las cotas L1–L6, Ox/Oz,
 referencias y configuración almacenada **no cambian**.
 Los perfiles siguen siendo esquemáticos, no CAD certificado.
+
+
+## Actualizaciones PWA (revisión de caché móvil)
+La aplicación solicita al servidor los módulos locales cuando está
+conectada y usa la caché sólo cuando falla la red; además comprueba
+actualizaciones del Service Worker. Una revisión activa sustituye a la
+antigua en una recarga para evitar mezclar el soporte del tope de una
+versión con la geometría de otra. La apertura offline sigue disponible.
