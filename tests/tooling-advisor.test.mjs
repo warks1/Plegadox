@@ -57,3 +57,10 @@ test('espesores mayores cambian objetivo V; cambios de signo no cambian la pieza
  assert.deepEqual(input.order,[0,1,3,2]);
  assert.deepEqual(input.angles,[90,-90,-90,90]);
 });
+
+test('omega de 3 mm y alas 50 mm: la guía recomienda la V más cercana a x8',()=>{
+ const r=recommendTooling({...EXAMPLE,thickness:3});
+ assert.ok(r.choice);
+ assert.equal(r.targetOpening,24);
+ assert.equal(r.choice.dieOpening,24,'No priorizar una V más pequeña sin motivo');
+});
