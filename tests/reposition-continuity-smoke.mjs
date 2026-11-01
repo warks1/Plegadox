@@ -24,7 +24,18 @@ try{
                    JSON.stringify(machineSheetProjection(s,100,100,1,false)),
             time:t,position:gaugePlacement(s,1).point,order:piece.order,angles:piece.angles};
    });
-   return {pts,stop:gaugeOutline(getV85().stop,1),support:gaugeOutline(getV85().support,2)};
+   const transfer=[5,10,15].map(boundary=>{
+    const t=raw=>boundary-.8+Math.max(raw,1e-5)*.8;
+    const frames=[0,.3,.4,.5,.6,.7,.9].map(raw=>{
+     const scene=technicalScene(piece,t(raw));
+     const placement=gaugePlacement(scene,2);
+     return {anchor:scene.gaugeAnchor, x:placement.point.x,
+      moving:placement.moving,active:placement.contactEngaged,
+      source:scene.gaugeTransition?.from?.x};
+    });
+    return frames;
+   });
+   return {pts,transfer,stop:gaugeOutline(getV85().stop,1),support:gaugeOutline(getV85().support,2)};
   });
   const checked=values.pts;
   assert.ok(values.stop[2].x===0&&values.stop[3].x===70,
@@ -35,6 +46,15 @@ try{
    const a=checked[2*i].position,b=checked[2*i+1].position;
    assert.ok(Math.hypot(a.x-b.x,a.y-b.y)<.2,
     'Tope teletransportado al pasar de golpe '+(i+1));
+  }
+  for(const [i,transfer] of values.transfer.entries()){
+   assert.ok(transfer.every(x=>x.moving&&!x.active),'Dedo en modo traslado '+i);
+   assert.ok(transfer.every(x=>Math.abs(x.anchor.x-transfer[0].anchor.x)<1e-7),
+    'El origen se desplaza al girar la chapa: salto '+i);
+   assert.ok(transfer.every(x=>Math.abs(x.source-transfer[0].source)<1e-7),
+    'La retirada del tope cambia su referencia X durante el golpe '+i);
+   assert.ok(transfer.slice(1,6).every(x=>Math.abs(x.x-transfer[1].x)<1e-7),
+    'El dedo no se mantiene retirado mientras gira la chapa '+i);
   }
   assert.ok(checked.every(x=>x.same),'Cabina distinta de la sección');
   assert.deepEqual(checked[0].order,[0,1,3,2]);

@@ -56,8 +56,15 @@ export function technicalScene(piece,instant=0){
  }
  const setupFractions=[...st.fractions];setupFractions[st.activeBend]=0;
  const setup=presentedForMachine(p,setupFractions,st.activeBend);
- const setupPoint=mirror(setup.points[reference.sourceIndex]);
- const gaugeAnchor={x:setupPoint.x,y:setupPoint.y+p.thickness/2};
+ // CRÍTICO: el punto origen del dedo es la referencia del golpe
+ // anterior ANTES de retirar la chapa. El factor visual spin es
+ // sólo para dibujar el giro de la CHAPA: nunca debe mover los ejes
+ // X/R del TOPE ni cambiar su origen durante el mismo traslado.
+ const fixedGaugePoint=setup.points[reference.sourceIndex];
+ const gaugeAnchor={
+  x:(feedMirror?-1:1)*fixedGaugePoint.x,
+  y:fixedGaugePoint.y+p.thickness/2
+ };
  // El tope es un dedo rígido con ejes X/R: durante la retirada no debe
  // teletransportarse al cambiar de pliegue. Se RETRAE, se reposiciona
  // cuando la chapa está alzada y vuelve a la referencia siguiente.
