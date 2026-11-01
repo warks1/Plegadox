@@ -783,3 +783,21 @@ La pieza, los signos de ángulo y los puntos de contacto no se alteran.
 Pruebas de ambos apoyos y los cambios 1→2, 2→4 y 4→3, en PC e iPhone.
 Continúa siendo una simulación esquemática: el encuadre NO verifica
 colisiones reales ni calibra los ejes CNC X/R/Z.
+
+## R13 · Asesor de matriz V y punzón en Programación
+La recomendación aparece **automáticamente**, sin cambiar las herramientas
+seleccionadas hasta pulsar **Aplicar V + punzón**. Se recalcula al modificar
+material, espesor, anchura, dimensiones de alas, ángulos o radio interior.
+Evalúa pares de los útiles registrados (incluidos los de catálogo o DXF).
+
+Se descartan aperturas cuya referencia preliminar 0,7 × V no cabe en las alas
+adyacentes, ángulos incluidos incompatibles, relación V/espesor fuera de 5–14,
+pares de amarres conocidos distintos y fuerza de referencia que supere
+las 85 toneladas nominales de la máquina. Objetivo habitual V≈8×espesor
+(para 9–10 mm 10×; desde 12 mm 12×). Muestra alternativas y avisos
+de longitud, radio, cuello de pata de cabra, ángulo y carga por metro.
+Cuando no hay ningún par posible se **avisa y no se inventa una selección**.
+
+El consejo es preliminar **NO CNC**: el perfil de las herramientas, sus
+amarres a la Trumpf V85, carga por metro y colisiones 3D siguen sin
+validarse. La comprobación definitiva requiere fabricante y ensayo real.
