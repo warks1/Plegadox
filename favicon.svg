@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="PlegadoX">
+<rect width="64" height="64" rx="13" fill="#081a2c"/>
+<path d="M11 18h42v9H37L28 46H11l13-28Z" fill="#81bbd5"/>
+<path d="M37 30l13 16h-12l-9-12Z" fill="#00bcf2"/>
+<path d="M8 53h48" stroke="#22bef5" stroke-width="3" stroke-linecap="round"/>
+</svg>
