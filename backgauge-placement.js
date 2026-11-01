@@ -5,6 +5,16 @@
 import {getV85,gaugeContactFeature,gaugeOutline} from './machine-config.js';
 import {inspectGaugeProfile} from './gauge-interference.js';
 
+/** Contacto válido sólo si el resto de la chapa viene de la IZQUIERDA. */
+export function sheetInFrontOfGauge(scene,index,anchor,thickness=2){
+ const sheet=scene?.sheet;
+ if(!Array.isArray(sheet)||sheet.length<2||!Number.isInteger(index)||
+  index<0||index>=sheet.length|| (index!==0&&index!==sheet.length-1))return false;
+ const neighbour=sheet[index===0?1:index-1];
+ const margin=Math.max(.12,Math.min(.5,thickness*.12));
+ return Number.isFinite(neighbour?.x)&&Number.isFinite(anchor?.x)&&
+  neighbour.x<=anchor.x-margin;
+}
 /** Mismo contacto nominal de la chapa, pero distinta cara física del dedo. */
 export function gaugePlacement(scene,stopNumber=1){
  const points=(scene?.sheetDisplay||[]).filter(p=>
@@ -41,6 +51,8 @@ export function gaugePlacement(scene,stopNumber=1){
    label:feature.label,usable:feature.usable,
    origin,mirrorX:false,localContactX:feature.point.x,
    from:toWorld(feature.from),to:toWorld(feature.to),
+   frontFace:feature.frontFace?{
+    from:toWorld(feature.frontFace.from),to:toWorld(feature.frontFace.to)}:null,
    point:surface,verified:false};
  };
  // Nuevo modo: lado de apoyo elegido POR PLIEGUE, independiente de tipo
@@ -54,17 +66,19 @@ export function gaugePlacement(scene,stopNumber=1){
   const edge=scene.sheet?.[index];
   const gap=edge?Math.hypot(edge.x-a.x,edge.y-a.y):Infinity;
   const approaching=['Posicionamiento','Aproximación'].includes(scene.stage?.phase);
-  const contactEngaged=valid&&freeEdge&&feature.usable&&a.x>0&&
+  const sheetInFront=sheetInFrontOfGauge(scene,index,a,thickness);
+  const contactEngaged=valid&&freeEdge&&sheetInFront&&feature.usable&&a.x>0&&
     approaching&&gap<=Math.max(.4,thickness*.28);
   return review({stopNumber:selected,profile:selected===2?'support':'stop',
    point:{x:a.x,y:a.y},contact:contactAt(a),nominalDistance:reference.distance,
    referenceSide:reference.side,referenceLabel:reference.label,
-   feedMirrored:!!scene.feedMirrored,sourceIndex:index,
+   feedMirrored:!!scene.feedMirrored,sourceIndex:index,sheetInFront,
    sheetEdgeFound:valid&&freeEdge,alignedToSheet:contactEngaged,
    contactEngaged,contactGap:gap,
    freeEdge,referenceKind:freeEdge?'extremo libre':'vértice interior plegado',
    state:!valid?'sin cota válida':!feature.usable?'sin cara física de apoyo definida':
     !freeEdge?'apoyo sobre vértice interior: revisar':
+    !sheetInFront?'⚠ La chapa llega por DETRÁS del tope; invertir la presentación':
     contactEngaged?'borde presentado contra la cara seleccionada':
     'referencia nominal fijada antes del golpe (sin contacto actual)',
    verified:false});
@@ -78,11 +92,16 @@ export function gaugePlacement(scene,stopNumber=1){
  const visible=rear||points.filter(p=>p.x>opening/2+1).sort((a,b)=>b.x-a.x)[0];
  const validEdge=!!rear&&Math.abs(rear.y-thickness/2)<=Math.max(4,2*thickness);
  const parkedX=Math.max(opening/2+25,40);
+ const edge=visible||{x:parkedX,y:thickness/2};
+ const index=visible===points[0]?0:visible===points.at(-1)?points.length-1:-1;
+ const neighbour=index===0?points[1]:index===points.length-1?points.at(-2):null;
+ const sheetInFront=!!neighbour&&neighbour.x<edge.x-Math.max(.12,thickness*.12);
  return review({stopNumber:selected,profile:selected===2?'support':'stop',
-  point:visible?{x:visible.x,y:visible.y}:{x:parkedX,y:thickness/2},
-  contact:contactAt(visible||{x:parkedX,y:thickness/2}),
-  sheetEdgeFound:!!rear,alignedToSheet:validEdge&&feature.usable,
-  state:validEdge?'borde visible orientativo':rear?'borde inclinado o elevado':'sin borde trasero accesible',
+  point:{...edge},contact:contactAt(edge),sheetInFront,
+  sheetEdgeFound:!!rear,alignedToSheet:validEdge&&sheetInFront&&feature.usable,
+  state:!sheetInFront&&rear?'⚠ Chapa por detrás del dedo; revisar orientación':
+   validEdge?'borde visible orientativo':rear?'borde inclinado o elevado':
+   'sin borde trasero accesible',
   verified:false});
 }
 

@@ -142,6 +142,13 @@ function rearMachine(ctx,w,h,cx,cy,scale,placement){
   ctx.strokeStyle=conflict?'#ff856e':valid?'#c1ffe2':'#ffd18d';
   ctx.shadowBlur=11*scale;ctx.shadowColor=conflict?'#ff4b37':valid?'#4fffb6':'#ffad56';
   ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();
+  // Support: la chapa descansa sobre la repisa y se detiene contra
+  // la contrahuella vertical del primer peldaño (dos apoyos a la vista).
+  if(contact.surface==='horizontal-top'&&contact.frontFace){
+   const u=screen(contact.frontFace.from),v=screen(contact.frontFace.to);
+   ctx.strokeStyle=conflict?'#ff856e':valid?'#7ddaff':'#adc0ce';
+   ctx.beginPath();ctx.moveTo(...u);ctx.lineTo(...v);ctx.stroke();
+  }
   const cp=screen(contact.point);
   ctx.beginPath();ctx.arc(...cp,Math.max(2.5,3*scale),0,Math.PI*2);
   ctx.fillStyle=conflict?'#ff7769':valid?'#e1fff1':'#ffd18d';ctx.fill();ctx.restore();

@@ -768,6 +768,8 @@ function renderSimulationText(){
   ' mm nominales desde el pliegue · '+(gauge.value===2?'chapa sobre primer escalón SUPPORT 2':'chapa contra cara frontal inferior STOP 1')+
    ' · '+(ref.side==='before'?'presentación invertida':'presentación directa')+
   (freeEnd?' · borde libre':' · ⚠ vértice interior: verificar apoyo')+
+  (freeEnd&&!chosenGauge.sheetInFront?
+   ' · ⚠ CHAPA POR DETRÁS DEL TOPE: revisar presentación':'')+
   (chosenGauge.gaugeInterference?.warning?
    ' · ⚠ POSIBLE INTERFERENCIA 2D DEL TOPE CON LA CHAPA: revisar apoyo y retirada':
    !chosenGauge.contactEngaged?' · sin contacto confirmado en esta fase':' · contacto nominal 2D')+

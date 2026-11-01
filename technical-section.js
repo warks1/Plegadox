@@ -174,6 +174,11 @@ export function drawTechnicalSection(ctx,w,h,piece,sim,view={}){
   ctx.lineWidth=3.2;ctx.strokeStyle=gaugeIssue?'#ff8673':
    place.alignedToSheet?'#dbffe7':'#ffca8d';
   ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+  if(place.contact.surface==='horizontal-top'&&place.contact.frontFace){
+   const u=map(place.contact.frontFace.from),v=map(place.contact.frontFace.to);
+   ctx.strokeStyle=gaugeIssue?'#ff8673':'#8dd9ff';
+   ctx.beginPath();ctx.moveTo(u.x,u.y);ctx.lineTo(v.x,v.y);ctx.stroke();
+  }
  }
  const nose=map(place.contact?.point||place.point);
  ctx.beginPath();ctx.arc(nose.x,nose.y,3.2,0,Math.PI*2);

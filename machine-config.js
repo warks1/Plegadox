@@ -116,8 +116,12 @@ export function gaugeContactFeature(values,stopNumber=1){
  const to={...outline[support?4:0]};
  const point=support?{...to}:{x:0,y:-(stepDepth+height)/2};
  const usable=height>stepDepth&&stepDepth>0&&ledge>0&&ledge<outer;
+ // Mismo tope completo: Support hace APOYO SUPERIOR en 5→4 y además
+ // contacto FRONTAL contra la contrahuella 4→3. Sin un segundo giro.
+ const frontFace=support?{from:{...outline[4]},to:{...outline[3]}}:
+  {from:{...outline[5]},to:{...outline[0]}};
  return {kind:support?'support-step':'stop-face',
-  surface:support?'horizontal-top':'vertical-front',
+  surface:support?'horizontal-top':'vertical-front',frontFace,
   label:support?'TOPE 2 · APOYO SOBRE PRIMER ESCALÓN':'TOPE 1 · CARA FRONTAL INFERIOR',
   from,to,point,usable,verified:false};
 }
