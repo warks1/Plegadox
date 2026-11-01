@@ -1,5 +1,5 @@
 // PlegadoX · caché offline estática. Se versiona para no arrastrar JS obsoleto.
-const CACHE='plegadox-static-0.9.0-gauge-framing-12';
+const CACHE='plegadox-static-0.9.0-tool-advisor-13';
 const APP_FILES=[
  "./",
  "./app.js",
@@ -36,6 +36,7 @@ const APP_FILES=[
  "./technical-section.js",
  "./tool-collision.js",
  "./tool-profiles.js",
+ "./tooling-advisor.js",
  "./tool-dxf.js",
  "./tool-import-ui.js",
  "./validation.js",
