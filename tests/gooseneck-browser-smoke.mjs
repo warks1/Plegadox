@@ -53,7 +53,10 @@ try{
    return {shape,bounds:sectionBounds(shape.points),active:window.PLEGADOX_STATE().piece.punch};
   });
   assert.equal(picture.active,'ref-goose-50-100-r1');
-  assert.equal(picture.shape.height,100);
+  assert.equal(picture.shape.workingHeight,100);
+  assert.equal(picture.shape.height,137);
+  assert.equal(picture.shape.headProjection,37);
+  assert.ok(picture.shape.points.some(([x,y])=>x===-11&&y===100));
   assert.equal(picture.bounds.maxX-picture.bounds.minX,50);
   assert.equal(picture.shape.tipRadius,1);
   await page.screenshot({path:'test-results/pata-cabra-'+viewport.name+'.png',fullPage:false});
