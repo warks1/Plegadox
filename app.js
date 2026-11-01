@@ -15,7 +15,11 @@ import {suggestBendOrder} from './sequence-advisor.js';
 import {compareGaugeSides} from './gauge-side-review.js';
 import {sectionPunch,sectionDie} from './tool-profiles.js';
 import {getV85} from './machine-config.js';
+import {loadImportedTools,registerImportedTools,persistImportedTool} from './tool-dxf.js';
+import {setupToolDxfImporter} from './tool-import-ui.js';
 registerCatalogue(DIES,PUNCHES);
+registerImportedTools(DIES,PUNCHES,loadImportedTools(
+ typeof localStorage==='undefined'?null:localStorage));
 const $=id=>document.getElementById(id);
 const storeKey='plegadox:piece:v1';
 let piece=restore();
@@ -586,9 +590,12 @@ function toolCard(tool,kind){
  const brand=document.createElement('span');brand.className='tool-card-brand';
  brand.textContent=tool.manufacturer||'Genérico';
  const notice=document.createElement('span');notice.className='tool-card-notice';
- notice.textContent=tool.verifiedSpecs?'Documentado':'Provisional';
+ notice.textContent=tool.importedDxf?'DXF · no verificado':
+  tool.verifiedSpecs?'Documentado':'Provisional';
  notice.classList.add('px-data-status',tool.verifiedSpecs?'px-status--documentado':'px-status--provisional');
- notice.title=tool.verifiedSpecs?
+ notice.title=tool.importedDxf?
+  'Perfil 2D importado de DXF local. Escala, orientación, montaje y colisiones no verificados.':
+  tool.verifiedSpecs?
   'Algunas medidas proceden de ficha; el contorno 2D/3D continúa siendo paramétrico, no CAD completo.':
   'Contorno paramétrico sin cotas CAD completas de fabricante ni validación física.';
  button.append(image,title,meta,brand,notice);
@@ -879,6 +886,17 @@ function tick(now){
  }
 }
 configure();
+setupToolDxfImporter({add:(tool,kind)=>{
+ // Persistir ANTES de alterar el catálogo: si falla la cuota, no se
+ // añade una herramienta efímera que desaparezca al recargar.
+ persistImportedTool(localStorage,tool);
+ registerImportedTools(DIES,PUNCHES,[tool]);
+ const field=kind==='die'?'die':'punch';
+ const option=document.createElement('option');
+ option.value=tool.id;option.textContent=tool.name;
+ $(field).append(option);
+ changePiece({...piece,[field]:tool.id},true);
+}});
 window.PLEGADOX_STATE=()=>({piece,sim});
 window.PLEGADOX_MACHINE_VIEW=machineView;
 window.PLEGADOX_REDRAW=()=>paintAll();

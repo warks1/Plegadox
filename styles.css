@@ -1250,3 +1250,15 @@ html{background:#020913}
  :where(.nav,.side-action,.header-icon-button,button,.card){
  transition-duration:0.01ms!important;animation-duration:0.01ms!important}
 }
+
+/* Importador DXF local, sin alterar geometría ni estilos del motor. */
+.px-dxf-import{margin:12px 0;padding:14px 18px}
+.px-dxf-import>summary{font-size:14px;font-weight:760;cursor:pointer;color:var(--px-primary-glow)}
+.px-dxf-import[open]>summary{margin-bottom:10px}
+.px-dxf-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:12px;margin:14px 0}
+.px-dxf-grid label[hidden]{display:none}
+.px-dxf-preview{width:min(100%,720px);height:220px;display:block;
+ border:1px solid var(--px-border);border-radius:var(--px-radius-md);margin:10px 0}
+.px-dxf-preview[hidden]{display:none}
+#toolDxfStatus[data-error="true"]{color:var(--px-danger)}
+@media(max-width:640px){.px-dxf-grid{grid-template-columns:1fr}}

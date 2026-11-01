@@ -82,8 +82,11 @@ function renderCatalogue(){
  ' · H'+tool.height;
    const flag=document.createElement('em');
    flag.className='px-data-status '+(tool.verifiedSpecs?'px-status--documentado':'px-status--provisional');
-   flag.textContent=tool.verifiedSpecs?'Documentado':'Provisional';
-   flag.title=tool.verifiedSpecs?
+   flag.textContent=tool.importedDxf?'DXF · no verificado':
+    tool.verifiedSpecs?'Documentado':'Provisional';
+   flag.title=tool.importedDxf?
+    'Contorno 2D leído de DXF local. Escala y amarre requieren comprobación. La extrusión 3D es ilustrativa.':
+    tool.verifiedSpecs?
     'Datos nominales parcialmente documentados. El contorno visual sigue siendo paramétrico.':
     'Silueta paramétrica no cotejada con un perfil CAD del fabricante.';
    b.append(canvas,title,detail,flag);b.onclick=()=>toolPicked(tool);
@@ -98,7 +101,9 @@ function renderCatalogue(){
  if(shown){
    const name=document.createElement('b');name.textContent=shown.name;info.append(name);
    const detail=document.createElement('div');detail.textContent=[shown.manufacturer||'Genérico',shown.mount||'Amarre por verificar',shown.length?'Longitud nominal: '+shown.length+' mm':'Longitud no registrada',shown.verifiedSpecs?'Datos parciales publicados':'Dimensiones no verificadas'].join(' · ');info.append(detail);
-   const note=document.createElement('div');note.textContent='Perfil 2D/3D: PARAMÉTRICO, pendiente de cotas completas para comprobación de colisiones.';info.append(note);
+   const note=document.createElement('div');note.textContent=shown.importedDxf?
+    'Contorno original importado desde DXF ASCII 2D. El visor 3D sólo extruye este contorno; ninguna colisión física o compatibilidad CNC está validada.':
+    'Perfil 2D/3D: PARAMÉTRICO, pendiente de cotas completas para comprobación de colisiones.';info.append(note);
    if(shown.source&&CATALOG_SOURCES[shown.source]?.url){const a=document.createElement('a');a.href=CATALOG_SOURCES[shown.source].url;a.target='_blank';a.rel='noreferrer noopener';a.textContent='Consultar fuente técnica';a.style.cssText='display:inline-block;color:#41c4ff;text-decoration:underline;margin-top:5px';info.append(a);}
  }
  drawToolViewer();

@@ -20,6 +20,8 @@ jobs:
           node --check boceto2.js
           node --check machine-visual.js
           node --check tool-profiles.js
+          node --check tool-dxf.js
+          node --check tool-import-ui.js
           node --check technical-section.js
           node --check tool-collision.js
           node --check machine-config.js
@@ -76,6 +78,7 @@ jobs:
           node tests/reposition-continuity-smoke.mjs
           node tests/controls-regression-smoke.mjs
           node tests/pwa-offline-smoke.mjs
+          node tests/tool-dxf-browser-smoke.mjs
       - name: Guardar capturas de escritorio y móvil
         if: always()
         uses: actions/upload-artifact@v4
