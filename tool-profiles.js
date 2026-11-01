@@ -37,8 +37,8 @@ export function photoGooseneckOutline(tool,{height,tipRadius,noseArc}){
   [rightX,workingHeight*.84],[neckX,workingHeight*.745],
   [neckX,workingHeight*.54],[noseArc[0][0],noseArc[0][1]],
   ...noseArc.slice(1),
-  [leftX,workingHeight*.42],[leftX,workingHeight*.97],
-  [stemLeft,workingHeight*.97]
+  [leftX,workingHeight*.42],[leftX,workingHeight],
+  [stemLeft,workingHeight]
  ];
  return {points,height:overallHeight,workingHeight,
   headProjection:projectedExtension,headSpan:span,
