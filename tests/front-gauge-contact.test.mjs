@@ -10,11 +10,11 @@ test('los dos perfiles completos tienen escalones orientados a la izquierda, no 
  for(const values of [V85_FACTORY.stop,V85_FACTORY.support]){
   assert.deepEqual(gaugeOutline(values,1),gaugeOutline(values,2));
   const pts=gaugeOutline(values,1);
-  assert.equal(pts[0].x,values[1]);
-  assert.equal(pts[5].x,values[1]);
-  assert.equal(pts[4].x,values[0]);
-  assert.equal(pts[3].x,values[0]);
-  assert.equal(pts[2].x,0);
+  assert.equal(pts[0].x,0);
+  assert.equal(pts[5].x,0);
+  assert.equal(pts[4].x,values[1]-values[0]);
+  assert.equal(pts[3].x,values[1]-values[0]);
+  assert.equal(pts[2].x,values[1]);
  }
 });
 test('cara inferior STOP en contacto frontal, repisa y frente vertical SUPPORT a la vez',()=>{
@@ -38,12 +38,12 @@ test('cara inferior STOP en contacto frontal, repisa y frente vertical SUPPORT a
  close(b.contact.from.y,b.point.y-p.thickness/2,'cara superior de la repisa');
  close(b.contact.to.y,b.point.y-p.thickness/2,'repisas al mismo nivel');
  assert.ok(b.contact.from.x<b.point.x,'repisa entra bajo la chapa, hacia la izquierda');
- assert.ok(b.contact.frontFace.to.y<b.point.y,'contrahuella inferior queda bajo la repisa');
- assert.deepEqual(stop[1],a.contact.from);
- assert.deepEqual(stop[2],a.contact.to);
- assert.deepEqual(support[2],b.contact.from);
- assert.deepEqual(support[3],b.contact.to);
- assert.deepEqual(support[4],b.contact.frontFace.to);
+ assert.ok(b.contact.frontFace.to.y>b.point.y,'contrahuella posterior sube para detener el canto');
+ assert.deepEqual(stop[0],a.contact.from);
+ assert.deepEqual(stop[5],a.contact.to);
+ assert.deepEqual(support[5],b.contact.from);
+ assert.deepEqual(support[4],b.contact.to);
+ assert.deepEqual(support[3],b.contact.frontFace.to);
  assert.deepEqual(a.point,b.point,'Cambiar tipo de dedo no mueve la referencia de pieza');
  assert.deepEqual(p,before,'Sin modificar pieza, signos ni orden');
 });

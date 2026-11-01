@@ -11,10 +11,11 @@ test('todo el cuerpo del tope se orienta a la derecha y AMBOS escalones miran a 
   const a=gaugeOutline(cfg,1),b=gaugeOutline(cfg,2);
   assert.deepEqual(a,b,'No girar el perfil al elegir Stop o Support');
   assert.ok(a.every(p=>p.x>=0),'Ninguna porción detrás del frente izquierdo');
-  assert.deepEqual(a[5],{x:cfg[1],y:-cfg[2]});
-  assert.equal(a[4].x,cfg[0]);
+  assert.deepEqual(a[5],{x:0,y:-cfg[2]});
+  assert.equal(a[4].x,cfg[1]-cfg[0]);
   assert.equal(a[3].x,a[4].x);
-  assert.equal(a[2].x,0);
+  assert.equal(a[2].x,cfg[1]);
+  assert.ok(a[3].y>a[4].y,'el escalón debe subir, no bajar');
  }
 });
 test('en la presentación la chapa apoya frontalmente en STOP o sobre la repisa y contra el escalón SUPPORT',()=>{
@@ -35,11 +36,11 @@ test('en la presentación la chapa apoya frontalmente en STOP o sobre la repisa 
  approx(sup.contact.frontFace.from.x,sup.point.x);
  approx(sup.contact.from.y,sup.point.y-scene.piece.thickness/2);
  assert.ok(sup.contact.from.x<sup.point.x,'la repisa queda delante, a la izquierda');
- assert.deepEqual(B[2],sup.contact.from);
- assert.deepEqual(B[3],sup.contact.to);
- assert.deepEqual(B[4],sup.contact.frontFace.to);
- assert.deepEqual(A[1],stop.contact.from);
- assert.deepEqual(A[2],stop.contact.to);
+ assert.deepEqual(B[5],sup.contact.from);
+ assert.deepEqual(B[4],sup.contact.to);
+ assert.deepEqual(B[3],sup.contact.frontFace.to);
+ assert.deepEqual(A[0],stop.contact.from);
+ assert.deepEqual(A[5],stop.contact.to);
 });
 test('si el ala llega inclinada, no anunciar apoyo válido sobre la repisa por tocar solamente un vértice',()=>{
  const feature=gaugeContactFeature(V85_FACTORY.support,2);
@@ -71,7 +72,7 @@ test('el contorno completo conserva su sentido y los dos contactos durante todos
   for(const n of [1,2]){
    const place=gaugePlacement(scene,n);
    const vertices=gaugeContourAtContact(place,n===1?V85_FACTORY.stop:V85_FACTORY.support);
-   assert.ok(vertices.every(p=>p.x>=place.point.x-(n===2?70:0)-1e-6),
+   assert.ok(vertices.every(p=>p.x>=place.point.x-(n===2?30:0)-1e-6),
     'El cuerpo del tope no debe saltar delante de la chapa, t='+time+' dedo='+n);
    assert.ok(vertices.some(p=>p.x>place.point.x),
     'El cuerpo del tope debe quedar por detrás, t='+time+' dedo='+n);

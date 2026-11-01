@@ -19,12 +19,14 @@ try{
    await page.locator('#chooseGauge'+n).click();
    const check=await page.evaluate(async n=>{
     const {technicalScene}=await import('/technical-section.js');
-    const {gaugePlacement}=await import('/backgauge-placement.js');
+    const {gaugePlacement,gaugeContourAtContact}=await import('/backgauge-placement.js');
+    const {getV85}=await import('/machine-config.js');
     const {piece}=window.PLEGADOX_STATE();
     const place=gaugePlacement(technicalScene(piece,.5),n);
+    const outline=gaugeContourAtContact(place,n===2?getV85().support:getV85().stop);
     return {selected:piece.stopByBend[0],point:place.point,
      inFront:place.sheetInFront,contact:place.contact,supported:place.contactEngaged,
-     seat:place.seat,
+     outline,seat:place.seat,
      text:document.querySelector('#activeGaugeReference')?.textContent};
    },n);
    assert.equal(check.selected,n);
@@ -37,6 +39,13 @@ try{
     assert.equal(check.contact.surface,'horizontal-top');
     assert.equal(check.contact.to.x,check.contact.frontFace.from.x);
     assert.ok(check.contact.from.x<check.contact.to.x);
+    assert.ok(check.contact.frontFace.to.y>check.contact.frontFace.from.y,
+     'EL VIDEO EXIGE una pared vertical que SUBA detrás de la chapa');
+    assert.equal(check.outline[5].x,check.contact.from.x);
+    assert.equal(check.outline[4].x,check.contact.to.x);
+    assert.equal(check.outline[3].x,check.contact.to.x);
+    assert.equal(check.outline[5].y,check.contact.to.y,
+     'la pestaña delantera es inferior y sirve de apoyo');
    }else{
     assert.equal(check.seat.required,false);
     assert.equal(check.contact.surface,'vertical-front');

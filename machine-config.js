@@ -72,8 +72,9 @@ export function resetV85(){return updateV85(V85_FACTORY);}
  * Coordinate contour for a schematic backgauge stop/support.
  * Top edge (Y=0) and L1/L2 lengths are measured along X. L3/L4 determine
  * two levels. L5/L6 are stored but not inferred as complete CAD.
- * Both positions use the WHOLE finger with steps facing the sheet (LEFT).
- * Stop/Support choose DIFFERENT contact surfaces, not mirrored fingers.
+ * Both positions use the WHOLE finger with the small lower lip extending
+ * toward the sheet (LEFT), stopping against the upward riser in Support.
+ * Stop/Support choose different surfaces, never a second mirror.
  * Schematic only: NOT certified factory geometry or collision model.
  */
 export function gaugeOutline(values,stopNumber=1){
@@ -87,13 +88,18 @@ export function gaugeOutline(values,stopNumber=1){
  const shoulder=Math.max(0,Math.min(outer,Number(l1)||0));
  const height=Math.max(1,Number(l3)||0,Number(l4)||0);
  const stepDepth=Math.max(0,Math.min(height,Number(l3)||0));
- // El perfil completo de la foto tiene el escalón ALTO delante,
- // a la izquierda, y la base más larga detrás a la derecha.
- // Es una ÚNICA silueta volteada; nunca reflejar Stop/Support aparte.
+ // VÍDEO REAL IMG_9033.mp4 (01/11/2026): el dedo completo entra
+ // desde la DERECHA; una pestaña BAJA sobresale a la IZQUIERDA
+ // y termina en una contrahuella vertical que SUBE hacia el cuerpo.
+ // La chapa está DELANTE (izquierda) y, en Support, descansa encima
+ // de esa pestaña sin atravesar el cuerpo del tope.
+ // L1 define la longitud del cuerpo trasero: el saliente es L2-L1.
+ // La silueta es única para Stop y Support; NO hay segundo espejo.
+ const ledge=outer-shoulder;
  return [
-  {x:outer,y:-height},{x:0,y:-height},
-  {x:0,y:0},{x:shoulder,y:0},
-  {x:shoulder,y:-stepDepth},{x:outer,y:-stepDepth}
+  {x:0,y:-height},{x:outer,y:-height},
+  {x:outer,y:0},{x:ledge,y:0},
+  {x:ledge,y:-stepDepth},{x:0,y:-stepDepth}
  ];
 }
 /**
@@ -107,20 +113,18 @@ export function gaugeContactFeature(values,stopNumber=1){
  const outline=gaugeOutline(values,stopNumber);
  const height=-Math.min(...outline.map(p=>p.y));
  const outer=Math.max(...outline.map(p=>p.x));
- const ledge=outline[3].x,stepDepth=-outline[4].y;
+ const ledge=outline[4].x,stepDepth=-outline[4].y;
  const support=Number(stopNumber)===2;
- // STOP 1: la chapa toca el frente izquierdo completo 1→2.
- // SUPPORT 2: chapa SOBRE la primera repisa ALTA 2→3.
- // Las dos caras pertenecen al mismo perfil completo, sin segundo espejo.
- const from={...outline[support?2:1]};
- const to={...outline[support?3:2]};
- const point=support?{...to}:{x:0,y:-height/2};
+ // STOP 1: borde o ala doblada contra frente izquierdo BAJO 0→5.
+ // SUPPORT 2: chapa ENCIMA del saliente bajo 5→4, con el canto
+ // detenido en el resalte VERTICAL 4→3 que sube por DETRÁS.
+ // Un único perfil en ambos modos, sin espejar una parte.
+ const from={...outline[support?5:0]};
+ const to={...outline[support?4:5]};
+ const point=support?{...to}:{x:0,y:-(height+stepDepth)/2};
  const usable=height>stepDepth&&stepDepth>0&&ledge>0&&ledge<outer;
- // El escalón vertical de la repisa alta desciende detrás del apoyo.
- // No fingir que bloquea frontalmente la chapa sobre la repisa:
- // la geometría real de un segundo contacto requiere CAD del dedo.
- const frontFace=support?{from:{...outline[3]},to:{...outline[4]}}:
-  {from:{...outline[1]},to:{...outline[2]}};
+ const frontFace=support?{from:{...outline[4]},to:{...outline[3]}}:
+  {from:{...outline[0]},to:{...outline[5]}};
  return {kind:support?'support-step':'stop-face',
   surface:support?'horizontal-top':'vertical-front',frontFace,
   label:support?'TOPE 2 · APOYO SOBRE PRIMER ESCALÓN':'TOPE 1 · CARA FRONTAL INFERIOR',

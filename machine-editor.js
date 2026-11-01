@@ -81,8 +81,8 @@ function gaugeCanvas(ctx,w,h,cfg,key){
  ctx.closePath();const g=ctx.createLinearGradient(ox,0,ox+bounds.width*s,h);
  g.addColorStop(0,'#b4d8e5');g.addColorStop(.45,'#31556a');g.addColorStop(1,'#163249');
  ctx.fillStyle=g;ctx.fill();ctx.strokeStyle='#bfe9fa';ctx.lineWidth=2;ctx.stroke();
- // Ambas posiciones presentan el cuerpo atrás y el escalón a la IZQUIERDA.
- // L1 es la longitud trasera; L2-L1 es el labio delantero.
+ // Perfil real orientativo: punta BAJA delante (izquierda),
+ // contrahuella hacia ARRIBA detrás; cuerpo largo a la derecha.
  const drawingX=x=>x;
  const x0=xy({x:drawingX(0),y:0}).x,
   x1=xy({x:drawingX(values[0]),y:0}).x,
