@@ -68,6 +68,7 @@ jobs:
           node tests/studio-smoke.mjs
           node tests/touch-order-smoke.mjs
           node tests/video-regression-smoke.mjs
+          node tests/gooseneck-browser-smoke.mjs
           node tests/technical-section-smoke.mjs
           node tests/tooling-advisor-smoke.mjs
           node tests/gauge-framing-smoke.mjs

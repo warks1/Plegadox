@@ -819,3 +819,28 @@ Este modo es una precaución del visor, no una protección CNC.
 La reproducción continua **NO significa que el plegado real sea seguro**.
 La seguridad industrial exige geometrías completas, amarres y control
 CNC independientes del simulador.
+
+## R15 · Punzones pata de cabra con cuello abierto y alturas H reales
+La incidencia de la captura de pantalla de 01/11/2026 mostraba una
+**pata de cabra 90°** cuya geometría se confundía con un punzón recto.
+El motor de perfiles ahora genera **todos los punzones `type:'cabra'`**
+con una sección asimétrica que deja un escote lateral abierto.
+La sección se comparte entre catálogo, pictogramas, inspector 3D,
+cabina, sección técnica y barrido de colisiones 2D.
+
+La referencia fotográfica `ref-goose-50-100-r1` conserva:
+- **H de trabajo 100 mm** desde el hombro de apoyo inferior hasta la punta;
+- **alcance horizontal 50 mm**, entre los puntos de cota mostrados;
+- **radio de punta R1** mediante arco de Ø2 mm nominal.
+
+La cota inclinada `8` de la foto no se ha convertido sin más en
+«ancho de punta» porque la imagen no define inequívocamente esa lectura.
+GN6/GN9 conservan cuello k=6/9 mm y H120; W55/W95 tienen siluetas
+ilustrativas diferenciadas, manteniendo las alturas de ficha H200/H220.
+La máquina genérica `goose` conserva H130.
+
+**IMPORTANTE:** los puntos sin cotas siguen siendo interpolaciones
+provisionales; no se ha obtenido un sólido CAD de fabricante, ni se
+han certificado amarres, radios reales, capacidad ni colisiones 3D.
+Esta geometría sirve para visualización coherente y prechequeo
+orientativo, no para aprobar una secuencia industrial.
