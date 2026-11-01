@@ -26,9 +26,16 @@ try{
   assert.equal(await page.locator('#die').inputValue(),old,
    'La recomendación no reemplaza automáticamente la herramienta');
   assert.ok(await page.locator('#toolAdvisorOptions .px-advisor-option').count()>0);
+  const expected=await page.evaluate(async()=>{
+   const {recommendTooling}=await import('/tooling-advisor.js');
+   return recommendTooling(window.PLEGADOX_STATE().piece).choice;
+  });
+  assert.ok(expected,'Existe una pareja recomendada');
   await page.locator('#toolAdvisorOptions .px-advisor-option.primary button').click();
-  assert.notEqual(await page.locator('#die').inputValue(),old,
-   'El botón aplica la matriz al programa');
+  assert.equal(await page.locator('#die').inputValue(),expected.dieId,
+   'La acción aplica exactamente la matriz aconsejada');
+  assert.equal(await page.locator('#punch').inputValue(),expected.punchId,
+   'La acción aplica exactamente el punzón aconsejado');
   assert.equal(await page.locator('#toolAdvisorOptions .px-advisor-option.primary button').isDisabled(),true);
   // Una ala demasiado corta debe cancelar sugerencia, no afirmar que V16 es segura.
   await page.locator('#flangeRows input[aria-label="Longitud ala 1"]').fill('1');
