@@ -89,6 +89,9 @@ function configure(){
  const entries=[['pieceName','name'],['material','material'],['thickness','thickness'],['width','width'],['die','die'],['punch','punch'],['datum','datum']];
  for(const [id,key] of entries)$(id).addEventListener('change',e=>{
   const v=key==='thickness'||key==='width'?finite(e.target.value,piece[key]):e.target.value;
+  // Si se confirma dos veces el mismo dato (por ejemplo, al salir
+  // del campo hacia Aplicar), no destruir la tarjeta bajo el dedo.
+  if(v===piece[key])return;
   const updated={...piece,[key]:v};
   // La Rm introducida sólo corresponde al material para el que se eligió.
   // Al cambiar de material se vuelve a la referencia orientativa visible.
@@ -289,13 +292,31 @@ function renderToolAdvisor(){
   const active=piece.die===pair.dieId&&piece.punch===pair.punchId;
   apply.textContent=active?'En uso':'Aplicar V + punzón';apply.disabled=active;
   apply.setAttribute('aria-label','Aplicar '+pair.dieName+' y '+pair.punchName);
+  // Impedir que el blur del campo numérico reconstruya y desmonte
+  // este botón entre pointerdown y click (PC y pantallas táctiles).
+  apply.addEventListener('pointerdown',e=>{if(e.isPrimary)e.preventDefault();});
   apply.onclick=()=>{
-   const fresh=recommendTooling(piece);
+   // Leer también valores tecleados que todavía no han confirmado "change".
+   const draft={...piece};
+   draft.thickness=finite($('thickness').value,piece.thickness);
+   draft.width=finite($('width').value,piece.width);
+   draft.material=$('material').value||piece.material;
+   draft.flanges=[...piece.flanges];
+   document.querySelectorAll('#flangeRows input[aria-label^="Longitud ala "]')
+    .forEach((input,i)=>{if(i<draft.flanges.length)
+     draft.flanges[i]=finite(input.value,piece.flanges[i]);});
+   draft.angles=[...piece.angles];
+   document.querySelectorAll('#flangeRows .angle-input')
+    .forEach((input,i)=>{if(i<draft.angles.length)
+     draft.angles[i]=finite(input.value.replace(',','.'),piece.angles[i]);});
+   const fresh=recommendTooling(draft);
    if(![fresh.choice,...fresh.alternatives].filter(Boolean)
     .some(x=>x.dieId===pair.dieId&&x.punchId===pair.punchId)){
-    renderToolAdvisor();return;
+    changePiece(draft,true);
+    $('toolAdvisorResult').textContent+=' Datos pendientes incorporados: revisa la nueva propuesta y pulsa aplicar de nuevo.';
+    return;
    }
-   changePiece({...piece,die:pair.dieId,punch:pair.punchId},true);
+   changePiece({...draft,die:pair.dieId,punch:pair.punchId},true);
   };
   el.append(header,data,warnings,apply);choices.append(el);
  };
