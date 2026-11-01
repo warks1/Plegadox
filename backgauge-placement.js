@@ -52,9 +52,6 @@ export function gaugeSeatAssessment(scene,index,anchor,thickness,feature){
    reason:vertical.valid?'cara frontal STOP con solape de espesor':
     'cara frontal STOP sin solape suficiente para detener el canto',
    vertical};
- if(!vertical.valid)
-  return {required:true,seated:false,
-   reason:'contrahuella sin solape suficiente con el espesor',vertical};
  // En el vídeo IMG_9033.mp4 la repisa BAJA sostiene la chapa y
  // una contrahuella vertical detrás SUBE para detener su canto.
  // No declarar "apoyado" si la cara de parada está ABAJO, desplazada
@@ -67,6 +64,9 @@ export function gaugeSeatAssessment(scene,index,anchor,thickness,feature){
   Math.abs(wall.to.x-wall.from.x)>.001||
   wall.to.y<=wall.from.y+.2)
   return {required:true,seated:false,reason:'escalón sin pared vertical ascendente de parada'};
+ if(!vertical.valid)
+  return {required:true,seated:false,
+   reason:'contrahuella sin solape suficiente con el espesor',vertical};
  const sheet=scene?.sheet;
  if(!Array.isArray(sheet)||!Number.isInteger(index)||
    (index!==0&&index!==sheet.length-1))
