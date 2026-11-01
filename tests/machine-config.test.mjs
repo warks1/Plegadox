@@ -36,7 +36,7 @@ test('rechaza medidas inválidas y conserva defaults',()=>{
  assert.equal(cfg.ram[3],0);
 });
 test('Stop y Support usan perfiles esquemáticos diferentes',()=>{
- const stop=gaugeOutline(V85_FACTORY.stop),support=gaugeOutline(V85_FACTORY.support);
+ const stop=gaugeOutline(V85_FACTORY.stop),support=gaugeOutline(V85_FACTORY.support,2);
  assert.notDeepEqual(stop,support);
  assert.ok(stop.every(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)));
  assert.equal(Math.max(...stop.map(p=>p.x)),100);

@@ -15,11 +15,10 @@ export function gaugePlacement(scene,stopNumber=1){
  const feature=gaugeContactFeature(dimensions,selected);
  const contactAt=edge=>{
   const origin={x:edge.x-feature.point.x,y:edge.y-feature.point.y};
-  // Dedo trasero a la derecha: la cara del escalón apunta hacia la chapa.
-  // El croquis Cybelec se espeja en el eje X sólo en la presentación Support.
+  // El perfil Support YA se espeja en gaugeOutline(values,2).
+  // No aplicar un segundo espejo aquí: escena y editor deben coincidir.
   const mirrorX=selected===2;
-  const toWorld=pt=>({x:origin.x+(mirrorX?2*feature.point.x-pt.x:pt.x),
-    y:origin.y+pt.y});
+  const toWorld=pt=>({x:origin.x+pt.x,y:origin.y+pt.y});
   return {kind:feature.kind,label:feature.label,usable:feature.usable,
    origin,mirrorX,localContactX:feature.point.x,
    from:toWorld(feature.from),to:toWorld(feature.to),
@@ -75,10 +74,9 @@ export function gaugePlacement(scene,stopNumber=1){
  */
 export function gaugeContourAtContact(placement,values){
  const origin=placement.contact?.origin||placement.point;
- const mirror=!!placement.contact?.mirrorX;
- const center=placement.contact?.localContactX||0;
- return gaugeOutline(values).map(p=>({
-  x:origin.x+(mirror?2*center-p.x:p.x),
+ const selected=placement.stopNumber===2||placement.profile==='support'?2:1;
+ return gaugeOutline(values,selected).map(p=>({
+  x:origin.x+p.x,
   y:origin.y+p.y
  }));
 }

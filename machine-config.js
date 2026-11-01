@@ -71,10 +71,11 @@ export function resetV85(){return updateV85(V85_FACTORY);}
 /**
  * Coordinate contour for a schematic backgauge stop/support.
  * Top edge (Y=0) and L1/L2 lengths are measured along X. L3/L4 determine
- * two levels; L5 and L6 locate a small notch. This is NOT the exact factory
- * contour or a collision geometry.
+ * two levels. L5/L6 are stored but not inferred as complete CAD.
+ * Stop 1 keeps the original drawing direction; Support 2 is mirrored X.
+ * This is NOT the exact factory contour or validated collision geometry.
  */
-export function gaugeOutline(values){
+export function gaugeOutline(values,stopNumber=1){
  const [l1,l2,l3,l4]=values;
  // Alzado de la fotografía Cybelec: L2 = longitud superior,
  // L1 = posición horizontal del ESCALÓN inferior,
@@ -85,20 +86,26 @@ export function gaugeOutline(values){
  const shoulder=Math.max(0,Math.min(outer,Number(l1)||0));
  const height=Math.max(1,Number(l3)||0,Number(l4)||0);
  const stepDepth=Math.max(0,Math.min(height,Number(l3)||0));
- return [
+ const outline=[
   {x:0,y:0},{x:outer,y:0},
   {x:outer,y:-stepDepth},{x:shoulder,y:-stepDepth},
   {x:shoulder,y:-height},{x:0,y:-height}
  ];
+ // Support (tope 2): alzado ESPEJADO en el eje horizontal de avance,
+ // tal como se presenta el dedo real al operario. Mantener Y y cotas.
+ // Se espeja aquí, en el origen compartido por el editor y la máquina,
+ // para evitar que un visor lo pinte en el sentido contrario.
+ return Number(stopNumber)===2?
+  outline.map(({x,y})=>({x:outer-x,y})):outline;
 }
 /**
  * Caras de contacto diferenciadas en el croquis del control:
  * Stop 1 contra la cara frontal izquierda;
- * Support 2 contra el escalón de L1 (la cara vertical inferior).
+ * Support 2 contra el escalón de L1 en el contorno ya ESPEJADO.
  * Perfil orientativo, sin garantía de accesibilidad ni cinemática CNC.
  */
 export function gaugeContactFeature(values,stopNumber=1){
- const outline=gaugeOutline(values);
+ const outline=gaugeOutline(values,stopNumber);
  const height=-Math.min(...outline.map(p=>p.y));
  const outer=Math.max(...outline.map(p=>p.x));
  const shoulder=outline[3].x,stepDepth=-outline[3].y;
@@ -112,8 +119,8 @@ export function gaugeContactFeature(values,stopNumber=1){
   from,to,point,usable,verified:false};
 }
 /** Envolvente del perfil esquemático, sin interpretar una cota L como CAD. */
-export function gaugeBounds(values){
- const outline=gaugeOutline(values);
+export function gaugeBounds(values,stopNumber=1){
+ const outline=gaugeOutline(values,stopNumber);
  const xs=outline.map(p=>p.x),ys=outline.map(p=>p.y);
  const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
  return {minX,maxX,minY,maxY,width:maxX-minX,height:maxY-minY};
