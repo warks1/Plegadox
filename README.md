@@ -674,3 +674,12 @@ conectada y usa la caché sólo cuando falla la red; además comprueba
 actualizaciones del Service Worker. Una revisión activa sustituye a la
 antigua en una recarga para evitar mezclar el soporte del tope de una
 versión con la geometría de otra. La apertura offline sigue disponible.
+
+
+## Contacto frontal y sobre primer escalón
+Stop 1: chapa delante del dedo, apoyada en la cara vertical inferior.
+Support 2: chapa delante, descansando en la repisa horizontal del primer
+escalón, y el canto de la chapa contra la contrahuella vertical. La
+geometría completa permanece con los escalones orientados a la izquierda.
+Se comprueba que el extremo llegue desde delante, no desde la parte trasera;
+ninguna cota ni signo de plegado cambia. Validación orientativa 2D.
