@@ -663,3 +663,17 @@ y la utilizan la pantalla **Máquina**, la presentación de la plegadora
 y el contacto esquemático con la chapa. Las cotas L1–L6, Ox/Oz,
 referencias y configuración almacenada **no cambian**.
 Los perfiles siguen siendo esquemáticos, no CAD certificado.
+
+
+## Diagnóstico de contacto realista del tope (revisión de vídeo 01-11-2026)
+El perfil del **Stop 1 / Support 2** se compara ahora con la chapa durante
+la secuencia usando un **cribado de interferencia en sección 2D**. Si la
+silueta del dedo invade la fibra de chapa o no queda holgura suficiente
+por espesor, el programa desactiva el indicador verde de apoyo, colorea
+el tope en advertencia y explica la posible interferencia. El contacto
+legítimo del extremo de chapa con la cara definida se trata aparte.
+La barra trasera se dibuja a partir del extremo posterior del dedo;
+ya no empieza atravesando su propio cuerpo desde la cara de contacto.
+El cálculo NO incorpora movimientos reales de ejes ni asegura holgura 3D.
+En todos los golpes se mantienen las cotas nominales y la referencia X
+original, sin desplazar automáticamente el dedo para esconder avisos.

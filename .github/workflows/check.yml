@@ -43,6 +43,7 @@ jobs:
           node --check backgauge-placement.js
           node --check collision-playback-guard.js
           node --check gauge-side-review.js
+          node --check gauge-interference.js
           node --check incident-navigation.js
       - name: Pruebas de dirección, secuencia y desarrollo
         run: npm test
@@ -75,6 +76,7 @@ jobs:
           node tests/punch-stop-visibility-smoke.mjs
           node tests/stop-support-contact-smoke.mjs
           node tests/support-orientation-smoke.mjs
+          node tests/gauge-interference-smoke.mjs
           node tests/punch-guard-smoke.mjs
           node tests/reposition-continuity-smoke.mjs
           node tests/controls-regression-smoke.mjs
