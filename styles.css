@@ -1262,3 +1262,16 @@ html{background:#020913}
 .px-dxf-preview[hidden]{display:none}
 #toolDxfStatus[data-error="true"]{color:var(--px-danger)}
 @media(max-width:640px){.px-dxf-grid{grid-template-columns:1fr}}
+
+/* Identificación de versión y rescate de código desactualizado en iOS PWA. */
+.header-logo .px-build-mark{
+ display:block;color:#79d6ff;font:700 9px/1.2 var(--px-font-data);
+ letter-spacing:.08em;margin-top:3px;opacity:.95;
+}
+.header-right .px-refresh-button{
+ color:#9bdfff;min-width:38px;min-height:38px;
+ border:1px solid #347b9f;border-radius:var(--px-radius-sm);
+ background:linear-gradient(145deg,#123955,#071f32)
+}
+.header-right .px-refresh-button:disabled{opacity:.5;cursor:wait}
+.header-right .px-refresh-button .px-icon{width:20px;height:20px}

@@ -6,15 +6,16 @@
 <link rel="stylesheet" href="./styles.css">
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <link rel="manifest" href="./manifest.webmanifest">
+<meta name="plegadox-build" content="TOPE-20261101-R07">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="PlegadoX">
 </head><body>
 <div id="app">
 <header class="topbar">
-<div class="header-logo"><span class="logo-title">PLEGADO<span>DO</span><em>X</em></span><small>PRECISIÓN EN CADA ÁNGULO</small></div>
+<div class="header-logo"><span class="logo-title">PLEGADO<span>DO</span><em>X</em></span><small>PRECISIÓN EN CADA ÁNGULO</small><small id="buildMark" class="px-build-mark" aria-label="Versión instalada de PlegadoX">TOPE-20261101-R07</small></div>
 <div class="header-project"><span class="h-icon" aria-hidden="true"><svg class="px-icon"><use href="./icons.svg#project"/></svg></span><div class="h-content"><small>PROYECTO ACTUAL</small><strong id="topProject">Omega · ejemplo geométrico</strong></div></div>
 <div class="header-stats"><div><small>Material</small><strong id="topMaterial">Acero S235</strong></div><div><small>Espesor</small><strong id="topThickness">2,00 mm</strong></div><div><small>Ángulo</small><strong id="topAngle">+90°</strong></div><div><small>Apertura V</small><strong id="topV">16 mm</strong></div><div><small>Punzón</small><strong id="topPunch">Recto 88°</strong></div><div><small>Matriz</small><strong id="topDie">V16</strong></div></div>
-<div class="header-right"><div class="header-status"><span class="led">▶</span><span id="topState">Simulación lista</span></div><span id="clock" aria-label="Hora"></span><button id="saveBtn" class="header-icon-button" title="Guardar pieza" aria-label="Guardar pieza"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#save"/></svg></button></div>
+<div class="header-right"><div class="header-status"><span class="led">▶</span><span id="topState">Simulación lista</span></div><span id="clock" aria-label="Hora"></span><button id="forceUpdateBtn" class="header-icon-button px-refresh-button" title="Actualizar PlegadoX sin borrar piezas" aria-label="Actualizar PlegadoX sin borrar piezas"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#refresh"/></svg></button><button id="saveBtn" class="header-icon-button" title="Guardar pieza" aria-label="Guardar pieza"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#save"/></svg></button></div>
 </header>
 <div class="shell">
 <nav class="sidebar" aria-label="Módulos">
@@ -126,4 +127,75 @@
 </section>
 
 </main></div><footer>PLEGADOX · Software de plegado · © AMS · Motor geométrico de demostración, sin conexión a la máquina <span id="layoutMode" aria-live="off"></span></footer></div>
-<script type="module" src="./pwa.js"></script><script type="module" src="./app.js"></script><script type="module" src="./cockpit.js"></script><script type="module" src="./boceto2.js"></script><script type="module" src="./responsive.js"></script><script type="module" src="./studio.js"></script><script type="module" src="./machine-editor.js"></script></body></html>
+<script type="module">
+/*
+ * Recuperación PWA iOS. Este arranque es INLINE deliberadamente:
+ * el módulo externo pwa.js podría ser una copia antigua del Service Worker.
+ * Descargar primero la marca del servidor, descartar SOLO cachés de
+ * PlegadoX anteriores y cargar luego todos los módulos secuencialmente.
+ * Nunca se elimina localStorage, IndexedDB ni los proyectos del usuario.
+ */
+const BUILD="TOPE-20261101-R07";
+const STATUS=document.getElementById('buildMark');
+const KEY='plegadox:verified-loader-build';
+const BASE=new URL('./',document.baseURI);
+const serverBuild=async()=>{
+ try{
+  const r=await fetch(new URL('build-info.json?check='+encodeURIComponent(BUILD),BASE),{
+   cache:'no-store'
+  });
+  return r.ok&&(await r.json()).build===BUILD;
+ }catch{return false;}
+};
+const clearOldCode=async()=>{
+ if(!('caches' in window))return;
+ const names=await caches.keys();
+ await Promise.all(names.filter(n=>n.startsWith('plegadox-static-'))
+  .map(n=>caches.delete(n)));
+};
+const loadModules=async()=>{
+ const scripts=['pwa.js','app.js','cockpit.js','boceto2.js',
+  'responsive.js','studio.js','machine-editor.js'];
+ for(const path of scripts)await import('./'+path+'?build='+encodeURIComponent(BUILD));
+};
+const show=message=>{if(STATUS)STATUS.textContent=message;};
+try{
+ // Los datos personales del usuario NO están en CacheStorage.
+ // Si falla la red, no purgar nunca la copia que permite trabajar offline.
+ const verified=await serverBuild();
+ if(verified&&localStorage.getItem(KEY)!==BUILD){
+  await clearOldCode();
+  localStorage.setItem(KEY,BUILD);
+ }
+ await loadModules();
+ const refresh=document.getElementById('forceUpdateBtn');
+ if(refresh)refresh.addEventListener('click',async()=>{
+  if(!navigator.onLine){show('Sin conexión · no se puede actualizar');return;}
+  refresh.disabled=true;
+  show('Comprobando versión…');
+  if(!await serverBuild()){
+   show('No se pudo comprobar el servidor');
+   refresh.disabled=false;
+   return;
+  }
+  try{
+   await clearOldCode();
+   localStorage.removeItem(KEY);
+   if('serviceWorker' in navigator){
+    const reg=await navigator.serviceWorker.getRegistration(BASE.href);
+    if(reg)await reg.unregister();
+   }
+   const url=new URL('index.html',BASE);
+   url.searchParams.set('rev',BUILD);
+   url.searchParams.set('refresh',Date.now().toString(36));
+   location.replace(url.href);
+  }catch(error){
+   show('Error al actualizar: '+error.message);
+   refresh.disabled=false;
+  }
+ });
+}catch(error){
+ show('Error de arranque: '+error.message);
+ console.error('PlegadoX no ha podido cargar la versión',error);
+}
+</script></body></html>
