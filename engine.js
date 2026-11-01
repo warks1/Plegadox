@@ -17,10 +17,12 @@ export const PUNCHES = [
  {id:'straight30',name:'Recto 30°',angle:30,height:120,tip:0.5,type:'recto'},
  {id:'straight60',name:'Recto 60°',angle:60,height:120,tip:0.6,type:'recto'},
  {id:'goose',name:'Pata de cabra 90°',angle:90,height:130,tip:1,type:'cabra'},
- // Referencia trazada de la foto enviada por el usuario; sólo tres cotas
- // inequívocas: ancho 50, altura 100, punta R1. El resto es proporcional.
- {id:'ref-goose-50-100-r1',name:'Pata de cabra · foto 50×100 R1',
-  angle:88,height:100,topWidth:50,tip:2,type:'cabra',
+ // Croquis: cota horizontal 50 mm, H útil 100 mm desde el hombro
+ // inferior hasta la punta y R1. El vástago sobresale ≈37 mm según la foto:
+ // estimación de la forma, NO cota declarada por el fabricante.
+ {id:'ref-goose-50-100-r1',name:'Pata de cabra · foto 50 / H útil100 · R1',
+  angle:88,height:100,workingHeight:100,referenceSpan:50,
+  headProjection:37,tip:2,type:'cabra',
   profileStyle:'user-photo',verifiedSpecs:false,profileAccuracy:'provisional'}
 ];
 // Registro único al inicializar el núcleo. La selección de herramientas

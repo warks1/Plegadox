@@ -12,8 +12,43 @@
  * NO la altura del cabezal de la plegadora. La imagen permite acotar 50 mm
  * de alcance horizontal y R1; los enlaces sin cota se interpolan.
  */
+/**
+ * Sección orientativa trazada del croquis 50 × 100 R1 del operario.
+ *
+ * La cota VERTICAL 100 NO llega al extremo superior del vástago:
+ * termina en el escalón (aprox. y=100 desde la punta), mientras que
+ * el vástago se prolonga por encima. La prolongación ≈37 mm y los
+ * puntos intermedios proceden de proporciones de la fotografía;
+ * NO son cotas de fabricante.
+ *
+ * El ancho de 50 mm va del plano del ala izquierda x=-40,5
+ * al plano derecho del vástago x=+9,5. La altura de la figura es
+ * H útil + prolongación. La punta sigue conservando un radio R1.
+ */
+export function photoGooseneckOutline(tool,{height,tipRadius,noseArc}){
+ const workingHeight=height;
+ const projectedExtension=Math.max(0,Number(tool.headProjection)||37);
+ const overallHeight=workingHeight+projectedExtension;
+ const span=Number(tool.referenceSpan)||Number(tool.topWidth)||50;
+ const rightX=9.5,leftX=rightX-span;
+ const stemLeft=-11,neckX=-21;
+ const points=[
+  [stemLeft,overallHeight],[rightX,overallHeight],
+  [rightX,workingHeight*.84],[neckX,workingHeight*.745],
+  [neckX,workingHeight*.54],[noseArc[0][0],noseArc[0][1]],
+  ...noseArc.slice(1),
+  [leftX,workingHeight*.42],[leftX,workingHeight],
+  [stemLeft,workingHeight]
+ ];
+ return {points,height:overallHeight,workingHeight,
+  headProjection:projectedExtension,headSpan:span,
+  nominalReferenceY:workingHeight,neckOffset:Math.abs(neckX),
+  model:'gooseneck',profileSource:'user-photo',
+  dimensionsFromPhoto:true};
+}
 export function gooseneckOutline(tool,{height,tipRadius,angle,noseArc}){
  const photo=tool.profileStyle==='user-photo';
+ if(photo)return photoGooseneckOutline(tool,{height,tipRadius,noseArc});
  const widthCode=/W(55|95|110)/i.exec(String(tool.reference||tool.id||''));
  const wCode=widthCode?Number(widthCode[1]):0;
  // La variante W del catálogo da formas distintas, pero sin CAD acotado
@@ -43,7 +78,8 @@ export function gooseneckOutline(tool,{height,tipRadius,angle,noseArc}){
   ...noseArc.slice(1),[-leftReach,leftShoulderY]
  ];
  return {points,neckOffset:neck,headSpan:leftReach+rightReach,
-  workingHeight:height,model:'gooseneck',profileSource:photo?'user-photo':'parametric'};
+  height,workingHeight:height,headProjection:0,model:'gooseneck',
+  profileSource:'parametric'};
 }
 /** Todos los visores de herramienta usan ESTA misma poligonal (2D, 3D,
  * cabina, inspector y análisis de sección de colisiones).
@@ -71,7 +107,7 @@ export function sectionPunch(tool={}){
  });
  if(tool.type==='cabra'||tool.profileStyle==='user-photo'){
   const goose=gooseneckOutline(tool,{height,tipRadius,angle,noseArc});
-  return {...goose,angle,height,tipRadius,roundedNose:true,
+  return {...goose,angle,tipRadius,roundedNose:true,
    provisional:true,profileAccuracy:'provisional'};
  }
  // Conservar la punta y los ángulos de los punzones rectos existentes.
