@@ -694,3 +694,22 @@ confirmado** sustituye al falso contacto verde. En el modo **Stop 1**
 se conserva el contacto frontal contra la cara inferior del mismo
 cuerpo de tope. Este control es geométrico 2D preliminar y no implica
 calibración de los ejes X/R/Z ni validación física de apriete.
+
+
+## Diagnóstico de versiones antiguas en PWA (iPhone)
+Algunas grabaciones muestran el dibujo antiguo del tope pese a que la
+rama `main` y GitHub Pages ya tienen los escalones a la izquierda.
+La pantalla muestra siempre la etiqueta de compilación **TOPE-20261101-R07** bajo
+el logotipo. Desde esta versión puede pulsarse el botón de **actualizar**
+(ícono de flechas circulares, arriba a la derecha) para contrastar la
+compilación con la publicada, limpiar únicamente los recursos de código
+almacenados en CacheStorage y volver a cargar. **No borra la pieza ni la
+configuración de máquina almacenadas en localStorage.** El enlace de
+recuperación permite abrir el último HTML desde Safari incluso cuando
+la aplicación instalada conserva una pestaña antigua:
+
+https://warks1.github.io/Plegadox/?rev=TOPE-20261101-R07
+
+El arranque inicial verifica una marca de compilación publicada antes
+de purgar las cachés anteriores. Sin conexión conserva los recursos
+locales. Una prueba nueva simula la presencia de código antiguo en caché.

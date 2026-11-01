@@ -78,6 +78,7 @@ jobs:
           node tests/support-orientation-smoke.mjs
           node tests/gauge-interference-smoke.mjs
           node tests/front-gauge-contact-smoke.mjs
+          node tests/pwa-version-recovery-smoke.mjs
           node tests/punch-guard-smoke.mjs
           node tests/reposition-continuity-smoke.mjs
           node tests/controls-regression-smoke.mjs

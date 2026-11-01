@@ -11,9 +11,13 @@ if('serviceWorker' in navigator &&
       navigator.serviceWorker.controller!==previousController)location.reload();
   });
  }
- window.addEventListener('load',()=>{
+ // Con carga dinámica, el evento load puede haber ocurrido ANTES de
+ // importar pwa.js. Registrar inmediatamente si el documento ya acabó.
+ const register=()=>{
   navigator.serviceWorker.register('./sw.js',{scope:'./',updateViaCache:'none'})
    .then(reg=>reg.update())
    .catch(err=>console.info('PlegadoX sin caché offline:',err.message));
- },{once:true});
+ };
+ if(document.readyState==='complete')register();
+ else window.addEventListener('load',register,{once:true});
 }
