@@ -4,7 +4,7 @@ import {drawIndustrialMachine} from './machine-visual.js';
 import {registerCatalogue} from './catalog.js';
 import {analyzeSequence} from './validation.js';
 import {inspectSequenceTools,currentToolContact,describeToolIssue} from './tool-collision.js';
-import {guardPunchAdvance} from './collision-playback-guard.js';
+import {advancePreview} from './collision-playback-guard.js';
 import {incidentReviewRows} from './incident-navigation.js';
 import {inspectSheetFrame,scanSheetSequence,describeSheetIssue} from './sheet-interference.js';
 import {viewerProfile} from './viewer-profile.js';
@@ -27,6 +27,7 @@ const $=id=>document.getElementById(id);
 const storeKey='plegadox:piece:v1';
 let piece=restore();
 let sim={playing:false,time:0,last:null,speed:1,blocked:null,error:null};
+let pauseOn2DPenetration=false; // Vista previa continua por defecto.
 let camera={yaw:-.62,pitch:.45,zoom:1};
 let machineView={panX:0,panY:0,zoom:1};
 let touchOrderEnabled=false,chosenTouchOrder=[];
@@ -230,6 +231,14 @@ function configure(){
  $('stepBtn').onclick=()=>{sim.playing=false;sim.last=null;sim.blocked=null;const i=Math.floor(sim.time/5);sim.time=Math.min(piece.order.length*5,(i+1)*5);paintAll();};
  $('timeline').oninput=e=>{sim.playing=false;sim.last=null;sim.blocked=null;sim.time=piece.order.length*5*Number(e.target.value)/1000;paintAll();};
  $('speed').onchange=e=>sim.speed=Number(e.target.value)||1;
+ $('pauseOnPenetration').onchange=e=>{
+  pauseOn2DPenetration=e.target.checked;
+  sim.blocked=null;
+  $('playbackModeNote').textContent=pauseOn2DPenetration?
+   'Pausa diagnóstica activa: el análisis 2D puede detener la animación; NO garantiza seguridad CNC.':
+   'Animación continua: las interferencias 2D se muestran como avisos sin detener la vista previa.';
+  renderSimulationText();
+ };
  $('viewIsometric').onclick=()=>{camera={yaw:-.62,pitch:.45,zoom:1};paintAll();};
  $('viewFront').onclick=()=>{camera={yaw:0,pitch:0,zoom:1};paintAll();};
  $('zoomIn').onclick=()=>{camera.zoom=clamp(camera.zoom*1.18,.35,6);paintAll();};
@@ -824,7 +833,9 @@ function renderIncidentNavigator(check,st){
 function renderSimulationText(){
  const st=stage(piece,sim.time),a=piece.angles[st.activeBend],check=geometryReport(),toolNow=currentToolContact(piece,sim.time);
  renderIncidentNavigator(check,st);
- $('simStatus').textContent=sim.blocked?'⚠ DETENIDO: POSIBLE PENETRACIÓN 2D EN PUNZÓN':st.phase;
+ $('simStatus').textContent=sim.blocked?'⚠ DETENIDO: POSIBLE PENETRACIÓN 2D EN PUNZÓN':
+  toolNow.issues.some(i=>i.kind==='punch'&&i.category==='penetration')?
+   '⚠ POSIBLE PENETRACIÓN 2D · VISTA PREVIA':st.phase;
  const gauge=stopAtStage(piece,sim.time);
  $('activeGaugeLabel').textContent=gauge.label+' · pliegue '+(gauge.bend+1);
  if($('gaugeSideReview').dataset.bend!==String(st.activeBend)){
@@ -948,13 +959,14 @@ function tick(now){
   if(sim.last!=null){
    const dt=Math.min((now-sim.last)/1000,.12)*sim.speed;
    const next=Math.min(piece.order.length*5,sim.time+dt);
-   const checked=guardPunchAdvance(piece,sim.time,next);
+   const checked=advancePreview(piece,sim.time,dt,piece.order.length*5,
+    {pauseOnPenetration:pauseOn2DPenetration});
    sim.time=checked.time;
    if(checked.blocked){
     sim.playing=false;sim.last=null;sim.blocked=checked.issue;
     $('playBtn').textContent='▶';
     $('playBtn').title='Detenido por posible penetración 2D con el punzón';
-   }else if(sim.time>=piece.order.length*5){sim.time=0;sim.last=null;}
+   }else if(checked.looped){sim.time=0;sim.last=null;}
   }
   if(sim.playing)sim.last=now;
   drawMachine();drawProfile('progressCanvas',stage(piece,sim.time).fractions);
