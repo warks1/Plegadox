@@ -759,3 +759,15 @@ Esto es una geometría esquemática basada en la evidencia visual,
 NO dimensiones CAD exactas de los dedos Trumpf ni validación del
 recorrido CNC de los ejes X/R/Z. Se conservan los números L1-L6,
 la secuencia omega y la copia `01/10/27`.
+
+
+## Diagnóstico del espesor de contacto del tope — R11
+El apoyo frontal Stop y el apoyo sobre la pestaña baja Support ahora
+comprueban el **solape vertical mínimo** entre el canto de chapa (espesor
+nominal) y la cara física del tope. Si la pared es demasiado corta o no
+alcanza el canto, **no** se muestra contacto confirmado, aunque la fibra
+media coincida en un punto. El modo seleccionado es independiente del
+estado real del contacto. La cabina distingue **CONTACTO NOMINAL 2D**,
+**RETIRADO / EN MOVIMIENTO** y **SIN CONTACTO CONFIRMADO**.
+Estas comprobaciones son exclusivamente geométricas 2D preliminares;
+no garantizan compatibilidad real, fuerzas, tolerancias ni cinemática CNC.

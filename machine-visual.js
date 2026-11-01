@@ -159,7 +159,9 @@ function rearMachine(ctx,w,h,cx,cy,scale,placement){
  ctx.font='800 '+Math.max(8,11*scale)+'px system-ui';
  ctx.fillStyle='#a5ffcc';ctx.textAlign='left';
  const label=conflict?'⚠ TOPE '+placement.stopNumber+' · REVISAR INTERFERENCIA':
-  placement.stopNumber===2?'TOPE 2 · APOYO SUPERIOR':'TOPE 1 · CARA INFERIOR';
+  placement.moving?'TOPE '+placement.stopNumber+' · RETIRADO / EN MOVIMIENTO':
+  placement.alignedToSheet?'TOPE '+placement.stopNumber+' · CONTACTO NOMINAL 2D':
+  'TOPE '+placement.stopNumber+' · SIN CONTACTO CONFIRMADO';
  ctx.fillText(label,Math.min(Math.max(8,ox+3*scale),w-145*scale),
   Math.max(20,cy-placement.point.y*scale-24*scale));
  // Left support and machine rails

@@ -16,14 +16,45 @@ export function sheetInFrontOfGauge(scene,index,anchor,thickness=2){
   neighbour.x<=anchor.x-margin;
 }
 /**
+ * Solape vertical de la cara de detención con TODO el espesor del canto.
+ * Un segmento vertical en contacto con la fibra media no basta por sí solo
+ * para demostrar que el tope puede detener la chapa en 2D.
+ * Sólo una comprobación de sección; no dimensiona fuerzas ni CNC.
+ */
+export function gaugeStopOverlap(feature,thickness=2){
+ const t=Math.max(.2,Number(thickness)||2);
+ const face=feature?.surface==='horizontal-top'?feature.frontFace:
+  {from:feature?.from,to:feature?.to};
+ const center=feature?.point?.y+(feature?.surface==='horizontal-top'?t/2:0);
+ if(!face?.from||!face?.to||!Number.isFinite(center)||
+    ![face.from.x,face.to.x,face.from.y,face.to.y].every(Number.isFinite))
+  return {valid:false,overlap:0,minimum:Math.max(.25,t*.25),
+   reason:'cara de parada no definida'};
+ const left=Math.min(face.from.y,face.to.y),right=Math.max(face.from.y,face.to.y);
+ const sheetLow=center-t/2,sheetHigh=center+t/2;
+ const overlap=Math.max(0,Math.min(right,sheetHigh)-Math.max(left,sheetLow));
+ const minimum=Math.max(.25,t*.25);
+ return {valid:Math.abs(face.from.x-face.to.x)<1e-5&&overlap+1e-8>=minimum,
+  overlap,minimum,reason:overlap>=minimum?'solape vertical nominal':
+   'cara de parada demasiado baja para el espesor',
+  faceLow:left,faceHigh:right,sheetLow,sheetHigh};
+}
+/**
  * Comprueba que la cara INFERIOR de la chapa queda sobre una longitud real
  * de repisa en Support 2, no únicamente coincidiendo en un vértice.
  * El Stop frontal no necesita apoyo horizontal: sólo contacto frontal.
  * La orientación completa del dedo se conserva (cuerpo a la derecha).
  */
 export function gaugeSeatAssessment(scene,index,anchor,thickness,feature){
+ const vertical=gaugeStopOverlap(feature,thickness);
  if(feature.surface!=='horizontal-top')
-  return {required:false,seated:true,reason:'cara frontal STOP'};
+  return {required:false,seated:vertical.valid,
+   reason:vertical.valid?'cara frontal STOP con solape de espesor':
+    'cara frontal STOP sin solape suficiente para detener el canto',
+   vertical};
+ if(!vertical.valid)
+  return {required:true,seated:false,
+   reason:'contrahuella sin solape suficiente con el espesor',vertical};
  // En el vídeo IMG_9033.mp4 la repisa BAJA sostiene la chapa y
  // una contrahuella vertical detrás SUBE para detener su canto.
  // No declarar "apoyado" si la cara de parada está ABAJO, desplazada
@@ -53,9 +84,9 @@ export function gaugeSeatAssessment(scene,index,anchor,thickness,feature){
  // La repisa queda a e/2 bajo la fibra de la chapa, ver contactAt.
  const seated=deviation<=tolerance &&
   Math.abs(feature.point.y-feature.to.y)<1e-8;
- return {required:true,seated,reason:seated?'apoyo horizontal sobre repisa':
+ return {required:true,seated,reason:seated?'apoyo horizontal y parada sobre contrahuella':
   'ala inclinada: no asienta sobre la repisa',
-  overlap:effective,deviation,tolerance};
+  overlap:effective,deviation,tolerance,vertical};
 }
 /** Mismo contacto nominal de la chapa, pero distinta cara física del dedo. */
 export function gaugePlacement(scene,stopNumber=1){
