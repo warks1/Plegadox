@@ -175,7 +175,7 @@ export function drawTechnicalSection(ctx,w,h,piece,sim,view={}){
    place.alignedToSheet?'#dbffe7':'#ffca8d';
   ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
  }
- const nose=map(place.point);
+ const nose=map(place.contact?.point||place.point);
  ctx.beginPath();ctx.arc(nose.x,nose.y,3.2,0,Math.PI*2);
  ctx.fillStyle=gaugeIssue?'#ff8673':place.alignedToSheet?'#c7ffe7':'#ffb567';ctx.fill();
  ctx.restore();

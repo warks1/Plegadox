@@ -10,12 +10,12 @@ test('Croquis de foto Cybelec: L2 ancho 100, L1 escalón en 70 y alturas L3/L4',
  const stop=gaugeOutline(V85_FACTORY.stop);
  const support=gaugeOutline(V85_FACTORY.support,2);
  assert.deepEqual(stop,[
-  {x:0,y:0},{x:100,y:0},{x:100,y:-18},
-  {x:70,y:-18},{x:70,y:-25},{x:0,y:-25}
+  {x:0,y:-25},{x:100,y:-25},{x:100,y:0},
+  {x:30,y:0},{x:30,y:-18},{x:0,y:-18}
  ]);
  assert.deepEqual(support,[
-  {x:100,y:0},{x:0,y:0},{x:0,y:-8},
-  {x:30,y:-8},{x:30,y:-25},{x:100,y:-25}
+  {x:0,y:-25},{x:100,y:-25},{x:100,y:0},
+  {x:30,y:0},{x:30,y:-8},{x:0,y:-8}
  ]);
 });
 test('Tope 1 y 2 NO comparten cara: frontal vs escalón',()=>{
@@ -25,8 +25,11 @@ test('Tope 1 y 2 NO comparten cara: frontal vs escalón',()=>{
  assert.equal(support.kind,'support-step');
  assert.equal(stop.point.x,0);
  assert.equal(support.point.x,30);
- near(stop.point.y,-12.5);
- near(support.point.y,-16.5);
+ near(stop.point.y,-21.5);
+ near(support.point.y,-8);
+ assert.equal(stop.surface,'vertical-front');
+ assert.equal(support.surface,'horizontal-top');
+ assert.equal(support.from.y,support.to.y);
  assert.equal(stop.usable,true);
  assert.equal(support.usable,true);
 });
@@ -45,14 +48,15 @@ test('El cambio Stop → Support mueve el dedo: chapa y referencia de 50 mm no s
  const cfg=getV85();
  const stopWorld=gaugeContourAtContact(stop,cfg.stop);
  const supportWorld=gaugeContourAtContact(support,cfg.support);
- assert.deepEqual(stopWorld[0],{x:stop.point.x,y:stop.contact.origin.y});
+ assert.deepEqual(stopWorld[0],{x:stop.point.x,y:stop.contact.origin.y-25});
  assert.notDeepEqual(stopWorld,supportWorld);
- const step=supportWorld[3];
+ const step=supportWorld[4];
  near(step.x,support.point.x);
- near(support.contact.from.x,support.point.x);
+ near(support.contact.from.x,support.point.x-30);
  near(support.contact.to.x,support.point.x);
  near(stop.contact.from.x,stop.point.x);
  near(stop.contact.to.x,stop.point.x);
+ near(support.contact.to.y,support.point.y-1);
  assert.deepEqual(p,before);
 });
 test('Golpe 3: elección de ala opuesta conserva 50 mm y Stop/Support respetan su cara',()=>{
@@ -111,11 +115,12 @@ test('Tope sólo se anuncia en contacto durante presentación: no perseguir ala 
  assert.match(late.state,/sin contacto actual/);
 });
 
-test('Support se voltea una sola vez (sin invertir Y ni cotas) tanto en editor como en simulación',()=>{
+test('el mismo tope mira a la izquierda en ambas posiciones, sin inversión secundaria',()=>{
  const original=gaugeOutline(V85_FACTORY.support);
  const mirror=gaugeOutline(V85_FACTORY.support,2);
- const outer=Math.max(...original.map(pt=>pt.x));
- assert.deepEqual(mirror,original.map(({x,y})=>({x:outer-x,y})));
+ assert.deepEqual(mirror,original);
+ assert.equal(mirror[5].x,0);
+ assert.equal(mirror[4].x,30);
  assert.equal(gaugeBoundsSupportHeight(),25);
  const scene=technicalScene(EXAMPLE,.5);
  const place=gaugePlacement(scene,2);
@@ -123,11 +128,12 @@ test('Support se voltea una sola vez (sin invertir Y ni cotas) tanto en editor c
  assert.deepEqual(world,mirror.map(pt=>({
   x:place.contact.origin.x+pt.x,y:place.contact.origin.y+pt.y
  })));
- // Los dos puntos de cara del escalón son el tramo 3->4.
- assert.deepEqual(world[3],place.contact.from);
+ // Superficie de apoyo horizontal 5→4, bajo la chapa de 2 mm.
+ assert.deepEqual(world[5],place.contact.from);
  assert.deepEqual(world[4],place.contact.to);
  assert.equal(place.contact.point.x,place.point.x);
- assert.equal(place.contact.mirrorX,true,'metadato de orientación, no segundo espejo');
+ near(place.contact.point.y,place.point.y-1);
+ assert.equal(place.contact.mirrorX,false);
  function gaugeBoundsSupportHeight(){
   return Math.max(...mirror.map(p=>p.y))-Math.min(...mirror.map(p=>p.y));
  }
@@ -136,9 +142,10 @@ test('Support sigue orientado al mismo lado aunque se editen L1, L2, L3, L4',()=
  for(const values of [[70,100,8,25,12,8],[50,125,10,31,12,8],[90,100,16,28,12,8]]){
   const face=gaugeContactFeature(values,2);
   const support=gaugeOutline(values,2);
-  assert.equal(face.point.x,support[3].x);
-  assert.equal(face.from.x,support[4].x);
+  assert.equal(face.point.x,support[4].x);
+  assert.equal(face.from.x,support[5].x);
+  assert.equal(face.from.y,face.to.y);
   assert.ok(face.point.x<Math.max(...support.map(p=>p.x)));
-  assert.ok(support[3].y<0);
+  assert.ok(support[4].y<0);
  }
 });

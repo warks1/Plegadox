@@ -81,10 +81,9 @@ function gaugeCanvas(ctx,w,h,cfg,key){
  ctx.closePath();const g=ctx.createLinearGradient(ox,0,ox+bounds.width*s,h);
  g.addColorStop(0,'#b4d8e5');g.addColorStop(.45,'#31556a');g.addColorStop(1,'#163249');
  ctx.fillStyle=g;ctx.fill();ctx.strokeStyle='#bfe9fa';ctx.lineWidth=2;ctx.stroke();
- // Las cotas siguen al mismo giro horizontal que la geometría.
- // En Support se toma la referencia desde el extremo DERECHO;
- // en Stop se conserva la referencia izquierda previa.
- const drawingX=x=>stopNumber===2?bounds.maxX-x:x;
+ // Ambas posiciones presentan el cuerpo atrás y el escalón a la IZQUIERDA.
+ // L1 es la longitud trasera; L2-L1 es el labio delantero.
+ const drawingX=x=>bounds.maxX-x;
  const x0=xy({x:drawingX(0),y:0}).x,
   x1=xy({x:drawingX(values[0]),y:0}).x,
   x2=xy({x:drawingX(values[1]),y:0}).x;
@@ -93,7 +92,7 @@ function gaugeCanvas(ctx,w,h,cfg,key){
  label(ctx,'L2 '+locale(values[1]),(x0+x2)/2,yy+30,10,'#8edbfa','center');
  arrow(ctx,{x:x0,y:pad-16},{x:x1,y:pad-16});
  label(ctx,'L1 '+locale(values[0]),(x0+x1)/2,pad-20,10,'#8edbfa','center');
- const dimensionLeft=stopNumber===2;
+ const dimensionLeft=true;
  label(ctx,'L3 '+locale(values[2]),dimensionLeft?8:w-8,pad+24,10,
   '#d9eef8',dimensionLeft?'left':'right');
  label(ctx,'L4 '+locale(values[3]),dimensionLeft?8:w-8,pad+40,10,
@@ -109,7 +108,7 @@ function gaugeCanvas(ctx,w,h,cfg,key){
  ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
  ctx.shadowBlur=0;ctx.beginPath();ctx.arc(p.x,p.y,3.2,0,Math.PI*2);
  ctx.fillStyle='#d4ffe9';ctx.fill();ctx.restore();
- label(ctx,key==='support'?'2 · CONTACTO EN ESCALÓN · ORIENTACIÓN CORREGIDA':'1 · CONTACTO EN CARA STOP',
+ label(ctx,key==='support'?'2 · CHAPA SOBRE EL PRIMER ESCALÓN':'1 · APOYO FRONTAL INFERIOR',
   w/2,h-10,Math.min(11,Math.max(8,w/40)),'#b8ffe0','center');
  ctx.restore();
 }

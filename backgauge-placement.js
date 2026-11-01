@@ -31,15 +31,17 @@ export function gaugePlacement(scene,stopNumber=1){
    verified:false};
  };
  const contactAt=edge=>{
-  const origin={x:edge.x-feature.point.x,y:edge.y-feature.point.y};
-  // El perfil Support YA se espeja en gaugeOutline(values,2).
-  // No aplicar un segundo espejo aquí: escena y editor deben coincidir.
-  const mirrorX=selected===2;
+  // Mantener X del borde de chapa. Stop toca la cara frontal vertical;
+  // Support apoya SOBRE el escalón, a e/2 bajo la fibra media de chapa.
+  const support=selected===2;
+  const surface={x:edge.x,y:edge.y-(support?thickness/2:0)};
+  const origin={x:surface.x-feature.point.x,y:surface.y-feature.point.y};
   const toWorld=pt=>({x:origin.x+pt.x,y:origin.y+pt.y});
-  return {kind:feature.kind,label:feature.label,usable:feature.usable,
-   origin,mirrorX,localContactX:feature.point.x,
+  return {kind:feature.kind,surface:feature.surface,
+   label:feature.label,usable:feature.usable,
+   origin,mirrorX:false,localContactX:feature.point.x,
    from:toWorld(feature.from),to:toWorld(feature.to),
-   point:{...edge},verified:false};
+   point:surface,verified:false};
  };
  // Nuevo modo: lado de apoyo elegido POR PLIEGUE, independiente de tipo
  // de dedo Stop/Support. La referencia es la chapa ANTES de deformarla:

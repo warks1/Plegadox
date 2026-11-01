@@ -28,10 +28,14 @@ try{
     dimensions:cfg.support};
   });
   assert.deepEqual(geometry.dimensions,[70,100,8,25,12,8]);
-  assert.deepEqual(geometry.mirrored,geometry.old.map(p=>({x:100-p.x,y:p.y})));
+  assert.deepEqual(geometry.mirrored,geometry.old);
+  assert.equal(geometry.mirrored[5].x,0,'la cara baja delantera está a la izquierda');
+  assert.equal(geometry.mirrored[4].x,30,'el primer escalón mira hacia la chapa');
   assert.equal(geometry.face.point.x,30,'escalón de Support al lado opuesto');
-  assert.deepEqual(geometry.world[3],geometry.place.contact.from);
+  assert.deepEqual(geometry.world[5],geometry.place.contact.from);
   assert.deepEqual(geometry.world[4],geometry.place.contact.to);
+  assert.equal(geometry.face.from.y,geometry.face.to.y);
+  assert.equal(geometry.place.contact.point.y,geometry.place.point.y-1);
   await page.screenshot({path:'test-results/support-orientation-'+device.name+'.png',fullPage:false});
   const input=page.locator('#machineSupportFields input[data-path="support.0"]');
   await input.fill('55');await input.dispatchEvent('change');
