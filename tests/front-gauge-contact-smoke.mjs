@@ -24,6 +24,7 @@ try{
     const place=gaugePlacement(technicalScene(piece,.5),n);
     return {selected:piece.stopByBend[0],point:place.point,
      inFront:place.sheetInFront,contact:place.contact,supported:place.contactEngaged,
+     seat:place.seat,
      text:document.querySelector('#activeGaugeReference')?.textContent};
    },n);
    assert.equal(check.selected,n);
@@ -31,10 +32,13 @@ try{
    assert.equal(check.supported,true,'contacto físico nominal '+n);
    assert.ok(!check.text.includes('CHAPA POR DETRÁS'));
    if(n===2){
+    assert.equal(check.seat.required,true);
+    assert.equal(check.seat.seated,true,'la chapa debe descansar sobre la repisa, no tocar solamente una esquina');
     assert.equal(check.contact.surface,'horizontal-top');
     assert.equal(check.contact.to.x,check.contact.frontFace.from.x);
     assert.ok(check.contact.from.x<check.contact.to.x);
    }else{
+    assert.equal(check.seat.required,false);
     assert.equal(check.contact.surface,'vertical-front');
     assert.equal(check.contact.to.x,check.contact.from.x);
    }

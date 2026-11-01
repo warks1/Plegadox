@@ -15,6 +15,36 @@ export function sheetInFrontOfGauge(scene,index,anchor,thickness=2){
  return Number.isFinite(neighbour?.x)&&Number.isFinite(anchor?.x)&&
   neighbour.x<=anchor.x-margin;
 }
+/**
+ * Comprueba que la cara INFERIOR de la chapa queda sobre una longitud real
+ * de repisa en Support 2, no únicamente coincidiendo en un vértice.
+ * El Stop frontal no necesita apoyo horizontal: sólo contacto frontal.
+ * La orientación completa del dedo se conserva (cuerpo a la derecha).
+ */
+export function gaugeSeatAssessment(scene,index,anchor,thickness,feature){
+ if(feature.surface!=='horizontal-top')
+  return {required:false,seated:true,reason:'cara frontal STOP'};
+ const sheet=scene?.sheet;
+ if(!Array.isArray(sheet)||!Number.isInteger(index)||
+   (index!==0&&index!==sheet.length-1))
+  return {required:true,seated:false,reason:'sin extremo libre'};
+ const edge=sheet[index],neighbour=sheet[index===0?1:index-1];
+ const dx=edge?.x-neighbour?.x,ledge=feature.to.x-feature.from.x;
+ const effective=Math.min(dx/2,ledge/2);
+ const minSpan=Math.max(.7,Math.min(2,thickness));
+ if(!Number.isFinite(dx)||!Number.isFinite(ledge)||
+  dx<=0||ledge<=0||effective<minSpan)
+  return {required:true,seated:false,reason:'sin ala horizontal suficiente'};
+ const sampleY=edge.y+(neighbour.y-edge.y)*effective/dx;
+ const deviation=Math.abs(sampleY-edge.y);
+ const tolerance=Math.max(.2,Math.min(.7,thickness*.16));
+ // La repisa queda a e/2 bajo la fibra de la chapa, ver contactAt.
+ const seated=deviation<=tolerance &&
+  Math.abs(feature.point.y-feature.to.y)<1e-8;
+ return {required:true,seated,reason:seated?'apoyo horizontal sobre repisa':
+  'ala inclinada: no asienta sobre la repisa',
+  overlap:effective,deviation,tolerance};
+}
 /** Mismo contacto nominal de la chapa, pero distinta cara física del dedo. */
 export function gaugePlacement(scene,stopNumber=1){
  const points=(scene?.sheetDisplay||[]).filter(p=>
@@ -67,18 +97,21 @@ export function gaugePlacement(scene,stopNumber=1){
   const gap=edge?Math.hypot(edge.x-a.x,edge.y-a.y):Infinity;
   const approaching=['Posicionamiento','Aproximación'].includes(scene.stage?.phase);
   const sheetInFront=sheetInFrontOfGauge(scene,index,a,thickness);
-  const contactEngaged=valid&&freeEdge&&sheetInFront&&feature.usable&&a.x>0&&
-    approaching&&gap<=Math.max(.4,thickness*.28);
+  const seat=gaugeSeatAssessment(scene,index,a,thickness,feature);
+  const contactEngaged=valid&&freeEdge&&sheetInFront&&seat.seated&&
+    feature.usable&&a.x>0&&approaching&&
+    gap<=Math.max(.4,thickness*.28);
   return review({stopNumber:selected,profile:selected===2?'support':'stop',
    point:{x:a.x,y:a.y},contact:contactAt(a),nominalDistance:reference.distance,
    referenceSide:reference.side,referenceLabel:reference.label,
    feedMirrored:!!scene.feedMirrored,sourceIndex:index,sheetInFront,
-   sheetEdgeFound:valid&&freeEdge,alignedToSheet:contactEngaged,
+   seat,sheetEdgeFound:valid&&freeEdge,alignedToSheet:contactEngaged,
    contactEngaged,contactGap:gap,
    freeEdge,referenceKind:freeEdge?'extremo libre':'vértice interior plegado',
    state:!valid?'sin cota válida':!feature.usable?'sin cara física de apoyo definida':
     !freeEdge?'apoyo sobre vértice interior: revisar':
     !sheetInFront?'⚠ La chapa llega por DETRÁS del tope; invertir la presentación':
+    !seat.seated?'⚠ La chapa NO asienta sobre la repisa del primer escalón':
     contactEngaged?'borde presentado contra la cara seleccionada':
     'referencia nominal fijada antes del golpe (sin contacto actual)',
    verified:false});
@@ -96,10 +129,13 @@ export function gaugePlacement(scene,stopNumber=1){
  const index=visible===points[0]?0:visible===points.at(-1)?points.length-1:-1;
  const neighbour=index===0?points[1]:index===points.length-1?points.at(-2):null;
  const sheetInFront=!!neighbour&&neighbour.x<edge.x-Math.max(.12,thickness*.12);
+ const seat=gaugeSeatAssessment({sheet:points},index,edge,thickness,feature);
  return review({stopNumber:selected,profile:selected===2?'support':'stop',
-  point:{...edge},contact:contactAt(edge),sheetInFront,
-  sheetEdgeFound:!!rear,alignedToSheet:validEdge&&sheetInFront&&feature.usable,
+  point:{...edge},contact:contactAt(edge),sheetInFront,seat,
+  sheetEdgeFound:!!rear,alignedToSheet:validEdge&&sheetInFront&&
+   seat.seated&&feature.usable,
   state:!sheetInFront&&rear?'⚠ Chapa por detrás del dedo; revisar orientación':
+   !seat.seated?'⚠ Chapa sin apoyo horizontal en el escalón':
    validEdge?'borde visible orientativo':rear?'borde inclinado o elevado':
    'sin borde trasero accesible',
   verified:false});
