@@ -89,7 +89,8 @@ export function gaugePlacement(scene,stopNumber=1){
  // de dedo Stop/Support. La referencia es la chapa ANTES de deformarla:
  // la distancia nominal (p.ej. 50 mm) no salta a los 200 del otro extremo.
  if(scene?.gaugeReference&&scene?.gaugeAnchor){
-  const reference=scene.gaugeReference,a=scene.gaugeAnchor;
+  const reference=scene.gaugeReference,
+   a=scene.gaugeTransition?.point||scene.gaugeAnchor;
   const index=reference.sourceIndex;
   const freeEdge=index===0||index===(scene.sheet?.length||0)-1;
   const valid=[a.x,a.y,reference.distance].every(Number.isFinite);
@@ -98,17 +99,19 @@ export function gaugePlacement(scene,stopNumber=1){
   const approaching=['Posicionamiento','Aproximación'].includes(scene.stage?.phase);
   const sheetInFront=sheetInFrontOfGauge(scene,index,a,thickness);
   const seat=gaugeSeatAssessment(scene,index,a,thickness,feature);
-  const contactEngaged=valid&&freeEdge&&sheetInFront&&seat.seated&&
+  const contactEngaged=!scene.gaugeTransition&&valid&&freeEdge&&sheetInFront&&seat.seated&&
     feature.usable&&a.x>0&&approaching&&
     gap<=Math.max(.4,thickness*.28);
   return review({stopNumber:selected,profile:selected===2?'support':'stop',
    point:{x:a.x,y:a.y},contact:contactAt(a),nominalDistance:reference.distance,
    referenceSide:reference.side,referenceLabel:reference.label,
    feedMirrored:!!scene.feedMirrored,sourceIndex:index,sheetInFront,
+   moving:!!scene.gaugeTransition,gaugeTransition:scene.gaugeTransition,
    seat,sheetEdgeFound:valid&&freeEdge,alignedToSheet:contactEngaged,
    contactEngaged,contactGap:gap,
    freeEdge,referenceKind:freeEdge?'extremo libre':'vértice interior plegado',
-   state:!valid?'sin cota válida':!feature.usable?'sin cara física de apoyo definida':
+   state:scene.gaugeTransition?'tope retirado y en traslación X/R al siguiente golpe':
+    !valid?'sin cota válida':!feature.usable?'sin cara física de apoyo definida':
     !freeEdge?'apoyo sobre vértice interior: revisar':
     !sheetInFront?'⚠ La chapa llega por DETRÁS del tope; invertir la presentación':
     !seat.seated?'⚠ La chapa NO asienta sobre la repisa del primer escalón':

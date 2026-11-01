@@ -1,6 +1,6 @@
 {
-  "build": "TOPE-20261101-R07",
+  "build": "TOPE-20261101-R08",
   "version": "0.9.0",
-  "gauge": "stepped-finger-front-left",
-  "cache": "plegadox-static-0.9.0-gauge-front-contact-7"
+  "gauge": "full-profile-flipped-and-transitioned",
+  "cache": "plegadox-static-0.9.0-gauge-motion-8"
 }

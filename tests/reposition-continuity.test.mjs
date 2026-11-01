@@ -32,3 +32,25 @@ test('la geometría del visor no depende del modo perspectiva al cambiar de cara
    machineSheetProjection(scene,0,0,1,false),'Vista diferente en '+t);
  }
 });
+
+test('al cambiar pliegue el tope X/R retrocede, se traslada y no da saltos de posición',async()=>{
+ const {gaugePlacement,gaugeContourAtContact}=await import('../backgauge-placement.js');
+ const {V85_FACTORY}=await import('../machine-config.js');
+ const p=normalized(EXAMPLE);
+ for(const boundary of [5,10,15]){
+  const before=technicalScene(p,boundary-.0001);
+  const after=technicalScene(p,boundary);
+  const a=gaugePlacement(before,1),b=gaugePlacement(after,1);
+  const delta=Math.hypot(a.point.x-b.point.x,a.point.y-b.point.y);
+  assert.ok(delta<.2,'Salto de '+delta+' mm del tope en '+boundary+' s');
+  assert.equal(a.contactEngaged,false,'Dedo debe separarse durante cambio');
+  const scene=technicalScene(p,boundary-.4);
+  assert.ok(scene.gaugeTransition,'Debe existir una trayectoria de tope entre golpes');
+  assert.ok(scene.gaugeTransition.point.x>=scene.gaugeTransition.from.x-1e-6,
+   'El dedo debe retirarse hacia atrás, lejos de la chapa');
+  const outline=gaugeContourAtContact(a,V85_FACTORY.stop);
+  assert.equal(outline.length,6,'El tope completo se traslada rígido');
+ }
+ assert.deepEqual(p.order,[0,1,3,2]);
+ assert.deepEqual(p.angles,[90,-90,-90,90]);
+});

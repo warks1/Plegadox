@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
 import {chromium} from 'playwright';
 const server=spawn('python3',['-m','http.server','4305','--bind','127.0.0.1'],{stdio:'ignore'});
-const BUILD='TOPE-20261101-R07';
+const BUILD='TOPE-20261101-R08';
 let browser;
 try{
  browser=await chromium.launch({headless:true,args:['--no-sandbox']});
@@ -41,8 +41,8 @@ try{
    return {stop,support,front:gaugeContactFeature(V85_FACTORY.support,2).frontFace,
     placement:gaugePlacement(scene,2),piece:window.PLEGADOX_STATE().piece.name};
   });
-  assert.equal(read.stop[4].x,30,'El escalón STOP debe mirar a la izquierda');
-  assert.equal(read.support[4].x,30,'El escalón SUPPORT debe mirar a la izquierda');
+  assert.equal(read.stop[3].x,70,'El escalón alto STOP debe estar a la izquierda');
+  assert.equal(read.support[3].x,70,'El escalón alto SUPPORT debe estar a la izquierda');
   assert.equal(read.front.from.x,read.front.to.x,'Contrahuella vertical');
   assert.equal(read.piece,'OMEGA PRESERVADA','La recuperación no borra la pieza');
   await page.locator('#forceUpdateBtn').click();

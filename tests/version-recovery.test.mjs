@@ -21,6 +21,6 @@ test('Arranque con recursos no versionados separado de la caché, sin perder mod
  assert.match(html,/<script type="module">/);
  assert.equal((html.match(/src="\.\/app\.js"/g)||[]).length,0);
  assert.ok(html.includes("import('./'+path+'?build='"));
- assert.ok(sw.includes("const CACHE='plegadox-static-0.9.0-gauge-front-contact-7'"));
+ assert.ok(sw.includes("const CACHE='plegadox-static-0.9.0-gauge-motion-8'"));
  assert.ok(sw.includes("await caches.match(request)"));
 });

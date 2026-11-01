@@ -83,7 +83,7 @@ function gaugeCanvas(ctx,w,h,cfg,key){
  ctx.fillStyle=g;ctx.fill();ctx.strokeStyle='#bfe9fa';ctx.lineWidth=2;ctx.stroke();
  // Ambas posiciones presentan el cuerpo atrás y el escalón a la IZQUIERDA.
  // L1 es la longitud trasera; L2-L1 es el labio delantero.
- const drawingX=x=>bounds.maxX-x;
+ const drawingX=x=>x;
  const x0=xy({x:drawingX(0),y:0}).x,
   x1=xy({x:drawingX(values[0]),y:0}).x,
   x2=xy({x:drawingX(values[1]),y:0}).x;
