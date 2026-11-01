@@ -17,6 +17,7 @@ import {sectionPunch,sectionDie} from './tool-profiles.js';
 import {getV85} from './machine-config.js';
 import {gaugePlacement} from './backgauge-placement.js';
 import {technicalScene} from './technical-section.js';
+import {recommendTooling} from './tooling-advisor.js';
 import {loadImportedTools,registerImportedTools,persistImportedTool} from './tool-dxf.js';
 import {setupToolDxfImporter} from './tool-import-ui.js';
 registerCatalogue(DIES,PUNCHES);
@@ -251,6 +252,56 @@ function bindViewport(canvas,kind){
  });
  for(const ev of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(ev,e=>{points.delete(e.pointerId);dist=null;last=null;});
 }
+/** Recomendar SIN alterar automáticamente la matriz/punzón elegidos. */
+function renderToolAdvisor(){
+ const result=$('toolAdvisorResult'),choices=$('toolAdvisorOptions');
+ if(!result||!choices)return;
+ const advice=recommendTooling(piece);
+ choices.replaceChildren();
+ const fmt=n=>numbers(n,1);
+ if(!advice.choice){
+  result.textContent='⚠ Sin pareja recomendable en el catálogo actual: '+
+   advice.reasons.join(' ')+' Revisa alas, ángulo, espesor y útiles.';
+  result.dataset.state='none';
+  return;
+ }
+ const primary=advice.choice;
+ result.dataset.state='suggested';
+ result.textContent='Propuesta: '+primary.dieName+' + '+primary.punchName+
+  ' · apertura objetivo '+fmt(advice.targetOpening)+' mm'+
+  ' · ala disponible '+fmt(advice.minimumFlange)+' mm / mínima aproximada '+
+  fmt(primary.flangeLimit)+' mm · fuerza al aire '+fmt(primary.forceTonnes)+
+  ' t ('+fmt(primary.forceKNm)+' kN/m). '+
+  (advice.requiresClearance?'Perfil complejo: revisar interferencias con la pata de cabra. ':'')+
+  'Sin comprobación de montaje ni seguridad CNC.';
+ const addPair=(pair,main)=>{
+  const el=document.createElement('div');el.className='px-advisor-option'+(main?' primary':'');
+  const header=document.createElement('strong');header.textContent=
+   (main?'Recomendada: ':'Alternativa: ')+pair.dieName+' + '+pair.punchName;
+  const data=document.createElement('span');data.textContent=
+   'V'+fmt(pair.dieOpening)+' / '+pair.dieAngle+'° · punzón '+
+   pair.punchAngle+'° · ala mínima ≈ '+fmt(pair.flangeLimit)+
+   ' mm · '+fmt(pair.forceTonnes)+' t';
+  const warnings=document.createElement('small');
+  warnings.textContent=pair.warnings.join(' · ');
+  const apply=document.createElement('button');apply.type='button';
+  apply.className='mini px-advisor-apply';
+  const active=piece.die===pair.dieId&&piece.punch===pair.punchId;
+  apply.textContent=active?'En uso':'Aplicar V + punzón';apply.disabled=active;
+  apply.setAttribute('aria-label','Aplicar '+pair.dieName+' y '+pair.punchName);
+  apply.onclick=()=>{
+   const fresh=recommendTooling(piece);
+   if(![fresh.choice,...fresh.alternatives].filter(Boolean)
+    .some(x=>x.dieId===pair.dieId&&x.punchId===pair.punchId)){
+    renderToolAdvisor();return;
+   }
+   changePiece({...piece,die:pair.dieId,punch:pair.punchId},true);
+  };
+  el.append(header,data,warnings,apply);choices.append(el);
+ };
+ addPair(primary,true);
+ advice.alternatives.forEach(pair=>addPair(pair,false));
+}
 function renderSetup(){
  for(const id of ['pieceName','material','thickness','width','die','punch'])$(id).value=piece[{pieceName:'name'}[id]||id];
  $('datum').value=piece.datum;
@@ -258,6 +309,7 @@ function renderSetup(){
  $('insideRadius').value=piece.radius??numbers(development(piece).radius,2).replace(',','.');
  $('rmMPa').value=piece.rmMPa??'';
  $('rmMPa').placeholder=String(REFERENCE_RM_MPA[piece.material]||450)+' (referencia)';
+ renderToolAdvisor();
 }
 function renderEditor(){
  const tb=$('flangeRows');tb.replaceChildren();
