@@ -1275,3 +1275,17 @@ html{background:#020913}
 }
 .header-right .px-refresh-button:disabled{opacity:.5;cursor:wait}
 .header-right .px-refresh-button .px-icon{width:20px;height:20px}
+
+/* R13: asesor visible de útiles en Programación, también en iPhone */
+.px-tool-advisor{margin:14px 0 20px;border:1px solid #acd1e7;background:#f5fbff}
+.px-tool-advisor .cardhead{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between}
+.px-advisor-result{background:#e8f5ff;border-left:4px solid #187cb7;padding:13px 15px;border-radius:8px;color:#1c4f6e;font-weight:700;line-height:1.6}
+.px-advisor-result[data-state="none"]{background:#fff1e3;border-left-color:#da8733;color:#764519}
+.px-advisor-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:10px;margin:12px 0}
+.px-advisor-option{border:1px solid #cfdfeb;background:white;border-radius:10px;display:flex;flex-direction:column;gap:7px;padding:12px;min-width:0;overflow-wrap:anywhere}
+.px-advisor-option.primary{border:2px solid #4f9dca;background:#f7fcff}
+.px-advisor-option strong{color:#164a70;font-size:13px}
+.px-advisor-option span{color:#34566b;font-size:12px;line-height:1.55}
+.px-advisor-option small{color:#6a6b62;font-size:11px;line-height:1.45;flex:1}
+.px-advisor-option button{align-self:flex-start;min-height:42px}
+@media(max-width:560px){.px-advisor-options{grid-template-columns:1fr}.px-advisor-option button{width:100%}.px-tool-advisor .cardhead{align-items:flex-start}}
