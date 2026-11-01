@@ -7,6 +7,14 @@ const $=id=>document.getElementById(id);
 const state={brand:'Todos',kind:'all',search:'',selectedTool:null,selectedToolKind:'punch',showAll:false,yaw:-.6,pitch:.34,zoom:1,fullLength:false};
 const format=(n,d=1)=>Number(n).toLocaleString('es-ES',{minimumFractionDigits:d,maximumFractionDigits:d});
 const tipR=tool=>format((Number(tool.tip)||0)/2,2);
+const punchHeightLabel=tool=>{
+ if(tool.profileStyle==='user-photo'){
+  const section=sectionPunch(tool);
+  return 'H útil '+format(section.workingHeight,0)+' mm · total ilustrado ≈'+
+   format(section.height,0)+' mm';
+ }
+ return 'H '+tool.height+' mm';
+};
 function current(){const s=window.PLEGADOX_STATE?.();if(s)return s;let p=null;try{p=JSON.parse(localStorage.getItem('plegadox:piece:v1'));}catch{}return {piece:normalized(p),sim:{time:0}};}
 const kindList=()=>{
  const punches=PUNCHES.map(tool=>({...tool,uiKind:'punch'}));
@@ -77,7 +85,7 @@ function renderCatalogue(){
     ' · Provisional: contorno paramétrico no verificado');
    const canvas=document.createElement('canvas');canvas.setAttribute('aria-hidden','true');
    const title=document.createElement('b');title.textContent=tool.reference||tool.name;
-   const detail=document.createElement('small');detail.textContent=kind==='punch'?tool.angle+'° · R'+tipR(tool)+' · H'+tool.height:'V'+tool.opening+' · '+tool.angle+'°'+
+   const detail=document.createElement('small');detail.textContent=kind==='punch'?tool.angle+'° · R'+tipR(tool)+' · '+punchHeightLabel(tool):'V'+tool.opening+' · '+tool.angle+'°'+
  (tool.shoulderRadius?' · R'+format(tool.shoulderRadius,2):'')+
  ' · H'+tool.height;
    const flag=document.createElement('em');
@@ -104,6 +112,14 @@ function renderCatalogue(){
    const note=document.createElement('div');note.textContent=shown.importedDxf?
     'Contorno original importado desde DXF ASCII 2D. El visor 3D sólo extruye este contorno; ninguna colisión física o compatibilidad CNC está validada.':
     'Perfil 2D/3D: PARAMÉTRICO, pendiente de cotas completas para comprobación de colisiones.';info.append(note);
+   if(shown.profileStyle==='user-photo'){
+    const section=sectionPunch(shown);
+    const explanation=document.createElement('div');
+    explanation.textContent='COTA H = '+section.workingHeight+
+     ' mm desde hombro inferior a punta. La prolongación del vástago ('+
+     section.headProjection+' mm) es ESTIMADA desde la fotografía; NO es una cota del fabricante.';
+    info.append(explanation);
+   }
    if(shown.source&&CATALOG_SOURCES[shown.source]?.url){const a=document.createElement('a');a.href=CATALOG_SOURCES[shown.source].url;a.target='_blank';a.rel='noreferrer noopener';a.textContent='Consultar fuente técnica';a.style.cssText='display:inline-block;color:#41c4ff;text-decoration:underline;margin-top:5px';info.append(a);}
  }
  drawToolViewer();
@@ -204,7 +220,7 @@ function drawToolViewer(){
  if(!tool)return;
  const meta=$('toolInspectorMeta');
  if(meta)meta.textContent=[tool.manufacturer||'Herramienta genérica',
-  tool.reference||tool.name,kind==='punch'?'Ángulo '+tool.angle+'° · Altura '+tool.height+' mm · Punta R'+tipR(tool):
+  tool.reference||tool.name,kind==='punch'?'Ángulo '+tool.angle+'° · '+punchHeightLabel(tool)+' · Punta R'+tipR(tool):
   'V '+tool.opening+' mm · '+tool.angle+'°'+
    (tool.shoulderRadius?' · Hombros R'+format(tool.shoulderRadius,2):'')+
    ' · Altura '+tool.height+' mm',
