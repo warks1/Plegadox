@@ -8,14 +8,14 @@ import {gaugePlacement,gaugeContourAtContact} from '../backgauge-placement.js';
 const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-6,a+' vs '+b);
 test('Croquis de foto Cybelec: L2 ancho 100, L1 escalón en 70 y alturas L3/L4',()=>{
  const stop=gaugeOutline(V85_FACTORY.stop);
- const support=gaugeOutline(V85_FACTORY.support);
+ const support=gaugeOutline(V85_FACTORY.support,2);
  assert.deepEqual(stop,[
   {x:0,y:0},{x:100,y:0},{x:100,y:-18},
   {x:70,y:-18},{x:70,y:-25},{x:0,y:-25}
  ]);
  assert.deepEqual(support,[
-  {x:0,y:0},{x:100,y:0},{x:100,y:-8},
-  {x:70,y:-8},{x:70,y:-25},{x:0,y:-25}
+  {x:100,y:0},{x:0,y:0},{x:0,y:-8},
+  {x:30,y:-8},{x:30,y:-25},{x:100,y:-25}
  ]);
 });
 test('Tope 1 y 2 NO comparten cara: frontal vs escalón',()=>{
@@ -24,7 +24,7 @@ test('Tope 1 y 2 NO comparten cara: frontal vs escalón',()=>{
  assert.equal(stop.kind,'stop-face');
  assert.equal(support.kind,'support-step');
  assert.equal(stop.point.x,0);
- assert.equal(support.point.x,70);
+ assert.equal(support.point.x,30);
  near(stop.point.y,-12.5);
  near(support.point.y,-16.5);
  assert.equal(stop.usable,true);
@@ -78,8 +78,8 @@ test('Vértice interior: no inventar apoyo confirmado con ningún dedo',()=>{
  }
 });
 test('L5/L6 no modifican silenciosamente la cara CAD al faltar cota inequívoca',()=>{
- const a=gaugeOutline([70,100,8,25,12,8]);
- const b=gaugeOutline([70,100,8,25,16,14]);
+ const a=gaugeOutline([70,100,8,25,12,8],2);
+ const b=gaugeOutline([70,100,8,25,16,14],2);
  assert.deepEqual(a,b);
  assert.equal(gaugeContactFeature([70,100,8,25,12,8],2).point.x,
   gaugeContactFeature([70,100,8,25,16,14],2).point.x);
@@ -109,4 +109,36 @@ test('Tope sólo se anuncia en contacto durante presentación: no perseguir ala 
  assert.equal(late.contactEngaged,false);
  assert.deepEqual(early.point,late.point,'La referencia X/R del tope no debe perseguir el ala');
  assert.match(late.state,/sin contacto actual/);
+});
+
+test('Support se voltea una sola vez (sin invertir Y ni cotas) tanto en editor como en simulación',()=>{
+ const original=gaugeOutline(V85_FACTORY.support);
+ const mirror=gaugeOutline(V85_FACTORY.support,2);
+ const outer=Math.max(...original.map(pt=>pt.x));
+ assert.deepEqual(mirror,original.map(({x,y})=>({x:outer-x,y})));
+ assert.equal(gaugeBoundsSupportHeight(),25);
+ const scene=technicalScene(EXAMPLE,.5);
+ const place=gaugePlacement(scene,2);
+ const world=gaugeContourAtContact(place,V85_FACTORY.support);
+ assert.deepEqual(world,mirror.map(pt=>({
+  x:place.contact.origin.x+pt.x,y:place.contact.origin.y+pt.y
+ })));
+ // Los dos puntos de cara del escalón son el tramo 3->4.
+ assert.deepEqual(world[3],place.contact.from);
+ assert.deepEqual(world[4],place.contact.to);
+ assert.equal(place.contact.point.x,place.point.x);
+ assert.equal(place.contact.mirrorX,true,'metadato de orientación, no segundo espejo');
+ function gaugeBoundsSupportHeight(){
+  return Math.max(...mirror.map(p=>p.y))-Math.min(...mirror.map(p=>p.y));
+ }
+});
+test('Support sigue orientado al mismo lado aunque se editen L1, L2, L3, L4',()=>{
+ for(const values of [[70,100,8,25,12,8],[50,125,10,31,12,8],[90,100,16,28,12,8]]){
+  const face=gaugeContactFeature(values,2);
+  const support=gaugeOutline(values,2);
+  assert.equal(face.point.x,support[3].x);
+  assert.equal(face.from.x,support[4].x);
+  assert.ok(face.point.x<Math.max(...support.map(p=>p.x)));
+  assert.ok(support[3].y<0);
+ }
 });

@@ -68,7 +68,8 @@ function arrow(ctx,a,b,color='#91d7ff'){
  ctx.strokeStyle=color;ctx.lineWidth=1;ctx.stroke();
 }
 function gaugeCanvas(ctx,w,h,cfg,key){
- const values=cfg[key],outline=gaugeOutline(values),bounds=gaugeBounds(values);
+ const values=cfg[key],stopNumber=key==='support'?2:1;
+ const outline=gaugeOutline(values,stopNumber),bounds=gaugeBounds(values,stopNumber);
  // L1 y L3 también pueden ser mayores que L2 y L4 tras editar Cybelec.
  // Ajustar a la envolvente REAL del esquema evita cortar el tope en pantalla.
  const pad=46,plotW=Math.max(1,w-2*pad),plotH=Math.max(1,h-2*pad);
@@ -80,25 +81,35 @@ function gaugeCanvas(ctx,w,h,cfg,key){
  ctx.closePath();const g=ctx.createLinearGradient(ox,0,ox+bounds.width*s,h);
  g.addColorStop(0,'#b4d8e5');g.addColorStop(.45,'#31556a');g.addColorStop(1,'#163249');
  ctx.fillStyle=g;ctx.fill();ctx.strokeStyle='#bfe9fa';ctx.lineWidth=2;ctx.stroke();
- const x0=xy({x:0,y:0}).x,x1=xy({x:values[0],y:0}).x,
-  x2=xy({x:values[1],y:0}).x;
+ // Las cotas siguen al mismo giro horizontal que la geometría.
+ // En Support se toma la referencia desde el extremo DERECHO;
+ // en Stop se conserva la referencia izquierda previa.
+ const drawingX=x=>stopNumber===2?bounds.maxX-x:x;
+ const x0=xy({x:drawingX(0),y:0}).x,
+  x1=xy({x:drawingX(values[0]),y:0}).x,
+  x2=xy({x:drawingX(values[1]),y:0}).x;
  const yy=xy({x:0,y:0}).y;
  arrow(ctx,{x:x0,y:yy+16},{x:x2,y:yy+16});
  label(ctx,'L2 '+locale(values[1]),(x0+x2)/2,yy+30,10,'#8edbfa','center');
  arrow(ctx,{x:x0,y:pad-16},{x:x1,y:pad-16});
  label(ctx,'L1 '+locale(values[0]),(x0+x1)/2,pad-20,10,'#8edbfa','center');
- label(ctx,'L3 '+locale(values[2]),Math.max(pad,w-8),pad+24,10,'#d9eef8','right');
- label(ctx,'L4 '+locale(values[3]),Math.max(pad,w-8),pad+40,10,'#d9eef8','right');
- label(ctx,'L5 '+locale(values[4])+' · L6 '+locale(values[5]),pad+8,Math.max(pad+15,yy-6),10);
+ const dimensionLeft=stopNumber===2;
+ label(ctx,'L3 '+locale(values[2]),dimensionLeft?8:w-8,pad+24,10,
+  '#d9eef8',dimensionLeft?'left':'right');
+ label(ctx,'L4 '+locale(values[3]),dimensionLeft?8:w-8,pad+40,10,
+  '#d9eef8',dimensionLeft?'left':'right');
+ label(ctx,'L5 '+locale(values[4])+' · L6 '+locale(values[5]),
+  dimensionLeft?w-pad-8:pad+8,Math.max(pad+15,yy-6),10,
+  '#b9ddf2',dimensionLeft?'right':'left');
  // Señalar la superficie activa, no el origen genérico del dibujo.
- const finger=gaugeContactFeature(values,key==='support'?2:1);
+ const finger=gaugeContactFeature(values,stopNumber);
  const a=xy(finger.from),b=xy(finger.to),p=xy(finger.point);
  ctx.save();ctx.lineCap='round';ctx.shadowBlur=8;ctx.shadowColor='#4dfabd';
  ctx.lineWidth=4;ctx.strokeStyle='#b4ffe3';
  ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
  ctx.shadowBlur=0;ctx.beginPath();ctx.arc(p.x,p.y,3.2,0,Math.PI*2);
  ctx.fillStyle='#d4ffe9';ctx.fill();ctx.restore();
- label(ctx,key==='support'?'2 · CONTACTO EN ESCALÓN':'1 · CONTACTO EN CARA STOP',
+ label(ctx,key==='support'?'2 · CONTACTO EN ESCALÓN · ORIENTACIÓN CORREGIDA':'1 · CONTACTO EN CARA STOP',
   w/2,h-10,Math.min(11,Math.max(8,w/40)),'#b8ffe0','center');
  ctx.restore();
 }

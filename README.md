@@ -652,3 +652,14 @@ El perfil seleccionado alimenta miniaturas, la sección técnica, el visor
 colisiones físicas verificadas. Se guardan hasta 30 perfiles en el
 almacenamiento local del navegador (no se suben al servidor).
 El archivo original debe conservarse aparte.
+
+
+## Orientación del tope trasero Support (corrección visual)
+La **vista de perfil del Tope Support nº 2** se muestra espejada
+horizontalmente respecto al croquis original, según la referencia
+aportada por el operario. Stop nº 1 conserva su orientación previa.
+La inversión se calcula una sola vez en `gaugeOutline(values,2)`,
+y la utilizan la pantalla **Máquina**, la presentación de la plegadora
+y el contacto esquemático con la chapa. Las cotas L1–L6, Ox/Oz,
+referencias y configuración almacenada **no cambian**.
+Los perfiles siguen siendo esquemáticos, no CAD certificado.
