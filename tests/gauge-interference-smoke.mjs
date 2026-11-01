@@ -16,13 +16,15 @@ try{
   await page.locator('#die').selectOption('conic-v010-30-s');
   await page.locator('[data-tab="simulacion"]').click();
   for(const n of [2,1,2]){
-   await page.locator('#chooseGauge'+n).click();
-   assert.equal(await page.locator('#chooseGauge'+n).getAttribute('aria-pressed'),'true');
    for(const t of [0,2.7,4.6,10.2,13.2]){
     await page.locator('#timeline').evaluate((el,t)=>{
      el.value=String(Math.round(t/20*1000));
      el.dispatchEvent(new Event('input',{bubbles:true}));
     },t);
+    // La selección Stop/Support es por pliegue, y puede cambiar al mover
+    // la línea de tiempo. Seleccionarla en el golpe que inspeccionamos.
+    await page.locator('#chooseGauge'+n).click();
+    assert.equal(await page.locator('#chooseGauge'+n).getAttribute('aria-pressed'),'true');
     const check=await page.evaluate(async n=>{
      const {technicalScene}=await import('/technical-section.js');
      const {gaugePlacement}=await import('/backgauge-placement.js');

@@ -25,7 +25,8 @@ export function gaugePlacement(scene,stopNumber=1){
    verified:false};
   return {...placement,alignedToSheet:false,contactEngaged:false,
    gaugeInterference:result,
-   state:'⚠ Posible '+(result.kind==='penetracion'?'penetración':'falta de holgura')+
+   state:(placement.state||'Apoyo sin verificar')+
+    ' · ⚠ Posible '+(result.kind==='penetracion'?'penetración':'falta de holgura')+
     ' 2D de chapa con el dedo '+selected+'; revisar apoyo y retirada del tope',
    verified:false};
  };
