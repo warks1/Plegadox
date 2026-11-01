@@ -16,8 +16,12 @@ test('foto aportada: H100 del hombro inferior a la punta, 50 mm de alcance y R1'
  assert.equal(t.type,'cabra');
  assert.equal(section.model,'gooseneck');
  assert.equal(section.profileSource,'user-photo');
- approx(section.height,100);
- approx(bounds.maxY-bounds.minY,100);
+ approx(section.workingHeight,100);
+ approx(section.nominalReferenceY,100);
+ approx(section.headProjection,37);
+ approx(section.height,137);
+ approx(bounds.maxY-bounds.minY,137);
+ assert.ok(section.points.some(([x,y])=>x===-11&&y===100),'Escalón del hombro a H100');
  approx(section.headSpan,50);
  approx(bounds.maxX-bounds.minX,50);
  approx(section.tipRadius,1);
@@ -30,8 +34,10 @@ test('todas las patas de cabra tienen cuello abierto, no punzón recto, y H no s
  for(const tool of goose){
   const section=sectionPunch(tool),bounds=sectionBounds(section.points);
   assert.equal(section.model,'gooseneck',tool.id);
-  approx(section.height,tool.height);
-  approx(bounds.maxY-bounds.minY,tool.height);
+  const overall=tool.height+(tool.profileStyle==='user-photo'?tool.headProjection:0);
+  approx(section.workingHeight,tool.height);
+  approx(section.height,overall);
+  approx(bounds.maxY-bounds.minY,overall);
   approx(section.tipRadius,(tool.tip||.8)/2);
   const recto=sectionPunch({...tool,type:'recto',profileStyle:null});
   assert.notDeepEqual(section.points,recto.points,tool.id);
@@ -76,6 +82,6 @@ test('la máquina proyecta exactamente el mismo perfil que el inspector y el mot
   const fromMachine=machineToolProjection(scene,0,0,1).punch;
   assert.deepEqual(fromMachine,scene.punchPolygon.map(v=>[v.x,-v.y]));
   assert.equal(getTooling(p).punch.id,t.id);
-  assert.equal(scene.punch.height,t.height);
+  assert.equal(scene.punch.height,t.height+(t.profileStyle==='user-photo'?t.headProjection:0));
  }
 });
