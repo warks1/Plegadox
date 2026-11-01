@@ -729,3 +729,14 @@ se retira hacia X positivo, mantiene distancia durante la reorientación
 y regresa suavemente a la referencia del siguiente golpe. La transición
 es **ilustrativa**, sin velocidades ni límites físicos X/R calibrados.
 Se desactiva el indicador de contacto mientras el tope está trasladándose.
+
+
+## Corrección del movimiento de tope en cambio de pliegue (R09)
+Durante el giro de la chapa, la proyección visual de la chapa puede
+invertirse o comprimirse; **NO debe aplicarse ese factor al origen X/R
+del tope**. Se ha fijado el anclaje al borde nominal del golpe anterior.
+El dedo se retira en X+, mantiene la X fija mientras la chapa se gira y
+regresa a la referencia del siguiente golpe. Las pruebas revisan toda
+la trayectoria en los cambios G1→G2, G2→G4 y G4→G3, no solamente las
+fronteras temporales. La geometría sigue siendo orientativa y no
+representa velocidades o límites mecánicos certificados.
