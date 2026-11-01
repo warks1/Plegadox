@@ -22,8 +22,15 @@ try{
  await page.locator('[data-tab="programacion"]').click();
  await page.locator('#pieceName').fill('OMEGA OFFLINE');
  await page.locator('#pieceName').dispatchEvent('change');
+ assert.equal(await page.evaluate(()=>JSON.parse(
+  localStorage.getItem('plegadox:piece:v1')||'{}').name),
+  'OMEGA OFFLINE','La pieza debe estar guardada antes de desconectar');
  await context.setOffline(true);
  await page.reload({waitUntil:'domcontentloaded'});
+ // El HTML se sirve desde caché antes de terminar sus imports dinámicos;
+ // canvas es visible aunque app.js todavía NO haya restaurado la pieza.
+ await page.waitForFunction(()=>window.PLEGADOX_STATE?.().piece.name==='OMEGA OFFLINE',
+  null,{timeout:20000});
  await page.locator('#machineCanvas').waitFor({state:'visible',timeout:15000});
  await page.locator('[data-tab="programacion"]').click();
  assert.equal(await page.locator('#pieceName').inputValue(),'OMEGA OFFLINE',
