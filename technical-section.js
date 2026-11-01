@@ -13,7 +13,7 @@ import {gaugePlacement,gaugeContourAtContact} from './backgauge-placement.js';
 import {getV85} from './machine-config.js';
 
 const mm=v=>Number.isFinite(+v)?+v:0;
-const mPoint=(x,y)=>({x:mm(x),y:mm(y});
+const mPoint=(x,y)=>({x:mm(x),y:mm(y)});
 
 /**
  * Encuadre métrico de la sección: incluye la silueta COMPLETA del tope.
