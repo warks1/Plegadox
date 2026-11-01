@@ -3,6 +3,51 @@
  * No son planos de fabricante. No deben utilizarse para fabricar herramientas
  * ni para validar colisiones. Ángulo = ángulo INCLUIDO de la punta y de la V.
  */
+/**
+ * Un punzón de pata de cabra tiene un cuello de descarga LATERAL y cuerpo
+ * asimétrico. Su sección NO es una cuña recta con una muesca decorativa.
+ *
+ * Coordenadas de trabajo: y=0 es la punta, y=H el plano nominal del
+ * hombro/amarre. En la foto del operario H=100 desde ese hombro inferior,
+ * NO la altura del cabezal de la plegadora. La imagen permite acotar 50 mm
+ * de alcance horizontal y R1; los enlaces sin cota se interpolan.
+ */
+export function gooseneckOutline(tool,{height,tipRadius,angle,noseArc}){
+ const photo=tool.profileStyle==='user-photo';
+ const widthCode=/W(55|95|110)/i.exec(String(tool.reference||tool.id||''));
+ const wCode=widthCode?Number(widthCode[1]):0;
+ // La variante W del catálogo da formas distintas, pero sin CAD acotado
+ // del fabricante sólo son ilustraciones, nunca holguras verificadas.
+ const leftReach=photo?42:
+  wCode?Math.min(56,26+wCode*.20):
+  Math.min(44,Math.max(26,height*.27));
+ const rightReach=photo?8:Math.max(9,Math.min(19,height*.11));
+ const neck=photo?20:
+  Number.isFinite(Number(tool.neckOffset))&&Number(tool.neckOffset)>0?
+   Number(tool.neckOffset):Math.min(19,Math.max(11,height*.075));
+ // No transformar la cota de cuello conocida: GN6=6 y GN9=9.
+ const innerX=-neck;
+ const shelfY=height*.84;
+ const recessTopY=height*.74;
+ const recessBottomY=height*.45;
+ const leftShoulderY=height*.41;
+ const beta=angle*Math.PI/360;
+ const tangentX=tipRadius*Math.cos(beta);
+ const tangentY=tipRadius*(1-Math.sin(beta));
+ // Mantener una única cavidad abierta a la derecha del cuerpo y un
+ // segmento macizo a la izquierda: la silueta nunca se autointerseca.
+ const points=[
+  [-leftReach,height],[rightReach,height],
+  [rightReach,shelfY],[innerX,recessTopY],
+  [innerX,recessBottomY],[tangentX,tangentY],
+  ...noseArc.slice(1),[-leftReach,leftShoulderY]
+ ];
+ return {points,neckOffset:neck,headSpan:leftReach+rightReach,
+  workingHeight:height,model:'gooseneck',profileSource:photo?'user-photo':'parametric'};
+}
+/** Todos los visores de herramienta usan ESTA misma poligonal (2D, 3D,
+ * cabina, inspector y análisis de sección de colisiones).
+ */
 export function sectionPunch(tool={}){
  if(tool.importedDxf&&Array.isArray(tool.profilePoints)&&tool.profilePoints.length>=3){
   return {points:tool.profilePoints.map(p=>[...p]),
@@ -10,64 +55,33 @@ export function sectionPunch(tool={}){
    tipRadius:Number(tool.tip)/2,roundedNose:false,
    provisional:true,importedDxf:true};
  }
- const height=Math.max(50,Number(tool.height)||120);
+ const declaredHeight=Number(tool.height);
+ const height=Number.isFinite(declaredHeight)&&declaredHeight>0?declaredHeight:120;
  const angle=Math.min(120,Math.max(15,Number(tool.angle)||88));
- // En el catálogo tip es el DIÁMETRO Ø, no el radio (p. ej. Ø1,2 = R0,6).
+ // En el catálogo tip es Ø, no radio: la foto R1 necesita tip=Ø2.
  const tipDiameter=Math.max(.25,Number(tool.tip)||.8);
  const tipRadius=tipDiameter/2;
  const beta=angle*Math.PI/360;
  const tangentX=tipRadius*Math.cos(beta);
  const tangentY=tipRadius*(1-Math.sin(beta));
- const halfTop=Math.min(22,tangentX+Math.max(0,height-4-tangentY)*Math.tan(beta));
- const bodyBottom=tangentY+(halfTop-tangentX)/Math.tan(beta);
- // Arco circular de la punta tangente a los DOS flancos rectos.
- // Polilínea aproximada, NO geometría CAD de fabricación.
+ // Arco de la punta tangente a los DOS flancos nominales.
  const noseArc=Array.from({length:17},(_,i)=>{
   const theta=-beta-(Math.PI-2*beta)*i/16;
   return [tipRadius*Math.cos(theta),tipRadius*(1+Math.sin(theta))];
  });
- let points;
- if(tool.profileStyle==='user-photo'){
-  // Contorno trazado proporcionalmente del ejemplo gráfico enviado al chat.
-  // La zona cuadriculada de la imagen es espacio libre, NO material de útil.
-  // El valor "8" de la zona inclinada no se convierte sin interpretación
-  // en una cota certificada del punzón.
-  const w=Number(tool.topWidth)||50,scaleX=w/50,scaleY=height/100;
-  points=[
-   [-10,100],[8,100],[8,60],[-16,52],[-16,31],
-   [0,0],[-42,31],[-42,72],[-10,72]
-  ].map(([x,y])=>[x*scaleX,y*scaleY]);
- }else if(tool.type==='cabra'){
-  // Pata de cabra: el hueco lateral forma una concavidad REAL en el polígono.
-  // CONIC GN9/GN6 publican el desplazamiento k=9/6 mm, H=90/120 y
-  // ángulo/R de punta. Otros empalmes permanecen parametrizados.
-  const neckOffset=Math.max(4,Math.min(18,Number(tool.neckOffset)||9));
-  const shoulderY=Math.max(bodyBottom+19,height*.48);
-  const recessY=Math.max(shoulderY+9,height*.72);
-  const outerW=Math.max(18,halfTop+3);
-  const rearW=outerW+7;
-  // Para ángulos agudos (Beyeler R) el rebaje superaba la altura del cuello;
-  // invertir estas alturas elimina el cruce. Modelo PROVISIONAL, no CAD.
-  const highShoulder=recessY>=height-20;
-  const neckY=highShoulder?recessY:height-20;
-  const notchY=highShoulder?shoulderY+Math.min(4,(recessY-shoulderY)/2):recessY;
-  points=[
-   [-rearW,height],[13,height],
-   [13,neckY],[-neckOffset,neckY],
-   [-neckOffset,notchY],[outerW,notchY],
-   [outerW,shoulderY],[halfTop,shoulderY],
-   [halfTop,bodyBottom],...noseArc,
-   [-halfTop,bodyBottom],[-halfTop,shoulderY-9],
-   [-rearW,shoulderY-9],[-rearW,height]
-  ];
- }else{
-  points=[
-   [-halfTop,height],[halfTop,height],
-   [halfTop,bodyBottom],...noseArc,[-halfTop,bodyBottom]
-  ];
+ if(tool.type==='cabra'||tool.profileStyle==='user-photo'){
+  const goose=gooseneckOutline(tool,{height,tipRadius,angle,noseArc});
+  return {...goose,angle,height,tipRadius,roundedNose:true,
+   provisional:true,profileAccuracy:'provisional'};
  }
- return {points,angle,height,tipRadius,
-  roundedNose:tool.profileStyle!=='user-photo',
+ // Conservar la punta y los ángulos de los punzones rectos existentes.
+ const halfTop=Math.min(22,tangentX+Math.max(0,height-4-tangentY)*Math.tan(beta));
+ const bodyBottom=tangentY+(halfTop-tangentX)/Math.tan(beta);
+ const points=[
+  [-halfTop,height],[halfTop,height],
+  [halfTop,bodyBottom],...noseArc,[-halfTop,bodyBottom]
+ ];
+ return {points,angle,height,tipRadius,roundedNose:true,
   provisional:tool.profileAccuracy!=='verified'};
 }
 export function sectionDie(tool={}){
