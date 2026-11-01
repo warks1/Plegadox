@@ -15,6 +15,45 @@ import {getV85} from './machine-config.js';
 const mm=v=>Number.isFinite(+v)?+v:0;
 const mPoint=(x,y)=>({x:mm(x),y:mm(y)});
 
+/**
+ * Encuadre métrico de la sección: incluye la silueta COMPLETA del tope.
+ * Durante la retirada se reserva el mismo espacio para los extremos y la
+ * posición de despeje. Así no se recorta el dedo ni se hace zoom/pan
+ * persiguiéndolo a mitad de una transición de un mismo golpe.
+ *
+ * Es sólo el encuadre gráfico; no modifica la trayectoria CNC X/R ni el
+ * ángulo, la cara, la referencia o la geometría de la pieza.
+ */
+export function technicalWorldBounds(scene){
+ const pts=[...scene.sheetDisplay,...scene.sheet,
+  ...scene.diePolygon,...scene.punchPolygon];
+ const stopNumber=scene.piece.stopByBend?.[scene.stage.activeBend]===2?2:1;
+ const dims=stopNumber===2?getV85().support:getV85().stop;
+ const place=gaugePlacement(scene,stopNumber);
+ const contour=gaugeContourAtContact(place,dims);
+ pts.push(...contour);
+ const transition=scene.gaugeTransition;
+ if(transition){
+  // Reserva fija durante TODA la retirada: origen, destino y posición
+  // posterior extrema. El perfil se TRASLADA rígido, nunca se espeja.
+  const withdraw=Math.max(transition.from.x,transition.to.x)+
+   Math.max(12,scene.die.opening||16);
+  for(const reference of [
+   transition.from,transition.to,
+   {x:withdraw,y:transition.from.y},{x:withdraw,y:transition.to.y}
+  ]){
+   const dx=reference.x-place.point.x,dy=reference.y-place.point.y;
+   pts.push(...contour.map(pt=>({x:pt.x+dx,y:pt.y+dy})));
+  }
+ }
+ const valid=pts.filter(pt=>Number.isFinite(pt.x)&&Number.isFinite(pt.y));
+ if(!valid.length)return {minX:-50,maxX:50,minY:-50,maxY:50};
+ return {minX:Math.min(...valid.map(pt=>pt.x)),
+  maxX:Math.max(...valid.map(pt=>pt.x)),
+  minY:Math.min(...valid.map(pt=>pt.y)),
+  maxY:Math.max(...valid.map(pt=>pt.y))};
+}
+
 export function technicalScene(piece,instant=0){
  const p=normalized(piece),st=typeof instant==='number'?stage(p,instant):instant;
  const tooling=getTooling(p),die=sectionDie(tooling.die),punch=sectionPunch(tooling.punch);
@@ -111,10 +150,10 @@ export function technicalScene(piece,instant=0){
  const punchPolygon=punch.points.map(([x,y])=>mPoint(x,y+kinematics.tipHeight));
  const engagement=kinematics.sag;
  // Include the selected punch, the V and all sheet wings in view bounds.
- const all=[...sheetDisplay,...sheet,...diePolygon,...punchPolygon];
- const bx=all.map(q=>q.x),by=all.map(q=>q.y);
- const world={minX:Math.min(...bx),maxX:Math.max(...bx),
-   minY:Math.min(...by),maxY:Math.max(...by)};
+ const world=technicalWorldBounds({
+  piece:p,stage:st,sheet,sheetDisplay,diePolygon,punchPolygon,die,
+  gaugeReference:reference,gaugeAnchor,gaugeTransition,feedMirrored:feedMirror
+ });
  return {piece:p,stage:st,presentation,sheet,sheetDisplay,kinematics,diePolygon,punchPolygon,die,punch,
          gaugeReference:reference,gaugeAnchor,gaugeTransition,feedMirrored:feedMirror,
          dimensions:{opening:die.opening,dieAngle:die.angle,depth:die.depth,

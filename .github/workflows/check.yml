@@ -68,6 +68,7 @@ jobs:
           node tests/touch-order-smoke.mjs
           node tests/video-regression-smoke.mjs
           node tests/technical-section-smoke.mjs
+          node tests/gauge-framing-smoke.mjs
           node tests/catalog-contact-smoke.mjs
           node tests/machine-editor-smoke.mjs
           node tests/legacy-canvas-smoke.mjs
