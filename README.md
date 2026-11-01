@@ -844,3 +844,28 @@ provisionales; no se ha obtenido un sólido CAD de fabricante, ni se
 han certificado amarres, radios reales, capacidad ni colisiones 3D.
 Esta geometría sirve para visualización coherente y prechequeo
 orientativo, no para aprobar una secuencia industrial.
+
+## R16 · Corrección del origen de la cota H100 en la pata de cabra de fotografía
+Al contrastar el croquis `IMG_9036.jpeg` con la R15 se detectó que
+la cota de 100 mm **NO abarca toda la altura del vástago**: mide desde
+el hombro inferior de apoyo hasta la punta. El vástago de la foto
+sobresale por encima de ese plano. Dibujar toda la herramienta en
+100 mm, como antes, falseaba su silueta y su altura ilustrada.
+
+Sólo para `ref-goose-50-100-r1` ahora se separan:
+- **H útil = 100 mm**, de la línea del hombro inferior a la punta.
+- **Extensión superior ≈37 mm**, aproximación proporcional de la foto,
+  **SIN respaldo de una cota del fabricante**.
+- **Altura total ilustrada ≈137 mm**; no confundir con la cota H útil.
+- **Alcance horizontal 50 mm** y radio inferior R1 según croquis.
+
+El hombro está anclado a y=100 desde la punta y el vástago crece hacia
+arriba. Las demás patas de cabra conservan exactamente las alturas H
+indicadas en sus fichas/entradas del catálogo, sin asumir que representen
+también una extensión superior. La interfaz separa H útil y longitud
+ilustrada en las tarjetas e inspector. El perfil compartido por
+sección, máquina, cabina y volumen del inspector mantiene las cotas.
+
+**Sin CAD de fabricante** no hay geometría de contacto ni verificación
+de colisiones 3D: esta mejora es de representación y documentación,
+no una validación de fabricación o seguridad de máquina.
