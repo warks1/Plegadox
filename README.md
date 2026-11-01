@@ -611,3 +611,26 @@ punto de referencia es un pliegue interior y no un extremo libre,
 hay que confirmar que puede realmente actuar de tope. La distancia
 nominal requiere deducción/radio/compensaciones de taller antes de
 programar una posición X de máquina.
+
+
+## Interfaz Titanium y uso sin conexión
+
+La interfaz actual carga **una sola hoja de estilos** (`styles.css`) que
+conserva las reglas visuales existentes y define los tokens `--px-*`.
+El sistema de iconos de navegación y controles principales utiliza el
+sprite SVG local `icons.svg`; las cotas emplean una pila monoespaciada.
+La tipografía Inter usa fuentes disponibles en el dispositivo, con
+alternativas locales: este repositorio no distribuye tipografías ajenas.
+
+La aplicación incluye `manifest.webmanifest` y `sw.js`. Al abrirla mediante
+HTTPS o localhost, el navegador puede instalarla y guardar los recursos
+estáticos para trabajar sin conexión; las piezas permanecen en el
+almacenamiento local del navegador y pueden exportarse como JSON.
+La primera visita requiere conexión, y borrar los datos del sitio puede
+eliminar las piezas no exportadas. Las fuentes de catálogos externas
+siguen requiriendo red.
+
+**Alcance industrial:** La simulación de plegado, los perfiles de herramientas,
+los desarrollos y los avisos de colisión siguen siendo aproximaciones;
+la etiqueta «Documentado» sólo indica disponibilidad parcial de datos
+nominales, nunca validación CAD de colisiones o seguridad de máquina.

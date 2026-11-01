@@ -44,7 +44,7 @@ test('−90 conserva dirección negativa también en la vista de máquina',()=>{
 });
 test('interfaz está conectada y presenta los módulos y mandos reales',()=>{
  const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
- for(const item of ['cockpit.css','cockpit.js','machineCanvas','progressCanvas','sceneCanvas','cockpitTools','cpBrandTabs','playBtn','pauseBtn','timeline']){
+ for(const item of ['styles.css','cockpit.js','machineCanvas','progressCanvas','sceneCanvas','cockpitTools','cpBrandTabs','playBtn','pauseBtn','timeline']){
   assert.ok(html.includes(item),item+' falta en el HTML');
  }
  assert.match(html,/class="panel active cockpit-page"/);

@@ -1,0 +1,19 @@
+{
+  "name": "PlegadoX · Taller de plegado",
+  "short_name": "PlegadoX",
+  "description": "Programación, geometría y simulación orientativa de plegado de chapa",
+  "lang": "es",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#030d18",
+  "theme_color": "#030d18",
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
