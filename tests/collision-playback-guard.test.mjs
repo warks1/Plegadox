@@ -52,7 +52,7 @@ test('vista previa continua por defecto NO se bloquea en aviso 2D provisional',(
  const risky=(piece,t)=>({issues:t>.15?[{kind:'punch',category:'penetration'}]:[]});
  const guard=(piece,from,to)=>guardPunchAdvance(piece,from,to,{inspect:risky});
  const step=advancePreview({},.1,.2,3,{guard});
- assert.equal(step.time,.3);
+ assert.ok(Math.abs(step.time-.3)<1e-9,'La reproducción avanza hasta 0,3 s');
  assert.equal(step.blocked,false);
  assert.equal(step.mode,'vista-continua');
  assert.equal(step.checked,0,'no se invoca el barrido pesado sin pausa diagnóstica');
