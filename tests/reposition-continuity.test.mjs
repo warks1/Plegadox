@@ -59,7 +59,7 @@ test('origen X/R fijo durante el giro de la chapa: el tope no invierte ni modifi
  const p=normalized(EXAMPLE);
  const {gaugePlacement}=await import('../backgauge-placement.js');
  for(const boundary of [5,10,15]){
-  const t=raw=>boundary-.8+raw*.8;
+  const t=raw=>boundary-.8+Math.max(raw,1e-5)*.8;
   const start=technicalScene(p,t(0)),initial=start.gaugeAnchor;
   assert.equal(start.stage.phase,'Reposicionamiento');
   // El tramo intermedio es donde antes spin=cos(pi*u) hacía variar

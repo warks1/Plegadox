@@ -25,7 +25,7 @@ try{
             time:t,position:gaugePlacement(s,1).point,order:piece.order,angles:piece.angles};
    });
    const transfer=[5,10,15].map(boundary=>{
-    const t=raw=>boundary-.8+raw*.8;
+    const t=raw=>boundary-.8+Math.max(raw,1e-5)*.8;
     const frames=[0,.3,.4,.5,.6,.7,.9].map(raw=>{
      const scene=technicalScene(piece,t(raw));
      const placement=gaugePlacement(scene,2);
