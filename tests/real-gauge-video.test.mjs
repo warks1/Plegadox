@@ -29,7 +29,7 @@ test('el dedo COMPLETO presenta saliente BAJO a la izquierda y pared que SUBE a 
   assert.deepEqual(face.to,e,'el canto llega al fondo de la repisa');
   assert.deepEqual(face.frontFace.from,e,'la pared comienza en el fondo del apoyo');
   assert.deepEqual(face.frontFace.to,d,'la pared termina arriba');
- });
+ }
 });
 test('la sección coloca chapa encima del saliente y la detiene contra la pared, SIN atravesar el tope',()=>{
  const scene=technicalScene(EXAMPLE,.6),sup=gaugePlacement(scene,2);
