@@ -58,6 +58,29 @@ export function technicalScene(piece,instant=0){
  const setup=presentedForMachine(p,setupFractions,st.activeBend);
  const setupPoint=mirror(setup.points[reference.sourceIndex]);
  const gaugeAnchor={x:setupPoint.x,y:setupPoint.y+p.thickness/2};
+ // El tope es un dedo rígido con ejes X/R: durante la retirada no debe
+ // teletransportarse al cambiar de pliegue. Se RETRAE, se reposiciona
+ // cuando la chapa está alzada y vuelve a la referencia siguiente.
+ let gaugeTransition=null;
+ if(presentation.repositioning&&st.activeOperation<p.order.length-1){
+  const nextReference=gaugeReference(p,nextBend);
+  const nextFractions=[...st.fractions];nextFractions[nextBend]=0;
+  const nextSetup=presentedForMachine(p,nextFractions,nextBend);
+  const nextPoint=nextSetup.points[nextReference.sourceIndex];
+  const target={x:(nextReference.side==='before'?-1:1)*nextPoint.x,
+   y:nextPoint.y+p.thickness/2};
+  const sub=(st.time/5)%1,raw=Math.max(0,Math.min(1,(sub-.84)/.16));
+  const smooth=t=>t*t*(3-2*t);
+  const withdraw=Math.max(gaugeAnchor.x,target.x)+Math.max(12,die.opening||16);
+  const x=raw<.22?
+    gaugeAnchor.x+(withdraw-gaugeAnchor.x)*smooth(raw/.22):
+    raw<.78?withdraw:
+    withdraw+(target.x-withdraw)*smooth((raw-.78)/.22);
+  const middle=smooth(Math.max(0,Math.min(1,(raw-.22)/.56)));
+  gaugeTransition={point:{x,y:gaugeAnchor.y+(target.y-gaugeAnchor.y)*middle},
+   from:gaugeAnchor,to:target,raw,progress:middle,
+   withdrawn:raw>=.22&&raw<=.78,nextBend};
+ }
  const kinematics=contactKinematics({
   points:presentation.points,activeBend:st.activeBend,
   angle:p.angles[st.activeBend]*st.fractions[st.activeBend],
@@ -86,7 +109,7 @@ export function technicalScene(piece,instant=0){
  const world={minX:Math.min(...bx),maxX:Math.max(...bx),
    minY:Math.min(...by),maxY:Math.max(...by)};
  return {piece:p,stage:st,presentation,sheet,sheetDisplay,kinematics,diePolygon,punchPolygon,die,punch,
-         gaugeReference:reference,gaugeAnchor,feedMirrored:feedMirror,
+         gaugeReference:reference,gaugeAnchor,gaugeTransition,feedMirrored:feedMirror,
          dimensions:{opening:die.opening,dieAngle:die.angle,depth:die.depth,
            punchAngle:punch.angle,punchHeight:punch.height,
            punchTipDiameter:tooling.punch.tip,thickness:t,engagement},

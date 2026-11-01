@@ -29,11 +29,11 @@ try{
   });
   assert.deepEqual(geometry.dimensions,[70,100,8,25,12,8]);
   assert.deepEqual(geometry.mirrored,geometry.old);
-  assert.equal(geometry.mirrored[5].x,0,'la cara baja delantera está a la izquierda');
-  assert.equal(geometry.mirrored[4].x,30,'el primer escalón mira hacia la chapa');
-  assert.equal(geometry.face.point.x,30,'escalón de Support al lado opuesto');
-  assert.deepEqual(geometry.world[5],geometry.place.contact.from);
-  assert.deepEqual(geometry.world[4],geometry.place.contact.to);
+  assert.equal(geometry.mirrored[5].x,100,'la base larga del tope está a la derecha');
+  assert.equal(geometry.mirrored[4].x,70,'el escalón alto está a la izquierda');
+  assert.equal(geometry.face.point.x,70,'apoyo sobre escalón alto de Support');
+  assert.deepEqual(geometry.world[2],geometry.place.contact.from);
+  assert.deepEqual(geometry.world[3],geometry.place.contact.to);
   assert.equal(geometry.face.from.y,geometry.face.to.y);
   assert.equal(geometry.place.contact.point.y,geometry.place.point.y-1);
   await page.screenshot({path:'test-results/support-orientation-'+device.name+'.png',fullPage:false});
@@ -46,7 +46,7 @@ try{
    return {values:getV85().support,pts:gaugeOutline(getV85().support,2)};
   });
   assert.equal(updated.values[0],55);
-  assert.equal(updated.pts[3].x,45);
+  assert.equal(updated.pts[3].x,55);
   assert.deepEqual(errors,[],'Errores de ejecución del visor '+device.name);
   await context.close();
  }

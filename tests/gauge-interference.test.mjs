@@ -39,10 +39,10 @@ test('un contacto válido vuelve a ser evaluable con Stop y Support sin cambiar 
   }
  }
 });
-test('durante la reproducción se conserva la referencia nominal, nunca se oculta una interferencia moviendo el tope',()=>{
+test('el tope permanece fijo durante el plegado y retrocede sólo después de iniciar la retirada',()=>{
  const anchor=gaugePlacement(technicalScene(EXAMPLE,.5),2).point;
  const points=[];
- for(const time of [1.2,2.6,3.1,4.5]){
+ for(const time of [1.2,2.6,3.1,4.19]){
   const p=gaugePlacement(technicalScene(EXAMPLE,time),2);
   points.push(p.point);
   assert.ok(typeof p.gaugeInterference.warning==='boolean');

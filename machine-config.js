@@ -87,14 +87,13 @@ export function gaugeOutline(values,stopNumber=1){
  const shoulder=Math.max(0,Math.min(outer,Number(l1)||0));
  const height=Math.max(1,Number(l3)||0,Number(l4)||0);
  const stepDepth=Math.max(0,Math.min(height,Number(l3)||0));
- // The first step is an UPPER SHELF at the LEFT front, not an
- // underside/overhang. The rest of the finger extends to the RIGHT.
- // The ledge has schematic length L2-L1 (without inferring unknown CAD).
- const ledge=Math.max(0,outer-shoulder);
+ // El perfil completo de la foto tiene el escalón ALTO delante,
+ // a la izquierda, y la base más larga detrás a la derecha.
+ // Es una ÚNICA silueta volteada; nunca reflejar Stop/Support aparte.
  return [
-  {x:0,y:-height},{x:outer,y:-height},
-  {x:outer,y:0},{x:ledge,y:0},
-  {x:ledge,y:-stepDepth},{x:0,y:-stepDepth}
+  {x:outer,y:-height},{x:0,y:-height},
+  {x:0,y:0},{x:shoulder,y:0},
+  {x:shoulder,y:-stepDepth},{x:outer,y:-stepDepth}
  ];
 }
 /**
@@ -108,18 +107,20 @@ export function gaugeContactFeature(values,stopNumber=1){
  const outline=gaugeOutline(values,stopNumber);
  const height=-Math.min(...outline.map(p=>p.y));
  const outer=Math.max(...outline.map(p=>p.x));
- const ledge=outline[4].x,stepDepth=-outline[4].y;
+ const ledge=outline[3].x,stepDepth=-outline[4].y;
  const support=Number(stopNumber)===2;
- // Stop: vertical frontal inferior (5→0).
- // Support: superficie horizontal superior del primer peldaño (5→4).
- const from={...outline[5]};
- const to={...outline[support?4:0]};
- const point=support?{...to}:{x:0,y:-(stepDepth+height)/2};
+ // STOP 1: la chapa toca el frente izquierdo completo 1→2.
+ // SUPPORT 2: chapa SOBRE la primera repisa ALTA 2→3.
+ // Las dos caras pertenecen al mismo perfil completo, sin segundo espejo.
+ const from={...outline[support?2:1]};
+ const to={...outline[support?3:2]};
+ const point=support?{...to}:{x:0,y:-height/2};
  const usable=height>stepDepth&&stepDepth>0&&ledge>0&&ledge<outer;
- // Mismo tope completo: Support hace APOYO SUPERIOR en 5→4 y además
- // contacto FRONTAL contra la contrahuella 4→3. Sin un segundo giro.
- const frontFace=support?{from:{...outline[4]},to:{...outline[3]}}:
-  {from:{...outline[5]},to:{...outline[0]}};
+ // El escalón vertical de la repisa alta desciende detrás del apoyo.
+ // No fingir que bloquea frontalmente la chapa sobre la repisa:
+ // la geometría real de un segundo contacto requiere CAD del dedo.
+ const frontFace=support?{from:{...outline[3]},to:{...outline[4]}}:
+  {from:{...outline[1]},to:{...outline[2]}};
  return {kind:support?'support-step':'stop-face',
   surface:support?'horizontal-top':'vertical-front',frontFace,
   label:support?'TOPE 2 · APOYO SOBRE PRIMER ESCALÓN':'TOPE 1 · CARA FRONTAL INFERIOR',

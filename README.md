@@ -713,3 +713,19 @@ https://warks1.github.io/Plegadox/?rev=TOPE-20261101-R07
 El arranque inicial verifica una marca de compilación publicada antes
 de purgar las cachés anteriores. Sin conexión conserva los recursos
 locales. Una prueba nueva simula la presencia de código antiguo en caché.
+
+
+## Perfil real de referencia y salto del tope entre golpes (01-11-2026)
+El contorno esquemático se ha corregido usando la fotografía con el
+**escalón alto a la izquierda y el cuerpo inferior hacia la derecha**.
+El dibujo entero se utiliza sin reflejarlo por separado cuando se
+selecciona Stop o Support. Stop toma la cara frontal izquierda del dedo;
+Support toma la superficie del primer escalón ALTO, con la chapa encima.
+La contrahuella inferior no se presenta como segundo tope de chapa
+porque en ese plano no sobresale por encima de la repisa.
+
+Al cambiar de golpe, el tope deja de saltar entre dos anclajes de alas:
+se retira hacia X positivo, mantiene distancia durante la reorientación
+y regresa suavemente a la referencia del siguiente golpe. La transición
+es **ilustrativa**, sin velocidades ni límites físicos X/R calibrados.
+Se desactiva el indicador de contacto mientras el tope está trasladándose.
