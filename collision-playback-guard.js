@@ -36,3 +36,26 @@ export function guardPunchAdvance(piece,from,to,{inspect=inspectToolContact,maxS
  }
  return {time:to,blocked:false,issue:null,checked,verified:false};
 }
+
+/**
+ * La vista previa es continua POR DEFECTO. Las colisiones del visor se
+ * dibujan como avisos, pero un modelo 2D provisional no puede decidir por
+ * sí solo que se interrumpa una demostración cinemática.
+ *
+ * El usuario puede activar explícitamente una pausa diagnóstica. Se reutiliza
+ * entonces el barrido conservador sin cambiar los ángulos ni los útiles.
+ * No habilita ni controla movimientos de una máquina real.
+ */
+export function advancePreview(piece,from,delta,duration,{
+ pauseOnPenetration=false,guard=guardPunchAdvance
+}={}){
+ if(!Number.isFinite(from)||!Number.isFinite(delta)||delta<0||
+    !Number.isFinite(duration)||duration<=0)
+  throw new Error('Intervalo de vista previa inválido');
+ const next=Math.min(duration,from+delta);
+ const checked=pauseOnPenetration?
+  guard(piece,from,next):
+  {time:next,blocked:false,issue:null,checked:0,verified:false};
+ return {...checked,looped:!checked.blocked&&checked.time>=duration,
+  mode:pauseOnPenetration?'pausa-diagnostica':'vista-continua',verified:false};
+}
