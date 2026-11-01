@@ -765,7 +765,7 @@ function renderSimulationText(){
  const freeEnd=ref.sourceIndex===0||ref.sourceIndex===piece.flanges.length;
  const chosenGauge=gaugePlacement(technicalScene(piece,sim.time),gauge.value);
  $('activeGaugeReference').textContent=ref.label+' · '+numbers(ref.distance,1)+
-  ' mm nominales desde el pliegue · '+(gauge.value===2?'contacto en escalón SUPPORT 2':'contacto en cara frontal STOP 1')+
+  ' mm nominales desde el pliegue · '+(gauge.value===2?'chapa sobre primer escalón SUPPORT 2':'chapa contra cara frontal inferior STOP 1')+
    ' · '+(ref.side==='before'?'presentación invertida':'presentación directa')+
   (freeEnd?' · borde libre':' · ⚠ vértice interior: verificar apoyo')+
   (chosenGauge.gaugeInterference?.warning?

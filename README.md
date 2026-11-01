@@ -654,15 +654,18 @@ almacenamiento local del navegador (no se suben al servidor).
 El archivo original debe conservarse aparte.
 
 
-## Orientación del tope trasero Support (corrección visual)
-La **vista de perfil del Tope Support nº 2** se muestra espejada
-horizontalmente respecto al croquis original, según la referencia
-aportada por el operario. Stop nº 1 conserva su orientación previa.
-La inversión se calcula una sola vez en `gaugeOutline(values,2)`,
-y la utilizan la pantalla **Máquina**, la presentación de la plegadora
-y el contacto esquemático con la chapa. Las cotas L1–L6, Ox/Oz,
-referencias y configuración almacenada **no cambian**.
-Los perfiles siguen siendo esquemáticos, no CAD certificado.
+## Tope trasero: perfil completo hacia la izquierda y dos contactos
+La vista de taller indica que el tope completo debe tener sus escalones
+hacia la **izquierda (chapa por delante)**, con el cuerpo detrás a la
+derecha. Las dos posiciones NO invierten dos veces el dedo:
+**Stop nº 1** apoya FRONTALMENTE contra la cara VERTICAL inferior,
+mientras que **Support nº 2** sostiene la chapa ENCIMA de la primera
+superficie HORIZONTAL del escalón. La meseta delante tiene longitud
+orientativa L2-L1, y el punto de apoyo superior se sitúa e/2 por debajo
+de la fibra media. Se conserva la posición programada X de la chapa
+y la geometría del dedo se traslada para hacer contacto.
+Las dimensiones L1–L6, Ox/Oz y los signos y secuencia de pliegues
+no se modifican; el perfil sigue siendo esquemático, no CAD certificado.
 
 
 ## Actualizaciones PWA (revisión de caché móvil)

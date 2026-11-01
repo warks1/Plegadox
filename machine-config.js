@@ -72,8 +72,9 @@ export function resetV85(){return updateV85(V85_FACTORY);}
  * Coordinate contour for a schematic backgauge stop/support.
  * Top edge (Y=0) and L1/L2 lengths are measured along X. L3/L4 determine
  * two levels. L5/L6 are stored but not inferred as complete CAD.
- * Stop 1 keeps the original drawing direction; Support 2 is mirrored X.
- * This is NOT the exact factory contour or validated collision geometry.
+ * Both positions use the WHOLE finger with steps facing the sheet (LEFT).
+ * Stop/Support choose DIFFERENT contact surfaces, not mirrored fingers.
+ * Schematic only: NOT certified factory geometry or collision model.
  */
 export function gaugeOutline(values,stopNumber=1){
  const [l1,l2,l3,l4]=values;
@@ -86,36 +87,38 @@ export function gaugeOutline(values,stopNumber=1){
  const shoulder=Math.max(0,Math.min(outer,Number(l1)||0));
  const height=Math.max(1,Number(l3)||0,Number(l4)||0);
  const stepDepth=Math.max(0,Math.min(height,Number(l3)||0));
- const outline=[
-  {x:0,y:0},{x:outer,y:0},
-  {x:outer,y:-stepDepth},{x:shoulder,y:-stepDepth},
-  {x:shoulder,y:-height},{x:0,y:-height}
+ // The first step is an UPPER SHELF at the LEFT front, not an
+ // underside/overhang. The rest of the finger extends to the RIGHT.
+ // The ledge has schematic length L2-L1 (without inferring unknown CAD).
+ const ledge=Math.max(0,outer-shoulder);
+ return [
+  {x:0,y:-height},{x:outer,y:-height},
+  {x:outer,y:0},{x:ledge,y:0},
+  {x:ledge,y:-stepDepth},{x:0,y:-stepDepth}
  ];
- // Support (tope 2): alzado ESPEJADO en el eje horizontal de avance,
- // tal como se presenta el dedo real al operario. Mantener Y y cotas.
- // Se espeja aquí, en el origen compartido por el editor y la máquina,
- // para evitar que un visor lo pinte en el sentido contrario.
- return Number(stopNumber)===2?
-  outline.map(({x,y})=>({x:outer-x,y})):outline;
 }
 /**
  * Caras de contacto diferenciadas en el croquis del control:
- * Stop 1 contra la cara frontal izquierda;
- * Support 2 contra el escalón de L1 en el contorno ya ESPEJADO.
- * Perfil orientativo, sin garantía de accesibilidad ni cinemática CNC.
+ * Stop 1: chapa frontal contra la cara inferior vertical del dedo.
+ * Support 2: chapa ENCIMA del primer escalón horizontal.
+ * El perfil físico NO se invierte al cambiar entre estas dos funciones.
+ * Sin garantía de accesibilidad ni cinemática CNC.
  */
 export function gaugeContactFeature(values,stopNumber=1){
  const outline=gaugeOutline(values,stopNumber);
  const height=-Math.min(...outline.map(p=>p.y));
  const outer=Math.max(...outline.map(p=>p.x));
- const shoulder=outline[3].x,stepDepth=-outline[3].y;
+ const ledge=outline[4].x,stepDepth=-outline[4].y;
  const support=Number(stopNumber)===2;
- const from=support?{x:shoulder,y:-stepDepth}:{x:0,y:0};
- const to=support?{x:shoulder,y:-height}:{x:0,y:-height};
- const point={x:from.x,y:(from.y+to.y)/2};
- const usable=from.y!==to.y && (support?shoulder>0&&shoulder<outer:true);
+ // Stop: vertical frontal inferior (5→0).
+ // Support: superficie horizontal superior del primer peldaño (5→4).
+ const from={...outline[5]};
+ const to={...outline[support?4:0]};
+ const point=support?{...to}:{x:0,y:-(stepDepth+height)/2};
+ const usable=height>stepDepth&&stepDepth>0&&ledge>0&&ledge<outer;
  return {kind:support?'support-step':'stop-face',
-  label:support?'TOPE 2 · ESCALÓN SUPPORT':'TOPE 1 · CARA STOP',
+  surface:support?'horizontal-top':'vertical-front',
+  label:support?'TOPE 2 · APOYO SOBRE PRIMER ESCALÓN':'TOPE 1 · CARA FRONTAL INFERIOR',
   from,to,point,usable,verified:false};
 }
 /** Envolvente del perfil esquemático, sin interpretar una cota L como CAD. */
