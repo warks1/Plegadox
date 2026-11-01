@@ -371,3 +371,12 @@ footer{padding-inline:max(12px,env(safe-area-inset-left,0px)) max(12px,env(safe-
  .cp-simulation{height:auto!important;min-height:0!important;}
  .cp-simulation .cp-player{flex:0 0 auto;min-height:100px;height:auto!important;}
 }
+
+/* Mostrar TODAS las alas hasta 20: scroll visible también en escritorio. */
+.cp-dimensions-card .cp-dimension-list{
+ height:auto;max-height:236px;overflow-y:auto;overflow-x:hidden;
+ overscroll-behavior:contain;scrollbar-width:thin;
+ scrollbar-color:#4387ad #0b273c;
+}
+.cp-dimensions-card .cp-dimension-list:focus-visible{outline:2px solid #7ccefa;outline-offset:2px}
+#cpDimensionsCount{font-size:10px;text-align:right}

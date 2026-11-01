@@ -32,7 +32,10 @@ function dimensions(){
  if(lastDims===key)return;
  lastDims=key;
  const target=$('cpDimensions');if(!target)return;
- target.replaceChildren(...piece.flanges.slice(0,8).map((value,i)=>{
+ const summary=$('cpDimensionsCount');
+ if(summary)summary.textContent=piece.flanges.length+' alas'+
+  (piece.flanges.length>8?' · desplaza para ver todas':'');
+ target.replaceChildren(...piece.flanges.map((value,i)=>{
   const row=document.createElement('div');row.className='cp-dimension-row';
   const l=document.createElement('span');l.textContent='L'+(i+1);
   const v=document.createElement('strong');v.textContent=fmt(value,2);
@@ -102,8 +105,8 @@ function setup(){
 function camera(action){
  const view=window.PLEGADOX_MACHINE_VIEW,redraw=window.PLEGADOX_REDRAW;
  if(!view)return;
- if(action==='zoomIn')view.zoom=Math.min(4,view.zoom*1.2);
- if(action==='zoomOut')view.zoom=Math.max(.5,view.zoom/1.2);
+ if(action==='zoomIn')view.zoom=Math.min(5,view.zoom*1.2);
+ if(action==='zoomOut')view.zoom=Math.max(.4,view.zoom/1.2);
  if(action==='reset'){view.zoom=1;view.panX=0;view.panY=0;}
  redraw?.();
 }

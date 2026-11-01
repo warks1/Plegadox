@@ -46,6 +46,12 @@ function save(){persist();$('saveBtn').textContent='✓';$('saveBtn').title='Gua
 function resetPlayback(){sim.time=0;sim.last=null;sim.playing=false;sim.blocked=null;sim.error=null;$('playBtn').textContent='▶';$('playBtn').title='Reproducir simulación';}
 function changePiece(p,structural=false){
  piece=normalized(p);persist();sim.blocked=null;sim.error=null;
+ // La selección por toques pertenece a la geometría anterior. Incluso si
+ // cambian los índices/número de alas, no conservar pliegues obsoletos.
+ if(touchOrderEnabled||chosenTouchOrder.length){
+  touchOrderEnabled=false;chosenTouchOrder=[];
+  touchOrderMessage('Pieza modificada: selección táctil reiniciada. Activa el modo para empezar de nuevo.');
+ }
  // Una edición invalida la comparación anterior y evita aplicar resultados obsoletos.
  pendingSequenceAdvice=null;
  if($('applySuggestedOrder'))$('applySuggestedOrder').disabled=true;
