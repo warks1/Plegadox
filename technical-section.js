@@ -8,7 +8,7 @@
  */
 import {normalized,stage,presentedAtStage,presentedForMachine,gaugeReference,getTooling,development,clamp} from './engine.js';
 import {sectionPunch,sectionDie,sectionBounds} from './tool-profiles.js';
-import {contactKinematics} from './bend-contact.js';
+import {contactKinematics,roundedCorner} from './bend-contact.js';
 import {gaugePlacement,gaugeContourAtContact} from './backgauge-placement.js';
 import {getV85} from './machine-config.js';
 
@@ -27,10 +27,18 @@ export function technicalScene(piece,instant=0){
  // no se cambia el signo firmado del pliegue en el programa.
  const feedMirror=reference.side==='before';
  const from=presentedAtStage(p,st);
- const mirror=pt=>feedMirror?{...pt,x:-pt.x}:{...pt};
+ // Si cambia la cara de alimentación, interpolar la proyección del
+ // giro durante la retirada. Un reflejo inmediato al iniciar el golpe
+ // siguiente teletransporta la pieza en la representación.
+ const nextBend=st.activeOperation<p.order.length-1?
+  p.order[st.activeOperation+1]:st.activeBend;
+ const nextFeedMirror=gaugeReference(p,nextBend).side==='before';
+ const changingSide=from.repositioning&&nextFeedMirror!==feedMirror;
+ const spin=changingSide?Math.cos(Math.PI*(from.progress??0)):1;
+ const mirror=pt=>({...pt,x:(feedMirror?-pt.x:pt.x)*spin});
  const presentation={...from,points:from.points.map(mirror),
   points3D:from.points3D?.map(mirror),gaugeSide:reference.side,
-  feedMirrored:feedMirror};
+  feedMirrored:feedMirror,changingFeedSide:changingSide};
  // Referencia FIJA de presentación: se mide antes de que baje el punzón.
  // No seguir el extremo de la chapa durante la deformación del golpe.
  // El margen de retirada debe calcularse DESPUÉS de la orientación
@@ -61,7 +69,14 @@ export function technicalScene(piece,instant=0){
   presentationLift:presentation.clearanceLift??0
  });
  const sheet=kinematics.sheet;
- const sheetDisplay=kinematics.rounded;
+ // Mantener los radios visibles de TODOS los golpes ejecutados, en vez de
+ // redondear sólo el pliegue activo y perder los anteriores al avanzar.
+ let sheetDisplay=sheet;
+ for(let bend=p.angles.length-1;bend>=0;bend--){
+  if(st.fractions[bend]>1e-5)
+   sheetDisplay=roundedCorner(sheetDisplay,bend+1,
+    kinematics.requestedCenterlineRadius);
+ }
  const diePolygon=die.points.map(([x,y])=>mPoint(x,y-die.height));
  const punchPolygon=punch.points.map(([x,y])=>mPoint(x,y+kinematics.tipHeight));
  const engagement=kinematics.sag;

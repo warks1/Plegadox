@@ -71,6 +71,7 @@ jobs:
           node tests/punch-stop-visibility-smoke.mjs
           node tests/stop-support-contact-smoke.mjs
           node tests/punch-guard-smoke.mjs
+          node tests/reposition-continuity-smoke.mjs
       - name: Guardar capturas de escritorio y móvil
         if: always()
         uses: actions/upload-artifact@v4

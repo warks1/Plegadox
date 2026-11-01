@@ -105,19 +105,15 @@ test('la vista industrial respeta H y fondo nominal de matrices diferentes',()=>
  assert.notDeepEqual(p30,p88);
 });
 
-test('la chapa en perspectiva refleja la profundidad del volteo sin alterar el alzado métrico',()=>{
- const scene=technicalScene(EXAMPLE,4.6);
- assert.equal(scene.presentation.repositioning,true);
- const front=machineSheetProjection(scene,200,200,1,false);
- const oblique=machineSheetProjection(scene,200,200,1,true);
- assert.equal(front.length,scene.sheetDisplay.length);
- assert.equal(oblique.length,scene.presentation.points3D.length);
- assert.ok(oblique.every(p=>p.every(Number.isFinite)));
- assert.notDeepEqual(front,oblique,'el giro de cara utiliza la profundidad Z');
- const normal=technicalScene(EXAMPLE,2.7);
- assert.deepEqual(machineSheetProjection(normal,200,200,1,false),
-  machineSheetProjection(normal,200,200,1,true),
-  'fuera del giro, el 2.5D y el alzado conservan la misma chapa');
+test('perspectiva y sección métrica dibujan exactamente la chapa inspeccionada',()=>{
+ for(let t=0;t<=20;t+=.075){
+  const scene=technicalScene(EXAMPLE,t),origin=[200,320],scale=1.25;
+  const expected=scene.sheetDisplay.map(p=>[origin[0]+p.x*scale,origin[1]-p.y*scale]);
+  const twoD=machineSheetProjection(scene,...origin,scale,false);
+  const perspective=machineSheetProjection(scene,...origin,scale,true);
+  assert.deepEqual(twoD,expected,'sección '+t.toFixed(3));
+  assert.deepEqual(perspective,expected,'perspectiva '+t.toFixed(3));
+ }
 });
 
 test('la sección gráfica usa el radio interior elegido sin modificar la fibra central',()=>{
