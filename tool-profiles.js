@@ -4,6 +4,12 @@
  * ni para validar colisiones. Ángulo = ángulo INCLUIDO de la punta y de la V.
  */
 export function sectionPunch(tool={}){
+ if(tool.importedDxf&&Array.isArray(tool.profilePoints)&&tool.profilePoints.length>=3){
+  return {points:tool.profilePoints.map(p=>[...p]),
+   angle:Number(tool.angle),height:Number(tool.height),
+   tipRadius:Number(tool.tip)/2,roundedNose:false,
+   provisional:true,importedDxf:true};
+ }
  const height=Math.max(50,Number(tool.height)||120);
  const angle=Math.min(120,Math.max(15,Number(tool.angle)||88));
  // En el catálogo tip es el DIÁMETRO Ø, no el radio (p. ej. Ø1,2 = R0,6).
@@ -65,6 +71,15 @@ export function sectionPunch(tool={}){
   provisional:tool.profileAccuracy!=='verified'};
 }
 export function sectionDie(tool={}){
+ if(tool.importedDxf&&Array.isArray(tool.profilePoints)&&tool.profilePoints.length>=3){
+  const opening=Number(tool.opening),angle=Number(tool.angle),height=Number(tool.height);
+  // El DXF aporta el contorno. V/ángulo son metadatos declarados,
+  // su profundidad geométrica sólo se estima; no se certifica contacto.
+  return {points:tool.profilePoints.map(p=>[...p]),
+   opening,angle,height,depth:opening/2/Math.tan(angle*Math.PI/360),
+   shoulderRadius:0,roundedShoulders:false,
+   provisional:true,importedDxf:true};
+ }
  const opening=Math.max(4,Number(tool.opening)||16);
  const angle=Math.min(120,Math.max(20,Number(tool.angle)||88));
  const height=Math.max(25,Number(tool.height)||80);

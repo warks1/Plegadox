@@ -634,3 +634,21 @@ siguen requiriendo red.
 los desarrollos y los avisos de colisión siguen siendo aproximaciones;
 la etiqueta «Documentado» sólo indica disponibilidad parcial de datos
 nominales, nunca validación CAD de colisiones o seguridad de máquina.
+
+
+## Importación de herramientas DXF (beta)
+En **Herramientas → Importar contorno DXF**, selecciona un archivo ASCII
+con **una única poligonal cerrada LWPOLYLINE** (admite bulge 42) o
+**un anillo de entidades LINE**. Se necesitan cotas en **mm**; si el archivo
+no declara unidades se asumen milímetros y la interfaz lo advierte.
+Archivos en pulgadas, entidades ARC/SPLINE/INSERT/POLYLINE clásico,
+agujeros y múltiples contornos se rechazan con un error explícito.
+El contorno se centra en X y se apoya en Y=0: debe traer la orientación
+correcta; no se infiere cuál es el filo, ni las mordazas.
+El diámetro de punta, apertura V, ángulo y longitud se anotan como datos
+nominales introducidos manualmente. No se deducen del DXF.
+El perfil seleccionado alimenta miniaturas, la sección técnica, el visor
+3D ilustrativo y los cálculos de interferencia 2D, sin convertirlos en
+colisiones físicas verificadas. Se guardan hasta 30 perfiles en el
+almacenamiento local del navegador (no se suben al servidor).
+El archivo original debe conservarse aparte.
