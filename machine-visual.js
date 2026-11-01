@@ -22,21 +22,17 @@ export function machineToolProjection(scene,cx,datumY,scale){
  return {die:transform(scene.diePolygon),punch:transform(scene.punchPolygon)};
 }
 /**
- * Proyección oblicua de la chapa mientras cambia de cara. Sólo se usa
- * cuando el usuario activa el modo 3D ilustrativo de cabina. La sección mm
- * sigue mostrando el alzado puro. La componente Z procede del giro rígido
- * de presentedAtStage, no de una deformación del ala.
+ * Mismo perfil de chapa para el detector, la sección métrica y la cabina.
+ * El modo perspectiva añade relieve decorativo sin introducir otra
+ * trayectoria de pieza que la comprobación 2D desconoce.
  */
 export function machineSheetProjection(scene,cx,datumY,scale,perspective=false){
  if(!Number.isFinite(scale)||scale<=0||![cx,datumY].every(Number.isFinite))
   throw Error('Transformación de chapa inválida');
- const presentation=scene.presentation;
- const point3D=perspective&&presentation?.repositioning&&
-  Array.isArray(presentation.points3D)?presentation.points3D:null;
- const positions=point3D?
-  point3D.map(p=>({x:p.x+.48*p.z,
-   y:p.y+scene.kinematics.centerHeight+.19*p.z})):
-  scene.sheetDisplay;
+ const positions=scene.sheetDisplay;
+ if(!Array.isArray(positions)||positions.length<2||
+    positions.some(p=>!Number.isFinite(p.x)||!Number.isFinite(p.y)))
+  throw Error('Perfil de chapa inválido para la vista de máquina');
  return positions.map(p=>[cx+p.x*scale,datumY-p.y*scale]);
 }
 function gradient(ctx,x1,y1,x2,y2,colors){
@@ -307,8 +303,8 @@ function stageScene(ctx,w,h,piece,sim,machineView){
   ctx.save();ctx.fillStyle='#9dd8ff';
   ctx.font='700 '+Math.max(9,11*scale)+'px system-ui';ctx.textAlign='center';
   ctx.fillText(machineView?.perspective?
-    'RETIRADA → VOLTEO 3D PROYECTADO → PRESENTACIÓN':
-    'RETIRADA → GIRO → PRESENTACIÓN (ESQUEMA)',w/2,h-48*scale);
+    'RETIRADA → RECOLOCACIÓN ORIENTATIVA · NO 3D REAL':
+    'RETIRADA → RECOLOCACIÓN ESQUEMÁTICA',w/2,h-48*scale);
   ctx.restore();
  }
  // El signo del plano no se cambia: sólo cambia la CARA de presentación
