@@ -683,3 +683,14 @@ escalón, y el canto de la chapa contra la contrahuella vertical. La
 geometría completa permanece con los escalones orientados a la izquierda.
 Se comprueba que el extremo llegue desde delante, no desde la parte trasera;
 ninguna cota ni signo de plegado cambia. Validación orientativa 2D.
+
+
+## Asiento geométrico de la chapa en el primer escalón
+En el modo **Support 2**, el programa comprueba también que la parte
+inferior de la chapa se aproxima horizontalmente a una longitud útil de
+la repisa, y no únicamente que el vértice del ala coincide con el dedo.
+Si la última ala está inclinada, el aviso de **apoyo horizontal no
+confirmado** sustituye al falso contacto verde. En el modo **Stop 1**
+se conserva el contacto frontal contra la cara inferior del mismo
+cuerpo de tope. Este control es geométrico 2D preliminar y no implica
+calibración de los ejes X/R/Z ni validación física de apriete.
