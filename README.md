@@ -771,3 +771,15 @@ estado real del contacto. La cabina distingue **CONTACTO NOMINAL 2D**,
 **RETIRADO / EN MOVIMIENTO** y **SIN CONTACTO CONFIRMADO**.
 Estas comprobaciones son exclusivamente geométricas 2D preliminares;
 no garantizan compatibilidad real, fuerzas, tolerancias ni cinemática CNC.
+
+## Encuadre del tope completo y trayectoria de retirada — R12
+El visor de sección técnica ahora incluye el contorno real del **croquis 2D**
+Stop/Support en sus límites de encuadre. Antes sólo se medían pieza, punzón
+y matriz, por lo que el tope podía quedar cortado. Durante cada retirada se
+reserva un contorno fijo que incluye las posiciones de partida, despeje en
+X+ y destino, evitando que el visor persiga el dedo a cada fotograma.
+La pieza, los signos de ángulo y los puntos de contacto no se alteran.
+
+Pruebas de ambos apoyos y los cambios 1→2, 2→4 y 4→3, en PC e iPhone.
+Continúa siendo una simulación esquemática: el encuadre NO verifica
+colisiones reales ni calibra los ejes CNC X/R/Z.
