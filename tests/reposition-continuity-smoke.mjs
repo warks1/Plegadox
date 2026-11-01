@@ -38,10 +38,10 @@ try{
    return {pts,transfer,stop:gaugeOutline(getV85().stop,1),support:gaugeOutline(getV85().support,2)};
   });
   const checked=values.pts;
-  assert.ok(values.stop[2].x===0&&values.stop[3].x===70,
-   'Tope completo invertido: parte alta delante a izquierda');
-  assert.ok(values.support[2].x===0&&values.support[3].x===70,
-   'Support usa mismo sentido de escalón que Stop');
+  assert.ok(values.stop[4].x===30&&values.stop[5].x===0&&values.stop[3].y>values.stop[4].y,
+   'Tope completo: saliente bajo delante y pared ASCENDENTE detrás');
+  assert.ok(values.support[4].x===30&&values.support[5].x===0&&values.support[3].y>values.support[4].y,
+   'Support: la punta baja tiene una pared que detiene el canto');
   for(let i=0;i<3;i++){
    const a=checked[2*i].position,b=checked[2*i+1].position;
    assert.ok(Math.hypot(a.x-b.x,a.y-b.y)<.2,

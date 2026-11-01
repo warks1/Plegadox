@@ -142,8 +142,9 @@ function rearMachine(ctx,w,h,cx,cy,scale,placement){
   ctx.strokeStyle=conflict?'#ff856e':valid?'#c1ffe2':'#ffd18d';
   ctx.shadowBlur=11*scale;ctx.shadowColor=conflict?'#ff4b37':valid?'#4fffb6':'#ffad56';
   ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();
-  // Support: chapa sobre repisa ALTA orientada a la izquierda.
-  // La contrahuella inferior queda debajo de la repisa; no es segundo apoyo.
+  // Support: cara INFERIOR de la chapa apoyada sobre la pestaña BAJA
+  // frontal y canto detenido contra la contrahuella ALTA posterior.
+  // Esta cara debe subir, no bajar tras el punto de contacto.
   if(contact.surface==='horizontal-top'&&contact.frontFace){
    const u=screen(contact.frontFace.from),v=screen(contact.frontFace.to);
    ctx.strokeStyle=conflict?'#ff856e':valid?'#7ddaff':'#adc0ce';

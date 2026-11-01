@@ -740,3 +740,22 @@ regresa a la referencia del siguiente golpe. Las pruebas revisan toda
 la trayectoria en los cambios G1→G2, G2→G4 y G4→G3, no solamente las
 fronteras temporales. La geometría sigue siendo orientativa y no
 representa velocidades o límites mecánicos certificados.
+
+
+## Contraste con vídeo real del tope — R10
+Revisión del vídeo `IMG_9033.mp4` (49 s). La punta del dedo del tope
+se proyecta hacia la **izquierda** y está **por debajo** del nivel del
+cuerpo posterior, que entra desde la derecha. Cuando el operario presenta
+la chapa sobre el escalón, su cara inferior descansa en ese **saliente
+bajo horizontal** y el canto llega hasta una **pared vertical posterior
+que sube**. En el modo de apoyo frontal se utiliza la cara izquierda
+más baja del dedo. El error anterior dibujaba la repisa ALTA delante
+con una pared que bajaba después y, por tanto, no podía detener el
+canto de la chapa. Ahora el motor, las vistas de Máquina y Simulación,
+las fichas y los controles de interferencias comparten el MISMO perfil
+orientativo de cara frontal y escalón.
+
+Esto es una geometría esquemática basada en la evidencia visual,
+NO dimensiones CAD exactas de los dedos Trumpf ni validación del
+recorrido CNC de los ejes X/R/Z. Se conservan los números L1-L6,
+la secuencia omega y la copia `01/10/27`.

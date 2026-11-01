@@ -24,6 +24,18 @@ export function sheetInFrontOfGauge(scene,index,anchor,thickness=2){
 export function gaugeSeatAssessment(scene,index,anchor,thickness,feature){
  if(feature.surface!=='horizontal-top')
   return {required:false,seated:true,reason:'cara frontal STOP'};
+ // En el vídeo IMG_9033.mp4 la repisa BAJA sostiene la chapa y
+ // una contrahuella vertical detrás SUBE para detener su canto.
+ // No declarar "apoyado" si la cara de parada está ABAJO, desplazada
+ // o ausente: ese fue el error de las versiones anteriores.
+ const wall=feature.frontFace;
+ const lip=feature.to;
+ if(!wall||!lip||
+  Math.abs(wall.from.x-lip.x)>.001||
+  Math.abs(wall.from.y-lip.y)>.001||
+  Math.abs(wall.to.x-wall.from.x)>.001||
+  wall.to.y<=wall.from.y+.2)
+  return {required:true,seated:false,reason:'escalón sin pared vertical ascendente de parada'};
  const sheet=scene?.sheet;
  if(!Array.isArray(sheet)||!Number.isInteger(index)||
    (index!==0&&index!==sheet.length-1))

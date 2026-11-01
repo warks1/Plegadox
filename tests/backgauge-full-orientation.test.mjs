@@ -9,21 +9,22 @@ test('dedo completo: escalón hacia izquierda y parte trasera a derecha en ambos
   const a=gaugeOutline(dimensions,1),b=gaugeOutline(dimensions,2);
   assert.deepEqual(a,b,'Stop/Support no hacen un espejo adicional');
   const width=Math.max(1,dimensions[0],dimensions[1]);
-  const ledge=Math.min(width,dimensions[0]);
-  assert.equal(a[0].x,width);
-  assert.equal(a[5].x,width,'base larga hacia la derecha');
-  assert.equal(a[4].x,ledge);
-  assert.equal(a[3].x,ledge,'resalte alto mirando a la izquierda');
-  assert.equal(a[2].y,a[3].y,'repisa superior horizontal');
-  assert.equal(a[1].x,0,'frente del tope hacia la chapa');
+  const nose=width-Math.min(width,dimensions[0]);
+  assert.equal(a[0].x,0,'frente bajo del dedo hacia la chapa');
+  assert.equal(a[5].x,0,'saliente bajo a la izquierda');
+  assert.equal(a[4].x,nose,'la punta baja termina en el resalte');
+  assert.equal(a[3].x,nose,'el resalte vertical está detrás de la punta');
+  assert.ok(a[3].y>a[4].y,'la pared del escalón debe SUBIR desde el apoyo');
+  assert.equal(a[5].y,a[4].y,'superficie BAJA horizontal de la pestaña');
+  assert.equal(a[1].x,width,'cuerpo del tope hacia la derecha');
  }
 });
 test('Stop 1: apoyo vertical en la parte frontal inferior, sin mover el borde de chapa',()=>{
  const scene=technicalScene(EXAMPLE,.6),place=gaugePlacement(scene,1);
  const pts=gaugeContourAtContact(place,V85_FACTORY.stop);
  assert.equal(place.contact.surface,'vertical-front');
- assert.deepEqual(place.contact.from,pts[1]);
- assert.deepEqual(place.contact.to,pts[2]);
+ assert.deepEqual(place.contact.from,pts[0]);
+ assert.deepEqual(place.contact.to,pts[5]);
  assert.equal(place.contact.from.x,place.point.x);
  assert.equal(place.contact.to.x,place.point.x);
  assert.ok(place.contact.from.y<place.contact.to.y);
@@ -34,8 +35,8 @@ test('Support 2: chapa apoyada ENCIMA del primer escalón horizontal a e/2',()=>
  const pts=gaugeContourAtContact(support,V85_FACTORY.support);
  assert.deepEqual(stop.point,support.point,'no cambiar X programada');
  assert.equal(support.contact.surface,'horizontal-top');
- assert.deepEqual(support.contact.from,pts[2]);
- assert.deepEqual(support.contact.to,pts[3]);
+ assert.deepEqual(support.contact.from,pts[5]);
+ assert.deepEqual(support.contact.to,pts[4]);
  assert.ok(support.contact.from.x<support.point.x,'labio del escalón debajo del tramo de chapa');
  assert.equal(support.contact.to.x,support.point.x);
  assert.equal(support.contact.from.y,support.contact.to.y,'apoyo horizontal');
