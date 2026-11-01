@@ -81,7 +81,10 @@ test('el contorno 50×100 de pata de cabra de fotografía no se convierte en un 
  const xmin=Math.min(...pts.map(p=>p[0])),xmax=Math.max(...pts.map(p=>p[0]));
  const ymin=Math.min(...pts.map(p=>p[1])),ymax=Math.max(...pts.map(p=>p[1]));
  approximate(xmax-xmin,50);
- approximate(ymax-ymin,100);
+ approximate(profile.workingHeight,100);
+ approximate(ymax-ymin,137);
+ assert.equal(profile.headProjection,37);
+ assert.ok(profile.points.some(([x,y])=>x===-11&&y===100));
  assert.ok(pts.length>=9,'debe existir escote interno real');
  assert.notDeepEqual(pts,sectionPunch({angle:88,height:100,type:'recto',tip:2}).points);
 });
