@@ -1,5 +1,5 @@
 // PlegadoX · caché offline estática. Se versiona para no arrastrar JS obsoleto.
-const CACHE='plegadox-static-0.9.0-tool-advisor-13';
+const CACHE='plegadox-static-0.9.0-playback-continuous-14';
 const APP_FILES=[
  "./",
  "./app.js",

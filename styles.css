@@ -1289,3 +1289,10 @@ html{background:#020913}
 .px-advisor-option small{color:#6a6b62;font-size:11px;line-height:1.45;flex:1}
 .px-advisor-option button{align-self:flex-start;min-height:42px}
 @media(max-width:560px){.px-advisor-options{grid-template-columns:1fr}.px-advisor-option button{width:100%}.px-tool-advisor .cardhead{align-items:flex-start}}
+
+/* R14: el diagnóstico 2D nunca interrumpe una vista previa salvo petición del usuario. */
+.px-playback-mode{padding:6px 10px 10px;border-bottom:1px solid #254b63;display:grid;gap:5px}
+.px-playback-mode label{display:flex;gap:9px;align-items:center;color:#c5e2f3;line-height:1.3;font-size:12px;cursor:pointer;font-weight:600}
+.px-playback-mode input[type=checkbox]{flex:0 0 18px;width:18px;height:18px;min-height:18px;accent-color:#179bd4;cursor:pointer}
+.px-playback-mode small{display:block;color:#a2c5da;font-size:11px;line-height:1.4}
+@media(max-width:500px){.px-playback-mode{padding:7px 9px}.px-playback-mode label{font-size:11px}}

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {EXAMPLE,normalized,gaugeReference,stopAtStage} from '../engine.js';
-import {guardPunchAdvance} from '../collision-playback-guard.js';
+import {guardPunchAdvance,advancePreview} from '../collision-playback-guard.js';
 import {inspectToolContact} from '../tool-collision.js';
 
 test('Pausa antes de penetrar: intervalo de avance acotado y posición sin intrusión',()=>{
@@ -45,4 +45,29 @@ test('Plegado Omega: el primer choque con el punzón detiene la reproducción an
 test('La precaución del motor rechaza saltos temporales negativos',()=>{
  assert.throws(()=>guardPunchAdvance({},1,.5),/Intervalo/);
  assert.throws(()=>guardPunchAdvance({},0,1,{maxStep:0}),/Paso/);
+});
+
+
+test('vista previa continua por defecto NO se bloquea en aviso 2D provisional',()=>{
+ const risky=(piece,t)=>({issues:t>.15?[{kind:'punch',category:'penetration'}]:[]});
+ const guard=(piece,from,to)=>guardPunchAdvance(piece,from,to,{inspect:risky});
+ const step=advancePreview({},.1,.2,3,{guard});
+ assert.ok(Math.abs(step.time-.3)<1e-9,'La reproducción avanza hasta 0,3 s');
+ assert.equal(step.blocked,false);
+ assert.equal(step.mode,'vista-continua');
+ assert.equal(step.checked,0,'no se invoca el barrido pesado sin pausa diagnóstica');
+ const guarded=advancePreview({},.1,.2,3,{guard,pauseOnPenetration:true});
+ assert.equal(guarded.blocked,true);
+ assert.ok(guarded.time<.15);
+ assert.equal(guarded.mode,'pausa-diagnostica');
+});
+test('vista previa continua repite al final sin perder el programa',()=>{
+ const p=normalized(EXAMPLE),before=structuredClone(p);
+ const end=advancePreview(p,19.9,.2,20);
+ assert.equal(end.time,20);
+ assert.equal(end.looped,true);
+ assert.equal(end.blocked,false);
+ assert.deepEqual(p,before);
+ assert.deepEqual(p.order,[0,1,3,2]);
+ assert.deepEqual(p.angles,[90,-90,-90,90]);
 });

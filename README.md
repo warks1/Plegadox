@@ -801,3 +801,21 @@ Cuando no hay ningún par posible se **avisa y no se inventa una selección**.
 El consejo es preliminar **NO CNC**: el perfil de las herramientas, sus
 amarres a la Trumpf V85, carga por metro y colisiones 3D siguen sin
 validarse. La comprobación definitiva requiere fabricante y ensayo real.
+
+## R14 · Simulación 2D/3D continua con avisos (vídeo 01-11-2026)
+Grabación del usuario: la reproducción se detenía al segundo pliegue,
+mostrando «CHAPA / PUNZÓN · POSIBLE PENETRACIÓN 2D».
+La causa era un enclavamiento obligatorio que paraba el reproductor
+ante la intersección de siluetas paramétricas **no certificadas**.
+
+Ahora la opción por defecto es **animación continua**: sigue pasando
+por todos los golpes y vuelve al principio al terminar; no cambia los
+ángulos, la pieza, las herramientas ni la secuencia. Las posibles
+penetraciones/holguras 2D siguen apareciendo en los avisos e indicadores.
+
+El usuario puede marcar «Pausar ante una posible penetración 2D» para
+recuperar el modo de parada diagnóstica ANTES del primer cruce del punzón.
+Este modo es una precaución del visor, no una protección CNC.
+La reproducción continua **NO significa que el plegado real sea seguro**.
+La seguridad industrial exige geometrías completas, amarres y control
+CNC independientes del simulador.
