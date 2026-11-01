@@ -42,7 +42,20 @@ function geometryReport(){
 const numbers=(n,d=1)=>Number(n).toLocaleString('es-ES',{maximumFractionDigits:d,minimumFractionDigits:d});
 function restore(){try{const saved=localStorage.getItem(storeKey);return normalized(saved?JSON.parse(saved):EXAMPLE);}catch{return normalized(EXAMPLE);}}
 function persist(){try{localStorage.setItem(storeKey,JSON.stringify(piece));}catch{}}
-function save(){persist();$('saveBtn').textContent='✓';$('saveBtn').title='Guardado en este dispositivo';setTimeout(()=>{$('saveBtn').textContent='▣';$('saveBtn').title='Guardar pieza';},1500);}
+function save(){
+ persist();
+ // Conservar el icono SVG al confirmar el guardado (sin sustituir su DOM).
+ const button=$('saveBtn');
+ if(!button)return;
+ button.classList.add('is-saved');
+ button.title='Guardado en este dispositivo';
+ button.setAttribute('aria-label','Guardado en este dispositivo');
+ setTimeout(()=>{
+  button.classList.remove('is-saved');
+  button.title='Guardar pieza';
+  button.setAttribute('aria-label','Guardar pieza');
+ },1500);
+}
 function resetPlayback(){sim.time=0;sim.last=null;sim.playing=false;sim.blocked=null;sim.error=null;$('playBtn').textContent='▶';$('playBtn').title='Reproducir simulación';}
 function changePiece(p,structural=false){
  piece=normalized(p);persist();sim.blocked=null;sim.error=null;
@@ -573,7 +586,11 @@ function toolCard(tool,kind){
  const brand=document.createElement('span');brand.className='tool-card-brand';
  brand.textContent=tool.manufacturer||'Genérico';
  const notice=document.createElement('span');notice.className='tool-card-notice';
- notice.textContent='Contorno provisional · no CAD';
+ notice.textContent=tool.verifiedSpecs?'Documentado':'Provisional';
+ notice.classList.add('px-data-status',tool.verifiedSpecs?'px-status--documentado':'px-status--provisional');
+ notice.title=tool.verifiedSpecs?
+  'Algunas medidas proceden de ficha; el contorno 2D/3D continúa siendo paramétrico, no CAD completo.':
+  'Contorno paramétrico sin cotas CAD completas de fabricante ni validación física.';
  button.append(image,title,meta,brand,notice);
  button.onclick=()=>changePiece({...piece,[kind==='punch'?'punch':'die']:tool.id},true);
  return button;

@@ -72,13 +72,20 @@ function renderCatalogue(){
    }
    const selected=kind==='punch'?p.punch:p.die;
    const b=document.createElement('button');b.type='button';b.className='cp-tool-card'+(selected===tool.id?' selected':'');
-   b.title=(tool.reference||tool.name)+(tool.verifiedSpecs?' · Especificaciones verificadas':' · Modelo provisional');
+   b.title=(tool.reference||tool.name)+(tool.verifiedSpecs?
+    ' · Documentado parcialmente (contorno CAD no verificado)':
+    ' · Provisional: contorno paramétrico no verificado');
    const canvas=document.createElement('canvas');canvas.setAttribute('aria-hidden','true');
    const title=document.createElement('b');title.textContent=tool.reference||tool.name;
    const detail=document.createElement('small');detail.textContent=kind==='punch'?tool.angle+'° · R'+tipR(tool)+' · H'+tool.height:'V'+tool.opening+' · '+tool.angle+'°'+
  (tool.shoulderRadius?' · R'+format(tool.shoulderRadius,2):'')+
  ' · H'+tool.height;
-   const flag=document.createElement('em');flag.textContent=tool.verifiedSpecs?'Ficha documentada':'Geometría provisional';
+   const flag=document.createElement('em');
+   flag.className='px-data-status '+(tool.verifiedSpecs?'px-status--documentado':'px-status--provisional');
+   flag.textContent=tool.verifiedSpecs?'Documentado':'Provisional';
+   flag.title=tool.verifiedSpecs?
+    'Datos nominales parcialmente documentados. El contorno visual sigue siendo paramétrico.':
+    'Silueta paramétrica no cotejada con un perfil CAD del fabricante.';
    b.append(canvas,title,detail,flag);b.onclick=()=>toolPicked(tool);
    container.append(b);drawThumbnail(canvas,tool,kind);
  }
