@@ -1,6 +1,6 @@
 {
-  "build": "TOPE-20261101-R10",
+  "build": "TOPE-20261101-R11",
   "version": "0.9.0",
-  "gauge": "real-video-low-front-lip-upward-riser",
-  "cache": "plegadox-static-0.9.0-gauge-real-contact-10"
+  "gauge": "low-front-lip-riser-with-thickness-overlap",
+  "cache": "plegadox-static-0.9.0-gauge-thickness-11"
 }
