@@ -1364,3 +1364,19 @@ html{background:#020913}
 .px-gauge-operation:hover,.px-gauge-operation:focus-visible{outline:2px solid #2481b8;outline-offset:2px}
 @media(max-width:560px){.px-gauge-review-rows{grid-template-columns:1fr}
  .px-gauge-operation{min-height:72px}}
+
+/* R22 · El Play luminoso del encabezado es un CONTROL REAL, no un adorno. */
+.header-status #topPlayBtn.led{
+ padding:0;min-width:38px;min-height:38px;width:38px;height:38px;
+ border:1px solid #38ffbd;display:inline-grid;place-items:center;
+ background:#19df82;color:#001d20;font-size:17px;font-weight:800;
+ box-shadow:0 0 12px #20da9775;touch-action:manipulation;cursor:pointer;
+}
+.header-status #topPlayBtn.led[aria-pressed="true"]{
+ background:#ffca6a;border-color:#ffe3a0;color:#201907;
+ box-shadow:0 0 12px #ffb64075;
+}
+.header-status #topPlayBtn:focus-visible{outline:3px solid #ffffff;outline-offset:3px}
+@media(max-width:650px){
+ .header-status #topPlayBtn.led{width:42px;height:42px;min-width:42px;min-height:42px;font-size:18px}
+}
