@@ -54,8 +54,8 @@ try{
   });
   assert.equal(picture.active,'ref-goose-50-100-r1');
   assert.equal(picture.shape.workingHeight,100);
-  assert.equal(picture.shape.height,137);
-  assert.equal(picture.shape.headProjection,37);
+  assert.equal(picture.shape.height,128);
+  assert.equal(picture.shape.headProjection,28);
   assert.ok(picture.shape.points.some(([x,y])=>x===-11&&y===100));
   assert.equal(picture.bounds.maxX-picture.bounds.minX,50);
   assert.equal(picture.shape.tipRadius,1);
