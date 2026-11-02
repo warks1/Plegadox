@@ -81,3 +81,19 @@ test('el backup no inventa perfil CAD verificado aunque el JSON lo afirme',()=>{
  assert.equal(backup.importedTools[0].profileAccuracy,'provisional');
  assert.equal(backup.importedTools[0].verifiedSpecs,false);
 });
+
+test('la recuperación no sustituye silenciosamente un útil desconocido por uno genérico',()=>{
+ const valid=buildProjectBackup({piece,machine:V85_FACTORY,tools:[p,d]});
+ for(const unknown of [
+  {...valid,piece:{...valid.piece,punch:'not-found'}},
+  {...valid,piece:{...valid.piece,die:'v999'}},
+  {...valid,piece:{...valid.piece,material:'material-falso'}},
+  {...valid,piece:{...valid.piece,stopByBend:[3,3,3,3]}},
+  {...valid,piece:{...valid.piece,kFactor:99}}
+ ]){
+  const st=store({[PIECE_KEY]:'ANTERIOR'});
+  assert.throws(()=>restoreProjectBackup(st,unknown));
+  assert.equal(st.getItem(PIECE_KEY),'ANTERIOR');
+  assert.equal(st.calls.length,0);
+ }
+});
