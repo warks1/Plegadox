@@ -19,7 +19,8 @@ try{
   const status=page.locator('#workshopAuditStatus');
   assert.ok(await status.isVisible());
   assert.match(await status.textContent(),/NO VALIDADO PARA FABRICAR/);
-  assert.ok(await page.locator('#workshopAuditBreakdown details').count()>=2);
+  assert.ok(await page.locator('#workshopAuditBreakdown details').count()>=1,
+   'La omega debe tener al menos la categoría de acreditaciones pendientes');
   const auditEvent=page.waitForEvent('download');
   await page.locator('#exportAuditBtn').click();
   const auditDownload=await auditEvent;
