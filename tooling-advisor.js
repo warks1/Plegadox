@@ -19,6 +19,12 @@ export function targetVRatio(thickness){
 }
 function pairData(p,die,punch,minimumInterior,minimumFlange,requiresClearance){
  const opening=Number(die.opening),included=Number(die.angle),punchAngle=Number(punch.angle);
+ // No proponer una pareja más corta que el ancho programado. Un
+ // montaje de varios segmentos exige plano de distribución y comprobación
+ // de carga: no se supone disponible automáticamente.
+ const lengthTooShort=tool=>finitePositive(tool.length)&&
+  Number(tool.length)+1e-8<p.width;
+ if(lengthTooShort(die)||lengthTooShort(punch))return null;
  if(!finitePositive(opening)||!finitePositive(included)||!finitePositive(punchAngle))
   return null;
  const ratio=opening/p.thickness;
@@ -55,8 +61,9 @@ function pairData(p,die,punch,minimumInterior,minimumFlange,requiresClearance){
  if(requiresClearance)warnings.push('Alas cerradas o signos alternos: verificar cuello del punzón y colisiones 3D');
  if(mount.compatible!==true)warnings.push(mount.reason);
  if(die.mount||punch.mount)warnings.push('Confirmar adaptación de los amarres a la Trumpf V85');
- if(die.length&&die.length<p.width||punch.length&&punch.length<p.width)
-  warnings.push('Comprobar longitud útil, segmentación y carga por segmento');
+ if(!finitePositive(die.length)||!finitePositive(punch.length))
+  warnings.push('Longitud comercial no documentada: comprobar que cubre el ancho de pieza');
+ warnings.push('Si se utilizan segmentos, verificar montaje, continuidad y carga por segmento');
  if(p.angles.some(a=>Math.abs(Math.abs(a)-90)>5))
   warnings.push('Ángulo fuera de aire típico 90°: comprobar ala mínima, radio y fuerza en tablas reales');
  warnings.push('Carga admisible por metro de útiles y mordazas NO comprobada');
@@ -97,7 +104,7 @@ export function recommendTooling(input,options={}){
  if(alternatives.length===0&&candidates.length>1)alternatives.push(candidates[1]);
  const reasons=[];
  if(!choice){
-  reasons.push('No hay una pareja de matriz y punzón que cumpla a la vez el apoyo mínimo estimado, el ángulo incluido, la relación V/e y el tonelaje nominal.');
+  reasons.push('No hay una pareja de matriz y punzón que cumpla a la vez el apoyo mínimo estimado, el ángulo incluido, la relación V/e, el ancho útil disponible y el tonelaje nominal.');
   if(!dies.length||!punches.length)reasons.push('Catálogo vacío: importar herramientas compatibles.');
  }else{
   reasons.push('Guía de apertura objetivo: '+targetVRatio(p.thickness)+' × espesor; ajustada según alas, ángulo y fuerza.');
