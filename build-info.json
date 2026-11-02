@@ -1,6 +1,6 @@
 {
-  "build": "PLEGADOX-20261102-R22",
+  "build": "PLEGADOX-20261102-R23",
   "version": "0.9.1",
   "gauge": "low-front-lip-riser-thickness-overlap-and-framing",
-  "cache": "plegadox-static-0.9.1-header-play-reorient-22"
+  "cache": "plegadox-static-0.9.1-tool-height-geometry-23"
 }
