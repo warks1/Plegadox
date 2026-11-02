@@ -6,6 +6,7 @@
 import {DIES,PUNCHES,MATERIALS} from './engine.js';
 import {normalizeV85,V85_STORAGE_KEY} from './machine-config.js';
 import {TOOL_DXF_STORAGE_KEY,loadImportedTools,validateContour} from './tool-dxf.js';
+import {MEASUREMENTS_KEY,readMeasurements,mergeMeasurements} from './workshop-measurements.js';
 export const PROJECT_FORMAT='plegadox-complete-project-v1';
 export const PIECE_KEY='plegadox:piece:v1';
 const MAX_TOOLS=30;
@@ -74,7 +75,7 @@ function validateToolReferences(piece,tools){
  check(knownPunch,'El backup no contiene una referencia válida de punzón: '+piece.punch);
  check(knownDie,'El backup no contiene una referencia válida de matriz: '+piece.die);
 }
-export function buildProjectBackup({piece,machine,tools,exportedAt=new Date().toISOString()}){
+export function buildProjectBackup({piece,machine,tools,measurements=[],exportedAt=new Date().toISOString()}){
  const p=checkedPiece(piece),t=checkedTools(tools);
  validateToolReferences(p,t);
  check(machine&&Array.isArray(machine.ram)&&Array.isArray(machine.bed)&&
@@ -84,8 +85,9 @@ export function buildProjectBackup({piece,machine,tools,exportedAt=new Date().to
   'Falta el DXF del punzón asociado a la pieza');
  check(t.some(x=>x.id===p.die)||!p.die.startsWith('user-dxf-'),
   'Falta el DXF de la matriz asociada a la pieza');
+ const tested=mergeMeasurements([],measurements);
  return {format:PROJECT_FORMAT,schemaVersion:1,exportedAt,
-  piece:p,machine:normalizeV85(machine),importedTools:t,
+  piece:p,machine:normalizeV85(machine),importedTools:t,measurements:tested,
   notes:'Backup local. La geometría de herramientas y cálculo aún no está verificada para fabricación real.'};
 }
 /** Puro; nunca modifica el navegador si el formato o contenido son inválidos. */
@@ -102,7 +104,10 @@ export function parseProjectBackup(source){
   'El proyecto no incluye su punzón DXF');
  check(tools.some(x=>x.id===p.die)||!p.die.startsWith('user-dxf-'),
   'El proyecto no incluye su matriz DXF');
- return {piece:p,machine:normalizeV85(raw.machine),importedTools:tools};
+ const hasMeasurements=Object.prototype.hasOwnProperty.call(raw,'measurements');
+ const measurements=hasMeasurements?mergeMeasurements([],raw.measurements):[];
+ return {piece:p,machine:normalizeV85(raw.machine),importedTools:tools,
+  measurements,hasMeasurements};
 }
 /** Importar sin borrar útiles DXF existentes. Rollback si falla el almacenamiento. */
 export function restoreProjectBackup(storage,source){
@@ -119,9 +124,12 @@ export function restoreProjectBackup(storage,source){
   }else merged.push(tool);
  }
  check(merged.length<=MAX_TOOLS,'La unión supera 30 útiles DXF. Exporta tu biblioteca antes de importar.');
+ const records=data.hasMeasurements?
+  mergeMeasurements(readMeasurements(storage),data.measurements):null;
  const entries=[[TOOL_DXF_STORAGE_KEY,JSON.stringify(merged)],
   [V85_STORAGE_KEY,JSON.stringify(data.machine)],
-  [PIECE_KEY,JSON.stringify(data.piece)]];
+  [PIECE_KEY,JSON.stringify(data.piece)],
+  ...(records?[ [MEASUREMENTS_KEY,JSON.stringify(records)] ]:[])];
  const old=entries.map(([key])=>[key,storage.getItem(key)]);
  let written=0;
  try{for(const [key,value] of entries){storage.setItem(key,value);written++;}}
@@ -131,5 +139,5 @@ export function restoreProjectBackup(storage,source){
   }
   throw Error('No se pudo restaurar el proyecto completo: '+error.message);
  }
- return {...data,importedTools:merged};
+ return {...data,importedTools:merged,measurements:records||data.measurements};
 }

@@ -1,5 +1,5 @@
 // PlegadoX · caché offline estática. Se versiona para no arrastrar JS obsoleto.
-const CACHE='plegadox-static-0.9.0-project-library-18';
+const CACHE='plegadox-static-0.9.0-workshop-calibration-19';
 const APP_FILES=[
  "./",
  "./app.js",
@@ -40,6 +40,7 @@ const APP_FILES=[
  "./workshop-audit.js",
  "./project-backup.js",
  "./project-library.js",
+ "./workshop-measurements.js",
  "./tool-dxf.js",
  "./tool-import-ui.js",
  "./validation.js",

@@ -21,6 +21,7 @@ import {recommendTooling} from './tooling-advisor.js';
 import {auditForWorkshop} from './workshop-audit.js';
 import {buildProjectBackup,restoreProjectBackup} from './project-backup.js';
 import {readProjectLibrary,saveLibraryPiece,getLibraryPiece,deleteLibraryPiece,setActiveLibraryId,getActiveLibraryId} from './project-library.js';
+import {measurementKey,calibrationSuggestion,readMeasurements,createMeasurement,persistMeasurement,deleteMeasurement} from './workshop-measurements.js';
 import {loadImportedTools,registerImportedTools,persistImportedTool} from './tool-dxf.js';
 import {setupToolDxfImporter} from './tool-import-ui.js';
 registerCatalogue(DIES,PUNCHES);
@@ -37,6 +38,7 @@ let camera={yaw:-.62,pitch:.45,zoom:1};
 let machineView={panX:0,panY:0,zoom:1};
 let touchOrderEnabled=false,chosenTouchOrder=[];
 let pendingSequenceAdvice=null;
+let measurementInputKey=measurementKey(piece),lastSavedMeasurement=null;
 const geometryCache={key:null,result:null};
 function geometryReport(){
  const key=JSON.stringify([piece.flanges,piece.angles,piece.order,piece.thickness,piece.width,piece.material,piece.rmMPa,piece.punch,piece.die,piece.gaugeSideByBend,getV85().ramWidth,getV85().holderWidth]);
@@ -306,16 +308,53 @@ function configure(){
  const blob=new Blob([JSON.stringify({...piece,format:'plegadox-piece-v1'},null,2)],{type:'application/json'});
  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=(piece.name.replace(/[^a-z0-9áéíóú_-]+/gi,'-').slice(0,55)||'pieza')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),4000);
  };
+ for(const id of ['measurementFlat','measurementRadius','measurementNotes'])
+  $(id).addEventListener('input',()=>{lastSavedMeasurement=null;renderMeasurementAdvice();});
+ $('measurementAnglesChecked').addEventListener('change',()=>{
+  lastSavedMeasurement=null;renderMeasurementAdvice();
+ });
+ $('measurementSave').onclick=()=>{
+  const out=$('measurementAdvice');
+  try{
+   const record=createMeasurement(piece,measurementFormData());
+   lastSavedMeasurement=persistMeasurement(localStorage,record);
+   renderMeasurementHistory();renderMeasurementAdvice();
+   out.textContent+=' Registro de medición guardado localmente.';
+  }catch(err){out.textContent='No se ha guardado la medición: '+err.message;}
+ };
+ $('measurementApplyK').onclick=()=>{
+  const data=measurementFormData();
+  if(!lastSavedMeasurement||lastSavedMeasurement.key!==measurementKey(piece)||
+   lastSavedMeasurement.measuredFlat!==data.measuredFlat||
+   lastSavedMeasurement.measuredRadius!==data.measuredRadius||
+   lastSavedMeasurement.anglesChecked!==data.anglesChecked){
+   renderMeasurementAdvice();return;
+  }
+  const suggestion=calibrationSuggestion(piece,data);
+  if(!suggestion.available||suggestion.proposedK!==lastSavedMeasurement.proposedK)
+   return;
+  changePiece({...piece,radius:data.measuredRadius,kFactor:suggestion.proposedK},true);
+  $('measurementAdvice').textContent+=' Factor K y radio aplicados sólo a esta pieza. Guardar una revisión de biblioteca para conservar el cambio.';
+ };
+ $('measurementExport').onclick=()=>{
+  try{downloadProjectJson({format:'plegadox-measurements-export-v1',
+   exportedAt:new Date().toISOString(),
+   records:readMeasurements(localStorage)},
+   'PlegadoX-MEDICIONES-TALLER.json');
+  }catch(err){$('measurementAdvice').textContent='No se han exportado las mediciones: '+err.message;}
+ };
  $('exportAuditBtn').onclick=()=>downloadProjectJson(
   auditForWorkshop(piece),projectSafeName()+'-INFORME-NO-VALIDADO.json');
  $('exportCompleteProject').onclick=()=>{
   const status=$('completeProjectStatus');
   try{
    const backup=buildProjectBackup({piece,machine:getV85(),
-    tools:loadImportedTools(localStorage)});
+    tools:loadImportedTools(localStorage),
+    measurements:readMeasurements(localStorage)});
    downloadProjectJson(backup,projectSafeName()+'-BACKUP-COMPLETO.json');
-   status.textContent='Copia descargada: pieza, máquina y '+backup.importedTools.length+
-    ' herramientas DXF. Comprueba el archivo antes de borrar datos locales.';
+   status.textContent='Copia descargada: pieza, máquina, '+backup.importedTools.length+
+    ' herramientas DXF y '+backup.measurements.length+
+    ' mediciones de taller. Comprueba el archivo antes de borrar datos locales.';
    status.dataset.state='success';
   }catch(err){status.textContent='Backup no generado: '+err.message;status.dataset.state='error';}
  };
@@ -336,8 +375,9 @@ function configure(){
    updateV85(restored.machine);
    detachLibraryPiece();
    changePiece(restored.piece,true);
-   status.textContent='Recuperado: pieza, V85 y '+restored.importedTools.length+
-    ' herramientas DXF. No se han borrado otros útiles guardados.';
+   status.textContent='Recuperado: pieza, V85, '+restored.importedTools.length+
+    ' herramientas DXF y '+restored.measurements.length+
+    ' mediciones de taller. No se han borrado otros útiles guardados.';
    status.dataset.state='success';
   }catch(err){status.textContent='Restauración rechazada: '+err.message;
    status.dataset.state='error';}
@@ -493,6 +533,95 @@ function downloadProjectJson(data,filename){
 function projectSafeName(){
  return piece.name.replace(/[^a-z0-9áéíóú_-]+/gi,'-').slice(0,55)||'PlegadoX';
 }
+function measurementFormData(){
+ return {
+  measuredFlat:$('measurementFlat').value.trim()===''?NaN:Number($('measurementFlat').value),
+  measuredRadius:$('measurementRadius').value.trim()===''?null:Number($('measurementRadius').value),
+  anglesChecked:$('measurementAnglesChecked').checked,
+  notes:$('measurementNotes').value.trim()
+ };
+}
+function renderMeasurementAdvice(){
+ const node=$('measurementAdvice'),button=$('measurementApplyK');
+ if(!node||!button)return;
+ button.disabled=true;
+ const data=measurementFormData();
+ if(!Number.isFinite(data.measuredFlat)||data.measuredFlat<=0){
+  node.textContent='Introduce la longitud desarrollada medida (mm) para comparar.';
+  return;
+ }
+ try{
+  const result=calibrationSuggestion(piece,data);
+  const sign=result.deviation>0?'+':'';
+  const delta='Desarrollo calculado '+numbers(result.predictedFlat,2)+
+   ' mm · medido '+numbers(result.measuredFlat,2)+
+   ' mm · diferencia '+sign+numbers(result.deviation,2)+' mm. ';
+  node.textContent=delta+(result.available?
+   'K orientativo para ESTA pieza: '+numbers(result.proposedK,4)+
+    '. '+result.reason:result.reason);
+  if(result.available&&lastSavedMeasurement&&
+   lastSavedMeasurement.key===measurementKey(piece)&&
+   lastSavedMeasurement.measuredFlat===data.measuredFlat&&
+   lastSavedMeasurement.measuredRadius===data.measuredRadius&&
+   lastSavedMeasurement.anglesChecked===data.anglesChecked&&
+   lastSavedMeasurement.proposedK===result.proposedK){
+   button.disabled=false;
+  }else if(result.available){
+   node.textContent+=' Guarda primero la medición actual para poder aplicar K.';
+  }
+ }catch(err){node.textContent='Medición no válida: '+err.message;}
+}
+function renderMeasurementHistory(){
+ const host=$('measurementHistory');
+ if(!host)return;
+ host.replaceChildren();
+ try{
+  const matching=readMeasurements(localStorage).filter(x=>x.key===measurementKey(piece));
+  if(!matching.length){
+   const empty=document.createElement('p');empty.className='hint';
+   empty.textContent='Todavía no hay mediciones guardadas para esta geometría y estos útiles.';
+   host.append(empty);
+  }
+  for(const entry of matching.slice(0,20)){
+   const card=document.createElement('div');card.className='px-measurement-item';
+   const title=document.createElement('strong');
+   title.textContent=new Date(entry.recordedAt).toLocaleDateString('es-ES')+
+    ' · '+numbers(entry.measuredFlat,2)+' mm · error '+numbers(entry.deviation,2)+' mm';
+   const info=document.createElement('small');
+   info.textContent=(entry.measuredRadius==null?'Radio sin medir':'Radio '+numbers(entry.measuredRadius,2)+' mm')+
+    ' · K '+(entry.proposedK==null?'sin propuesta':numbers(entry.proposedK,4))+
+    (entry.notes?' · '+entry.notes:'')+' · Sin validación física';
+   const rm=document.createElement('button');rm.type='button';rm.className='mini';
+   rm.textContent='Eliminar registro';
+   rm.onclick=()=>{
+    if(!window.confirm('¿Eliminar esta medición de taller del dispositivo?'))return;
+    try{
+     deleteMeasurement(localStorage,entry.id);
+     if(lastSavedMeasurement?.id===entry.id)lastSavedMeasurement=null;
+     renderMeasurementHistory();renderMeasurementAdvice();
+    }catch(error){$('measurementAdvice').textContent=error.message;}
+   };
+   card.append(title,info,rm);host.append(card);
+  }
+  if(matching.length>20){
+   const extra=document.createElement('p');extra.className='hint';
+   extra.textContent='Se muestran las 20 últimas de '+matching.length+'. Exporta el JSON para conservarlas todas.';
+   host.append(extra);
+  }
+ }catch(err){host.textContent='No se ha leído el historial: '+err.message;}
+}
+function syncMeasurementPiece(){
+ const current=measurementKey(piece);
+ if(measurementInputKey!==current){
+  measurementInputKey=current;lastSavedMeasurement=null;
+  for(const id of ['measurementFlat','measurementRadius','measurementNotes']){
+   if($(id))$(id).value='';
+  }
+  if($('measurementAnglesChecked'))$('measurementAnglesChecked').checked=false;
+ }
+ renderMeasurementAdvice();
+ renderMeasurementHistory();
+}
 function renderSetup(){
  for(const id of ['pieceName','material','thickness','width','die','punch'])$(id).value=piece[{pieceName:'name'}[id]||id];
  $('datum').value=piece.datum;
@@ -502,6 +631,7 @@ function renderSetup(){
  $('rmMPa').placeholder=String(REFERENCE_RM_MPA[piece.material]||450)+' (referencia)';
  renderToolAdvisor();
  renderWorkshopAudit();
+ syncMeasurementPiece();
 }
 function renderEditor(){
  const tb=$('flangeRows');tb.replaceChildren();
