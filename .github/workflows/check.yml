@@ -95,6 +95,7 @@ jobs:
           node tests/pwa-version-recovery-smoke.mjs
           node tests/punch-guard-smoke.mjs
           node tests/reposition-continuity-smoke.mjs
+          node tests/play-header-reorientation-smoke.mjs
           node tests/controls-regression-smoke.mjs
           node tests/pwa-offline-smoke.mjs
           node tests/tool-dxf-browser-smoke.mjs

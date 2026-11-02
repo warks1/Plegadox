@@ -199,6 +199,21 @@ export function presentedForMachine(piece,fractions,activeBend){
  * PREVISUALIZACIÓN: no calcula trayectorias mecánicas ni valida holguras
  * reales frente a topes, mesa, trancha, punzón o mordazas.
  */
+/**
+ * Vista previa de volteo y cambio de sentido de alimentación.
+ * Si cambian AMBAS caras, no comprimir X e Y al mismo tiempo:
+ * primero girar la chapa sobre su eje longitudinal y DESPUÉS
+ * reorientarla hacia el tope. De lo contrario toda la sección
+ * desaparece en un punto a mitad del cambio de golpe.
+ *
+ * Es una proyección 2D ilustrativa, NO trayectoria física de manipulación.
+ */
+export function repositionAxisProgress(progress,faceChanged,feedChanged){
+ const u=clamp(Number.isFinite(progress)?progress:0,0,1);
+ if(faceChanged&&feedChanged)
+  return {face:clamp(2*u,0,1),feed:clamp(2*u-1,0,1)};
+ return {face:u,feed:u};
+}
 export function presentedAtStage(piece,st){
  const p=normalized(piece);
  const current=presentedForMachine(p,st.fractions,st.activeBend);
@@ -222,7 +237,10 @@ export function presentedAtStage(piece,st){
  const theta=old.theta+angleDiff*u;
  const pivot={x:old.pivot.x+(next.pivot.x-old.pivot.x)*u,
               y:old.pivot.y+(next.pivot.y-old.pivot.y)*u};
- const flipAngle=old.flip===next.flip?0:Math.PI*u;
+ const oldFeed=gaugeReference(p,st.activeBend).side;
+ const nextFeed=gaugeReference(p,next.bend).side;
+ const axes=repositionAxisProgress(u,old.flip!==next.flip,oldFeed!==nextFeed);
+ const flipAngle=old.flip===next.flip?0:Math.PI*axes.face;
  const projectionY=old.flip*Math.cos(flipAngle);
  const projectionZ=old.flip*Math.sin(flipAngle);
  const c=Math.cos(-theta),s=Math.sin(-theta);
@@ -238,7 +256,8 @@ export function presentedAtStage(piece,st){
  const clearanceLift=Math.max(0,5-Math.min(...points.map(pt=>pt.y)))*liftFactor;
  return {points,points3D,clearanceLift,
   flipped:projectionY<0,sign:next.flip,label:'Retirada, giro y presentación orientativos',
-  repositioning:true,progress:u,nextBend:next.bend,liftFactor};
+  repositioning:true,progress:u,feedProgress:axes.feed,
+  faceProgress:axes.face,nextBend:next.bend,liftFactor};
 }
 function cross(a,b,c){return (b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);}
 export function selfIntersects(points){

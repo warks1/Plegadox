@@ -993,3 +993,27 @@ de retirada, borde de chapa por detrás y salto a muestras en PC/iPhone.
 **Límite:** 2D temporal discreto sin volumen CAD real, recorridos de
 ejes X/R/Z, sincronismo de control, topes/trancha/amarres físicos,
 capacidad de carga ni validación industrial. No se afirma seguridad de CNC.
+
+## R22 · El Play verde de cabecera funciona; reorientación G1→G2 por etapas
+El vídeo del 02/11/2026 muestra el PLAY VERDE señalado en la cabecera.
+Antes era un `span.led` SIN evento; el usuario pulsaba un indicador
+decorativo. Ahora es un auténtico `button#topPlayBtn` accesible,
+táctil y con alternancia **reproducir/pausar**, conectado al mismo
+reproductor continuo que los mandos inferiores. Iconos, `aria-pressed`
+y estado se sincronizan con las pausas, la línea de tiempo y los cambios
+de pieza, también en móvil.
+
+Para el giro del golpe 1 (+90°) al golpe 2 (−90°), cuando además
+se cambia de ala anterior/siguiente, el visor ejecutaba dos proyecciones
+de coseno SOBRE X e Y al mismo tiempo, aplastando la pieza en ambas
+direcciones a mitad del giro. Ahora las dos etapas de visualización
+se hacen secuencialmente: **primero el volteo de cara y después el giro
+de alimentación**, con continuidad del perfil y del tope en el límite
+de golpe. Si solo cambia una dimensión, sigue usando toda la ventana
+de transición. Se preservan los signos y el orden 1–2–4–3 de omega.
+
+Regresiones Node y Playwright en PC/iPhone sobre el Play del encabezado,
+la pausa, la animación activa al pasar del primer al segundo golpe, el
+perfil sin colapso y los anteriores tests de continuidad.
+No se ha modelado una trayectoria de manipulador física ni validado
+el volumen real de los útiles.

@@ -148,7 +148,28 @@ function renderProjectLibrary(){
   card.append(name,details,actions);host.append(card);
  }
 }
-function resetPlayback(){sim.time=0;sim.last=null;sim.playing=false;sim.blocked=null;sim.error=null;$('playBtn').textContent='▶';$('playBtn').title='Reproducir simulación';}
+function syncPlaybackButtons(){
+ const playing=sim.playing,label=playing?'Pausar simulación':'Reproducir simulación';
+ for(const id of ['playBtn','topPlayBtn']){
+  const btn=$(id);
+  if(!btn)continue;
+  btn.textContent=playing?'Ⅱ':'▶';
+  btn.title=label;
+  btn.setAttribute('aria-label',label);
+  btn.setAttribute('aria-pressed',String(playing));
+ }
+}
+function pausePlayback(){
+ sim.playing=false;sim.last=null;syncPlaybackButtons();
+}
+function startPlayback(){
+ if(sim.time>=piece.order.length*5)sim.time=0;
+ sim.playing=true;sim.last=null;sim.blocked=null;sim.error=null;
+ syncPlaybackButtons();
+}
+function resetPlayback(){
+ sim.time=0;sim.blocked=null;sim.error=null;pausePlayback();
+}
 function changePiece(p,structural=false){
  piece=normalized(p);persist();sim.blocked=null;sim.error=null;
  if($('libraryActiveLabel'))$('libraryActiveLabel').textContent=
@@ -398,11 +419,12 @@ function configure(){
  const file=e.target.files?.[0];if(!file)return;
  try{if(file.size>1024*1024)throw new Error('Archivo demasiado grande');const data=JSON.parse(await file.text());if(!Array.isArray(data.flanges)||!Array.isArray(data.angles))throw new Error('El JSON no contiene alas y pliegues');detachLibraryPiece();changePiece(data,true);}catch(err){alert('No se pudo cargar la pieza: '+err.message);}e.target.value='';
  };
- $('playBtn').onclick=()=>{if(sim.time>=piece.order.length*5)sim.time=0;sim.blocked=null;sim.error=null;sim.playing=true;sim.last=null;$('playBtn').textContent='▶';$('playBtn').title='Reproduciendo';};
- $('pauseBtn').onclick=()=>{sim.playing=false;sim.last=null;$('playBtn').textContent='▶';$('playBtn').title='Continuar simulación';};
+ $('playBtn').onclick=()=>sim.playing?pausePlayback():startPlayback();
+ $('topPlayBtn').onclick=()=>sim.playing?pausePlayback():startPlayback();
+ $('pauseBtn').onclick=pausePlayback;
  $('restartBtn').onclick=()=>{resetPlayback();paintAll();};
- $('stepBtn').onclick=()=>{sim.playing=false;sim.last=null;sim.blocked=null;const i=Math.floor(sim.time/5);sim.time=Math.min(piece.order.length*5,(i+1)*5);paintAll();};
- $('timeline').oninput=e=>{sim.playing=false;sim.last=null;sim.blocked=null;sim.time=piece.order.length*5*Number(e.target.value)/1000;paintAll();};
+ $('stepBtn').onclick=()=>{pausePlayback();sim.blocked=null;const i=Math.floor(sim.time/5);sim.time=Math.min(piece.order.length*5,(i+1)*5);paintAll();};
+ $('timeline').oninput=e=>{pausePlayback();sim.blocked=null;sim.time=piece.order.length*5*Number(e.target.value)/1000;paintAll();};
  $('speed').onchange=e=>sim.speed=Number(e.target.value)||1;
  $('pauseOnPenetration').onchange=e=>{
   pauseOn2DPenetration=e.target.checked;
@@ -422,7 +444,7 @@ function configure(){
  if('ResizeObserver' in window)new ResizeObserver(paintAll).observe(document.querySelector('main'));
  setInterval(()=>$('clock').textContent=new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}),30000);
  $('clock').textContent=new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
- renderEditor();renderSetup();paintAll();renderProjectLibrary();requestAnimationFrame(tick);
+ renderEditor();renderSetup();paintAll();renderProjectLibrary();syncPlaybackButtons();requestAnimationFrame(tick);
  if(selectedLibraryId){try{const current=getLibraryPiece(localStorage,selectedLibraryId);
   $('libraryClient').value=current.client;
   $('libraryActiveLabel').textContent=
@@ -541,7 +563,7 @@ function renderGaugeReview(scan){
   button.setAttribute('aria-label','Ver revisión tope del golpe '+(op.operation+1)+
    ' pliegue '+(op.bend+1)+' a '+to.toFixed(2)+' segundos');
   button.onclick=()=>{
-   sim.playing=false;sim.last=null;sim.blocked=null;sim.time=to;
+   pausePlayback();sim.blocked=null;sim.time=to;
    document.querySelector('.nav[data-tab="simulacion"]')?.click();
    paintAll();
   };
@@ -1158,7 +1180,7 @@ function renderIncidentNavigator(check,st){
       ' · vista del golpe '+row.time.toFixed(2)+' s');
    button.append(number,severity,detail);
    button.addEventListener('click',()=>{
-    sim.playing=false;sim.last=null;sim.blocked=null;sim.time=row.time;
+    pausePlayback();sim.blocked=null;sim.time=row.time;
     paintAll();
    });
    return button;
@@ -1250,7 +1272,7 @@ function renderSimulationText(){
        const mark=document.createElement('span');mark.className='op-alert';mark.textContent='!';mark.setAttribute('aria-label','Advertencia geométrica');values.append(mark);
      }
      el.append(n,visual,values,menu);
-     el.addEventListener('click',()=>{sim.playing=false;sim.last=null;sim.blocked=null;sim.time=i*5;paintAll();});
+     el.addEventListener('click',()=>{pausePlayback();sim.blocked=null;sim.time=i*5;paintAll();});
      return el;
    }));
  }
@@ -1303,8 +1325,7 @@ function tick(now){
     {pauseOnPenetration:pauseOn2DPenetration});
    sim.time=checked.time;
    if(checked.blocked){
-    sim.playing=false;sim.last=null;sim.blocked=checked.issue;
-    $('playBtn').textContent='▶';
+    sim.blocked=checked.issue;pausePlayback();
     $('playBtn').title='Detenido por posible penetración 2D con el punzón';
    }else if(checked.looped){sim.time=0;sim.last=null;}
   }
@@ -1315,8 +1336,9 @@ function tick(now){
  }catch(error){
   sim.playing=false;sim.last=null;
   sim.error=error instanceof Error?error.message:String(error);
+  syncPlaybackButtons();
   const play=$('playBtn');
-  if(play){play.textContent='▶';play.title='Simulación detenida: revisar error';}
+  if(play)play.title='Simulación detenida: revisar error';
   const details=$('collisionDetails');
   if(details){details.classList.add('has-warning');
    details.textContent='⛔ Error de simulación: '+sim.error+'. Revisa los parámetros.';}
