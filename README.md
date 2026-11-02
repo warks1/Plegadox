@@ -1124,3 +1124,18 @@ PC no modifica geometrías industriales ni sustituye pruebas de colisión.
 
 **Pendiente industrial:** un DXF 2D simple no certifica el montaje, los radios reales, la dureza, la carrera, las tolerancias ni la seguridad de una trayectoria; sigue siendo necesaria la ficha del fabricante y la validación en taller.
 
+
+## R27 · Orientación física del punzón montado
+
+En Programación de pieza se puede elegir **Original / Invertido 180°**.
+La orientación del punzón queda guardada en la pieza y se comparte entre
+el modelo 2D de la máquina, la sección técnica, las miniaturas del montaje
+y el cribado de interferencias. Se invierte **todo el perfil** (incluido el
+escote de la pata de cabra), no solamente una etiqueta o icono.
+La herramienta de catálogo conserva intactas sus cotas y su contorno fuente.
+
+La orientación es **un estado de montaje global**, no una instrucción CNC
+de giro del punzón entre operaciones. Para cambiarla físicamente hay que
+detener la máquina, comprobar la admisibilidad de inversión del amarre,
+la longitud, el centrado y los despejes. No se afirma que un golpe sea
+seguro porque desaparezca un aviso 2D en la vista invertida.
