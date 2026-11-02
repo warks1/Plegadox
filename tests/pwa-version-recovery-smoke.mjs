@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
+import {readFileSync} from 'node:fs';
 import {chromium} from 'playwright';
 const server=spawn('python3',['-m','http.server','4305','--bind','127.0.0.1'],{stdio:'ignore'});
-const BUILD='PLEGADOX-20261102-R18';
+const BUILD=JSON.parse(readFileSync(new URL('../build-info.json',import.meta.url),'utf8')).build;
 let browser;
 try{
  browser=await chromium.launch({headless:true,args:['--no-sandbox']});
