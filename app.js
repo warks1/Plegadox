@@ -190,6 +190,7 @@ function changePiece(p,structural=false){
  if($('gaugeSideReview')){$('gaugeSideReview').dataset.bend='';
   $('gaugeSideReview').textContent='Referencia modificada. Compara ambos lados si necesitas comprobar los útiles 2D.';}
  if(structural)resetPlayback();
+ touchProgrammer?.resetSelection();
  renderEditor();renderSetup();paintAll();touchProgrammer?.render();
  window.dispatchEvent(new CustomEvent('plegadox:pieceChanged',{detail:piece}));
 }
@@ -1083,7 +1084,9 @@ function toolCard(tool,kind){
  const title=document.createElement('b');title.textContent=tool.reference||tool.name;
  const meta=document.createElement('span');meta.className='tool-card-measure';
  meta.textContent=kind==='punch'?
-  tool.angle+'° · R'+numbers((Number(tool.tip)||0)/2,2)+' · H'+tool.height+' mm'+(tool.type==='cabra'?' · Pata de cabra':''):
+  tool.angle+'° · R'+numbers((Number(tool.tip)||0)/2,2)+' · '+
+  (tool.profileStyle==='user-photo'?'H útil ':'H total ')+tool.height+' mm'+
+  (tool.type==='cabra'?' · Pata de cabra':''):
   'V'+tool.opening+' · '+tool.angle+'°'+
   (tool.shoulderRadius?' · R'+numbers(tool.shoulderRadius,2):'')+
   ' · H'+tool.height+' mm';
@@ -1091,7 +1094,7 @@ function toolCard(tool,kind){
  brand.textContent=tool.manufacturer||'Genérico';
  const notice=document.createElement('span');notice.className='tool-card-notice';
  notice.textContent=tool.importedDxf?'DXF · no verificado':
-  tool.verifiedSpecs?'Documentado':'Provisional';
+  tool.verifiedSpecs?'Cotas parciales · CAD pendiente':'Perfil provisional';
  notice.classList.add('px-data-status',tool.verifiedSpecs?'px-status--documentado':'px-status--provisional');
  notice.title=tool.importedDxf?
   'Perfil 2D importado de DXF local. Escala, orientación, montaje y colisiones no verificados.':
