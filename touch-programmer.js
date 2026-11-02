@@ -4,6 +4,7 @@
  * que no se pierden signos, orden, tipos de tope o ala de referencia.
  */
 import {normalized,profile} from './engine.js';
+import {flangeLengthFromMouseDrag} from './mouse-programmer.js';
 
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 export function editTouchPiece(input,action){
@@ -84,8 +85,18 @@ export function installTouchProgrammer({root,getPiece,onChange}){
  const zoomIn=root.querySelector('#touchProgramZoomIn');
  const zoomOut=root.querySelector('#touchProgramZoomOut');
  const resetView=root.querySelector('#touchProgramResetView');
+ const inputHint=root.querySelector('#touchInputHint');
  const state={type:'length',index:0,orderMode:false,selected:[],zoom:1,panX:0,panY:0,
-  pointers:new Map(),drag:null,ignoreClick:false};
+  pointers:new Map(),drag:null,ignoreClick:false,spaceHeld:false,
+  lastRender:null,pinchDistance:null};
+ const finePointer=()=>window.matchMedia?.('(pointer: fine)')?.matches??false;
+ const setInteractionMode=mode=>{
+  root.dataset.inputMode=mode;
+  if(inputHint)inputHint.textContent=mode==='mouse'?
+   'PC: clic para seleccionar · doble clic para escribir · arrastra el tramo para cambiar su longitud · rueda para zoom · arrastra el fondo para mover · Intro para confirmar.':
+   'Táctil: toca un ala o vértice, introduce la medida en el teclado; pellizca para zoom y desliza el fondo para mover.';
+ };
+ setInteractionMode(finePointer()?'mouse':'touch');
  const safeChange=(action)=>{
   try{onChange(editTouchPiece(getPiece(),action),true);
    const p=normalized(getPiece());
@@ -165,7 +176,7 @@ export function installTouchProgrammer({root,getPiece,onChange}){
       const selected=[...state.selected];state.orderMode=false;state.selected=[];
       orderBtn.setAttribute('aria-pressed','false');safeChange({type:'order',indices:selected});
      }else{
-      status.textContent='Orden: '+state.selected.length+'/'+p.angles.length+'. Toca el siguiente pliegue.';
+      status.textContent='Orden: '+state.selected.length+'/'+p.angles.length+'. Selecciona el siguiente pliegue.';
       render();
      }
     }else pick('angle',i);
@@ -191,7 +202,8 @@ export function installTouchProgrammer({root,getPiece,onChange}){
   if(document.activeElement!==input)input.value=String(n??0);
   inverse.disabled=state.type!=='angle';
   remove.disabled=state.type!=='length'||state.index<1||p.flanges.length<=2;
-  return {scale,mapped};
+  state.lastRender={scale,mapped,cx,cy};
+  return state.lastRender;
  }
  apply.onclick=()=>{
   const value=Number(input.value.replace(',','.'));
@@ -205,7 +217,7 @@ export function installTouchProgrammer({root,getPiece,onChange}){
  orderBtn.onclick=()=>{
   state.orderMode=!state.orderMode;state.selected=[];
   orderBtn.setAttribute('aria-pressed',String(state.orderMode));
-  status.textContent=state.orderMode?'Toca los círculos en orden de trabajo.':'Orden táctil cancelado.';
+  status.textContent=state.orderMode?'Selecciona los pliegues por orden de trabajo.':'Orden gráfico cancelado.';
   render();
  };
  pad.querySelectorAll('button[data-key]').forEach(button=>{
