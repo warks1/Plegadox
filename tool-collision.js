@@ -263,7 +263,7 @@ export function currentToolContact(piece,time=0){
  // No anticipar el golpe siguiente al redondear el último instante.
  const t=Math.floor(Math.max(0,Number(time)||0)*10+1e-9)/10;
  const key=JSON.stringify([p.flanges,p.angles,p.order,p.punch,p.die,p.thickness,
-  p.gaugeSideByBend,t]);
+  p.gaugeSideByBend,p.punchOrientation,t]);
  if(key!==cachedKey){cachedKey=key;cachedContact=inspectToolContact(p,t);}
  return cachedContact;
 }
