@@ -915,3 +915,34 @@ Este es **almacenamiento local del navegador**, no sincronización
 multidispositivo ni una base de datos respaldada en servidor.
 Para migrar piezas importantes usar «Descargar proyecto completo».
 El guardado en biblioteca no autoriza cortar ni plegar físicamente.
+
+## R19 · Contraste del desarrollo con medidas reales y registro de ensayos
+En Desarrollo se añaden entradas para **longitud plana REAL medida**,
+**radio interior REAL medido**, confirmación expresa de que las cotas y
+ángulos corresponden al programa, y observaciones de material/lote.
+
+El motor muestra la longitud calculada y el desvío con signo. Si los
+datos de radio/cotas son completos y el factor matemático queda entre
+0,15 y 0,60, **propone K** para esa geometría. Si el K requerido queda
+fuera de rango NO se trunca ni se aplica; se pide revisar dimensiones,
+radio, procedimiento de medición, herramienta o ángulos reales.
+
+El factor K propuesto **NUNCA se aplica automáticamente**: primero se
+guarda una medición local y después el operario debe pulsar
+«Aplicar K a esta pieza», que fija también el radio medido en esa pieza.
+No se extrapola a otra V, punzón, material, espesor, ancho, alas ni
+ángulos: cada registro lleva la combinación exacta y una clave técnica.
+El registro distingue mediciones introducidas del estado de verificación
+industrial (siempre NO acreditada). Se pueden guardar 120 registros,
+consultar los de la pieza y exportar un JSON.
+
+El backup completo R17 incluye ahora el historial de mediciones, manteniendo
+compatibilidad con los JSON R17/R18 que no tienen ese campo, restauración
+no destructiva, rechazo de ID duplicado con contenido diferente y rollback.
+El servicio PWA incluye el motor de mediciones para funcionar sin red.
+
+**Límite técnico:** el K inferido de una muestra no modela por sí mismo la
+recuperación elástica, el lote, ni valida el desarrollo de otras piezas.
+Los datos de longitud/radio/ángulo son declarados por el operario y se
+requieren múltiples muestras contrastadas en máquina y documentación.
+Ninguna medición equivale a certificado CNC o seguridad de colisiones.
