@@ -43,7 +43,7 @@ let pendingSequenceAdvice=null;
 let measurementInputKey=measurementKey(piece),lastSavedMeasurement=null;
 const geometryCache={key:null,result:null};
 function geometryReport(){
- const key=JSON.stringify([piece.flanges,piece.angles,piece.order,piece.thickness,piece.width,piece.material,piece.rmMPa,piece.punch,piece.die,piece.gaugeSideByBend,getV85().ramWidth,getV85().holderWidth]);
+ const key=JSON.stringify([piece.flanges,piece.angles,piece.order,piece.thickness,piece.width,piece.material,piece.rmMPa,piece.punch,piece.die,piece.punchOrientation,piece.gaugeSideByBend,getV85().ramWidth,getV85().holderWidth]);
  if(key!==geometryCache.key){
   const report=analyzeSequence(piece),tools=inspectSequenceTools(piece,6),
    sheetScan=scanSheetSequence(piece,15);
@@ -198,7 +198,7 @@ function configure(){
  const options=(select,items,current)=>{select.replaceChildren(...items.map(item=>{const o=document.createElement('option');o.value=item.id;o.textContent=item.name;return o;}));select.value=current;};
  options($('material'),MATERIALS,piece.material);options($('die'),DIES,piece.die);options($('punch'),PUNCHES,piece.punch);
  document.querySelectorAll('.nav').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.nav').forEach(n=>n.classList.toggle('active',n===btn));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id==='tab-'+btn.dataset.tab));paintAll();}));
- const entries=[['pieceName','name'],['material','material'],['thickness','thickness'],['width','width'],['die','die'],['punch','punch'],['datum','datum']];
+ const entries=[['pieceName','name'],['material','material'],['thickness','thickness'],['width','width'],['die','die'],['punch','punch'],['punchOrientation','punchOrientation'],['datum','datum']];
  for(const [id,key] of entries)$(id).addEventListener('change',e=>{
   const v=key==='thickness'||key==='width'?finite(e.target.value,piece[key]):e.target.value;
   // Si se confirma dos veces el mismo dato (por ejemplo, al salir
@@ -748,7 +748,7 @@ function syncMeasurementPiece(){
  renderMeasurementHistory();
 }
 function renderSetup(){
- for(const id of ['pieceName','material','thickness','width','die','punch'])$(id).value=piece[{pieceName:'name'}[id]||id];
+ for(const id of ['pieceName','material','thickness','width','die','punch','punchOrientation'])$(id).value=piece[{pieceName:'name'}[id]||id];
  $('datum').value=piece.datum;
  $('kFactor').value=piece.kFactor??getTooling(piece).material.k;
  $('insideRadius').value=piece.radius??numbers(development(piece).radius,2).replace(',','.');
@@ -1020,7 +1020,8 @@ function toolDrawing(){
  const {die,punch}=getTooling(piece);
  // La ficha y la vista de máquina comparten los mismos perfiles paramétricos.
  const punchSection=sectionPunch(punch),dieSection=sectionDie(die);
- const pPts=punchSection.points.map(([x,y])=>({x,y:y+14}));
+ const pPts=punchSection.points.map(([x,y])=>({
+  x:piece.punchOrientation==='reversed'?-x:x,y:y+14}));
  const dPts=dieSection.points.map(([x,y])=>({x,y:y-dieSection.height}));
  const all=[...pPts,...dPts],bb=bounds(all),spanX=Math.max(25,bb.maxX-bb.minX),
        spanY=Math.max(80,bb.maxY-bb.minY);
@@ -1043,6 +1044,8 @@ function toolDrawing(){
  line(ctx,[{x:vLeft.x,y:vLeft.y-8},{x:vRight.x,y:vRight.y-8}],'#e1a24e',2);
  text(ctx,'V'+die.opening+' / '+die.angle+'°',w/2,h-11,'#8bd3ff',12,'center');
  text(ctx,punch.name,10,18,'#9ecfee',12);
+ if(piece.punchOrientation==='reversed')
+  text(ctx,'PUNZÓN MONTADO INVERTIDO · CONTORNO COMPLETO',10,35,'#f9cc81',10);
  text(ctx,'MODELO PARAMÉTRICO · NO CAD',w-9,18,'#c49b65',9,'right');
 }
 /**
