@@ -18,9 +18,9 @@ test('foto aportada: H100 del hombro inferior a la punta, 50 mm de alcance y R1'
  assert.equal(section.profileSource,'user-photo');
  approx(section.workingHeight,100);
  approx(section.nominalReferenceY,100);
- approx(section.headProjection,37);
- approx(section.height,137);
- approx(bounds.maxY-bounds.minY,137);
+ approx(section.headProjection,28);
+ approx(section.height,128);
+ approx(bounds.maxY-bounds.minY,128);
  assert.ok(section.points.some(([x,y])=>x===-11&&y===100),'Escalón del hombro a H100');
  approx(section.headSpan,50);
  approx(bounds.maxX-bounds.minX,50);

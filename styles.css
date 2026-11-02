@@ -1380,3 +1380,9 @@ html{background:#020913}
 @media(max-width:650px){
  .header-status #topPlayBtn.led{width:42px;height:42px;min-width:42px;min-height:42px;font-size:18px}
 }
+
+/* R23: las cotas de ficha y perfil NO se esconden en el inspector. */
+.px-tool-height-audit{margin:7px 0;padding:9px 12px;line-height:1.5;
+ border:1px solid #5792ae;border-left:4px solid #35bdf4;
+ border-radius:7px;background:#0d2b40;color:#dff2ff;font-weight:700;
+ overflow-wrap:anywhere}

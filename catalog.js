@@ -12,6 +12,9 @@ export const CATALOG_SOURCES = {
   rolleriTMR1001630:{title:"Rolleri TMR100.16.30 · fabricante oficial",url:"https://www.rolleri.es/utillaje-127636/soluciones-de-plegado/utillaje/tipo-r2r3-matrices/tmr1001630",scope:"Matriz V16 / 30°, altura total 120 mm, altura útil 100 mm, radio R1,6 y amarre R2/R3; contorno 3D simplificado"}
 };
 
+// En el motor "tip" representa DIÁMETRO, mientras que el catálogo
+// AMADA imprime R0,6 (RADIO). Todas las referencias AMADA con R0,6
+// se codifican con tip=Ø1,2; antes se representaban erróneamente como R0,3.
 // verifiedSpecs significa que las dimensiones indicadas están respaldadas,
 // no que el perfil 2D/3D provisional esté validado.
 export const CATALOG_PUNCHES = [
@@ -22,13 +25,13 @@ export const CATALOG_PUNCHES = [
  {id:"conic-gn9-12-8806",manufacturer:"CONIC (tipo Amada)",reference:"GN9-12-8806",name:"Pata de cabra GN9 88° H120 R0,6",angle:88,tip:1.2,height:120,length:835,type:"cabra",neckOffset:9,mount:"Amada/Promecam",verifiedSpecs:true,profileAccuracy:"provisional",source:"conicAmadaType2022"},
  {id:"conic-gn6-12-8806",manufacturer:"CONIC (tipo Amada)",reference:"GN6-12-8806",name:"Pata de cabra GN6 88° H120 R0,6",angle:88,tip:1.2,height:120,length:835,type:"cabra",neckOffset:6,mount:"Amada/Promecam",verifiedSpecs:true,profileAccuracy:"provisional",source:"conicAmadaType2022"},
  {id:"trumpf-ow200-k",manufacturer:"Trumpf",reference:"OW200/K",name:"OW200/K · 86°",angle:86,tip:1,height:120,length:415,type:"recto",mount:"TRUMPF",verifiedSpecs:true,source:"trumpfTechnical",profileAccuracy:"provisional"},
- {id:"amada-831",manufacturer:"Amada",reference:"831",name:"831 · 30° H200",angle:30,tip:.6,height:200,length:415,type:"recto",mount:"Amada/Promecam",verifiedSpecs:true,source:"amada2025",profileAccuracy:"provisional"},
- {id:"amada-841-w55",manufacturer:"Amada",reference:"841 W55",name:"841 W55 · 60°",angle:60,tip:.6,height:200,length:415,type:"cabra",mount:"Amada/Promecam",verifiedSpecs:true,source:"amada2025",profileAccuracy:"provisional"},
- {id:"amada-841-w95",manufacturer:"Amada",reference:"841 W95",name:"841 W95 · 60°",angle:60,tip:.6,height:200,length:415,type:"cabra",mount:"Amada/Promecam",verifiedSpecs:true,source:"amada2025",profileAccuracy:"provisional"},
- {id:"amada-846-w110",manufacturer:"Amada",reference:"846 W110",name:"846 W110 · 86°",angle:86,tip:.6,height:200,length:415,type:"cabra",mount:"Amada/Promecam",verifiedSpecs:true,source:"amada2025",profileAccuracy:"provisional"},
- {id:"amada-804",manufacturer:"Amada",reference:"804",name:"804 · 86° H220",angle:86,tip:.6,height:220,length:415,type:"recto",mount:"Amada/Promecam",verifiedSpecs:true,source:"amada2025",profileAccuracy:"provisional"},
- {id:"amada-846-w55-h220",manufacturer:"Amada",reference:"846 W55 H220",name:"846 W55 · 86°",angle:86,tip:.6,height:220,length:415,type:"cabra",mount:"Amada/Promecam",verifiedSpecs:true,source:"amada2025",profileAccuracy:"provisional"},
- {id:"amada-846-w95-h220",manufacturer:"Amada",reference:"846 W95 H220",name:"846 W95 · 86°",angle:86,tip:.6,height:220,length:415,type:"cabra",mount:"Amada/Promecam",verifiedSpecs:true,source:"amada2025",profileAccuracy:"provisional"},
+ {id:"amada-831",manufacturer:"Amada",reference:"831",name:"831 · 30° H200",angle:30,tip:1.2,height:200,length:415,type:"recto",mount:"Amada/Promecam",verifiedSpecs:true,source:"amada2025",profileAccuracy:"provisional"},
+ {id:"amada-841-w55",manufacturer:"Amada",reference:"841 W55",name:"841 W55 · 60°",angle:60,tip:1.2,height:200,length:415,type:"cabra",mount:"Amada/Promecam",verifiedSpecs:true,source:"amada2025",profileAccuracy:"provisional"},
+ {id:"amada-841-w95",manufacturer:"Amada",reference:"841 W95",name:"841 W95 · 60°",angle:60,tip:1.2,height:200,length:415,type:"cabra",mount:"Amada/Promecam",verifiedSpecs:true,source:"amada2025",profileAccuracy:"provisional"},
+ {id:"amada-846-w110",manufacturer:"Amada",reference:"846 W110",name:"846 W110 · 86°",angle:86,tip:1.2,height:200,length:415,type:"cabra",mount:"Amada/Promecam",verifiedSpecs:true,source:"amada2025",profileAccuracy:"provisional"},
+ {id:"amada-804",manufacturer:"Amada",reference:"804",name:"804 · 86° H220",angle:86,tip:1.2,height:220,length:415,type:"recto",mount:"Amada/Promecam",verifiedSpecs:true,source:"amada2025",profileAccuracy:"provisional"},
+ {id:"amada-846-w55-h220",manufacturer:"Amada",reference:"846 W55 H220",name:"846 W55 · 86°",angle:86,tip:1.2,height:220,length:415,type:"cabra",mount:"Amada/Promecam",verifiedSpecs:true,source:"amada2025",profileAccuracy:"provisional"},
+ {id:"amada-846-w95-h220",manufacturer:"Amada",reference:"846 W95 H220",name:"846 W95 · 86°",angle:86,tip:1.2,height:220,length:415,type:"cabra",mount:"Amada/Promecam",verifiedSpecs:true,source:"amada2025",profileAccuracy:"provisional"},
  {id:"bystronic-rfa-demo",manufacturer:"Bystronic",reference:"RF-A (ejemplo)",name:"RF-A · PERFIL PROVISIONAL",angle:88,tip:1,height:120,length:415,type:"recto",mount:"Bystronic RF-A",verifiedSpecs:false,source:"bystronic",profileAccuracy:"provisional"},
  {id:"bystronic-r-demo",manufacturer:"Bystronic",reference:"Beyeler R (ejemplo)",name:"Beyeler R · PROVISIONAL",angle:30,tip:.8,height:120,length:415,type:"cabra",mount:"Bystronic R",verifiedSpecs:false,source:"mecosTooling2022",profileAccuracy:"provisional"}
 ];
