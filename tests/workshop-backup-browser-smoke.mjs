@@ -27,6 +27,8 @@ try{
   const audit=JSON.parse(readFileSync(await auditDownload.path(),'utf8'));
   assert.equal(audit.canApproveForMachine,false);
   assert.ok(audit.issues.some(x=>x.code==='machine-3d'));
+  await page.locator('#librarySaveBtn').click();
+  assert.equal(await page.locator('#libraryItems .px-library-entry').count(),1);
   const downEvent=page.waitForEvent('download');
   await page.locator('#exportCompleteProject').click();
   const backupDownload=await downEvent;
@@ -35,6 +37,9 @@ try{
   assert.equal(backup.piece.order.join(','),'0,1,3,2');
   assert.ok(backup.machine.stop);
   assert.ok(Array.isArray(backup.importedTools));
+  assert.equal(backup.library.length,1);
+  assert.equal(backup.library[0].revision,1);
+  assert.equal(backup.activeLibraryId,backup.library[0].id);
   await page.locator('#pieceName').fill('MODIFICADA');
   await page.locator('#pieceName').dispatchEvent('change');
   assert.equal(await page.locator('#pieceName').inputValue(),'MODIFICADA');
@@ -44,6 +49,7 @@ try{
   await page.waitForFunction(()=>window.PLEGADOX_STATE().piece.name===
    'Omega · ejemplo geométrico');
   assert.match(await page.locator('#completeProjectStatus').textContent(),/Recuperado/);
+  assert.equal(await page.locator('#libraryItems .px-library-entry').count(),1);
   // Una importación corrupta no puede borrar el proyecto.
   await page.locator('#completeProjectInput').setInputFiles({
    name:'corrupto.json',mimeType:'application/json',
