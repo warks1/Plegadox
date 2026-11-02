@@ -1,5 +1,5 @@
 // PlegadoX · caché offline estática. Se versiona para no arrastrar JS obsoleto.
-const CACHE='plegadox-static-0.9.0-workshop-backup-17';
+const CACHE='plegadox-static-0.9.0-project-library-18';
 const APP_FILES=[
  "./",
  "./app.js",
@@ -39,6 +39,7 @@ const APP_FILES=[
  "./tooling-advisor.js",
  "./workshop-audit.js",
  "./project-backup.js",
+ "./project-library.js",
  "./tool-dxf.js",
  "./tool-import-ui.js",
  "./validation.js",
