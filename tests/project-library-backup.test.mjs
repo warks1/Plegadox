@@ -6,7 +6,7 @@ import {TOOL_DXF_STORAGE_KEY} from '../tool-dxf.js';
 import {PROJECT_LIBRARY_KEY,ACTIVE_LIBRARY_ID,readProjectLibrary,
  saveLibraryPiece,setActiveLibraryId} from '../project-library.js';
 import {PIECE_KEY,buildProjectBackup,parseProjectBackup,
- restoreProjectBackup} from '../project-backup.js';
+ restoreProjectBackup,readStoredToolsForBackup} from '../project-backup.js';
 
 function store(initial={},failOnceOn=null){
  const map=new Map(Object.entries(initial)),calls=[];
@@ -119,5 +119,20 @@ test('biblioteca incompleta, referencias erróneas e ID activo inválido bloquea
   assert.throws(()=>restoreProjectBackup(dest,corrupt));
   assert.equal(dest.calls.length,calls);
   assert.equal(dest.getItem(PIECE_KEY),'ORIGINAL');
+ }
+});
+
+test('DXF locales dañados nunca se borran ni filtran durante importación o backup',()=>{
+ const data=backup(sourceLibrary());
+ for(const bad of ['{json-invalido',
+  JSON.stringify([{id:'user-dxf-punch-roto',importedDxf:true}]),
+  JSON.stringify(Array.from({length:31},()=>({id:'user-dxf-punch-a'})))]){
+  const st=store({[TOOL_DXF_STORAGE_KEY]:bad,[PIECE_KEY]:'ORIGINAL'});
+  const calls=st.calls.length;
+  assert.throws(()=>readStoredToolsForBackup(st));
+  assert.throws(()=>restoreProjectBackup(st,data));
+  assert.equal(st.calls.length,calls);
+  assert.equal(st.getItem(TOOL_DXF_STORAGE_KEY),bad);
+  assert.equal(st.getItem(PIECE_KEY),'ORIGINAL');
  }
 });
