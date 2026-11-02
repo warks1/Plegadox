@@ -190,6 +190,7 @@ function changePiece(p,structural=false){
  if($('gaugeSideReview')){$('gaugeSideReview').dataset.bend='';
   $('gaugeSideReview').textContent='Referencia modificada. Compara ambos lados si necesitas comprobar los útiles 2D.';}
  if(structural)resetPlayback();
+ touchProgrammer?.resetSelection();
  renderEditor();renderSetup();paintAll();touchProgrammer?.render();
  window.dispatchEvent(new CustomEvent('plegadox:pieceChanged',{detail:piece}));
 }
