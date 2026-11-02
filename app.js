@@ -312,10 +312,13 @@ function configure(){
   const status=$('completeProjectStatus');
   try{
    const backup=buildProjectBackup({piece,machine:getV85(),
-    tools:loadImportedTools(localStorage)});
+    tools:loadImportedTools(localStorage),
+    library:readProjectLibrary(localStorage),
+    activeLibraryId:getActiveLibraryId(localStorage)});
    downloadProjectJson(backup,projectSafeName()+'-BACKUP-COMPLETO.json');
-   status.textContent='Copia descargada: pieza, máquina y '+backup.importedTools.length+
-    ' herramientas DXF. Comprueba el archivo antes de borrar datos locales.';
+   status.textContent='Copia descargada: pieza activa, V85, '+backup.importedTools.length+
+    ' herramientas DXF y '+backup.library.length+
+    ' piezas con sus revisiones. Comprueba el archivo antes de borrar datos locales.';
    status.dataset.state='success';
   }catch(err){status.textContent='Backup no generado: '+err.message;status.dataset.state='error';}
  };
@@ -334,10 +337,18 @@ function configure(){
     option.textContent=tool.name;sel.append(option);
    }
    updateV85(restored.machine);
-   detachLibraryPiece();
+   if(restored.library===null)detachLibraryPiece();
+   else{
+    selectedLibraryId=restored.activeLibraryId;
+    if($('libraryClient'))$('libraryClient').value=
+     restored.library.find(x=>x.id===selectedLibraryId)?.client||'';
+   }
    changePiece(restored.piece,true);
-   status.textContent='Recuperado: pieza, V85 y '+restored.importedTools.length+
-    ' herramientas DXF. No se han borrado otros útiles guardados.';
+   renderProjectLibrary();
+   status.textContent='Recuperado: pieza, V85, '+restored.importedTools.length+
+    ' herramientas DXF'+(restored.library===null?
+    ' (backup antiguo: biblioteca local conservada).':
+    ' y '+restored.library.length+' piezas de biblioteca. Los proyectos locales no se han borrado.');
    status.dataset.state='success';
   }catch(err){status.textContent='Restauración rechazada: '+err.message;
    status.dataset.state='error';}
