@@ -87,7 +87,10 @@ export function installTouchProgrammer({root,getPiece,onChange}){
  const state={type:'length',index:0,orderMode:false,selected:[],zoom:1,panX:0,panY:0,
   pointers:new Map(),drag:null,ignoreClick:false};
  const safeChange=(action)=>{
-  try{onChange(editTouchPiece(getPiece(),action),true);status.textContent='Pieza modificada. Comprueba el desarrollo y la simulación.';render();}
+  try{onChange(editTouchPiece(getPiece(),action),true);
+   const p=normalized(getPiece());
+   state.index=clamp(state.index,0,(state.type==='length'?p.flanges.length:p.angles.length)-1);
+   status.textContent='Pieza modificada. Comprueba el desarrollo y la simulación.';render();}
   catch(error){status.textContent=error.message;}
  };
  const pick=(type,index)=>{
