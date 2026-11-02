@@ -1,5 +1,5 @@
 // PlegadoX · caché offline estática. Se versiona para no arrastrar JS obsoleto.
-const CACHE='plegadox-static-0.9.1-header-play-reorient-22';
+const CACHE='plegadox-static-0.9.1-tool-height-geometry-23';
 const APP_FILES=[
  "./",
  "./app.js",
@@ -37,6 +37,7 @@ const APP_FILES=[
  "./technical-section.js",
  "./tool-collision.js",
  "./tool-profiles.js",
+ "./tool-height-audit.js",
  "./tooling-advisor.js",
  "./workshop-audit.js",
  "./project-backup.js",
