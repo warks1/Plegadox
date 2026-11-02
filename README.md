@@ -915,3 +915,26 @@ Este es **almacenamiento local del navegador**, no sincronización
 multidispositivo ni una base de datos respaldada en servidor.
 Para migrar piezas importantes usar «Descargar proyecto completo».
 El guardado en biblioteca no autoriza cortar ni plegar físicamente.
+
+
+## R19 · Copia integral de biblioteca y revisiones sin sobrescritura
+
+La copia descargable del proyecto incluye ahora **toda la biblioteca local** (hasta
+60 piezas y las 8 revisiones históricas por pieza), el identificador de la
+pieza activa, los útiles DXF y la configuración V85. Antes, el botón de
+«proyecto completo» de R17/R18 sólo exportaba la pieza activa.
+
+- El formato JSON v1 permanece compatible: las copias antiguas sin campo
+  `library` se importan sin borrar ni reemplazar la biblioteca del dispositivo.
+- Las piezas importadas se fusionan por ID. Un ID ya existente con revisiones
+  o contenido diferente **bloquea toda la importación**: el operario debe
+  conservar ambas copias y resolver la discrepancia, nunca se sobrescribe.
+- Se comprueban geometría, referencias de útiles y revisiones históricas.
+  Una referencia DXF perdida impide crear un backup incompleto.
+- Restauración atómica de piezas, historial, útiles, máquina y selección activa;
+  intenta revertir cualquier escritura fallida, incluida la clave fallida.
+- La copia sigue siendo un archivo local, no una copia en la nube, ni valida
+  el plegado CNC o las colisiones 3D industriales.
+
+Pruebas: `tests/project-library-backup.test.mjs` más smoke en navegador
+PC y móvil. Backup antiguo `01/10/27` sin alteraciones.
