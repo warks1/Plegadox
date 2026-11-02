@@ -376,7 +376,10 @@ function configure(){
  renderEditor();renderSetup();paintAll();renderProjectLibrary();requestAnimationFrame(tick);
  if(selectedLibraryId){try{const current=getLibraryPiece(localStorage,selectedLibraryId);
   $('libraryClient').value=current.client;
-  $('libraryActiveLabel').textContent='Última guardada: '+current.piece.name+' · r'+current.revision;
+  $('libraryActiveLabel').textContent=
+   JSON.stringify(piece)===JSON.stringify(current.piece)?
+    'Última guardada: '+current.piece.name+' · r'+current.revision:
+    'Cambios sin guardar en la revisión de la biblioteca';
  }catch{selectedLibraryId=null;}}
 }
 function bindViewport(canvas,kind){
