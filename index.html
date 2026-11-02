@@ -30,6 +30,44 @@
 <section class="panel" id="tab-programacion">
 <div class="page-title"><div><h1>Programación de pieza</h1><p>Introduce las alas, el sentido real de cada pliegue y el orden de fabricación.</p></div><div class="actions"><button id="newBtn">Nueva pieza</button><button id="loadBtn">Importar JSON</button><button id="exportBtn">Exportar JSON</button><input type="file" id="fileInput" accept=".json,application/json" hidden></div></div>
 <div class="formgrid"><label>Nombre de pieza<input id="pieceName" maxlength="80"></label><label>Material<select id="material"></select></label><label>Espesor (mm)<input id="thickness" type="number" min=".2" max="30" step=".1" inputmode="decimal"></label><label>Ancho de pieza (mm)<input id="width" type="number" min="1" max="10000" step="1" inputmode="decimal"></label><label>Matriz / V<select id="die"></select></label><label>Punzón<select id="punch"></select></label></div>
+<article class="card px-touch-program" id="touchProgramPanel">
+<div class="cardhead"><h2>Programación táctil · como en la plegadora</h2><span class="smalllabel">Toca la pieza para crear y modificar pliegues</span></div>
+<p class="hint">Toca un tramo para introducir su longitud. Toca un círculo para editar el ángulo positivo o negativo; el número interior representa el orden de plegado. Pulsa el símbolo + del extremo para añadir otra ala. Pellizca para ampliar y arrastra el fondo para mover el dibujo.</p>
+<div class="px-touch-editor">
+<div class="px-touch-drawing">
+<div class="px-touch-toolbar"><span id="touchProgramSelection" role="status">Selecciona un ala</span>
+<button type="button" id="touchProgramOrderBtn" aria-pressed="false">Orden tocando pliegues</button>
+<button type="button" id="touchProgramZoomIn" aria-label="Ampliar dibujo">＋</button>
+<button type="button" id="touchProgramZoomOut" aria-label="Alejar dibujo">−</button>
+<button type="button" id="touchProgramResetView" aria-label="Centrar pieza">⌖</button></div>
+<svg id="touchProgramSvg" viewBox="0 0 820 380" xmlns="http://www.w3.org/2000/svg" aria-label="Dibujo táctil de pieza con alas, ángulos y orden de plegado" role="img"></svg>
+<div class="px-touch-hint" id="touchProgramStatus" role="status" aria-live="polite">Selecciona un tramo o un vértice para editarlo.</div>
+</div>
+<div class="px-touch-keyboard">
+<strong id="touchProgramScreen">Ala 1 · mm</strong>
+<input type="text" id="touchValue" inputmode="decimal" autocomplete="off" aria-label="Medida o ángulo seleccionado" value="50">
+<div id="touchProgramPad" class="px-touch-pad"><button type="button" data-key="7" aria-label="7">7</button>
+<button type="button" data-key="8" aria-label="8">8</button>
+<button type="button" data-key="9" aria-label="9">9</button>
+<button type="button" data-key="4" aria-label="4">4</button>
+<button type="button" data-key="5" aria-label="5">5</button>
+<button type="button" data-key="6" aria-label="6">6</button>
+<button type="button" data-key="1" aria-label="1">1</button>
+<button type="button" data-key="2" aria-label="2">2</button>
+<button type="button" data-key="3" aria-label="3">3</button>
+<button type="button" data-key="sign" aria-label="Cambiar signo">±</button>
+<button type="button" data-key="0" aria-label="0">0</button>
+<button type="button" data-key="decimal" aria-label="Coma decimal">,</button>
+<button type="button" data-key="clear" aria-label="Limpiar">C</button>
+<button type="button" data-key="back" aria-label="Borrar último">⌫</button></div>
+<div class="px-touch-commands"><button id="touchProgramApply" type="button">✓ Confirmar medida</button>
+<button id="touchProgramInvert" type="button">Invertir ± ángulo</button>
+<button id="touchProgramAdd" type="button">＋ Añadir ala</button>
+<button id="touchProgramRemove" type="button">Eliminar ala</button></div>
+</div>
+</div>
+<p class="hint">La pieza se actualiza también en la tabla, simulación 2D/3D y cálculo de herramientas. El dibujo es un perfil geométrico, no una comprobación de colisiones físicas.</p>
+</article>
 <article class="card px-tool-advisor" id="toolAdvisorPanel" aria-labelledby="toolAdvisorTitle">
 <div class="cardhead"><h2 id="toolAdvisorTitle">Asesor de matriz V y punzón</h2><span class="smalllabel">RECOMENDACIÓN AUTOMÁTICA · SIN CAMBIAR TU SELECCIÓN</span></div>
 <p class="hint">Se actualiza al cambiar material, espesor, ancho, longitudes de las alas, ángulos o radio. Compara los útiles disponibles y la fuerza estimada de la Trumpf V85.</p>
