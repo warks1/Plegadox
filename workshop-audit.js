@@ -8,6 +8,7 @@ import {getV85} from './machine-config.js';
 import {selectionCompatibility} from './catalog.js';
 import {inspectSequenceTools} from './tool-collision.js';
 import {scanSheetSequence} from './sheet-interference.js';
+import {scanGaugeSequence} from './gauge-sequence-review.js';
 
 const round=n=>Math.round(n*100)/100;
 function item(code,level,message,bend=null){
@@ -57,10 +58,27 @@ export function auditForWorkshop(input,options={}){
  push('material-test','missing','Faltan ensayos/calibración de radios, recuperación elástica y deducciones con material/lote y útiles reales.');
  const toolScan=options.toolScan||inspectSequenceTools(p,3);
  const sheetScan=options.sheetScan||scanSheetSequence(p,8);
+ const gaugeScan=options.gaugeScan||scanGaugeSequence(p,{samplesPerOperation:18});
  if(toolScan.warningCount>0)
   push('tool-2d','review',toolScan.warningCount+' operación(es) con candidatos de interferencia 2D entre chapa y herramientas; inspeccionar cada golpe.');
  if(sheetScan.warningCount>0)
   push('sheet-2d','review',sheetScan.warningCount+' operación(es) con candidatos de auto-interferencia 2D de chapa.');
+ // Recorre también retirada y cambio de pliegue; el visor puntual no bastaba.
+ // Alertas de sección, NO bloqueo industrial ni acreditación del contacto CNC.
+ for(const op of gaugeScan.operations){
+  for(const finding of op.findings){
+   const time=round(finding.time);
+   const detail='Golpe '+(op.operation+1)+' · pliegue P'+(op.bend+1)+
+    ' · '+(op.stopNumber===2?'Support 2':'Stop 1')+
+    ' · t='+time+' s: '+finding.reason+'.';
+   push('gauge-'+finding.kind,'review',detail,op.bend);
+  }
+  if(!op.contactObserved)
+   push('gauge-unconfirmed','review','Golpe '+(op.operation+1)+
+    ' · pliegue P'+(op.bend+1)+
+    ': no se observó contacto nominal en los '+op.samples+
+    ' instantes muestreados; NO equivale a que el tope no toque físicamente la chapa.',op.bend);
+ }
  if(p.angles.some(a=>Math.abs(a)>0&&Math.abs(a)!==90))
   push('non90','review','Ángulos de plegado distintos de 90°: confirmar radio, apoyo y recuperaciones reales.');
  const block=issues.filter(i=>i.level==='block');
@@ -77,7 +95,9 @@ export function auditForWorkshop(input,options={}){
   force:{estimated:force.estimated,tonnes:force.estimated?round(force.tonneForce):null,
    loadPercent:force.estimated?round(force.loadPercent):null},
   issues,summary:{blocks:block.length,missing:missing.length,reviews:review.length,
-   toolWarnings:toolScan.warningCount,sheetWarnings:sheetScan.warningCount},
+   toolWarnings:toolScan.warningCount,sheetWarnings:sheetScan.warningCount,
+   gaugeWarnings:gaugeScan.warningCount,
+   gaugeContactNotObserved:gaugeScan.contactNotObserved},gaugeScan,
   status:'SIN_VALIDACION_INDUSTRIAL',verified:false,canApproveForMachine:false,
   limitations:'Vista previa 2D/2.5D. Sin volumetría CAD verificada, calibración ni verificación CNC. Este informe no autoriza fabricación.'};
 }
