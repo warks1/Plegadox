@@ -20,6 +20,7 @@ import {technicalScene} from './technical-section.js';
 import {recommendTooling} from './tooling-advisor.js';
 import {auditForWorkshop} from './workshop-audit.js';
 import {buildProjectBackup,restoreProjectBackup} from './project-backup.js';
+import {readProjectLibrary,saveLibraryPiece,getLibraryPiece,deleteLibraryPiece,setActiveLibraryId,getActiveLibraryId} from './project-library.js';
 import {loadImportedTools,registerImportedTools,persistImportedTool} from './tool-dxf.js';
 import {setupToolDxfImporter} from './tool-import-ui.js';
 registerCatalogue(DIES,PUNCHES);
@@ -28,6 +29,8 @@ registerImportedTools(DIES,PUNCHES,loadImportedTools(
 const $=id=>document.getElementById(id);
 const storeKey='plegadox:piece:v1';
 let piece=restore();
+let selectedLibraryId=null;
+try{selectedLibraryId=getActiveLibraryId(localStorage);}catch{}
 let sim={playing:false,time:0,last:null,speed:1,blocked:null,error:null};
 let pauseOn2DPenetration=false; // Vista previa continua por defecto.
 let camera={yaw:-.62,pitch:.45,zoom:1};
@@ -54,21 +57,101 @@ function restore(){try{const saved=localStorage.getItem(storeKey);return normali
 function persist(){try{localStorage.setItem(storeKey,JSON.stringify(piece));}catch{}}
 function save(){
  persist();
- // Conservar el icono SVG al confirmar el guardado (sin sustituir su DOM).
+ const message=$('libraryActiveLabel');
+ try{
+  const current=saveLibraryPiece(localStorage,piece,{id:selectedLibraryId,
+   client:$('libraryClient')?.value||''});
+  selectedLibraryId=current.id;
+  setActiveLibraryId(localStorage,current.id);
+  if(message)message.textContent='Guardada: '+current.piece.name+
+   ' · revisión '+current.revision;
+  renderProjectLibrary();
+ }catch(error){
+  if(message)message.textContent='No se ha podido guardar en biblioteca: '+error.message;
+  return;
+ }
  const button=$('saveBtn');
  if(!button)return;
  button.classList.add('is-saved');
- button.title='Guardado en este dispositivo';
- button.setAttribute('aria-label','Guardado en este dispositivo');
+ button.title='Guardado en biblioteca de este dispositivo';
+ button.setAttribute('aria-label','Guardado en biblioteca local');
  setTimeout(()=>{
   button.classList.remove('is-saved');
   button.title='Guardar pieza';
   button.setAttribute('aria-label','Guardar pieza');
  },1500);
 }
+function detachLibraryPiece(){
+ selectedLibraryId=null;
+ try{setActiveLibraryId(localStorage,null);}catch{}
+ if($('libraryClient'))$('libraryClient').value='';
+ if($('libraryActiveLabel'))$('libraryActiveLabel').textContent=
+  'Pieza activa sin guardar en la biblioteca';
+ renderProjectLibrary();
+}
+function renderProjectLibrary(){
+ const host=$('libraryItems'),current=$('libraryActiveLabel');
+ if(!host)return;
+ host.replaceChildren();
+ let list;
+ try{list=readProjectLibrary(localStorage);}
+ catch(err){if(current)current.textContent='Biblioteca no disponible: '+err.message;return;}
+ if(!list.length){
+  const hint=document.createElement('p');hint.className='hint';
+  hint.textContent='Aún no hay piezas guardadas. Pulsa Guardar pieza en biblioteca.';
+  host.append(hint);return;
+ }
+ for(const entry of list){
+  const card=document.createElement('div');card.className='px-library-entry';
+  if(entry.id===selectedLibraryId)card.classList.add('selected');
+  const name=document.createElement('strong');name.textContent=entry.piece.name;
+  const details=document.createElement('small');
+  details.textContent=(entry.client?entry.client+' · ':'')+
+   'r'+entry.revision+' · '+entry.piece.material+' · '+
+   entry.piece.thickness+' mm · '+entry.piece.angles.length+' pliegues';
+  const actions=document.createElement('div');actions.className='inline-actions';
+  const btn=(label,callback)=>{
+   const b=document.createElement('button');b.type='button';b.className='mini';
+   b.textContent=label;b.onclick=callback;actions.append(b);
+  };
+  const open=revision=>{
+   let loaded;
+   try{loaded=getLibraryPiece(localStorage,entry.id,{revision});}
+   catch(err){if(current)current.textContent=err.message;return;}
+   if(JSON.stringify(piece)!==JSON.stringify(loaded.piece)&&
+    !window.confirm('¿Abrir esta pieza? Los cambios sin guardar en la biblioteca se perderán.'))return;
+   selectedLibraryId=entry.id;
+   try{setActiveLibraryId(localStorage,entry.id);}catch{}
+   changePiece(loaded.piece,true);
+   if($('libraryClient'))$('libraryClient').value=entry.client;
+   if(current)current.textContent='Abierta '+entry.piece.name+
+    ' · r'+loaded.revision+(loaded.restoredFromHistory?' (revisión anterior sin guardar)':'');
+   renderProjectLibrary();
+  };
+  btn('Abrir',()=>open('latest'));
+  if(entry.history.length){
+   const previous=entry.history.at(-1);
+   btn('Abrir r'+previous.revision,()=>open(previous.revision));
+  }
+  btn('Eliminar',()=>{
+   if(!window.confirm('¿Eliminar '+entry.piece.name+
+    ' de este navegador, incluidas sus revisiones?'))return;
+   try{
+    deleteLibraryPiece(localStorage,entry.id);
+    if(selectedLibraryId===entry.id){selectedLibraryId=null;
+     if(current)current.textContent='Pieza eliminada de la biblioteca (la vista activa se conserva).';}
+    renderProjectLibrary();
+   }catch(err){if(current)current.textContent=err.message;}
+  });
+  card.append(name,details,actions);host.append(card);
+ }
+}
 function resetPlayback(){sim.time=0;sim.last=null;sim.playing=false;sim.blocked=null;sim.error=null;$('playBtn').textContent='▶';$('playBtn').title='Reproducir simulación';}
 function changePiece(p,structural=false){
  piece=normalized(p);persist();sim.blocked=null;sim.error=null;
+ if($('libraryActiveLabel'))$('libraryActiveLabel').textContent=
+  selectedLibraryId?'Cambios sin guardar en la revisión de la biblioteca':
+  'Pieza activa sin guardar en la biblioteca';
  // La selección por toques pertenece a la geometría anterior. Incluso si
  // cambian los índices/número de alas, no conservar pliegues obsoletos.
  if(touchOrderEnabled||chosenTouchOrder.length){
@@ -110,8 +193,8 @@ function configure(){
   }
   changePiece({...piece,rmMPa:raw===''?null:Number(raw)});
  });
- $('newBtn').onclick=()=>changePiece({name:'Nueva pieza',flanges:[100,100],angles:[90],order:[0],material:'s235',thickness:2,width:500,die:'v16',punch:'straight88'},true);
- $('sampleBtn').onclick=()=>changePiece(EXAMPLE,true);
+ $('newBtn').onclick=()=>{detachLibraryPiece();changePiece({name:'Nueva pieza',flanges:[100,100],angles:[90],order:[0],material:'s235',thickness:2,width:500,die:'v16',punch:'straight88'},true);};
+ $('sampleBtn').onclick=()=>{detachLibraryPiece();changePiece(EXAMPLE,true);};
  $('addFlange').onclick=()=>{if(piece.flanges.length>=20)return;changePiece({...piece,flanges:[...piece.flanges,50],angles:[...piece.angles,90],order:[...piece.order,piece.angles.length],stopByBend:[...piece.stopByBend,1],gaugeSideByBend:[...piece.gaugeSideByBend,'auto']},true);};
  $('resetOrder').onclick=()=>changePiece({...piece,order:piece.angles.map((_,i)=>i)},true);
  for(const value of [1,2])$('chooseGauge'+value).onclick=()=>{
@@ -199,6 +282,7 @@ function configure(){
  $('touchOrderMode').onclick=toggleTouchOrder;
  $('finalCanvas').addEventListener('pointerdown',pickBendFromDrawing);
  $('saveBtn').onclick=save;
+ $('librarySaveBtn').onclick=save;
  const downloadDxf=(content,suffix)=>{
   const filename=(piece.name.replace(/[^a-z0-9áéíóú_-]+/gi,'-').slice(0,45)||'pieza')+
     '-'+suffix+'.dxf';
@@ -250,6 +334,7 @@ function configure(){
     option.textContent=tool.name;sel.append(option);
    }
    updateV85(restored.machine);
+   detachLibraryPiece();
    changePiece(restored.piece,true);
    status.textContent='Recuperado: pieza, V85 y '+restored.importedTools.length+
     ' herramientas DXF. No se han borrado otros útiles guardados.';
@@ -262,7 +347,7 @@ function configure(){
  $('loadBtn').onclick=()=>$('fileInput').click();
  $('fileInput').onchange=async e=>{
  const file=e.target.files?.[0];if(!file)return;
- try{if(file.size>1024*1024)throw new Error('Archivo demasiado grande');const data=JSON.parse(await file.text());if(!Array.isArray(data.flanges)||!Array.isArray(data.angles))throw new Error('El JSON no contiene alas y pliegues');changePiece(data,true);}catch(err){alert('No se pudo cargar la pieza: '+err.message);}e.target.value='';
+ try{if(file.size>1024*1024)throw new Error('Archivo demasiado grande');const data=JSON.parse(await file.text());if(!Array.isArray(data.flanges)||!Array.isArray(data.angles))throw new Error('El JSON no contiene alas y pliegues');detachLibraryPiece();changePiece(data,true);}catch(err){alert('No se pudo cargar la pieza: '+err.message);}e.target.value='';
  };
  $('playBtn').onclick=()=>{if(sim.time>=piece.order.length*5)sim.time=0;sim.blocked=null;sim.error=null;sim.playing=true;sim.last=null;$('playBtn').textContent='▶';$('playBtn').title='Reproduciendo';};
  $('pauseBtn').onclick=()=>{sim.playing=false;sim.last=null;$('playBtn').textContent='▶';$('playBtn').title='Continuar simulación';};
@@ -288,7 +373,14 @@ function configure(){
  if('ResizeObserver' in window)new ResizeObserver(paintAll).observe(document.querySelector('main'));
  setInterval(()=>$('clock').textContent=new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}),30000);
  $('clock').textContent=new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
- renderEditor();renderSetup();paintAll();requestAnimationFrame(tick);
+ renderEditor();renderSetup();paintAll();renderProjectLibrary();requestAnimationFrame(tick);
+ if(selectedLibraryId){try{const current=getLibraryPiece(localStorage,selectedLibraryId);
+  $('libraryClient').value=current.client;
+  $('libraryActiveLabel').textContent=
+   JSON.stringify(piece)===JSON.stringify(current.piece)?
+    'Última guardada: '+current.piece.name+' · r'+current.revision:
+    'Cambios sin guardar en la revisión de la biblioteca';
+ }catch{selectedLibraryId=null;}}
 }
 function bindViewport(canvas,kind){
  let last=null,dist=null;const points=new Map();
