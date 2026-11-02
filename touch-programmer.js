@@ -124,9 +124,14 @@ export function installTouchProgrammer({root,getPiece,onChange}){
   mapped.slice(0,-1).forEach((p0,i)=>{
    const p1=mapped[i+1],mx=(p0.x+p1.x)/2,my=(p0.y+p1.y)/2;
    const selected=state.type==='length'&&state.index===i&&!state.orderMode;
-   const target=marker('line',{x1:p0.x,y1:p0.y,x2:p1.x,y2:p1.y,
-    stroke:selected?'#6bf5b2':'transparent','stroke-width':30,
-    'stroke-linecap':'round',class:'touch-program-segment',role:'button',
+   // Una línea SVG horizontal tiene altura de bbox = 0 y ciertos
+   // navegadores no la consideran pulsable. Zona RECTANGULAR de 34 px
+   // con transformación rotada: funciona en iPhone incluso a 0°/90°.
+   const dx=p1.x-p0.x,dy=p1.y-p0.y,segmentLength=Math.hypot(dx,dy);
+   const target=marker('rect',{x:0,y:-17,width:Math.max(1,segmentLength),height:34,
+    fill:selected?'rgba(74,245,178,.22)':'rgba(255,255,255,.015)',
+    transform:'translate('+p0.x+' '+p0.y+') rotate('+(Math.atan2(dy,dx)*180/Math.PI)+')',
+    class:'touch-program-segment',role:'button',
     tabindex:0,'aria-label':'Editar longitud ala '+(i+1)+': '+format(normalized(getPiece()).flanges[i])+' milímetros',
     'data-segment':i});
    if(selected)g.append(marker('line',{x1:p0.x,y1:p0.y,x2:p1.x,y2:p1.y,
