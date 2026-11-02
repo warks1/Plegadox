@@ -41,6 +41,11 @@
 <div class="cardhead"><h2 id="workshopAuditTitle">Auditoría técnica previa a taller</h2><span class="smalllabel">SIN CERTIFICACIÓN CNC</span></div>
 <div id="workshopAuditStatus" class="px-audit-status" role="status" aria-live="polite">Analizando datos de la pieza...</div>
 <div id="workshopAuditBreakdown" class="px-audit-breakdown" aria-live="off"></div>
+<div class="px-gauge-review">
+<strong>Revisión de topes por golpe · 2D</strong>
+<p class="hint">Comprueba contacto, cara frontal y posibles penetraciones durante el posicionamiento, plegado y retirada. Cada botón lleva al instante muestreado. Sin comprobación de ejes reales X/R/Z.</p>
+<div id="gaugeReviewRows" class="px-gauge-review-rows" role="region" aria-label="Incidencias muestreadas de tope por operación"></div>
+</div>
 <div class="inline-actions"><button id="exportAuditBtn" type="button">Descargar informe técnico (JSON)</button></div>
 <p class="hint">No es un permiso para fabricar. Aunque no haya avisos 2D, faltan CAD de máquina y herramientas y comprobación de colisiones físicas. Revisar medidas, material y montaje en la plegadora.</p>
 </article>
