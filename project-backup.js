@@ -3,7 +3,7 @@
  * Validar TODO antes de escribir; una importación inválida no toca datos.
  * Es un backup LOCAL descargable por el operario, no nube automática.
  */
-import {normalized} from './engine.js';
+import {DIES,PUNCHES,MATERIALS} from './engine.js';
 import {normalizeV85,V85_STORAGE_KEY} from './machine-config.js';
 import {TOOL_DXF_STORAGE_KEY,loadImportedTools,validateContour} from './tool-dxf.js';
 export const PROJECT_FORMAT='plegadox-complete-project-v1';
@@ -26,6 +26,17 @@ function checkedPiece(p){
  check(finite(p.thickness,.2,30)&&finite(p.width,1,10000),'Espesor o ancho inválidos');
  check(typeof p.name==='string'&&p.name.length<=80,'Nombre de pieza inválido');
  check(typeof p.punch==='string'&&typeof p.die==='string','No hay referencias de herramienta');
+ check(MATERIALS.some(m=>m.id===p.material),'Material de proyecto desconocido');
+ if(p.kFactor!=null)check(finite(p.kFactor,.15,.6),'Factor K fuera de rango');
+ if(p.radius!=null)check(finite(p.radius,.1,100),'Radio fuera de rango');
+ if(p.rmMPa!=null)check(finite(p.rmMPa,50,1800),'Resistencia Rm fuera de rango');
+ if(p.datum!=null)check(['outside','neutral'].includes(p.datum),'Criterio de desarrollo inválido');
+ if(p.stopByBend!=null)
+  check(Array.isArray(p.stopByBend)&&p.stopByBend.length===p.angles.length&&
+   p.stopByBend.every(x=>x===1||x===2),'Selección de tope incoherente');
+ if(p.gaugeSideByBend!=null)
+  check(Array.isArray(p.gaugeSideByBend)&&p.gaugeSideByBend.length===p.angles.length&&
+   p.gaugeSideByBend.every(x=>['before','after','auto'].includes(x)),'Referencia de apoyo incoherente');
  return {...p,flanges:[...p.flanges],angles:[...p.angles],order:[...p.order]};
 }
 function checkedTool(t){
@@ -55,8 +66,17 @@ function checkedTools(list){
  check(new Set(data.map(t=>t.id)).size===data.length,'IDs de herramientas repetidos');
  return data;
 }
+function validateToolReferences(piece,tools){
+ const knownPunch=PUNCHES.some(x=>x.id===piece.punch&&!x.importedDxf)||
+  tools.some(x=>x.id===piece.punch&&x.opening==null);
+ const knownDie=DIES.some(x=>x.id===piece.die&&!x.importedDxf)||
+  tools.some(x=>x.id===piece.die&&x.opening!=null);
+ check(knownPunch,'El backup no contiene una referencia válida de punzón: '+piece.punch);
+ check(knownDie,'El backup no contiene una referencia válida de matriz: '+piece.die);
+}
 export function buildProjectBackup({piece,machine,tools,exportedAt=new Date().toISOString()}){
  const p=checkedPiece(piece),t=checkedTools(tools);
+ validateToolReferences(p,t);
  check(machine&&Array.isArray(machine.ram)&&Array.isArray(machine.bed)&&
   Array.isArray(machine.stop)&&Array.isArray(machine.support),
   'Configuración de máquina incompleta');
@@ -74,6 +94,7 @@ export function parseProjectBackup(source){
  check(raw&&typeof raw==='object'&&raw.format===PROJECT_FORMAT&&
   raw.schemaVersion===1,'Formato de proyecto no compatible');
  const p=checkedPiece(raw.piece),tools=checkedTools(raw.importedTools);
+ validateToolReferences(p,tools);
  check(raw.machine&&Array.isArray(raw.machine.ram)&&Array.isArray(raw.machine.bed)&&
   Array.isArray(raw.machine.stop)&&Array.isArray(raw.machine.support),
   'Configuración de máquina incompleta');
