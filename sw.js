@@ -1,5 +1,5 @@
 // PlegadoX · caché offline estática. Se versiona para no arrastrar JS obsoleto.
-const CACHE='plegadox-static-0.9.1-hmi-touch-tool-drawings-24';
+const CACHE='plegadox-static-0.9.1-pc-mouse-hmi-25';
 const APP_FILES=[
  "./",
  "./app.js",
@@ -40,6 +40,7 @@ const APP_FILES=[
  "./tool-height-audit.js",
  "./tooling-advisor.js",
  "./touch-programmer.js",
+ "./mouse-programmer.js",
  "./workshop-audit.js",
  "./project-backup.js",
  "./project-library.js",

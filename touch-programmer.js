@@ -4,6 +4,7 @@
  * que no se pierden signos, orden, tipos de tope o ala de referencia.
  */
 import {normalized,profile} from './engine.js';
+import {flangeLengthFromMouseDrag} from './mouse-programmer.js';
 
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 export function editTouchPiece(input,action){
@@ -84,8 +85,18 @@ export function installTouchProgrammer({root,getPiece,onChange}){
  const zoomIn=root.querySelector('#touchProgramZoomIn');
  const zoomOut=root.querySelector('#touchProgramZoomOut');
  const resetView=root.querySelector('#touchProgramResetView');
+ const inputHint=root.querySelector('#touchInputHint');
  const state={type:'length',index:0,orderMode:false,selected:[],zoom:1,panX:0,panY:0,
-  pointers:new Map(),drag:null,ignoreClick:false};
+  pointers:new Map(),drag:null,ignoreClick:false,spaceHeld:false,
+  lastRender:null,pinchDistance:null};
+ const finePointer=()=>window.matchMedia?.('(pointer: fine)')?.matches??false;
+ const setInteractionMode=mode=>{
+  root.dataset.inputMode=mode;
+  if(inputHint)inputHint.textContent=mode==='mouse'?
+   'PC: clic para seleccionar · doble clic para escribir · arrastra el tramo para cambiar su longitud · rueda para zoom · arrastra el fondo para mover · Intro para confirmar.':
+   'Táctil: toca un ala o vértice, introduce la medida en el teclado; pellizca para zoom y desliza el fondo para mover.';
+ };
+ setInteractionMode(finePointer()?'mouse':'touch');
  const safeChange=(action)=>{
   try{onChange(editTouchPiece(getPiece(),action),true);
    const p=normalized(getPiece());
@@ -95,6 +106,7 @@ export function installTouchProgrammer({root,getPiece,onChange}){
  };
  const pick=(type,index)=>{
   const p=normalized(getPiece());
+  const alreadySelected=state.type===type&&state.index===index;
   state.type=type;state.index=index;
   const n=type==='length'?p.flanges[index]:p.angles[index];
   input.value=String(n);
@@ -102,10 +114,13 @@ export function installTouchProgrammer({root,getPiece,onChange}){
   input.setAttribute('aria-label',type==='length'?'Longitud de ala '+(index+1):'Ángulo firmado de pliegue '+(index+1));
   inverse.disabled=type!=='angle';remove.disabled=type!=='length'||index<1||p.flanges.length<=2;
   modeText.textContent=(type==='length'?'Ala '+(index+1):'Pliegue '+(index+1))+' seleccionado';
-  render();
+  // Do NOT replace the targeted SVG node after every click. The browser
+  // must keep the same element through a double click to raise dblclick.
+  if(!alreadySelected)render();
  };
  function render(){
   const p=normalized(getPiece());
+  state.index=clamp(state.index,0,(state.type==='length'?p.flanges.length:p.angles.length)-1);
   const shape=profile(p,p.angles.map(()=>1)).points;
   const xs=shape.map(s=>s.x),ys=shape.map(s=>s.y);
   const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
@@ -165,7 +180,7 @@ export function installTouchProgrammer({root,getPiece,onChange}){
       const selected=[...state.selected];state.orderMode=false;state.selected=[];
       orderBtn.setAttribute('aria-pressed','false');safeChange({type:'order',indices:selected});
      }else{
-      status.textContent='Orden: '+state.selected.length+'/'+p.angles.length+'. Toca el siguiente pliegue.';
+      status.textContent='Orden: '+state.selected.length+'/'+p.angles.length+'. Selecciona el siguiente pliegue.';
       render();
      }
     }else pick('angle',i);
@@ -191,7 +206,8 @@ export function installTouchProgrammer({root,getPiece,onChange}){
   if(document.activeElement!==input)input.value=String(n??0);
   inverse.disabled=state.type!=='angle';
   remove.disabled=state.type!=='length'||state.index<1||p.flanges.length<=2;
-  return {scale,mapped};
+  state.lastRender={scale,mapped,cx,cy};
+  return state.lastRender;
  }
  apply.onclick=()=>{
   const value=Number(input.value.replace(',','.'));
@@ -205,7 +221,7 @@ export function installTouchProgrammer({root,getPiece,onChange}){
  orderBtn.onclick=()=>{
   state.orderMode=!state.orderMode;state.selected=[];
   orderBtn.setAttribute('aria-pressed',String(state.orderMode));
-  status.textContent=state.orderMode?'Toca los círculos en orden de trabajo.':'Orden táctil cancelado.';
+  status.textContent=state.orderMode?'Selecciona los pliegues por orden de trabajo.':'Orden gráfico cancelado.';
   render();
  };
  pad.querySelectorAll('button[data-key]').forEach(button=>{
@@ -225,41 +241,145 @@ export function installTouchProgrammer({root,getPiece,onChange}){
  svg.addEventListener('wheel',e=>{
   e.preventDefault();state.zoom=clamp(state.zoom*(e.deltaY<0?1.15:.87),.6,5);render();
  },{passive:false});
+ // Coordinates in the SVG viewBox, independent of the browser's CSS
+ // scaling. This also makes dragging vertical flanges reliable on PC.
+ const svgPoint=e=>{
+  const matrix=svg.getScreenCTM();
+  if(!matrix)return null;
+  const point=svg.createSVGPoint();
+  point.x=e.clientX;point.y=e.clientY;
+  return point.matrixTransform(matrix.inverse());
+ };
+ const ghost=()=>svg.querySelector('.px-mouse-length-preview');
  svg.addEventListener('pointerdown',e=>{
-  // Capturar sólo el fondo: si capturamos los vértices, algunos
-  // navegadores táctiles envían el click a svg y no al pliegue.
-  if(e.target===svg)svg.setPointerCapture?.(e.pointerId);
+  if(e.pointerType==='mouse')setInteractionMode('mouse');
+  if(e.pointerType==='touch')setInteractionMode('touch');
+  if(e.pointerType==='mouse'&&e.button!==0&&e.button!==1)return;
+  const pos=svgPoint(e);
   state.pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
-  if(state.pointers.size===1)state.drag={x:e.clientX,y:e.clientY,
-   origX:state.panX,origY:state.panY,moved:false};
-  else state.drag=null;
+  if(state.pointers.size>1){state.drag=null;return;}
+  const segment=e.target.closest?.('[data-segment]');
+  // On desktop, left-dragging a flange projects the mouse delta onto
+  // that flange's axis. A short click still selects normally.
+  if(e.pointerType==='mouse'&&e.button===0&&segment&&!state.orderMode){
+   const index=Number(segment.dataset.segment);
+   const p=normalized(getPiece()),mapped=state.lastRender?.mapped;
+   if(!mapped?.[index+1])return;
+   state.drag={type:'flange',index,x:e.clientX,y:e.clientY,
+    startPos:pos,startLength:p.flanges[index],scale:state.lastRender.scale,
+    segmentX:mapped[index+1].x-mapped[index].x,
+    segmentY:mapped[index+1].y-mapped[index].y,
+    moved:false,value:p.flanges[index]};
+   return;
+  }
+  // Clicks on the piece remain clicks (not accidental viewport pans).
+  if(segment||e.target.closest?.('[data-bend],[data-add]'))return;
+  svg.setPointerCapture?.(e.pointerId);
+  state.drag={type:'pan',x:e.clientX,y:e.clientY,origX:state.panX,
+   origY:state.panY,moved:false};
  });
  svg.addEventListener('pointermove',e=>{
   if(!state.pointers.has(e.pointerId))return;
-  const prev=state.pointers.get(e.pointerId);
   state.pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(state.pointers.size===2){
    const all=[...state.pointers.values()];
    const dist=Math.hypot(all[0].x-all[1].x,all[0].y-all[1].y);
    if(state.pinchDistance)state.zoom=clamp(state.zoom*dist/state.pinchDistance,.6,5);
-   state.pinchDistance=dist;state.ignoreClick=true;render();return;
+   state.pinchDistance=dist;
+   state.ignoreClick=true;
+   render();return;
   }
-  if(state.drag){
-   const dx=e.clientX-state.drag.x,dy=e.clientY-state.drag.y;
-   if(Math.hypot(dx,dy)>8)state.drag.moved=true;
-   if(state.drag.moved){state.panX=state.drag.origX+dx;state.panY=state.drag.origY+dy;render();}
+  const drag=state.drag;
+  if(!drag)return;
+  const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+  if(Math.hypot(dx,dy)>6&&!drag.moved){
+   drag.moved=true;
+   // Capture only once a drag is real. Capturing at pointerdown would
+   // swallow the normal click on a flange or bend in desktop browsers.
+   if(e.pointerType==='mouse'&&drag.type==='flange')
+    svg.setPointerCapture?.(e.pointerId);
+  }
+  if(!drag.moved)return;
+  state.ignoreClick=true;
+  if(drag.type==='flange'){
+   const pos=svgPoint(e);
+   if(!pos||!drag.startPos)return;
+   try{
+    drag.value=flangeLengthFromMouseDrag({
+     originalLength:drag.startLength,
+     deltaX:pos.x-drag.startPos.x,deltaY:pos.y-drag.startPos.y,
+     segmentX:drag.segmentX,segmentY:drag.segmentY,
+     scale:drag.scale,zoom:state.zoom
+    });
+   }catch{return;}
+   input.value=String(drag.value);
+   status.textContent='Arrastrando ala '+(drag.index+1)+': '+format(drag.value)+
+    ' mm. Suelta el ratón para confirmar.';
+   // A preview line follows the new geometry WITHOUT changing the saved
+   // piece or rescaling the scene until release.
+   const p=editTouchPiece(getPiece(),{type:'length',index:drag.index,value:drag.value});
+   const renderInfo=state.lastRender;
+   const points=profile(p,p.angles.map(()=>1)).points.map(q=>({
+    x:V_WIDTH/2+(q.x-renderInfo.cx)*renderInfo.scale,
+    y:V_HEIGHT/2-(q.y-renderInfo.cy)*renderInfo.scale
+   }));
+   let preview=ghost();
+   if(!preview){
+    preview=marker('polyline',{class:'px-mouse-length-preview',fill:'none',
+     stroke:'#ffd178','stroke-width':5,'stroke-dasharray':'9 5',
+     'pointer-events':'none','stroke-linecap':'round'});
+    svg.querySelector('g')?.append(preview);
+   }
+   preview.setAttribute('points',points.map(q=>q.x+','+q.y).join(' '));
+  }else if(drag.type==='pan'){
+   state.panX=drag.origX+dx*V_WIDTH/svg.getBoundingClientRect().width;
+   state.panY=drag.origY+dy*V_HEIGHT/svg.getBoundingClientRect().height;
+   render();
   }
  });
  const endPointer=e=>{
-  if(state.drag?.moved)state.ignoreClick=true;
-  state.pointers.delete(e.pointerId);state.drag=null;state.pinchDistance=null;
-  if(state.pointers.size===0&&state.ignoreClick){
-   // click is synthesized immediately after pointerup; clear on next task.
-   setTimeout(()=>{state.ignoreClick=false;},0);
+  const drag=state.drag;
+  state.pointers.delete(e.pointerId);
+  state.drag=null;state.pinchDistance=null;
+  if(drag?.moved&&drag.type==='flange'){
+   // Only one edit at mouseup: consistent undo/revision semantics.
+   state.type='length';state.index=drag.index;
+   safeChange({type:'length',index:drag.index,value:drag.value});
+   pick('length',drag.index);
   }
+  if(drag?.moved)state.ignoreClick=true;
+  if(state.pointers.size===0&&state.ignoreClick)
+   setTimeout(()=>{state.ignoreClick=false;},0);
  };
  for(const ev of ['pointerup','pointercancel','lostpointercapture'])
   svg.addEventListener(ev,endPointer);
+ svg.addEventListener('dblclick',e=>{
+  if(root.dataset.inputMode==='mouse'&&!state.orderMode){
+   input.focus();input.select();
+   status.textContent='Introduce la medida o el ángulo con el teclado del PC y pulsa Intro.';
+  }
+ });
+ // Some browsers send the second click but no dblclick when the SVG
+ // target changes after selection. Fallback based on the click counter.
+ svg.addEventListener('click',e=>{
+  if(e.detail>=2&&root.dataset.inputMode==='mouse'&&!state.orderMode){
+   input.focus();input.select();
+  }
+ });
+ root.addEventListener('keydown',e=>{
+  if(root.dataset.inputMode!=='mouse'||e.target===input||
+   e.target.closest?.('button'))return;
+  if(e.key==='Escape'&&state.orderMode){
+   e.preventDefault();orderBtn.click();
+  }else if(e.key==='Delete'&&state.type==='length'&&
+   state.index>0&&normalized(getPiece()).flanges.length>2){
+   e.preventDefault();remove.click();
+  }else if((e.key==='+'||e.key==='=')&&!e.ctrlKey){
+   e.preventDefault();actionAdd.click();
+  }else if(e.key.toLowerCase()==='i'&&state.type==='angle'){
+   e.preventDefault();inverse.click();
+  }
+ });
  pick('length',0);
  return {render,selectLength:index=>pick('length',index),selectAngle:index=>pick('angle',index)};
 }

@@ -1434,3 +1434,21 @@ html{background:#020913}
 @media(max-width:390px){.px-touch-toolbar button{padding:5px 7px;font-size:11px}
  .px-advisor-tool-picture{padding:5px}
  .px-advisor-tool-picture .tool-geometry{height:88px;min-height:88px}}
+
+/* R25: en ordenador se trabaja con ratón y teclado real, no con keypad táctil. */
+.px-interaction-hint{margin:8px 0;padding:9px 12px;border:1px solid #5e9bb5;
+ border-radius:8px;color:#204d68;background:#e6f4fc;font-size:12px;font-weight:650;line-height:1.55}
+.px-touch-program[data-input-mode="mouse"] .px-touch-pad{display:none}
+.px-touch-program[data-input-mode="mouse"] .px-touch-keyboard{max-width:315px;justify-content:flex-start}
+.px-touch-program[data-input-mode="mouse"] #touchValue{font-size:22px}
+.px-touch-program[data-input-mode="mouse"] .px-touch-editor{grid-template-columns:minmax(0,1fr) minmax(205px,295px)}
+.px-touch-program[data-input-mode="mouse"] #touchProgramSvg{cursor:grab;touch-action:none}
+.px-touch-program[data-input-mode="mouse"] #touchProgramSvg .touch-program-segment{cursor:ew-resize}
+.px-touch-program[data-input-mode="mouse"] #touchProgramSvg .touch-program-bend{cursor:pointer}
+.px-touch-program[data-input-mode="mouse"] #touchProgramSvg .touch-program-add{cursor:copy}
+.px-touch-program[data-input-mode="mouse"] .px-touch-commands button{min-height:37px}
+.px-touch-program[data-input-mode="mouse"] .px-touch-keyboard>strong{font-size:13px}
+@media(max-width:720px){
+ .px-touch-program[data-input-mode="mouse"] .px-touch-editor{grid-template-columns:1fr}
+ .px-touch-program[data-input-mode="mouse"] .px-touch-keyboard{max-width:none}
+}

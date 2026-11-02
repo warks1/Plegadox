@@ -6,13 +6,13 @@
 <link rel="stylesheet" href="./styles.css">
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <link rel="manifest" href="./manifest.webmanifest">
-<meta name="plegadox-build" content="PLEGADOX-20261102-R24">
+<meta name="plegadox-build" content="PLEGADOX-20261102-R25">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="PlegadoX">
 </head><body>
 <div id="app">
 <header class="topbar">
-<div class="header-logo"><span class="logo-title">PLEGADO<span>DO</span><em>X</em></span><small>PRECISIÓN EN CADA ÁNGULO</small><small id="buildMark" class="px-build-mark" aria-label="Versión instalada de PlegadoX">PLEGADOX-20261102-R24</small></div>
+<div class="header-logo"><span class="logo-title">PLEGADO<span>DO</span><em>X</em></span><small>PRECISIÓN EN CADA ÁNGULO</small><small id="buildMark" class="px-build-mark" aria-label="Versión instalada de PlegadoX">PLEGADOX-20261102-R25</small></div>
 <div class="header-project"><span class="h-icon" aria-hidden="true"><svg class="px-icon"><use href="./icons.svg#project"/></svg></span><div class="h-content"><small>PROYECTO ACTUAL</small><strong id="topProject">Omega · ejemplo geométrico</strong></div></div>
 <div class="header-stats"><div><small>Material</small><strong id="topMaterial">Acero S235</strong></div><div><small>Espesor</small><strong id="topThickness">2,00 mm</strong></div><div><small>Ángulo</small><strong id="topAngle">+90°</strong></div><div><small>Apertura V</small><strong id="topV">16 mm</strong></div><div><small>Punzón</small><strong id="topPunch">Recto 88°</strong></div><div><small>Matriz</small><strong id="topDie">V16</strong></div></div>
 <div class="header-right"><div class="header-status"><button id="topPlayBtn" class="led" type="button" aria-label="Reproducir simulación" aria-pressed="false" title="Reproducir / pausar simulación">▶</button><span id="topState">Simulación lista</span></div><span id="clock" aria-label="Hora"></span><button id="forceUpdateBtn" class="header-icon-button px-refresh-button" title="Actualizar PlegadoX sin borrar piezas" aria-label="Actualizar PlegadoX sin borrar piezas"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#refresh"/></svg></button><button id="saveBtn" class="header-icon-button" title="Guardar pieza" aria-label="Guardar pieza"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#save"/></svg></button></div>
@@ -31,16 +31,17 @@
 <div class="page-title"><div><h1>Programación de pieza</h1><p>Introduce las alas, el sentido real de cada pliegue y el orden de fabricación.</p></div><div class="actions"><button id="newBtn">Nueva pieza</button><button id="loadBtn">Importar JSON</button><button id="exportBtn">Exportar JSON</button><input type="file" id="fileInput" accept=".json,application/json" hidden></div></div>
 <div class="formgrid"><label>Nombre de pieza<input id="pieceName" maxlength="80"></label><label>Material<select id="material"></select></label><label>Espesor (mm)<input id="thickness" type="number" min=".2" max="30" step=".1" inputmode="decimal"></label><label>Ancho de pieza (mm)<input id="width" type="number" min="1" max="10000" step="1" inputmode="decimal"></label><label>Matriz / V<select id="die"></select></label><label>Punzón<select id="punch"></select></label></div>
 <article class="card px-touch-program" id="touchProgramPanel">
-<div class="cardhead"><h2>Programación táctil · como en la plegadora</h2><span class="smalllabel">Toca la pieza para crear y modificar pliegues</span></div>
-<p class="hint">Toca un tramo para introducir su longitud. Toca un círculo para editar el ángulo positivo o negativo; el número interior representa el orden de plegado. Pulsa el símbolo + del extremo para añadir otra ala. Pellizca para ampliar y arrastra el fondo para mover el dibujo.</p>
+<div class="cardhead"><h2>Programación gráfica · ratón y pantalla táctil</h2><span class="smalllabel">PC: ratón y teclado · móvil: dedos</span></div>
+<p class="hint">Selecciona un ala o un círculo de pliegue directamente en el dibujo. La edición utiliza el mismo motor en PC y móvil; no necesitas usar un teclado en pantalla si tienes ratón y teclado físico.</p>
+<p id="touchInputHint" class="px-interaction-hint" role="status" aria-live="polite">Los controles se adaptan a tu dispositivo.</p>
 <div class="px-touch-editor">
 <div class="px-touch-drawing">
 <div class="px-touch-toolbar"><span id="touchProgramSelection" role="status">Selecciona un ala</span>
-<button type="button" id="touchProgramOrderBtn" aria-pressed="false">Orden tocando pliegues</button>
+<button type="button" id="touchProgramOrderBtn" aria-pressed="false">Elegir orden en el dibujo</button>
 <button type="button" id="touchProgramZoomIn" aria-label="Ampliar dibujo">＋</button>
 <button type="button" id="touchProgramZoomOut" aria-label="Alejar dibujo">−</button>
 <button type="button" id="touchProgramResetView" aria-label="Centrar pieza">⌖</button></div>
-<svg id="touchProgramSvg" viewBox="0 0 820 380" xmlns="http://www.w3.org/2000/svg" aria-label="Dibujo táctil de pieza con alas, ángulos y orden de plegado" role="img"></svg>
+<svg id="touchProgramSvg" viewBox="0 0 820 380" xmlns="http://www.w3.org/2000/svg" aria-label="Editor gráfico con ratón o toque para definir alas, ángulos y orden de plegado" role="img"></svg>
 <div class="px-touch-hint" id="touchProgramStatus" role="status" aria-live="polite">Selecciona un tramo o un vértice para editarlo.</div>
 </div>
 <div class="px-touch-keyboard">
@@ -222,7 +223,7 @@
  * PlegadoX anteriores y cargar luego todos los módulos secuencialmente.
  * Nunca se elimina localStorage, IndexedDB ni los proyectos del usuario.
  */
-const BUILD="PLEGADOX-20261102-R24";
+const BUILD="PLEGADOX-20261102-R25";
 const STATUS=document.getElementById('buildMark');
 const KEY='plegadox:verified-loader-build';
 const BASE=new URL('./',document.baseURI);
