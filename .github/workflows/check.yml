@@ -82,6 +82,7 @@ jobs:
           node tests/tooling-advisor-smoke.mjs
           node tests/touch-programmer-browser-smoke.mjs
           node tests/mouse-programmer-browser-smoke.mjs
+          node tests/playback-controls-r26-smoke.mjs
           node tests/workshop-backup-browser-smoke.mjs
           node tests/project-library-browser-smoke.mjs
           node tests/workshop-calibration-browser-smoke.mjs
