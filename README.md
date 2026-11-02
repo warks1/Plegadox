@@ -946,3 +946,24 @@ recuperación elástica, el lote, ni valida el desarrollo de otras piezas.
 Los datos de longitud/radio/ángulo son declarados por el operario y se
 requieren múltiples muestras contrastadas en máquina y documentación.
 Ninguna medición equivale a certificado CNC o seguridad de colisiones.
+
+
+## R20 · Backup conjunto de biblioteca completa y calibración de taller
+
+El backup descargable contiene **todos los datos de R19** (mediciones de
+taller, pieza, V85 y DXF) más las **60 piezas de biblioteca y hasta ocho
+revisiones históricas por pieza**, con ID activo. Se mantiene el mismo
+formato JSON compatible con copias antiguas R17/R18/R19.
+
+- Si el archivo no incluye biblioteca, se conservan todas las piezas locales.
+- Si un ID existente tiene otra revisión o datos distintos, se rechaza la
+  importación completa antes de escribir.
+- Los DXF locales dañados se detectan; nunca se filtran silenciosamente al
+  exportar ni se sustituyen con un backup incompleto.
+- Se validan piezas actuales e históricas y sus referencias de utillaje.
+- Fusión no destructiva de útiles, mediciones y biblioteca; rollback de todas
+  las claves cuando falla una escritura, incluida la clave que falla.
+- Backup local, sin nube y sin certificación de fabricación industrial.
+
+Pruebas: `tests/project-library-backup.test.mjs`, smoke de backup en PC/móvil
+y pruebas de calibración R19. El backup histórico `01/10/27` no se altera.
