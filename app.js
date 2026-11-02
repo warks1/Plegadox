@@ -14,10 +14,12 @@ import {flatBendLayout} from './flat-layout.js';
 import {suggestBendOrder} from './sequence-advisor.js';
 import {compareGaugeSides} from './gauge-side-review.js';
 import {sectionPunch,sectionDie} from './tool-profiles.js';
-import {getV85} from './machine-config.js';
+import {getV85,updateV85} from './machine-config.js';
 import {gaugePlacement} from './backgauge-placement.js';
 import {technicalScene} from './technical-section.js';
 import {recommendTooling} from './tooling-advisor.js';
+import {auditForWorkshop} from './workshop-audit.js';
+import {buildProjectBackup,restoreProjectBackup} from './project-backup.js';
 import {loadImportedTools,registerImportedTools,persistImportedTool} from './tool-dxf.js';
 import {setupToolDxfImporter} from './tool-import-ui.js';
 registerCatalogue(DIES,PUNCHES);
@@ -220,6 +222,43 @@ function configure(){
  const blob=new Blob([JSON.stringify({...piece,format:'plegadox-piece-v1'},null,2)],{type:'application/json'});
  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=(piece.name.replace(/[^a-z0-9áéíóú_-]+/gi,'-').slice(0,55)||'pieza')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),4000);
  };
+ $('exportAuditBtn').onclick=()=>downloadProjectJson(
+  auditForWorkshop(piece),projectSafeName()+'-INFORME-NO-VALIDADO.json');
+ $('exportCompleteProject').onclick=()=>{
+  const status=$('completeProjectStatus');
+  try{
+   const backup=buildProjectBackup({piece,machine:getV85(),
+    tools:loadImportedTools(localStorage)});
+   downloadProjectJson(backup,projectSafeName()+'-BACKUP-COMPLETO.json');
+   status.textContent='Copia descargada: pieza, máquina y '+backup.importedTools.length+
+    ' herramientas DXF. Comprueba el archivo antes de borrar datos locales.';
+   status.dataset.state='success';
+  }catch(err){status.textContent='Backup no generado: '+err.message;status.dataset.state='error';}
+ };
+ $('importCompleteProject').onclick=()=>$('completeProjectInput').click();
+ $('completeProjectInput').onchange=async e=>{
+  const file=e.target.files?.[0],status=$('completeProjectStatus');
+  if(!file)return;
+  try{
+   if(file.size>2*1024*1024)throw Error('La copia supera 2 MB');
+   const restored=restoreProjectBackup(localStorage,await file.text());
+   registerImportedTools(DIES,PUNCHES,restored.importedTools);
+   for(const tool of restored.importedTools){
+    const sel=$(tool.opening!=null?'die':'punch');
+    if([...sel.options].some(o=>o.value===tool.id))continue;
+    const option=document.createElement('option');option.value=tool.id;
+    option.textContent=tool.name;sel.append(option);
+   }
+   updateV85(restored.machine);
+   changePiece(restored.piece,true);
+   status.textContent='Recuperado: pieza, V85 y '+restored.importedTools.length+
+    ' herramientas DXF. No se han borrado otros útiles guardados.';
+   status.dataset.state='success';
+  }catch(err){status.textContent='Restauración rechazada: '+err.message;
+   status.dataset.state='error';}
+  finally{e.target.value='';}
+ };
+ window.addEventListener('plegadox:machineChanged',renderWorkshopAudit);
  $('loadBtn').onclick=()=>$('fileInput').click();
  $('fileInput').onchange=async e=>{
  const file=e.target.files?.[0];if(!file)return;
@@ -332,6 +371,36 @@ function renderToolAdvisor(){
  addPair(primary,true);
  advice.alternatives.forEach(pair=>addPair(pair,false));
 }
+function renderWorkshopAudit(){
+ const node=$('workshopAuditStatus'),body=$('workshopAuditBreakdown');
+ if(!node||!body)return;
+ const audit=auditForWorkshop(piece);
+ node.dataset.state=audit.summary.blocks?'block':'unverified';
+ node.textContent='NO VALIDADO PARA FABRICAR · '+audit.summary.blocks+
+  ' incompatibilidades · '+audit.summary.missing+
+  ' verificaciones pendientes · '+audit.summary.reviews+' advertencias.';
+ body.replaceChildren();
+ for(const level of ['block','missing','review']){
+  const rows=audit.issues.filter(x=>x.level===level);
+  if(!rows.length)continue;
+  const details=document.createElement('details');details.open=level==='block';
+  const summary=document.createElement('summary');
+  summary.textContent=(level==='block'?'Incompatibilidades':
+   level==='missing'?'Datos sin verificar':'Advertencias')+' ('+rows.length+')';
+  const list=document.createElement('ul');
+  for(const item of rows){const li=document.createElement('li');li.textContent=item.message;list.append(li);}
+  details.append(summary,list);body.append(details);
+ }
+}
+function downloadProjectJson(data,filename){
+ const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json;charset=utf-8'});
+ const url=URL.createObjectURL(blob),link=document.createElement('a');
+ link.href=url;link.download=filename;document.body.append(link);link.click();link.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),4000);
+}
+function projectSafeName(){
+ return piece.name.replace(/[^a-z0-9áéíóú_-]+/gi,'-').slice(0,55)||'PlegadoX';
+}
 function renderSetup(){
  for(const id of ['pieceName','material','thickness','width','die','punch'])$(id).value=piece[{pieceName:'name'}[id]||id];
  $('datum').value=piece.datum;
@@ -340,6 +409,7 @@ function renderSetup(){
  $('rmMPa').value=piece.rmMPa??'';
  $('rmMPa').placeholder=String(REFERENCE_RM_MPA[piece.material]||450)+' (referencia)';
  renderToolAdvisor();
+ renderWorkshopAudit();
 }
 function renderEditor(){
  const tb=$('flangeRows');tb.replaceChildren();

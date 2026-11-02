@@ -20,6 +20,8 @@ jobs:
           node --check boceto2.js
           node --check machine-visual.js
           node --check tool-profiles.js
+          node --check workshop-audit.js
+          node --check project-backup.js
           node --check tooling-advisor.js
           node --check tool-dxf.js
           node --check tool-import-ui.js
@@ -71,6 +73,7 @@ jobs:
           node tests/gooseneck-browser-smoke.mjs
           node tests/technical-section-smoke.mjs
           node tests/tooling-advisor-smoke.mjs
+          node tests/workshop-backup-browser-smoke.mjs
           node tests/gauge-framing-smoke.mjs
           node tests/catalog-contact-smoke.mjs
           node tests/machine-editor-smoke.mjs

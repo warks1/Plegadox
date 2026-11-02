@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 const get=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 test('La compilación visible, el manifiesto de recuperación y el SW tienen la misma marca',()=>{
  const build=JSON.parse(get('build-info.json')).build;
- assert.match(build,/^TOPE-20261101-R/);
+ assert.match(build,/^(TOPE-20261101-R|PLEGADOX-20261102-R)/);
  const html=get('index.html');
  assert.ok(html.includes('id="buildMark"'));
  assert.ok(html.includes('id="forceUpdateBtn"'));
@@ -21,6 +21,6 @@ test('Arranque con recursos no versionados separado de la caché, sin perder mod
  assert.match(html,/<script type="module">/);
  assert.equal((html.match(/src="\.\/app\.js"/g)||[]).length,0);
  assert.ok(html.includes("import('./'+path+'?build='"));
- assert.ok(sw.includes("const CACHE='plegadox-static-0.9.0-gooseneck-actual-H-16'"));
+ assert.ok(sw.includes("const CACHE='plegadox-static-0.9.0-workshop-backup-17'"));
  assert.ok(sw.includes("await caches.match(request)"));
 });

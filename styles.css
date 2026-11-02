@@ -1296,3 +1296,21 @@ html{background:#020913}
 .px-playback-mode input[type=checkbox]{flex:0 0 18px;width:18px;height:18px;min-height:18px;accent-color:#179bd4;cursor:pointer}
 .px-playback-mode small{display:block;color:#a2c5da;font-size:11px;line-height:1.4}
 @media(max-width:500px){.px-playback-mode{padding:7px 9px}.px-playback-mode label{font-size:11px}}
+
+/* R17: auditoría industrial y backup de proyecto, responsive. */
+.px-workshop-audit,.px-project-backup{margin:14px 0 19px}
+.px-workshop-audit .cardhead,.px-project-backup .cardhead{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.px-audit-status{padding:12px 14px;border-radius:9px;background:#f9e9e2;
+ border-left:4px solid #b85031;color:#793c25;font-weight:750;line-height:1.5}
+.px-audit-status[data-state="unverified"]{background:#fff3df;border-color:#b6832f;color:#805922}
+.px-audit-breakdown{display:grid;gap:9px;margin:12px 0}
+.px-audit-breakdown details{border:1px solid #c7d7e0;border-radius:8px;padding:8px 12px;
+ background:#f8fbff;color:#31516b}
+.px-audit-breakdown summary{cursor:pointer;font-weight:700;line-height:1.5}
+.px-audit-breakdown li{margin:7px 0;line-height:1.5;font-size:13px}
+.px-project-backup #completeProjectStatus[data-state="success"]{color:#23694f;font-weight:650}
+.px-project-backup #completeProjectStatus[data-state="error"]{color:#a13325;font-weight:650}
+@media(max-width:560px){.px-audit-status{font-size:12px;padding:10px}
+ .px-audit-breakdown li{font-size:12px}
+ .px-project-backup .inline-actions{display:flex;flex-wrap:wrap;gap:10px}
+ .px-project-backup .inline-actions button{width:100%;min-height:44px}}

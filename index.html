@@ -6,13 +6,13 @@
 <link rel="stylesheet" href="./styles.css">
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <link rel="manifest" href="./manifest.webmanifest">
-<meta name="plegadox-build" content="TOPE-20261101-R16">
+<meta name="plegadox-build" content="PLEGADOX-20261102-R17">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="PlegadoX">
 </head><body>
 <div id="app">
 <header class="topbar">
-<div class="header-logo"><span class="logo-title">PLEGADO<span>DO</span><em>X</em></span><small>PRECISIÓN EN CADA ÁNGULO</small><small id="buildMark" class="px-build-mark" aria-label="Versión instalada de PlegadoX">TOPE-20261101-R16</small></div>
+<div class="header-logo"><span class="logo-title">PLEGADO<span>DO</span><em>X</em></span><small>PRECISIÓN EN CADA ÁNGULO</small><small id="buildMark" class="px-build-mark" aria-label="Versión instalada de PlegadoX">PLEGADOX-20261102-R17</small></div>
 <div class="header-project"><span class="h-icon" aria-hidden="true"><svg class="px-icon"><use href="./icons.svg#project"/></svg></span><div class="h-content"><small>PROYECTO ACTUAL</small><strong id="topProject">Omega · ejemplo geométrico</strong></div></div>
 <div class="header-stats"><div><small>Material</small><strong id="topMaterial">Acero S235</strong></div><div><small>Espesor</small><strong id="topThickness">2,00 mm</strong></div><div><small>Ángulo</small><strong id="topAngle">+90°</strong></div><div><small>Apertura V</small><strong id="topV">16 mm</strong></div><div><small>Punzón</small><strong id="topPunch">Recto 88°</strong></div><div><small>Matriz</small><strong id="topDie">V16</strong></div></div>
 <div class="header-right"><div class="header-status"><span class="led">▶</span><span id="topState">Simulación lista</span></div><span id="clock" aria-label="Hora"></span><button id="forceUpdateBtn" class="header-icon-button px-refresh-button" title="Actualizar PlegadoX sin borrar piezas" aria-label="Actualizar PlegadoX sin borrar piezas"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#refresh"/></svg></button><button id="saveBtn" class="header-icon-button" title="Guardar pieza" aria-label="Guardar pieza"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#save"/></svg></button></div>
@@ -36,6 +36,19 @@
 <div id="toolAdvisorResult" class="px-advisor-result" role="status" aria-live="polite">Calculando herramientas orientativas…</div>
 <div id="toolAdvisorOptions" class="px-advisor-options"></div>
 <p class="hint">Guía preliminar para plegado al aire: V/e, ala mínima ≈ 0,7 × V cerca de 90° y fuerza de referencia. <strong>No comprueba</strong> amarres, carga máxima de cada útil, radio exacto, colisiones 3D, topes, ni compatibilidad CNC. Comprueba las fichas de fabricante y realiza una prueba de taller antes de fabricar.</p>
+</article>
+<article class="card px-workshop-audit" id="workshopAuditPanel" aria-labelledby="workshopAuditTitle">
+<div class="cardhead"><h2 id="workshopAuditTitle">Auditoría técnica previa a taller</h2><span class="smalllabel">SIN CERTIFICACIÓN CNC</span></div>
+<div id="workshopAuditStatus" class="px-audit-status" role="status" aria-live="polite">Analizando datos de la pieza...</div>
+<div id="workshopAuditBreakdown" class="px-audit-breakdown" aria-live="off"></div>
+<div class="inline-actions"><button id="exportAuditBtn" type="button">Descargar informe técnico (JSON)</button></div>
+<p class="hint">No es un permiso para fabricar. Aunque no haya avisos 2D, faltan CAD de máquina y herramientas y comprobación de colisiones físicas. Revisar medidas, material y montaje en la plegadora.</p>
+</article>
+<article class="card px-project-backup" id="projectBackupPanel" aria-labelledby="projectBackupTitle">
+<div class="cardhead"><h2 id="projectBackupTitle">Copia completa del proyecto</h2><span class="smalllabel">PIEZA + TRUMPF V85 + UTILLAJE DXF</span></div>
+<p class="hint">Descarga un único JSON con todos los datos necesarios para reabrir esta pieza en otro dispositivo. La restauración conserva los útiles DXF que ya tengas y rechaza referencias incompatibles sin sobrescribir tu trabajo.</p>
+<div class="inline-actions"><button type="button" id="exportCompleteProject">Descargar proyecto completo</button><button type="button" id="importCompleteProject">Restaurar proyecto completo</button><input type="file" id="completeProjectInput" hidden accept=".json,application/json" aria-label="Seleccionar copia completa de PlegadoX"></div>
+<p id="completeProjectStatus" role="status" aria-live="polite" class="hint">Copia local descargable: no se guarda automáticamente en la nube.</p>
 </article>
 <div class="twocol"><article class="card"><div class="cardhead"><h2>Alas y pliegues</h2><button id="addFlange">+ Añadir ala</button></div><p class="hint">Las longitudes se miden sobre el perfil teórico. El signo del ángulo determina el sentido de giro. El primer tramo no lleva pliegue.</p><div class="table-scroll"><table class="edit-table"><thead><tr><th>Ala</th><th>Longitud (mm)</th><th>Pliegue anterior</th><th>Tope</th><th>Ala de apoyo</th><th>Orden</th><th></th></tr></thead><tbody id="flangeRows"></tbody></table></div><div class="inline-actions"><button id="sampleBtn">Ejemplo omega</button><button id="resetOrder">Orden 1, 2, 3…</button></div></article>
 <article class="card"><div class="cardhead"><h2>Pieza final · perfil 2D</h2><span id="validity" class="tag">Listo</span></div><div class="touch-order-controls"><button id="touchOrderMode" type="button" aria-pressed="false">☝ Asignar orden tocando pliegues</button><p id="touchOrderHint" aria-live="polite">Activa este modo y toca los vértices de la pieza en el orden de trabajo.</p></div><canvas id="finalCanvas" class="canvas drawing" aria-label="Perfil final de la pieza; permite seleccionar los pliegues por toque"></canvas><div class="sheet-collision-legend" aria-label="Leyenda de interferencias de chapa">
@@ -142,7 +155,7 @@
  * PlegadoX anteriores y cargar luego todos los módulos secuencialmente.
  * Nunca se elimina localStorage, IndexedDB ni los proyectos del usuario.
  */
-const BUILD="TOPE-20261101-R16";
+const BUILD="PLEGADOX-20261102-R17";
 const STATUS=document.getElementById('buildMark');
 const KEY='plegadox:verified-loader-build';
 const BASE=new URL('./',document.baseURI);
