@@ -20,6 +20,7 @@ jobs:
           node --check boceto2.js
           node --check machine-visual.js
           node --check tool-profiles.js
+          node --check tool-height-audit.js
           node --check workshop-audit.js
           node --check project-backup.js
           node --check project-library.js
@@ -74,6 +75,7 @@ jobs:
           node tests/touch-order-smoke.mjs
           node tests/video-regression-smoke.mjs
           node tests/gooseneck-browser-smoke.mjs
+          node tests/tool-height-browser-smoke.mjs
           node tests/technical-section-smoke.mjs
           node tests/tooling-advisor-smoke.mjs
           node tests/workshop-backup-browser-smoke.mjs
