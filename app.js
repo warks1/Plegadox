@@ -218,7 +218,7 @@ function configure(){
   }
   changePiece({...piece,rmMPa:raw===''?null:Number(raw)});
  });
- $('newBtn').onclick=()=>{detachLibraryPiece();changePiece({name:'Nueva pieza',flanges:[100,100],angles:[90],order:[0],material:'s235',thickness:2,width:500,die:'v16',punch:'straight88'},true);};
+ $('newBtn').onclick=()=>{detachLibraryPiece();changePiece({name:'Nueva pieza',flanges:[100,100],angles:[0],order:[0],material:'s235',thickness:2,width:500,die:'v16',punch:'straight88'},true);};
  $('sampleBtn').onclick=()=>{detachLibraryPiece();changePiece(EXAMPLE,true);};
  $('addFlange').onclick=()=>{if(piece.flanges.length>=20)return;changePiece({...piece,flanges:[...piece.flanges,50],angles:[...piece.angles,90],order:[...piece.order,piece.angles.length],stopByBend:[...piece.stopByBend,1],gaugeSideByBend:[...piece.gaugeSideByBend,'auto']},true);};
  $('resetOrder').onclick=()=>changePiece({...piece,order:piece.angles.map((_,i)=>i)},true);
