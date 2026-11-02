@@ -21,6 +21,7 @@ test('Arranque con recursos no versionados separado de la caché, sin perder mod
  assert.match(html,/<script type="module">/);
  assert.equal((html.match(/src="\.\/app\.js"/g)||[]).length,0);
  assert.ok(html.includes("import('./'+path+'?build='"));
- assert.ok(sw.includes("const CACHE='plegadox-static-0.9.0-workshop-calibration-19'"));
+ const cache=JSON.parse(get('build-info.json')).cache;
+ assert.ok(sw.includes("const CACHE='"+cache+"'"));
  assert.ok(sw.includes("await caches.match(request)"));
 });
