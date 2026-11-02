@@ -381,5 +381,16 @@ export function installTouchProgrammer({root,getPiece,onChange}){
   }
  });
  pick('length',0);
- return {render,selectLength:index=>pick('length',index),selectAngle:index=>pick('angle',index)};
+ // Al cambiar de pieza se descartan los pliegues pulsados en el dibujo.
+ // Los índices de la selección anterior ya no corresponden al nuevo perfil.
+ const resetSelection=()=>{
+  state.orderMode=false;state.selected=[];
+  state.drag=null;state.pointers.clear();state.pinchDistance=null;
+  state.ignoreClick=false;
+  orderBtn.setAttribute('aria-pressed','false');
+  status.textContent='Pieza modificada: selección de orden reiniciada.';
+  render();
+ };
+ return {render,resetSelection,
+  selectLength:index=>pick('length',index),selectAngle:index=>pick('angle',index)};
 }
