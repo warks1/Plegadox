@@ -73,7 +73,9 @@ export function technicalScene(piece,instant=0){
   p.order[st.activeOperation+1]:st.activeBend;
  const nextFeedMirror=gaugeReference(p,nextBend).side==='before';
  const changingSide=from.repositioning&&nextFeedMirror!==feedMirror;
- const spin=changingSide?Math.cos(Math.PI*(from.progress??0)):1;
+ // Cambiar el signo de alimentación DESPUÉS del volteo de cara.
+ // Ambos giros simultáneos hacían colapsar X e Y a cero en el mismo instante.
+ const spin=changingSide?Math.cos(Math.PI*(from.feedProgress??from.progress??0)):1;
  const mirror=pt=>({...pt,x:(feedMirror?-pt.x:pt.x)*spin});
  const presentation={...from,points:from.points.map(mirror),
   points3D:from.points3D?.map(mirror),gaugeSide:reference.side,
