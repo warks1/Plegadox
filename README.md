@@ -869,3 +869,31 @@ sección, máquina, cabina y volumen del inspector mantiene las cotas.
 **Sin CAD de fabricante** no hay geometría de contacto ni verificación
 de colisiones 3D: esta mejora es de representación y documentación,
 no una validación de fabricación o seguridad de máquina.
+
+## R17 · Control de conformidad previo a taller y copia completa de proyecto
+
+**Auditoría de Programa:** la programación tiene un informe técnico automático
+que detecta incompatibilidades de ángulo, ala menor que ≈0,7×V, tonelaje
+estimado superior a 85 t, ancho fuera de la Trumpf V85 configurada y
+amarres de familias distintas. También indica límites de longitud
+de segmento, ensayos pendientes, carga certificada por metro inexistente,
+geometría de punzones/matrices provisional y avisos de colisiones 2D.
+Puede exportarse en JSON con código y operación de cada incidencia.
+
+Este informe **SIEMPRE conserva el estado SIN_VALIDACION_INDUSTRIAL**
+hasta que se implante una comprobación completa y calibrada de los sólidos
+3D de máquina, amarres, topes y herramientas. Una simulación continua o
+ausencia de avisos **NO autoriza fabricar**.
+
+**Copia completa de proyecto:** botones para descargar y restaurar un JSON
+`plegadox-complete-project-v1` que incluye la pieza con ángulos firmados,
+orden, topes, material, configuración V85 y los perfiles DXF locales.
+La importación valida datos y contornos antes de tocar el almacenamiento,
+conserva otras referencias DXF del navegador, rechaza conflictos de IDs
+y revierte las escrituras si falla la cuota de almacenamiento.
+La copia es local descargada: NO hay sincronización automática en la nube.
+
+**Limitaciones de cierre v1.0:** faltan sólidos CAD industriales reales,
+datos de carga por metro, compatibilidad de amarres verificada, contraste
+dimensional contra plegados físicos, estudio volumétrico de colisiones y
+calibración del desarrollo. Estas carencias NO quedan resueltas por la R17.
