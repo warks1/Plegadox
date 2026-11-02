@@ -1103,3 +1103,13 @@ puntero utilizado, útil en equipos híbridos y portátiles convertibles.
 Todos los datos se guardan en el mismo modelo de pieza, con la misma
 secuencia, ángulos, tipos de tope y herramientas. La adaptación
 PC no modifica geometrías industriales ni sustituye pruebas de colisión.
+
+## R26 · Control de reproducción, medidas de utillaje y selección gráfica (2 noviembre 2026)
+
+- El asesor de herramientas deja de ofrecer automáticamente punzones y matrices cuya **longitud comercial declarada** sea inferior al ancho de la pieza. No presupone que sea posible componer segmentos ni que la carga por segmento esté validada.
+- Las herramientas sin longitud declarada conservan la condición de **preselección orientativa**, con advertencia expresa de comprobar su longitud útil, montaje y capacidad.
+- Las tarjetas muestran **H útil** para la pata de cabra reconstruida a partir de la fotografía; en las demás muestran H total. Las herramientas con fichas parciales no se anuncian como geometría CAD completa.
+- El editor gráfico (ratón/táctil) borra los pliegues seleccionados para ordenación cuando se cambia de pieza, con independencia del selector táctil antiguo.
+- Se incorpora prueba de navegador para **Play/Pausa**, tecla de cabecera, continuidad G1 → G2 de la omega, permanencia del signo −90° y bucle continuo, tanto en PC como en móvil. Pruebas de longitud útil y selección de orden incluidas en CI.
+- El modelo es una **previsualización geométrica**, no un programa CNC validado: sigue pendiente trazar contra planos acotados cada punzón/matriz y verificar cinemática de volteo, longitud real útil, cargas y colisiones tridimensionales de la Trumpf V85.
+
