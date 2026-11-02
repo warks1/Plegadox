@@ -187,8 +187,8 @@ export function installTouchProgrammer({root,getPiece,onChange}){
  }
  apply.onclick=()=>{
   const value=Number(input.value.replace(',','.'));
-  safeChange({type:state.type,index:state.index,value});
   input.blur();
+  safeChange({type:state.type,index:state.index,value});
  };
  input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();apply.click();}});
  inverse.onclick=()=>safeChange({type:'invert',index:state.index});
@@ -218,7 +218,9 @@ export function installTouchProgrammer({root,getPiece,onChange}){
   e.preventDefault();state.zoom=clamp(state.zoom*(e.deltaY<0?1.15:.87),.6,5);render();
  },{passive:false});
  svg.addEventListener('pointerdown',e=>{
-  svg.setPointerCapture?.(e.pointerId);
+  // Capturar sólo el fondo: si capturamos los vértices, algunos
+  // navegadores táctiles envían el click a svg y no al pliegue.
+  if(e.target===svg)svg.setPointerCapture?.(e.pointerId);
   state.pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(state.pointers.size===1)state.drag={x:e.clientX,y:e.clientY,
    origX:state.panX,origY:state.panY,moved:false};
