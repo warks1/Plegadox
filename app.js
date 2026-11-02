@@ -19,7 +19,7 @@ import {gaugePlacement} from './backgauge-placement.js';
 import {technicalScene} from './technical-section.js';
 import {recommendTooling} from './tooling-advisor.js';
 import {auditForWorkshop} from './workshop-audit.js';
-import {buildProjectBackup,restoreProjectBackup} from './project-backup.js';
+import {buildProjectBackup,restoreProjectBackup,readStoredToolsForBackup} from './project-backup.js';
 import {readProjectLibrary,saveLibraryPiece,getLibraryPiece,deleteLibraryPiece,setActiveLibraryId,getActiveLibraryId} from './project-library.js';
 import {loadImportedTools,registerImportedTools,persistImportedTool} from './tool-dxf.js';
 import {setupToolDxfImporter} from './tool-import-ui.js';
@@ -312,7 +312,7 @@ function configure(){
   const status=$('completeProjectStatus');
   try{
    const backup=buildProjectBackup({piece,machine:getV85(),
-    tools:loadImportedTools(localStorage),
+    tools:readStoredToolsForBackup(localStorage),
     library:readProjectLibrary(localStorage),
     activeLibraryId:getActiveLibraryId(localStorage)});
    downloadProjectJson(backup,projectSafeName()+'-BACKUP-COMPLETO.json');
