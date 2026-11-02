@@ -1017,3 +1017,35 @@ la pausa, la animación activa al pasar del primer al segundo golpe, el
 perfil sin colapso y los anteriores tests de continuidad.
 No se ha modelado una trayectoria de manipulador física ni validado
 el volumen real de los útiles.
+
+## R23 · Alturas del utillaje y geometría de pata de cabra auditadas
+Se revisó la crítica de que las patas de cabra no respetan sus dibujos:
+el motor antiguo usaba una misma cuña/escote deformados en escala para
+referencias CONIC GN9/GN6 y AMADA W55/W95/H220, sin vástago acotable.
+La sección se ha reconstruido con **vástago superior diferenciado, hombros,
+relieve lateral cóncavo y punta redondeada**. Se conservan las H TOTALES
+de las fichas oficiales CONIC (120 mm) y AMADA (200/220 mm) sin añadir
+tramos ficticios al alto del perfil. La figura del cuello y el amarre aún
+son PARAMÉTRICOS: **no equivalen a un contorno CAD de fabricante**.
+
+Para la referencia fotográfica `ref-goose-50-100-r1`, la cota **100 mm**
+mide desde el hombro inferior a la punta y el alcance horizontal es
+50 mm. El vástago superior NO está dimensionado en el dibujo: la
+aproximación visual del saliente se ha revisado de ≈37 a ≈28 mm.
+**H TOTAL ≈128 mm es estimada, no una cota de fabricación.**
+La geometría calculada conserva R1 en la punta (Ø2) y el hombro en
+H útil100, sin inventar certificación de la altura total.
+
+**Corrección de radio:** las 7 referencias AMADA del catálogo citan
+R0,6. En el motor el parámetro `tip` representa DIÁMETRO, por lo que
+se ajustaron de `tip=0.6` (dibujaba R0,3 INCORRECTO) a `tip=1.2`
+(dibuja **R0,6**).
+
+La nueva auditoría `tool-height-audit.js` compara en milímetros
+la cota de ficha con el ALTO del perfil dibujado de TODOS los punzones
+y matrices. Diferencia explícitamente `H total` y `H útil`; muestra
+ambas en catálogo/inspector cuando procede, y emite avisos en auditoría
+de fabricación si hay discrepancias o alturas sin acotar.
+La matriz Rolleri H total120 / H útil100 conserva ambos datos.
+El CAD real de escotes, amarres y perfiles de herramienta sigue
+pendiente de aportarse y verificarse. No autoriza la fabricación.
