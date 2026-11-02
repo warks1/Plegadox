@@ -1314,3 +1314,17 @@ html{background:#020913}
  .px-audit-breakdown li{font-size:12px}
  .px-project-backup .inline-actions{display:flex;flex-wrap:wrap;gap:10px}
  .px-project-backup .inline-actions button{width:100%;min-height:44px}}
+
+/* R18: biblioteca de piezas versionadas en el navegador. */
+.px-project-library{margin:14px 0 20px}
+.px-project-library .cardhead{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.px-project-library-items{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:10px;margin:12px 0}
+.px-library-entry{display:flex;flex-direction:column;gap:7px;padding:12px;border-radius:10px;border:1px solid #adc9da;
+ background:#f6fbff;color:#244c65;overflow-wrap:anywhere}
+.px-library-entry.selected{border:2px solid #348ab8;background:#edf8ff}
+.px-library-entry strong{font-size:13px}
+.px-library-entry small{font-size:12px;line-height:1.5}
+.px-library-entry .inline-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto}
+.px-library-entry button{min-height:38px}
+@media(max-width:560px){.px-project-library-items{grid-template-columns:1fr}
+ .px-project-library .inline-actions>button{min-height:44px}}
