@@ -24,6 +24,8 @@ try{
   assert.match(await page.locator('#libraryActiveLabel').textContent(),/revisión 1/);
   await page.locator('#pieceName').fill('OMEGA SEGUNDA REVISION');
   await page.locator('#pieceName').dispatchEvent('change');
+  assert.match(await page.locator('#libraryActiveLabel').textContent(),
+   /Cambios sin guardar/);
   await page.locator('#librarySaveBtn').click();
   assert.match(await page.locator('#libraryActiveLabel').textContent(),/revisión 2/);
   await page.locator('#libraryItems button').filter({hasText:'Abrir r1'}).click();
