@@ -1049,3 +1049,32 @@ de fabricación si hay discrepancias o alturas sin acotar.
 La matriz Rolleri H total120 / H útil100 conserva ambos datos.
 El CAD real de escotes, amarres y perfiles de herramienta sigue
 pendiente de aportarse y verificarse. No autoriza la fabricación.
+
+## R24 · Programación de pieza tocando la pantalla y asesor con perfiles
+A partir del vídeo real Cybelec `IMG_9031.mp4`, se incorpora un panel
+**Programación táctil** en «Editar pieza». Toca el tramo de chapa para
+seleccionar y escribir la longitud con un teclado numérico de botones
+grandes; toca el vértice para introducir el ángulo firmado (por ejemplo
+`+90` o `-90`), usa **invertir ±** y añade alas pulsando el extremo
+de la pieza o el botón **Añadir ala**. El botón **Orden tocando pliegues**
+permite seleccionar cada vértice en la secuencia real de máquina.
+Se incluyen gestos de pellizco para zoom, arrastre del fondo, zoom con
+rueda y controles de centrado y escala. No se reemplazan los controles
+anteriores por tabla y las piezas se conservan en la misma biblioteca.
+El motor garantiza que al añadir/eliminar alas se sincronizan también
+índices de secuencia, Stop/Support y lado de apoyo.
+
+En **Asesor de matriz V y punzón**, la pareja recomendada y cada
+alternativa muestran ahora DOS DIBUJOS 2D: la sección de la matriz y
+la del punzón, construidas con `sectionDie/sectionPunch` de los
+mismos perfiles utilizados en la cabina y catálogo. Se indica
+apertura V, ángulos, altura nominal H, radio de punta y la diferencia
+entre cota útil y total cuando procede. Al tocarlos, el dibujo se abre
+ampliado. Cambiar el espesor, ángulo o ala vuelve a evaluar la propuesta
+y reconstruye ambos dibujos; el asesor nunca modifica las herramientas
+seleccionadas sin pulsar expresamente «Aplicar».
+
+Esta pantalla sirve para programación geométrica táctil; no reemplaza
+calibración de ejes X/R/Z, sólidos CAD verificados ni aprobación real
+de colisiones. Las herramientas sin contorno CAD completo se muestran
+con una advertencia de perfil provisional.

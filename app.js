@@ -18,6 +18,7 @@ import {getV85,updateV85} from './machine-config.js';
 import {gaugePlacement} from './backgauge-placement.js';
 import {technicalScene} from './technical-section.js';
 import {recommendTooling} from './tooling-advisor.js';
+import {installTouchProgrammer} from './touch-programmer.js';
 import {auditForWorkshop} from './workshop-audit.js';
 import {buildProjectBackup,restoreProjectBackup,readStoredToolsForBackup} from './project-backup.js';
 import {readProjectLibrary,saveLibraryPiece,getLibraryPiece,deleteLibraryPiece,setActiveLibraryId,getActiveLibraryId} from './project-library.js';
@@ -37,6 +38,7 @@ let pauseOn2DPenetration=false; // Vista previa continua por defecto.
 let camera={yaw:-.62,pitch:.45,zoom:1};
 let machineView={panX:0,panY:0,zoom:1};
 let touchOrderEnabled=false,chosenTouchOrder=[];
+let touchProgrammer=null;
 let pendingSequenceAdvice=null;
 let measurementInputKey=measurementKey(piece),lastSavedMeasurement=null;
 const geometryCache={key:null,result:null};
@@ -188,7 +190,7 @@ function changePiece(p,structural=false){
  if($('gaugeSideReview')){$('gaugeSideReview').dataset.bend='';
   $('gaugeSideReview').textContent='Referencia modificada. Compara ambos lados si necesitas comprobar los útiles 2D.';}
  if(structural)resetPlayback();
- renderEditor();renderSetup();paintAll();
+ renderEditor();renderSetup();paintAll();touchProgrammer?.render();
  window.dispatchEvent(new CustomEvent('plegadox:pieceChanged',{detail:piece}));
 }
 function configure(){
@@ -216,7 +218,7 @@ function configure(){
   }
   changePiece({...piece,rmMPa:raw===''?null:Number(raw)});
  });
- $('newBtn').onclick=()=>{detachLibraryPiece();changePiece({name:'Nueva pieza',flanges:[100,100],angles:[90],order:[0],material:'s235',thickness:2,width:500,die:'v16',punch:'straight88'},true);};
+ $('newBtn').onclick=()=>{detachLibraryPiece();changePiece({name:'Nueva pieza',flanges:[100,100],angles:[0],order:[0],material:'s235',thickness:2,width:500,die:'v16',punch:'straight88'},true);};
  $('sampleBtn').onclick=()=>{detachLibraryPiece();changePiece(EXAMPLE,true);};
  $('addFlange').onclick=()=>{if(piece.flanges.length>=20)return;changePiece({...piece,flanges:[...piece.flanges,50],angles:[...piece.angles,90],order:[...piece.order,piece.angles.length],stopByBend:[...piece.stopByBend,1],gaugeSideByBend:[...piece.gaugeSideByBend,'auto']},true);};
  $('resetOrder').onclick=()=>changePiece({...piece,order:piece.angles.map((_,i)=>i)},true);
@@ -496,6 +498,30 @@ function renderToolAdvisor(){
    'V'+fmt(pair.dieOpening)+' / '+pair.dieAngle+'° · punzón '+
    pair.punchAngle+'° · ala mínima ≈ '+fmt(pair.flangeLimit)+
    ' mm · '+fmt(pair.forceTonnes)+' t';
+  // El asesor usa la sección exacta que representa la cabina y el
+  // inspector. Nunca sustituir la silueta por un pictograma genérico.
+  const picture=document.createElement('div');picture.className='px-advisor-tool-pictures';
+  for(const [kind,id] of [['die',pair.dieId],['punch',pair.punchId]]){
+   const tool=(kind==='die'?DIES:PUNCHES).find(t=>t.id===id);
+   if(!tool)continue;
+   const pict=document.createElement('button');
+   pict.type='button';pict.className='px-advisor-tool-picture';
+   pict.dataset.kind=kind;pict.dataset.toolId=id;
+   pict.setAttribute('aria-label','Ampliar dibujo del '+(kind==='die'?'matriz ':'punzón ')+tool.name);
+   const figure=toolCardPreview(tool,kind);
+   figure.setAttribute('aria-hidden','true');
+   const caption=document.createElement('strong');caption.textContent=kind==='die'?'MATRIZ · V'+numbers(tool.opening,1):'PUNZÓN';
+   const info=document.createElement('small');
+   const section=kind==='die'?sectionDie(tool):sectionPunch(tool);
+   info.textContent=tool.name+' · '+tool.angle+'° · H '+
+    (tool.profileStyle==='user-photo'?'útil ':'')+tool.height+' mm'+
+    (kind==='punch'?' · R'+numbers((tool.tip||0)/2,2):'')+
+    (tool.profileStyle==='user-photo'?' · parte superior estimada':'');
+   const note=document.createElement('em');note.textContent='Perfil 2D · comprobar CAD';
+   pict.append(caption,figure,info,note);
+   pict.onclick=()=>showAdvisorToolDrawing(tool,kind);
+   picture.append(pict);
+  }
   const warnings=document.createElement('small');
   warnings.textContent=pair.warnings.join(' · ');
   const apply=document.createElement('button');apply.type='button';
@@ -529,10 +555,38 @@ function renderToolAdvisor(){
    }
    changePiece({...draft,die:pair.dieId,punch:pair.punchId},true);
   };
-  el.append(header,data,warnings,apply);choices.append(el);
+  el.append(header,data,picture,warnings,apply);choices.append(el);
  };
  addPair(primary,true);
  advice.alternatives.forEach(pair=>addPair(pair,false));
+}
+function showAdvisorToolDrawing(tool,kind){
+ let dialog=$('advisorToolDialog');
+ if(!dialog){
+  dialog=document.createElement('dialog');dialog.id='advisorToolDialog';
+  dialog.className='px-tool-dialog';
+  const close=document.createElement('button');close.type='button';
+  close.textContent='Cerrar dibujo';close.className='px-tool-dialog-close';
+  close.onclick=()=>dialog.close();
+  dialog.append(close);
+  document.body.append(dialog);
+ }
+ dialog.querySelectorAll('.px-large-tool-figure').forEach(x=>x.remove());
+ const figure=document.createElement('div');figure.className='px-large-tool-figure';
+ const heading=document.createElement('h3');heading.textContent=(kind==='die'?'Matriz: ':'Punzón: ')+tool.name;
+ const graphic=toolCardPreview(tool,kind);
+ graphic.classList.add('px-large-tool-svg');graphic.setAttribute('role','img');
+ graphic.setAttribute('aria-label','Perfil acotado disponible de '+tool.name);
+ const section=kind==='die'?sectionDie(tool):sectionPunch(tool);
+ const dimensions=document.createElement('p');
+ dimensions.textContent='Ángulo '+tool.angle+'° · Altura '+(tool.profileStyle==='user-photo'?'útil ':'total ')+
+  tool.height+' mm'+(kind==='die'?' · V'+tool.opening+' mm':' · radio de punta R'+numbers((tool.tip||0)/2,2)+' mm')+
+  (tool.profileStyle==='user-photo'?' · H total ilustrada ≈'+numbers(section.height,1)+' mm (no acotada)':'');
+ const notice=document.createElement('p');
+ notice.textContent='El perfil dibujado puede ser provisional en zonas sin CAD acotado; no certifica amarres ni colisiones físicas.';
+ figure.append(heading,graphic,dimensions,notice);
+ dialog.append(figure);
+ if(!dialog.open)dialog.showModal();
 }
 /** Los botones viajan al instante real del visor, no a una imagen fija. */
 function renderGaugeReview(scan){
@@ -1347,6 +1401,8 @@ function tick(now){
  }
 }
 configure();
+touchProgrammer=installTouchProgrammer({root:$('touchProgramPanel'),getPiece:()=>piece,
+ onChange:(modified,structural)=>changePiece(modified,structural)});
 setupToolDxfImporter({add:(tool,kind)=>{
  // Persistir ANTES de alterar el catálogo: si falla la cuota, no se
  // añade una herramienta efímera que desaparezca al recargar.

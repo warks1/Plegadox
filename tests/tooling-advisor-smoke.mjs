@@ -31,12 +31,12 @@ try{
    return recommendTooling(window.PLEGADOX_STATE().piece).choice;
   });
   assert.ok(expected,'Existe una pareja recomendada');
-  await page.locator('#toolAdvisorOptions .px-advisor-option.primary button').click();
+  await page.locator('#toolAdvisorOptions .px-advisor-option.primary .px-advisor-apply').click();
   assert.equal(await page.locator('#die').inputValue(),expected.dieId,
    'La acción aplica exactamente la matriz aconsejada');
   assert.equal(await page.locator('#punch').inputValue(),expected.punchId,
    'La acción aplica exactamente el punzón aconsejado');
-  assert.equal(await page.locator('#toolAdvisorOptions .px-advisor-option.primary button').isDisabled(),true);
+  assert.equal(await page.locator('#toolAdvisorOptions .px-advisor-option.primary .px-advisor-apply').isDisabled(),true);
   // Una ala demasiado corta debe cancelar sugerencia, no afirmar que V16 es segura.
   await page.locator('#flangeRows input[aria-label="Longitud ala 1"]').fill('1');
   await page.locator('#flangeRows input[aria-label="Longitud ala 1"]').dispatchEvent('change');

@@ -1,6 +1,6 @@
 {
-  "build": "PLEGADOX-20261102-R23",
+  "build": "PLEGADOX-20261102-R24",
   "version": "0.9.1",
   "gauge": "low-front-lip-riser-thickness-overlap-and-framing",
-  "cache": "plegadox-static-0.9.1-tool-height-geometry-23"
+  "cache": "plegadox-static-0.9.1-hmi-touch-tool-drawings-24"
 }
