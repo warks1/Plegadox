@@ -11,7 +11,7 @@ function compactLabel(t){return t?.reference||t?.name||'—';}
 function topbar(){
  const {piece,sim}=screenData(),tools=getTooling(piece),st=stage(piece,sim.time);
  const angle=piece.angles[st.activeBend]||0;
- const newKey=JSON.stringify([piece.name,piece.material,piece.thickness,piece.die,piece.punch,angle,st.phase]);
+ const newKey=JSON.stringify([piece.name,piece.material,piece.thickness,piece.die,piece.punch,angle,st.phase,!!sim.playing,!!sim.error]);
  if(lastTop===newKey)return;
  lastTop=newKey;
  const entries={
@@ -22,7 +22,8 @@ function topbar(){
  topV:tools.die.opening+' mm',
  topPunch:compactLabel(tools.punch),
  topDie:compactLabel(tools.die),
- topState:st.completed?'Pieza simulada':st.phase
+ topState:sim.error?'Error de simulación':sim.playing?'Reproduciendo · '+st.phase:
+  st.completed?'Pieza simulada':st.phase
  };
  for(const [id,text] of Object.entries(entries)){const el=$(id);if(el)el.textContent=text;}
 }
