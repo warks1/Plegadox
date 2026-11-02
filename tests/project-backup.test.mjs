@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {EXAMPLE} from '../engine.js';
 import {V85_FACTORY,V85_STORAGE_KEY} from '../machine-config.js';
 import {TOOL_DXF_STORAGE_KEY} from '../tool-dxf.js';
+import {MEASUREMENTS_KEY,createMeasurement} from '../workshop-measurements.js';
 import {PIECE_KEY,PROJECT_FORMAT,buildProjectBackup,parseProjectBackup,
  restoreProjectBackup} from '../project-backup.js';
 const sample=(id,kind)=>({
@@ -96,4 +97,42 @@ test('la recuperación no sustituye silenciosamente un útil desconocido por uno
   assert.equal(st.getItem(PIECE_KEY),'ANTERIOR');
   assert.equal(st.calls.length,0);
  }
+});
+
+test('R19: backup incluye mediciones sin elevar acreditación y las recupera',()=>{
+ const m=createMeasurement(EXAMPLE,{measuredFlat:250,measuredRadius:2,
+  anglesChecked:true},{id:'wm-example-01',now:'2026-11-02T12:30:00Z'});
+ const backup=buildProjectBackup({piece,machine:V85_FACTORY,tools:[p,d],
+  measurements:[m]});
+ assert.equal(backup.measurements.length,1);
+ assert.equal(backup.measurements[0].verified,false);
+ const st=store({});
+ const restored=restoreProjectBackup(st,backup);
+ assert.equal(restored.measurements.length,1);
+ assert.equal(JSON.parse(st.getItem(MEASUREMENTS_KEY)).length,1);
+ // Reimportación idéntica no duplica las mediciones existentes.
+ restoreProjectBackup(st,backup);
+ assert.equal(JSON.parse(st.getItem(MEASUREMENTS_KEY)).length,1);
+});
+test('R19: sigue abriendo backups antiguos R17 sin campo measurements',()=>{
+ const backup=buildProjectBackup({piece,machine:V85_FACTORY,tools:[p,d]});
+ delete backup.measurements;
+ const st=store({[MEASUREMENTS_KEY]:'SENTINEL'});
+ restoreProjectBackup(st,backup);
+ assert.equal(st.getItem(MEASUREMENTS_KEY),'SENTINEL');
+});
+test('R19: backup con medición corrupta o ID conflictivo no altera datos locales',()=>{
+ const record=createMeasurement(EXAMPLE,{measuredFlat:250},{id:'wm-example-01'});
+ const backup=buildProjectBackup({piece,machine:V85_FACTORY,tools:[p,d],
+  measurements:[record]});
+ const st=store({[PIECE_KEY]:'PIEZA ORIGINAL',
+  [MEASUREMENTS_KEY]:JSON.stringify([{...record,notes:'OTRA MEDICIÓN'}])});
+ const oldPiece=st.getItem(PIECE_KEY),oldMeasurement=st.getItem(MEASUREMENTS_KEY);
+ assert.throws(()=>restoreProjectBackup(st,backup),/Conflicto/);
+ assert.equal(st.getItem(PIECE_KEY),oldPiece);
+ assert.equal(st.getItem(MEASUREMENTS_KEY),oldMeasurement);
+ assert.equal(st.calls.length,0);
+ const bad={...backup,measurements:[{...record,measuredFlat:NaN}]};
+ assert.throws(()=>restoreProjectBackup(st,bad),/Longitud medida/);
+ assert.equal(st.calls.length,0);
 });
