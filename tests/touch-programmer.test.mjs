@@ -40,7 +40,7 @@ test('orden por toque guarda la permutación elegida sin modificar ángulos',()=
 });
 test('valores fuera de rango o selecciones incompletas no llegan a los controles CNC',()=>{
  for(const action of [{type:'length',index:0,value:0},
-  {type:'length',index:4,value:50},{type:'angle',index:1,value:-190},
+  {type:'length',index:5,value:50},{type:'angle',index:1,value:-190},
   {type:'angle',index:4,value:90},{type:'order',indices:[0,1,1,3]},
   {type:'remove',index:0},{type:'append',value:0}]){
   assert.throws(()=>editTouchPiece(EXAMPLE,action),action.type);
