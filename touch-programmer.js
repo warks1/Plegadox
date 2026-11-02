@@ -117,6 +117,7 @@ export function installTouchProgrammer({root,getPiece,onChange}){
  };
  function render(){
   const p=normalized(getPiece());
+  state.index=clamp(state.index,0,(state.type==='length'?p.flanges.length:p.angles.length)-1);
   const shape=profile(p,p.angles.map(()=>1)).points;
   const xs=shape.map(s=>s.x),ys=shape.map(s=>s.y);
   const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
@@ -288,7 +289,13 @@ export function installTouchProgrammer({root,getPiece,onChange}){
   const drag=state.drag;
   if(!drag)return;
   const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
-  if(Math.hypot(dx,dy)>6)drag.moved=true;
+  if(Math.hypot(dx,dy)>6&&!drag.moved){
+   drag.moved=true;
+   // Capture only once a drag is real. Capturing at pointerdown would
+   // swallow the normal click on a flange or bend in desktop browsers.
+   if(e.pointerType==='mouse'&&drag.type==='flange')
+    svg.setPointerCapture?.(e.pointerId);
+  }
   if(!drag.moved)return;
   state.ignoreClick=true;
   if(drag.type==='flange'){
