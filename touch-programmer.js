@@ -237,41 +237,132 @@ export function installTouchProgrammer({root,getPiece,onChange}){
  svg.addEventListener('wheel',e=>{
   e.preventDefault();state.zoom=clamp(state.zoom*(e.deltaY<0?1.15:.87),.6,5);render();
  },{passive:false});
+ // Coordinates in the SVG viewBox, independent of the browser's CSS
+ // scaling. This also makes dragging vertical flanges reliable on PC.
+ const svgPoint=e=>{
+  const matrix=svg.getScreenCTM();
+  if(!matrix)return null;
+  const point=svg.createSVGPoint();
+  point.x=e.clientX;point.y=e.clientY;
+  return point.matrixTransform(matrix.inverse());
+ };
+ const ghost=()=>svg.querySelector('.px-mouse-length-preview');
  svg.addEventListener('pointerdown',e=>{
-  // Capturar sólo el fondo: si capturamos los vértices, algunos
-  // navegadores táctiles envían el click a svg y no al pliegue.
-  if(e.target===svg)svg.setPointerCapture?.(e.pointerId);
+  if(e.pointerType==='mouse')setInteractionMode('mouse');
+  if(e.pointerType==='touch')setInteractionMode('touch');
+  if(e.pointerType==='mouse'&&e.button!==0&&e.button!==1)return;
+  const pos=svgPoint(e);
   state.pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
-  if(state.pointers.size===1)state.drag={x:e.clientX,y:e.clientY,
-   origX:state.panX,origY:state.panY,moved:false};
-  else state.drag=null;
+  if(state.pointers.size>1){state.drag=null;return;}
+  const segment=e.target.closest?.('[data-segment]');
+  // On desktop, left-dragging a flange projects the mouse delta onto
+  // that flange's axis. A short click still selects normally.
+  if(e.pointerType==='mouse'&&e.button===0&&segment&&!state.orderMode){
+   const index=Number(segment.dataset.segment);
+   const p=normalized(getPiece()),mapped=state.lastRender?.mapped;
+   if(!mapped?.[index+1])return;
+   state.drag={type:'flange',index,x:e.clientX,y:e.clientY,
+    startPos:pos,startLength:p.flanges[index],scale:state.lastRender.scale,
+    segmentX:mapped[index+1].x-mapped[index].x,
+    segmentY:mapped[index+1].y-mapped[index].y,
+    moved:false,value:p.flanges[index]};
+   return;
+  }
+  // Clicks on the piece remain clicks (not accidental viewport pans).
+  if(segment||e.target.closest?.('[data-bend],[data-add]'))return;
+  svg.setPointerCapture?.(e.pointerId);
+  state.drag={type:'pan',x:e.clientX,y:e.clientY,origX:state.panX,
+   origY:state.panY,moved:false};
  });
  svg.addEventListener('pointermove',e=>{
   if(!state.pointers.has(e.pointerId))return;
-  const prev=state.pointers.get(e.pointerId);
   state.pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(state.pointers.size===2){
    const all=[...state.pointers.values()];
    const dist=Math.hypot(all[0].x-all[1].x,all[0].y-all[1].y);
    if(state.pinchDistance)state.zoom=clamp(state.zoom*dist/state.pinchDistance,.6,5);
-   state.pinchDistance=dist;state.ignoreClick=true;render();return;
+   state.pinchDistance=dist;
+   state.ignoreClick=true;
+   render();return;
   }
-  if(state.drag){
-   const dx=e.clientX-state.drag.x,dy=e.clientY-state.drag.y;
-   if(Math.hypot(dx,dy)>8)state.drag.moved=true;
-   if(state.drag.moved){state.panX=state.drag.origX+dx;state.panY=state.drag.origY+dy;render();}
+  const drag=state.drag;
+  if(!drag)return;
+  const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+  if(Math.hypot(dx,dy)>6)drag.moved=true;
+  if(!drag.moved)return;
+  state.ignoreClick=true;
+  if(drag.type==='flange'){
+   const pos=svgPoint(e);
+   if(!pos||!drag.startPos)return;
+   try{
+    drag.value=flangeLengthFromMouseDrag({
+     originalLength:drag.startLength,
+     deltaX:pos.x-drag.startPos.x,deltaY:pos.y-drag.startPos.y,
+     segmentX:drag.segmentX,segmentY:drag.segmentY,
+     scale:drag.scale,zoom:state.zoom
+    });
+   }catch{return;}
+   input.value=String(drag.value);
+   status.textContent='Arrastrando ala '+(drag.index+1)+': '+format(drag.value)+
+    ' mm. Suelta el ratón para confirmar.';
+   // A preview line follows the new geometry WITHOUT changing the saved
+   // piece or rescaling the scene until release.
+   const p=editTouchPiece(getPiece(),{type:'length',index:drag.index,value:drag.value});
+   const renderInfo=state.lastRender;
+   const points=profile(p,p.angles.map(()=>1)).points.map(q=>({
+    x:V_WIDTH/2+(q.x-renderInfo.cx)*renderInfo.scale,
+    y:V_HEIGHT/2-(q.y-renderInfo.cy)*renderInfo.scale
+   }));
+   let preview=ghost();
+   if(!preview){
+    preview=marker('polyline',{class:'px-mouse-length-preview',fill:'none',
+     stroke:'#ffd178','stroke-width':5,'stroke-dasharray':'9 5',
+     'pointer-events':'none','stroke-linecap':'round'});
+    svg.querySelector('g')?.append(preview);
+   }
+   preview.setAttribute('points',points.map(q=>q.x+','+q.y).join(' '));
+  }else if(drag.type==='pan'){
+   state.panX=drag.origX+dx*V_WIDTH/svg.getBoundingClientRect().width;
+   state.panY=drag.origY+dy*V_HEIGHT/svg.getBoundingClientRect().height;
+   render();
   }
  });
  const endPointer=e=>{
-  if(state.drag?.moved)state.ignoreClick=true;
-  state.pointers.delete(e.pointerId);state.drag=null;state.pinchDistance=null;
-  if(state.pointers.size===0&&state.ignoreClick){
-   // click is synthesized immediately after pointerup; clear on next task.
-   setTimeout(()=>{state.ignoreClick=false;},0);
+  const drag=state.drag;
+  state.pointers.delete(e.pointerId);
+  state.drag=null;state.pinchDistance=null;
+  if(drag?.moved&&drag.type==='flange'){
+   // Only one edit at mouseup: consistent undo/revision semantics.
+   state.type='length';state.index=drag.index;
+   safeChange({type:'length',index:drag.index,value:drag.value});
+   pick('length',drag.index);
   }
+  if(drag?.moved)state.ignoreClick=true;
+  if(state.pointers.size===0&&state.ignoreClick)
+   setTimeout(()=>{state.ignoreClick=false;},0);
  };
  for(const ev of ['pointerup','pointercancel','lostpointercapture'])
   svg.addEventListener(ev,endPointer);
+ svg.addEventListener('dblclick',e=>{
+  if(root.dataset.inputMode==='mouse'&&!state.orderMode){
+   input.focus();input.select();
+   status.textContent='Introduce la medida o el ángulo con el teclado del PC y pulsa Intro.';
+  }
+ });
+ root.addEventListener('keydown',e=>{
+  if(root.dataset.inputMode!=='mouse'||e.target===input||
+   e.target.closest?.('button'))return;
+  if(e.key==='Escape'&&state.orderMode){
+   e.preventDefault();orderBtn.click();
+  }else if(e.key==='Delete'&&state.type==='length'&&
+   state.index>0&&normalized(getPiece()).flanges.length>2){
+   e.preventDefault();remove.click();
+  }else if((e.key==='+'||e.key==='=')&&!e.ctrlKey){
+   e.preventDefault();actionAdd.click();
+  }else if(e.key.toLowerCase()==='i'&&state.type==='angle'){
+   e.preventDefault();inverse.click();
+  }
+ });
  pick('length',0);
  return {render,selectLength:index=>pick('length',index),selectAngle:index=>pick('angle',index)};
 }
