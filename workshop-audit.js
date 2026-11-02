@@ -9,6 +9,7 @@ import {selectionCompatibility} from './catalog.js';
 import {inspectSequenceTools} from './tool-collision.js';
 import {scanSheetSequence} from './sheet-interference.js';
 import {scanGaugeSequence} from './gauge-sequence-review.js';
+import {toolHeightAudit} from './tool-height-audit.js';
 
 const round=n=>Math.round(n*100)/100;
 function item(code,level,message,bend=null){
@@ -49,6 +50,15 @@ export function auditForWorkshop(input,options={}){
  if(die.length&&p.width>die.length)
   push('die-length','review','Ancho de pieza '+p.width+' mm superior al segmento de matriz '+die.length+' mm; comprobar ensamblaje y carga por segmento.');
  for(const [kind,t] of [['punzón',punch],['matriz',die]]){
+  const dims=toolHeightAudit(t,kind==='punzón'?'punch':'die');
+  if(!dims.heightMatches)
+   push('height-'+kind,'block','La altura declarada del '+kind+
+    ' NO coincide con el contorno del visor: ficha '+dims.declaredHeight+
+    ' mm, perfil '+dims.measuredNominal+' mm.');
+  if(dims.nominalType==='working')
+   push('head-projection-'+kind,'missing','La pata de cabra '+t.name+
+    ' tiene H útil '+dims.declaredHeight+' mm acotada, pero el vástago superior ('+
+    dims.estimatedUpperHeight+' mm) es estimado: H total SIN VERIFICAR.');
   if(t.profileAccuracy!=='verified'||t.importedDxf||t.verifiedSpecs!==true)
    push('profile-'+kind,'missing','Contorno de '+kind+' no acreditado por CAD acotado de fabricante: '+t.name+'.');
   if(!Number.isFinite(Number(t.maxLoadKNm))||Number(t.maxLoadKNm)<=0)
