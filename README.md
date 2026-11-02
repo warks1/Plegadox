@@ -1078,3 +1078,28 @@ Esta pantalla sirve para programación geométrica táctil; no reemplaza
 calibración de ejes X/R/Z, sólidos CAD verificados ni aprobación real
 de colisiones. Las herramientas sin contorno CAD completo se muestran
 con una advertencia de perfil provisional.
+
+## R25 · Editor gráfico adaptado a ratón y teclado del PC
+El editor R24 compartía la misma lógica de punzones, cotas y pliegues,
+pero mostraba un teclado táctil también en ordenadores. Ahora detecta
+`pointer: fine` (ratón/trackpad) y oculta el teclado numérico visual;
+mantiene el campo de medida y el teclado físico. En PC:
+- **Clic** sobre un tramo o vértice para seleccionar ala/ángulo.
+- **Doble clic** para enfocar y editar la medida con el teclado del PC;
+  Enter confirma. Ángulos firmados +90/-90 sin sustituir el signo.
+- **Arrastrar con botón izquierdo el tramo de un ala** para cambiar
+  su longitud (proyección sobre el eje del tramo; funciona también
+  en alas verticales y bajo zoom).
+- **Arrastrar el fondo** para desplazar la vista; **rueda del ratón**
+  y botones para ampliar/alejar. Se mantiene asignación de orden por
+  clic sobre vértices y añadir ala por clic en el extremo.
+- Se muestra una línea de previsualización amarilla durante el
+  arrastre; el nuevo valor **solo se guarda al soltar** el ratón.
+
+En iPhone/tablet, el editor conserva teclado táctil, selección por
+toque, pellizco y desplazamiento. El modo también responde al tipo de
+puntero utilizado, útil en equipos híbridos y portátiles convertibles.
+
+Todos los datos se guardan en el mismo modelo de pieza, con la misma
+secuencia, ángulos, tipos de tope y herramientas. La adaptación
+PC no modifica geometrías industriales ni sustituye pruebas de colisión.
