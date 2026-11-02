@@ -349,10 +349,12 @@ function configure(){
   const status=$('completeProjectStatus');
   try{
    const backup=buildProjectBackup({piece,machine:getV85(),
-    tools:loadImportedTools(localStorage)});
+    tools:loadImportedTools(localStorage),
+    measurements:readMeasurements(localStorage)});
    downloadProjectJson(backup,projectSafeName()+'-BACKUP-COMPLETO.json');
-   status.textContent='Copia descargada: pieza, máquina y '+backup.importedTools.length+
-    ' herramientas DXF. Comprueba el archivo antes de borrar datos locales.';
+   status.textContent='Copia descargada: pieza, máquina, '+backup.importedTools.length+
+    ' herramientas DXF y '+backup.measurements.length+
+    ' mediciones de taller. Comprueba el archivo antes de borrar datos locales.';
    status.dataset.state='success';
   }catch(err){status.textContent='Backup no generado: '+err.message;status.dataset.state='error';}
  };
@@ -373,8 +375,9 @@ function configure(){
    updateV85(restored.machine);
    detachLibraryPiece();
    changePiece(restored.piece,true);
-   status.textContent='Recuperado: pieza, V85 y '+restored.importedTools.length+
-    ' herramientas DXF. No se han borrado otros útiles guardados.';
+   status.textContent='Recuperado: pieza, V85, '+restored.importedTools.length+
+    ' herramientas DXF y '+restored.measurements.length+
+    ' mediciones de taller. No se han borrado otros útiles guardados.';
    status.dataset.state='success';
   }catch(err){status.textContent='Restauración rechazada: '+err.message;
    status.dataset.state='error';}
