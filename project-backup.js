@@ -5,7 +5,7 @@
  */
 import {DIES,PUNCHES,MATERIALS} from './engine.js';
 import {normalizeV85,V85_STORAGE_KEY} from './machine-config.js';
-import {TOOL_DXF_STORAGE_KEY,loadImportedTools,validateContour} from './tool-dxf.js';
+import {TOOL_DXF_STORAGE_KEY,validateContour} from './tool-dxf.js';
 import {PROJECT_LIBRARY_KEY,ACTIVE_LIBRARY_ID,readProjectLibrary} from './project-library.js';
 export const PROJECT_FORMAT='plegadox-complete-project-v1';
 export const PIECE_KEY='plegadox:piece:v1';
@@ -66,6 +66,20 @@ function checkedTools(list){
  const data=list.map(checkedTool);
  check(new Set(data.map(t=>t.id)).size===data.length,'IDs de herramientas repetidos');
  return data;
+}
+/**
+ * No reutilizar loadImportedTools() para un backup: ese lector tolerante
+ * descarta entradas corruptas y podría hacerlas desaparecer al reescribir.
+ */
+export function readStoredToolsForBackup(storage){
+ check(storage&&typeof storage.getItem==='function',
+  'Almacenamiento local no disponible');
+ const raw=storage.getItem(TOOL_DXF_STORAGE_KEY);
+ if(raw===null)return [];
+ let source;
+ try{source=JSON.parse(raw);}
+ catch{throw Error('La biblioteca DXF local está dañada; conserva el archivo antes de recuperar una copia');}
+ return checkedTools(source);
 }
 function validateToolReferences(piece,tools){
  const knownPunch=PUNCHES.some(x=>x.id===piece.punch&&!x.importedDxf)||
@@ -175,7 +189,7 @@ export function restoreProjectBackup(storage,source){
   typeof storage.setItem==='function'&&typeof storage.removeItem==='function',
   'Almacenamiento local no disponible');
  const data=parseProjectBackup(source);
- const previous=loadImportedTools(storage);
+ const previous=readStoredToolsForBackup(storage);
  const merged=[...previous];
  for(const tool of data.importedTools){
   const before=merged.find(x=>x.id===tool.id);
