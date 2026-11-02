@@ -6,13 +6,13 @@
 <link rel="stylesheet" href="./styles.css">
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <link rel="manifest" href="./manifest.webmanifest">
-<meta name="plegadox-build" content="PLEGADOX-20261102-R20">
+<meta name="plegadox-build" content="PLEGADOX-20261102-R21">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="PlegadoX">
 </head><body>
 <div id="app">
 <header class="topbar">
-<div class="header-logo"><span class="logo-title">PLEGADO<span>DO</span><em>X</em></span><small>PRECISIÓN EN CADA ÁNGULO</small><small id="buildMark" class="px-build-mark" aria-label="Versión instalada de PlegadoX">PLEGADOX-20261102-R20</small></div>
+<div class="header-logo"><span class="logo-title">PLEGADO<span>DO</span><em>X</em></span><small>PRECISIÓN EN CADA ÁNGULO</small><small id="buildMark" class="px-build-mark" aria-label="Versión instalada de PlegadoX">PLEGADOX-20261102-R21</small></div>
 <div class="header-project"><span class="h-icon" aria-hidden="true"><svg class="px-icon"><use href="./icons.svg#project"/></svg></span><div class="h-content"><small>PROYECTO ACTUAL</small><strong id="topProject">Omega · ejemplo geométrico</strong></div></div>
 <div class="header-stats"><div><small>Material</small><strong id="topMaterial">Acero S235</strong></div><div><small>Espesor</small><strong id="topThickness">2,00 mm</strong></div><div><small>Ángulo</small><strong id="topAngle">+90°</strong></div><div><small>Apertura V</small><strong id="topV">16 mm</strong></div><div><small>Punzón</small><strong id="topPunch">Recto 88°</strong></div><div><small>Matriz</small><strong id="topDie">V16</strong></div></div>
 <div class="header-right"><div class="header-status"><span class="led">▶</span><span id="topState">Simulación lista</span></div><span id="clock" aria-label="Hora"></span><button id="forceUpdateBtn" class="header-icon-button px-refresh-button" title="Actualizar PlegadoX sin borrar piezas" aria-label="Actualizar PlegadoX sin borrar piezas"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#refresh"/></svg></button><button id="saveBtn" class="header-icon-button" title="Guardar pieza" aria-label="Guardar pieza"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#save"/></svg></button></div>
@@ -41,6 +41,11 @@
 <div class="cardhead"><h2 id="workshopAuditTitle">Auditoría técnica previa a taller</h2><span class="smalllabel">SIN CERTIFICACIÓN CNC</span></div>
 <div id="workshopAuditStatus" class="px-audit-status" role="status" aria-live="polite">Analizando datos de la pieza...</div>
 <div id="workshopAuditBreakdown" class="px-audit-breakdown" aria-live="off"></div>
+<div class="px-gauge-review">
+<strong>Revisión de topes por golpe · 2D</strong>
+<p class="hint">Comprueba contacto, cara frontal y posibles penetraciones durante el posicionamiento, plegado y retirada. Cada botón lleva al instante muestreado. Sin comprobación de ejes reales X/R/Z.</p>
+<div id="gaugeReviewRows" class="px-gauge-review-rows" role="region" aria-label="Incidencias muestreadas de tope por operación"></div>
+</div>
 <div class="inline-actions"><button id="exportAuditBtn" type="button">Descargar informe técnico (JSON)</button></div>
 <p class="hint">No es un permiso para fabricar. Aunque no haya avisos 2D, faltan CAD de máquina y herramientas y comprobación de colisiones físicas. Revisar medidas, material y montaje en la plegadora.</p>
 </article>
@@ -179,7 +184,7 @@
  * PlegadoX anteriores y cargar luego todos los módulos secuencialmente.
  * Nunca se elimina localStorage, IndexedDB ni los proyectos del usuario.
  */
-const BUILD="PLEGADOX-20261102-R20";
+const BUILD="PLEGADOX-20261102-R21";
 const STATUS=document.getElementById('buildMark');
 const KEY='plegadox:verified-loader-build';
 const BASE=new URL('./',document.baseURI);

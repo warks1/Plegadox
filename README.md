@@ -967,3 +967,29 @@ formato JSON compatible con copias antiguas R17/R18/R19.
 
 Pruebas: `tests/project-library-backup.test.mjs`, smoke de backup en PC/móvil
 y pruebas de calibración R19. El backup histórico `01/10/27` no se altera.
+
+## R21 · Revisión temporal de topes por pliegue y retirada
+Además de la comprobación puntual de la geometría 2D de los topes,
+la auditoría ahora analiza cada operación en **19 instantes**, incluyendo
+posicionamiento, cierre, retirada y reposicionamiento visual del dedo.
+Selecciona Stop 1 o Support 2 por el **índice del pliegue realmente
+programado**, nunca por el número de golpe. Identifica en cada operación
+candidatos a penetración/holgura, chapa por detrás de la cara, falta de
+apoyo nominal sobre el escalón y referencia sobre vértice interior.
+
+En **Programación → Auditoría técnica → Revisión de topes por golpe**
+cada tarjeta indica número de golpe, pliegue, tipo de tope y primera
+muestra de aviso; el botón abre la simulación directamente en ese instante.
+Las advertencias se incluyen también en el informe exportable JSON.
+Si no aparecen incidencias, la tarjeta lo dice explícitamente como
+«Sin interferencia detectada en N muestras 2D»: **no equivale a que
+el tope sea físicamente válido** ni a ausencia de choque entre muestras.
+
+El motor utiliza las mismas escenas paramétricas que el visor, no
+cambia el perfil del tope ni invierte dibujos finales, preserva orden y
+signos de pliegues. Se añaden regresiones de ambos modos, barrido
+de retirada, borde de chapa por detrás y salto a muestras en PC/iPhone.
+
+**Límite:** 2D temporal discreto sin volumen CAD real, recorridos de
+ejes X/R/Z, sincronismo de control, topes/trancha/amarres físicos,
+capacidad de carga ni validación industrial. No se afirma seguridad de CNC.

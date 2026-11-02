@@ -512,14 +512,53 @@ function renderToolAdvisor(){
  addPair(primary,true);
  advice.alternatives.forEach(pair=>addPair(pair,false));
 }
+/** Los botones viajan al instante real del visor, no a una imagen fija. */
+function renderGaugeReview(scan){
+ const host=$('gaugeReviewRows');
+ if(!host)return;
+ host.replaceChildren();
+ for(const op of scan.operations){
+  const button=document.createElement('button');
+  button.type='button';button.className='px-gauge-operation';
+  const warning=op.findings.length>0;
+  button.dataset.warning=String(warning);
+  button.dataset.operation=String(op.operation);
+  const to=op.example?.time??op.operation*5+.5;
+  button.dataset.time=String(to);
+  const top=document.createElement('strong');
+  top.textContent='G'+(op.operation+1)+' · P'+(op.bend+1)+' · '+
+   (op.stopNumber===2?'SUPPORT 2':'STOP 1');
+  const summary=document.createElement('small');
+  summary.textContent=warning?
+   '⚠ '+op.findings.map(x=>x.reason).join(' · ')+
+    ' · muestra '+to.toFixed(2)+' s':
+   'Sin interferencia detectada en '+op.samples+
+    ' muestras 2D (NO verifica el tope real) · muestra '+to.toFixed(2)+' s';
+  const contact=document.createElement('span');
+  contact.textContent=op.contactObserved?'Contacto nominal observado en muestras':
+   'Contacto nominal no confirmado en las muestras';
+  button.append(top,summary,contact);
+  button.setAttribute('aria-label','Ver revisión tope del golpe '+(op.operation+1)+
+   ' pliegue '+(op.bend+1)+' a '+to.toFixed(2)+' segundos');
+  button.onclick=()=>{
+   sim.playing=false;sim.last=null;sim.blocked=null;sim.time=to;
+   document.querySelector('.nav[data-tab="simulacion"]')?.click();
+   paintAll();
+  };
+  host.append(button);
+ }
+}
 function renderWorkshopAudit(){
  const node=$('workshopAuditStatus'),body=$('workshopAuditBreakdown');
  if(!node||!body)return;
  const audit=auditForWorkshop(piece);
+ renderGaugeReview(audit.gaugeScan);
  node.dataset.state=audit.summary.blocks?'block':'unverified';
  node.textContent='NO VALIDADO PARA FABRICAR · '+audit.summary.blocks+
   ' incompatibilidades · '+audit.summary.missing+
-  ' verificaciones pendientes · '+audit.summary.reviews+' advertencias.';
+  ' verificaciones pendientes · '+audit.summary.reviews+
+  ' advertencias (incluye '+audit.summary.gaugeWarnings+
+  ' golpes con avisos de tope 2D).';
  body.replaceChildren();
  for(const level of ['block','missing','review']){
   const rows=audit.issues.filter(x=>x.level===level);
