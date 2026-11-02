@@ -40,6 +40,13 @@ try{
   await page.locator('[data-tab="programacion"]').click();
   assert.equal(await page.locator('#libraryItems .px-library-entry').count(),2);
   assert.equal(await page.locator('#pieceName').inputValue(),'PIEZA CLIENTE B');
+  await page.locator('#pieceName').fill('BETA SIN GUARDAR');
+  await page.locator('#pieceName').dispatchEvent('change');
+  await page.reload({waitUntil:'networkidle'});
+  await page.locator('[data-tab="programacion"]').click();
+  assert.equal(await page.locator('#pieceName').inputValue(),'BETA SIN GUARDAR');
+  assert.match(await page.locator('#libraryActiveLabel').textContent(),
+   /Cambios sin guardar/,'Una recarga no debe fingir guardado en biblioteca');
   // La eliminación requiere confirmación; la otra pieza sigue intacta.
   await page.locator('#libraryItems .px-library-entry')
    .filter({hasText:'PIEZA CLIENTE B'}).getByRole('button',{name:'Eliminar'}).click();
