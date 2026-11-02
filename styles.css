@@ -1328,3 +1328,24 @@ html{background:#020913}
 .px-library-entry button{min-height:38px}
 @media(max-width:560px){.px-project-library-items{grid-template-columns:1fr}
  .px-project-library .inline-actions>button{min-height:44px}}
+
+/* R19 · Contraste entre desarrollo estimado y ensayo medido en taller. */
+.px-workshop-calibration{margin:16px 0 20px}
+.px-workshop-calibration .cardhead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.px-calibration-confirm{display:flex;align-items:flex-start;gap:9px;margin:10px 0;padding:8px;
+ font-size:13px;line-height:1.5;cursor:pointer}
+.px-calibration-confirm input[type=checkbox]{flex:0 0 19px;width:19px;height:19px;min-height:19px;accent-color:#197bb5;margin:2px 0 0}
+.px-calibration-advice{background:#e9f4fc;border-left:4px solid #2589bd;
+ border-radius:8px;padding:12px;line-height:1.5;color:#225470;font-weight:650}
+.px-calibration-history{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,265px),1fr));
+ gap:9px;margin:12px 0}
+.px-measurement-item{display:flex;flex-direction:column;gap:6px;border:1px solid #bfd3df;
+ border-radius:9px;padding:11px;background:#f9fcff;overflow-wrap:anywhere}
+.px-measurement-item strong{font-size:13px;color:#234765}
+.px-measurement-item small{font-size:12px;line-height:1.5;color:#40576a;flex:1}
+.px-measurement-item button{align-self:flex-start;min-height:40px}
+@media(max-width:560px){
+ .px-workshop-calibration .inline-actions{display:flex;flex-wrap:wrap}
+ .px-workshop-calibration .inline-actions button{min-height:44px;flex:1 1 130px}
+ .px-calibration-history{grid-template-columns:1fr}
+}
