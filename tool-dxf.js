@@ -50,6 +50,23 @@ function arcBulge(a,b,bulge){
 function polyline(entity){
  const flag=Number(property(entity,70,'0'));
  if(!(flag&1))throw Error('La LWPOLYLINE debe estar cerrada (flag 70)');
+ // La lectura 2D asume coordenadas XY en milímetros, sin proyección OCS.
+ // No aceptar una polilínea con elevación o extrusión inclinada: su
+ // silueta vista desde la máquina sería distinta de la que contiene el DXF.
+ const elevation=numeric(property(entity,38,'0'),'Elevación DXF');
+ const thickness=numeric(property(entity,39,'0'),'Espesor de entidad DXF');
+ const normal=[
+  numeric(property(entity,210,'0'),'Normal X'),
+  numeric(property(entity,220,'0'),'Normal Y'),
+  numeric(property(entity,230,'1'),'Normal Z')
+ ];
+ if(Math.abs(elevation)>EPS||Math.abs(thickness)>EPS||
+    Math.abs(normal[0])>1e-8||Math.abs(normal[1])>1e-8||
+    Math.abs(normal[2]-1)>1e-8)
+  throw Error('Perfil DXF no plano XY: elimina elevación, extrusión o coordenadas OCS');
+ if(Number(property(entity,43,'0'))>0)
+  throw Error('Polilínea con ancho constante; exporta un contorno sin grosor de trazo');
+ const declaredCount=property(entity,90,null);
  const verts=[];
  for(const p of entity){
   if(p.code===10)verts.push({x:numeric(p.value,'X'),y:null,bulge:0});
@@ -60,6 +77,9 @@ function polyline(entity){
  }
  if(verts.length<3||verts.some(p=>p.y===null))
   throw Error('La polilínea no tiene al menos tres vértices XY');
+ if(declaredCount!==null&&
+    (!Number.isInteger(Number(declaredCount))||Number(declaredCount)!==verts.length))
+  throw Error('Número de vértices DXF (90) no coincide con las coordenadas');
  if(verts.length>MAX_POINTS)throw Error('Demasiados vértices DXF');
  const result=[[verts[0].x,verts[0].y]];
  for(let i=0;i<verts.length;i++){
@@ -106,11 +126,29 @@ function signedArea(points){
   s+=a[0]*b[1]-b[0]*a[1];
  }return s/2;
 }
+// Distancia firmada (mm) del punto a la recta dirigida. Evita
+// clasificar contactos según una tolerancia de área que cambia al
+// cambiar el tamaño de la herramienta.
+function side(a,b,p){
+ const dx=b[0]-a[0],dy=b[1]-a[1];
+ return (dx*(p[1]-a[1])-dy*(p[0]-a[0]))/Math.hypot(dx,dy);
+}
+function onSegment(p,a,b){
+ return Math.abs(side(a,b,p))<=EPS &&
+  p[0]>=Math.min(a[0],b[0])-EPS&&p[0]<=Math.max(a[0],b[0])+EPS&&
+  p[1]>=Math.min(a[1],b[1])-EPS&&p[1]<=Math.max(a[1],b[1])+EPS;
+}
+/** Incluye cruces, vértices tocando aristas y solapes colineales.
+ * Un contorno que se toca a sí mismo puede crear un sólido con
+ * caras ambiguas; no se debe importar para la detección de choques.
+ */
 function intersects(a,b,c,d){
- const cross=(u,v,w)=>(v[0]-u[0])*(w[1]-u[1])-(v[1]-u[1])*(w[0]-u[0]);
- const aa=cross(a,b,c),ab=cross(a,b,d),ca=cross(c,d,a),cb=cross(c,d,b);
- if(aa*ab<-1e-8&&ca*cb<-1e-8)return true;
- return false;
+ const ac=side(a,b,c),ad=side(a,b,d);
+ const ca=side(c,d,a),cb=side(c,d,b);
+ const opposed=(u,v)=>(u>EPS&&v< -EPS)||(u< -EPS&&v>EPS);
+ if(opposed(ac,ad)&&opposed(ca,cb))return true;
+ return onSegment(c,a,b)||onSegment(d,a,b)||
+        onSegment(a,c,d)||onSegment(b,c,d);
 }
 export function validateContour(raw){
  if(!Array.isArray(raw)||raw.length<3||raw.length>MAX_POINTS)
@@ -120,8 +158,16 @@ export function validateContour(raw){
   return [numeric(p[0],'X'),numeric(p[1],'Y')];
  });
  for(let i=0;i<points.length;i++){
-  if(near(points[i],points[(i+1)%points.length]))
+  const a=points[(i+points.length-1)%points.length],
+    b=points[i],c=points[(i+1)%points.length];
+  if(near(b,c))
    throw Error('Segmentos de longitud nula o duplicados en el contorno');
+  // Los lados ADYACENTES comparten su vértice por diseño, pero no
+  // pueden regresar sobre sí mismos y ocupar dos veces la misma arista.
+  const ab=[b[0]-a[0],b[1]-a[1]],bc=[c[0]-b[0],c[1]-b[1]];
+  const dot=ab[0]*bc[0]+ab[1]*bc[1];
+  if(Math.abs(side(a,b,c))<=EPS&&dot<0)
+   throw Error('Contorno DXF con retroceso o aristas adyacentes solapadas');
  }
  const xs=points.map(p=>p[0]),ys=points.map(p=>p[1]);
  const width=Math.max(...xs)-Math.min(...xs),height=Math.max(...ys)-Math.min(...ys);
@@ -133,7 +179,7 @@ export function validateContour(raw){
   if(i===0&&j===points.length-1)continue;
   if(intersects(points[i],points[(i+1)%points.length],
    points[j],points[(j+1)%points.length]))
-   throw Error('Contorno DXF autointersecado');
+   throw Error('Contorno DXF autointersecado, con vértices en contacto o aristas solapadas');
  }
  return {points,width,height};
 }

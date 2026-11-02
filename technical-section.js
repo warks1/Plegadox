@@ -149,7 +149,11 @@ export function technicalScene(piece,instant=0){
     kinematics.requestedCenterlineRadius);
  }
  const diePolygon=die.points.map(([x,y])=>mPoint(x,y-die.height));
- const punchPolygon=punch.points.map(([x,y])=>mPoint(x,y+kinematics.tipHeight));
+ // Girar 180° el útil montado cambia el lado de su cuello y TODO el
+ // contorno, no sólo la decoración. La misma poligonal se usa en la
+ // cabina, la sección y el cribado de interferencias 2D.
+ const punchX=p.punchOrientation==='reversed'?-1:1;
+ const punchPolygon=punch.points.map(([x,y])=>mPoint(punchX*x,y+kinematics.tipHeight));
  const engagement=kinematics.sag;
  // Include the selected punch, the V and all sheet wings in view bounds.
  const world=technicalWorldBounds({

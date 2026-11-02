@@ -1113,3 +1113,29 @@ PC no modifica geometrías industriales ni sustituye pruebas de colisión.
 - Se incorpora prueba de navegador para **Play/Pausa**, tecla de cabecera, continuidad G1 → G2 de la omega, permanencia del signo −90° y bucle continuo, tanto en PC como en móvil. Pruebas de longitud útil y selección de orden incluidas en CI.
 - El modelo es una **previsualización geométrica**, no un programa CNC validado: sigue pendiente trazar contra planos acotados cada punzón/matriz y verificar cinemática de volteo, longitud real útil, cargas y colisiones tridimensionales de la Trumpf V85.
 
+
+## R27 · Contornos DXF protegidos contra autotoques y geometrías 3D mal proyectadas
+
+- La importación DXF rechaza **cruces, contactos no adyacentes, solapes colineales y retrocesos entre aristas consecutivas**. El perfil debe ser un único polígono simple y cerrado. Antes sólo se detectaban cruces interiores estrictos.
+- Para LWPOLYLINE se comprueban también **cantidad declarada de vértices, elevación, normal de extrusión OCS, grosor de entidad y ancho constante**. No se crea una silueta supuestamente fiel a partir de una proyección no XY.
+- Se conserva la importación local de punzones y matrices DXF ASCII en milímetros, contornos cóncavos de patas de cabra y arcos con bulge que puedan muestrearse sin solapes.
+- El importador recuerda la orientación que debe tener la punta del punzón y la V superior de la matriz. La geometría de entrada se conserva sin redimensionados arbitrarios.
+- Pruebas unitarias de topología y prueba real del importador en Chromium comprueban rechazos sin cambiar la herramienta activa.
+
+**Pendiente industrial:** un DXF 2D simple no certifica el montaje, los radios reales, la dureza, la carrera, las tolerancias ni la seguridad de una trayectoria; sigue siendo necesaria la ficha del fabricante y la validación en taller.
+
+
+## R27 · Orientación física del punzón montado
+
+En Programación de pieza se puede elegir **Original / Invertido 180°**.
+La orientación del punzón queda guardada en la pieza y se comparte entre
+el modelo 2D de la máquina, la sección técnica, las miniaturas del montaje
+y el cribado de interferencias. Se invierte **todo el perfil** (incluido el
+escote de la pata de cabra), no solamente una etiqueta o icono.
+La herramienta de catálogo conserva intactas sus cotas y su contorno fuente.
+
+La orientación es **un estado de montaje global**, no una instrucción CNC
+de giro del punzón entre operaciones. Para cambiarla físicamente hay que
+detener la máquina, comprobar la admisibilidad de inversión del amarre,
+la longitud, el centrado y los despejes. No se afirma que un golpe sea
+seguro porque desaparezca un aviso 2D en la vista invertida.

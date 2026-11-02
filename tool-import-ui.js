@@ -47,7 +47,7 @@ export function setupToolDxfImporter({add}){
    say('Contorno leído: '+model.points.length+' vértices · '+
     model.width.toFixed(2)+' × '+model.height.toFixed(2)+' mm. '+
     (model.unitsAssumed?'El archivo no declara mm: revisa la escala. ':'')+
-    'Comprueba orientación, ángulo, apertura y amarre antes de guardar.');
+    'Comprueba la orientación (punta del punzón abajo, V de la matriz arriba), ángulo, apertura, longitud y amarre antes de guardar.');
   }catch(e){say('No se puede importar: '+e.message,true);}
  });
  save.addEventListener('click',()=>{

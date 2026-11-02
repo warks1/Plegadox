@@ -69,6 +69,15 @@ try{
   buffer:Buffer.from(dxf(1))});
  assert.equal(await page.locator('#toolDxfCommit').isDisabled(),true);
  assert.match(await page.locator('#toolDxfStatus').textContent(),/no milimétricas/);
+ // Un perfil con elevación OCS no se proyecta silenciosamente como
+ // herramienta física. Rechazarlo y conservar la selección anterior.
+ const beforeTool=await page.evaluate(()=>window.PLEGADOX_STATE().piece.die);
+ const nonplanar=dxf().replace('\n90\n7\n70\n1\n','\n90\n7\n70\n1\n38\n8\n');
+ await page.locator('#toolDxfFile').setInputFiles({name:'Perfil-inclinado.dxf',
+  mimeType:'application/dxf',buffer:Buffer.from(nonplanar)});
+ assert.equal(await page.locator('#toolDxfCommit').isDisabled(),true);
+ assert.match(await page.locator('#toolDxfStatus').textContent(),/no plano XY/);
+ assert.equal(await page.evaluate(()=>window.PLEGADOX_STATE().piece.die),beforeTool);
  assert.deepEqual(errors,[],'Excepciones navegador DXF');
  console.log('TOOL_DXF_IMPORT_OK');
 }finally{await browser?.close();server.kill();}
