@@ -106,6 +106,7 @@ export function installTouchProgrammer({root,getPiece,onChange}){
  };
  const pick=(type,index)=>{
   const p=normalized(getPiece());
+  const alreadySelected=state.type===type&&state.index===index;
   state.type=type;state.index=index;
   const n=type==='length'?p.flanges[index]:p.angles[index];
   input.value=String(n);
@@ -113,7 +114,9 @@ export function installTouchProgrammer({root,getPiece,onChange}){
   input.setAttribute('aria-label',type==='length'?'Longitud de ala '+(index+1):'Ángulo firmado de pliegue '+(index+1));
   inverse.disabled=type!=='angle';remove.disabled=type!=='length'||index<1||p.flanges.length<=2;
   modeText.textContent=(type==='length'?'Ala '+(index+1):'Pliegue '+(index+1))+' seleccionado';
-  render();
+  // Do NOT replace the targeted SVG node after every click. The browser
+  // must keep the same element through a double click to raise dblclick.
+  if(!alreadySelected)render();
  };
  function render(){
   const p=normalized(getPiece());
@@ -354,6 +357,13 @@ export function installTouchProgrammer({root,getPiece,onChange}){
   if(root.dataset.inputMode==='mouse'&&!state.orderMode){
    input.focus();input.select();
    status.textContent='Introduce la medida o el ángulo con el teclado del PC y pulsa Intro.';
+  }
+ });
+ // Some browsers send the second click but no dblclick when the SVG
+ // target changes after selection. Fallback based on the click counter.
+ svg.addEventListener('click',e=>{
+  if(e.detail>=2&&root.dataset.inputMode==='mouse'&&!state.orderMode){
+   input.focus();input.select();
   }
  });
  root.addEventListener('keydown',e=>{
