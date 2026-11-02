@@ -40,8 +40,14 @@ export function inspectGaugeOperation(piece,operation,{
  let contacted=false,withdrawn=false;
  // Incluir el instante inicial, los extremos y la retirada final;
  // evitar tomar justo t=5,10,15 como si fuese el golpe anterior.
+ const split=Math.floor(samples/2);
  for(let i=0;i<=samples;i++){
-  const time=start+(i===samples?5-1e-6:5*i/samples);
+  // Muestreo reforzado de la retirada: el dedo comienza a retroceder
+  // al 84% del golpe. Un muestreo uniforme omitía transiciones breves.
+  const relative=i<=split?
+   4.2*i/split:
+   4.2+.8*(i-split)/(samples-split);
+  const time=start+(i===samples?5-1e-6:relative);
   const {scene,place}=inspect(p,time);
   if(!scene||!place||!scene.stage||scene.stage.activeOperation!==operation)
    throw Error('El visor no corresponde al golpe solicitado en '+time);
