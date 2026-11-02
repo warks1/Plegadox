@@ -44,7 +44,7 @@ try{
   await page.locator('#libraryItems .px-library-entry')
    .filter({hasText:'PIEZA CLIENTE B'}).getByRole('button',{name:'Eliminar'}).click();
   assert.equal(await page.locator('#libraryItems .px-library-entry').count(),1);
-  assert.match(await page.locator('#libraryItems').textContent(),/Omega/);
+  assert.match(await page.locator('#libraryItems').textContent(),/OMEGA SEGUNDA REVISION/);
   await page.screenshot({path:'test-results/biblioteca-piezas-'+dev.name+'.png',fullPage:false});
   assert.deepEqual(errors,[],dev.name+' sin excepciones');
   console.log('PROJECT_LIBRARY_UI_OK '+dev.name);
