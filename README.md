@@ -933,6 +933,8 @@ pieza activa, los útiles DXF y la configuración V85. Antes, el botón de
   Una referencia DXF perdida impide crear un backup incompleto.
 - Restauración atómica de piezas, historial, útiles, máquina y selección activa;
   intenta revertir cualquier escritura fallida, incluida la clave fallida.
+- Una biblioteca DXF existente corrupta no se filtra ni sustituye: bloquea la
+  exportación/restauración hasta que el usuario salve y repare sus datos.
 - La copia sigue siendo un archivo local, no una copia en la nube, ni valida
   el plegado CNC o las colisiones 3D industriales.
 
