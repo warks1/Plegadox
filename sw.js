@@ -1,5 +1,5 @@
 // PlegadoX · caché offline estática. Se versiona para no arrastrar JS obsoleto.
-const CACHE='plegadox-static-0.9.0-workshop-calibration-19';
+const CACHE='plegadox-static-0.9.0-gauge-review-20';
 const APP_FILES=[
  "./",
  "./app.js",
@@ -17,6 +17,7 @@ const APP_FILES=[
  "./flat-layout.js",
  "./gauge-side-review.js",
  "./gauge-interference.js",
+ "./gauge-sequence-review.js",
  "./icons.svg",
  "./incident-navigation.js",
  "./index.html",
