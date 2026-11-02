@@ -90,3 +90,23 @@ test('auditoría incluye avisos de tope sin dar aprobación industrial',()=>{
  assert.equal(result.canApproveForMachine,false);
  assert.equal(result.status,'SIN_VALIDACION_INDUSTRIAL');
 });
+
+test('muestra la retirada con mayor densidad para detectar movimientos breves',()=>{
+ const checked=[];
+ const inspect=(piece,time)=>{
+  checked.push(time);
+  return {scene:{stage:{activeOperation:0,activeBend:0,
+   phase:time>=4.2?'Retirada':'Posicionamiento'},
+   gaugeTransition:time>=4.2?{point:{x:100,y:0}}:null},
+   place:{stopNumber:1,freeEdge:true,sheetInFront:true,
+    seat:{seated:true},contactEngaged:time<4.2,
+    gaugeInterference:{warning:false}}};
+ };
+ const result=inspectGaugeOperation(EXAMPLE,0,{samples:18,inspect});
+ assert.equal(result.samples,19);
+ assert.ok(checked.filter(t=>t>=4.2-1e-9).length>=10,
+  'Al menos diez muestras en los últimos 0,8 segundos');
+ assert.ok(checked.at(-1)>4.999&&checked.at(-1)<5,
+  'La última muestra no debe atribuirse al golpe siguiente');
+ assert.equal(result.withdrawalObserved,true);
+});
