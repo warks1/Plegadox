@@ -19,7 +19,7 @@ import {gaugePlacement} from './backgauge-placement.js';
 import {technicalScene} from './technical-section.js';
 import {recommendTooling} from './tooling-advisor.js';
 import {auditForWorkshop} from './workshop-audit.js';
-import {buildProjectBackup,restoreProjectBackup} from './project-backup.js';
+import {buildProjectBackup,restoreProjectBackup,readStoredToolsForBackup} from './project-backup.js';
 import {readProjectLibrary,saveLibraryPiece,getLibraryPiece,deleteLibraryPiece,setActiveLibraryId,getActiveLibraryId} from './project-library.js';
 import {measurementKey,calibrationSuggestion,readMeasurements,createMeasurement,persistMeasurement,deleteMeasurement} from './workshop-measurements.js';
 import {loadImportedTools,registerImportedTools,persistImportedTool} from './tool-dxf.js';
@@ -349,12 +349,14 @@ function configure(){
   const status=$('completeProjectStatus');
   try{
    const backup=buildProjectBackup({piece,machine:getV85(),
-    tools:loadImportedTools(localStorage),
-    measurements:readMeasurements(localStorage)});
+    tools:readStoredToolsForBackup(localStorage),
+    measurements:readMeasurements(localStorage),
+    library:readProjectLibrary(localStorage),
+    activeLibraryId:getActiveLibraryId(localStorage)});
    downloadProjectJson(backup,projectSafeName()+'-BACKUP-COMPLETO.json');
-   status.textContent='Copia descargada: pieza, máquina, '+backup.importedTools.length+
-    ' herramientas DXF y '+backup.measurements.length+
-    ' mediciones de taller. Comprueba el archivo antes de borrar datos locales.';
+   status.textContent='Copia descargada: pieza, V85, '+backup.importedTools.length+
+    ' herramientas DXF, '+backup.measurements.length+' mediciones y '+
+    backup.library.length+' piezas de biblioteca con revisiones.';
    status.dataset.state='success';
   }catch(err){status.textContent='Backup no generado: '+err.message;status.dataset.state='error';}
  };
@@ -373,11 +375,18 @@ function configure(){
     option.textContent=tool.name;sel.append(option);
    }
    updateV85(restored.machine);
-   detachLibraryPiece();
+   if(restored.library===null)detachLibraryPiece();
+   else{
+    selectedLibraryId=restored.activeLibraryId;
+    if($('libraryClient'))$('libraryClient').value=
+     restored.library.find(x=>x.id===selectedLibraryId)?.client||'';
+   }
    changePiece(restored.piece,true);
+   renderProjectLibrary();renderMeasurementHistory();
    status.textContent='Recuperado: pieza, V85, '+restored.importedTools.length+
-    ' herramientas DXF y '+restored.measurements.length+
-    ' mediciones de taller. No se han borrado otros útiles guardados.';
+    ' herramientas DXF, '+restored.measurements.length+' mediciones'+
+    (restored.library===null?' (copia antigua: biblioteca local conservada).':
+    ' y '+restored.library.length+' piezas de biblioteca. Los proyectos locales se han conservado.');
    status.dataset.state='success';
   }catch(err){status.textContent='Restauración rechazada: '+err.message;
    status.dataset.state='error';}
