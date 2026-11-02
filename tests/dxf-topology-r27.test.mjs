@@ -54,7 +54,6 @@ test('rechazar LWPOLYLINE con extrusión OCS inclinada o elevación',()=>{
 
 test('rechazar lista de vértices DXF truncada o mal declarada',()=>{
  const good=wrap({points:[[0,0],[40,0],[40,100],[0,100]]});
- assert.throws(()=>parseToolDxf(good.replace("'90','4'","'90','3'")),/vértices/);
  // Sustituir sólo el par 90/4, no el valor 70/4 de INSUNITS.
  assert.throws(()=>parseToolDxf(good.replace('\n90\n4\n','\n90\n3\n')),/vértices/);
 });
