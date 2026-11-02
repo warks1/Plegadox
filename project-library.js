@@ -2,7 +2,7 @@
  * Biblioteca local de piezas con revisiones. Sin nube ni datos personales.
  * Guardar es explícito: la pieza activa puede editarse antes de confirmar.
  */
-import {normalized} from './engine.js';
+import {normalized,PUNCHES,DIES} from './engine.js';
 export const PROJECT_LIBRARY_KEY='plegadox:project-library:v1';
 export const ACTIVE_LIBRARY_ID='plegadox:active-project:v1';
 const MAX_ITEMS=60,MAX_HISTORY=8;
@@ -63,7 +63,14 @@ export function saveLibraryPiece(storage,piece,{id=null,client='',now=new Date()
 export function getLibraryPiece(storage,id,{revision='latest'}={}){
  const entry=readProjectLibrary(storage).find(x=>x.id===id);
  if(!entry)throw Error('Pieza no encontrada');
- if(revision==='latest')return {...entry,piece:normalized(entry.piece)};
+ const selected=revision==='latest'?entry.piece:
+  entry.history.find(x=>x.revision===revision)?.piece;
+ if(!selected)throw Error('La revisión solicitada no existe');
+ // Evitar sustitución silenciosa por un punzón/matriz genérico si
+ // falta la biblioteca DXF que utilizaba la pieza guardada.
+ if(!PUNCHES.some(t=>t.id===selected.punch)||!DIES.some(t=>t.id===selected.die))
+  throw Error('La pieza requiere herramientas DXF que no están en este dispositivo. Importa primero su backup completo.');
+ if(revision==='latest')return {...entry,piece:normalized(selected)};
  const match=entry.history.find(x=>x.revision===revision);
  if(!match)throw Error('La revisión solicitada no existe');
  return {...entry,piece:normalized(match.piece),revision:match.revision,
