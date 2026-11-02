@@ -85,6 +85,8 @@ function detachLibraryPiece(){
  selectedLibraryId=null;
  try{setActiveLibraryId(localStorage,null);}catch{}
  if($('libraryClient'))$('libraryClient').value='';
+ if($('libraryActiveLabel'))$('libraryActiveLabel').textContent=
+  'Pieza activa sin guardar en la biblioteca';
  renderProjectLibrary();
 }
 function renderProjectLibrary(){
@@ -147,6 +149,9 @@ function renderProjectLibrary(){
 function resetPlayback(){sim.time=0;sim.last=null;sim.playing=false;sim.blocked=null;sim.error=null;$('playBtn').textContent='▶';$('playBtn').title='Reproducir simulación';}
 function changePiece(p,structural=false){
  piece=normalized(p);persist();sim.blocked=null;sim.error=null;
+ if($('libraryActiveLabel'))$('libraryActiveLabel').textContent=
+  selectedLibraryId?'Cambios sin guardar en la revisión de la biblioteca':
+  'Pieza activa sin guardar en la biblioteca';
  // La selección por toques pertenece a la geometría anterior. Incluso si
  // cambian los índices/número de alas, no conservar pliegues obsoletos.
  if(touchOrderEnabled||chosenTouchOrder.length){
