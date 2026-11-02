@@ -897,3 +897,21 @@ La copia es local descargada: NO hay sincronización automática en la nube.
 datos de carga por metro, compatibilidad de amarres verificada, contraste
 dimensional contra plegados físicos, estudio volumétrico de colisiones y
 calibración del desarrollo. Estas carencias NO quedan resueltas por la R17.
+
+## R18 · Biblioteca de piezas local con versiones (hasta 60)
+Ahora el botón `Guardar pieza` de cabecera **también guarda en la
+biblioteca**, en lugar de limitarse a sobrescribir la pieza activa.
+En Programación se encuentra el panel «Biblioteca de piezas y revisiones»:
+cliente opcional, lista de piezas guardadas, abrir, abrir la revisión
+anterior, crear nueva pieza sin sobrescribir la anterior, y eliminar con
+confirmación explícita. Conserva hasta ocho revisiones anteriores por
+pieza. El último identificador activo sobrevive a la recarga.
+
+Una pieza que depende de un punzón/matriz DXF ausente NO se sustituye
+silenciosamente por una referencia genérica: se pide recuperar el
+backup completo con los útiles asociados (R17).
+
+Este es **almacenamiento local del navegador**, no sincronización
+multidispositivo ni una base de datos respaldada en servidor.
+Para migrar piezas importantes usar «Descargar proyecto completo».
+El guardado en biblioteca no autoriza cortar ni plegar físicamente.
