@@ -16,6 +16,26 @@ const mm=v=>Number.isFinite(+v)?+v:0;
 const mPoint=(x,y)=>({x:mm(x),y:mm(y)});
 
 /**
+ * Giro rígido del perfil de chapa sobre el eje vertical al cambiar el
+ * lado de alimentación. Conservar la profundidad Z es imprescindible:
+ * multiplicar solo X por cos(ángulo) encogía la pieza en 3D durante el giro.
+ *
+ * Esta rotación es una PREVISUALIZACIÓN de manipulación, no una trayectoria
+ * real CNC ni una comprobación de holguras en el espacio.
+ */
+export function orientFeedIn3D(points,feedMirrored=false,angle=0){
+ if(!Array.isArray(points)||!Number.isFinite(angle))
+  throw Error('Orientación 3D de chapa inválida');
+ const sign=feedMirrored?-1:1,c=Math.cos(angle),s=Math.sin(angle);
+ return points.map(pt=>{
+  if(![pt?.x,pt?.y,pt?.z].every(Number.isFinite))
+   throw Error('Punto 3D de chapa inválido');
+  const x=pt.x*sign,z=pt.z;
+  return {x:x*c+z*s,y:pt.y,z:z*c-x*s};
+ });
+}
+
+/**
  * Encuadre métrico de la sección: incluye la silueta COMPLETA del tope.
  * Durante la retirada se reserva el mismo espacio para los extremos y la
  * posición de despeje. Así no se recorta el dedo ni se hace zoom/pan
@@ -75,10 +95,15 @@ export function technicalScene(piece,instant=0){
  const changingSide=from.repositioning&&nextFeedMirror!==feedMirror;
  // Cambiar el signo de alimentación DESPUÉS del volteo de cara.
  // Ambos giros simultáneos hacían colapsar X e Y a cero en el mismo instante.
- const spin=changingSide?Math.cos(Math.PI*(from.feedProgress??from.progress??0)):1;
- const mirror=pt=>({...pt,x:(feedMirror?-pt.x:pt.x)*spin});
- const presentation={...from,points:from.points.map(mirror),
-  points3D:from.points3D?.map(mirror),gaugeSide:reference.side,
+ const spin=changingSide?Math.PI*(from.feedProgress??from.progress??0):0;
+ // El visor 2D usa la proyección XY del MISMO giro rígido que el estado 3D.
+ // Así no se acorta el desarrollo físico cuando la chapa se ve de canto.
+ const sheet3D=from.points3D?
+  orientFeedIn3D(from.points3D,feedMirror,spin):undefined;
+ const presentation={...from,
+  points:sheet3D?sheet3D.map(({x,y})=>({x,y})):
+   from.points.map(pt=>({...pt,x:(feedMirror?-1:1)*pt.x})),
+  points3D:sheet3D,gaugeSide:reference.side,
   feedMirrored:feedMirror,changingFeedSide:changingSide};
  // Referencia FIJA de presentación: se mide antes de que baje el punzón.
  // No seguir el extremo de la chapa durante la deformación del golpe.
