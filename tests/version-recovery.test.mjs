@@ -5,7 +5,7 @@ const get=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 test('La compilación visible, el manifiesto de recuperación y el SW tienen la misma marca',()=>{
  const manifest=JSON.parse(get('build-info.json'));
  const build=manifest.build;
- assert.match(build,/^PLEGADOX-20\\d{6}-R\\d+$/,'Identificador de compilación fechado y numerado');
+ assert.match(build,/^PLEGADOX-20\d{6}-R\d+$/,'Identificador de compilación fechado y numerado');
  assert.equal(JSON.parse(get('package.json')).version,manifest.version,
   'El paquete y el manifiesto deben compartir versión');
  const html=get('index.html');
