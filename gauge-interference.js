@@ -70,7 +70,10 @@ export function inspectGaugeProfile(sheet,polygon,thickness=2,contact=null){
   for(let j=0;j<unique.length-1;j++){
    const t=(unique[j]+unique[j+1])/2;
    const p={x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t};
-   if(strictInside(p,polygon)&&!exempt(p))
+   // Un contacto nominal permite tocar la cara elegida, NO atravesarla:
+   // la excepción de proximidad se reserva para la holgura por espesor.
+   // Incluso una penetración corta (< e/2) debe detectarse.
+   if(strictInside(p,polygon))
     return {warning:true,kind:'penetracion',point:p,segment:i};
   }
   // Envolvente de espesor nominal: un contacto lejos de la cara elegida
