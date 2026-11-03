@@ -3,8 +3,11 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const get=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 test('La compilación visible, el manifiesto de recuperación y el SW tienen la misma marca',()=>{
- const build=JSON.parse(get('build-info.json')).build;
- assert.match(build,/^(TOPE-20261101-R|PLEGADOX-20261102-R)/);
+ const manifest=JSON.parse(get('build-info.json'));
+ const build=manifest.build;
+ assert.match(build,/^PLEGADOX-20\d{6}-R\d+$/,'Identificador de compilación fechado y numerado');
+ assert.equal(JSON.parse(get('package.json')).version,manifest.version,
+  'El paquete y el manifiesto deben compartir versión');
  const html=get('index.html');
  assert.ok(html.includes('id="buildMark"'));
  assert.ok(html.includes('id="forceUpdateBtn"'));

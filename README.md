@@ -2,6 +2,13 @@
 
 **Proyecto nuevo e independiente**. Repositorio inicializado desde cero a partir del material proporcionado por el usuario, sin reutilizar el repositorio Plegar Pro Plus.
 
+## Estado R29 · 3 de noviembre de 2026
+
+- **R28:** cribado de tope/chapa detecta penetraciones de la fibra media incluso si ocurren a menos de un espesor del apoyo nominal; pruebas de interfaz y lógica aprobadas.
+- **R29:** cambio de lado representado como giro rígido en el estado tridimensional de chapa, con profundidad Z coherente y conservación de longitudes. La sección 2D es la proyección de esa transformación. Se mantienen las pruebas de continuidad entre golpes y del tope trasero.
+- **Compilación:** 0.9.4, `PLEGADOX-20261103-R29`, nueva caché de aplicación instalada para evitar mezclar versiones.
+- **Límite:** no se ha construido una trayectoria real de carga, giro, retirada y aproximación en los ejes de la plegadora. No se validan CAD exactos, amarres, seguridad industrial ni colisiones volumétricas.
+
 ## Abrir Plegadox
 
 **Web:** https://warks1.github.io/Plegadox/ (depende de la publicación de GitHub Pages).

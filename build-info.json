@@ -1,6 +1,6 @@
 {
-  "build": "PLEGADOX-20261102-R27",
-  "version": "0.9.3",
+  "build": "PLEGADOX-20261103-R29",
+  "version": "0.9.4",
   "gauge": "low-front-lip-riser-thickness-overlap-and-framing",
-  "cache": "plegadox-static-0.9.3-safe-dxf-r27"
+  "cache": "plegadox-static-0.9.4-r29-rotation"
 }
