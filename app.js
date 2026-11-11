@@ -148,7 +148,6 @@ function renderProjectLibrary(){
    if(JSON.stringify(piece)!==JSON.stringify(loaded.piece)&&
     !window.confirm('¿Abrir esta pieza? Los cambios sin guardar en la biblioteca se perderán.'))return;
    selectedLibraryId=entry.id;
-   setPlannerMode('manual',{replan:false});
    try{setActiveLibraryId(localStorage,entry.id);}
     catch(error){notifyStorageFailure('No se pudo recordar la pieza abierta de la biblioteca',error);}
    changePiece(loaded.piece,true);
@@ -218,7 +217,7 @@ function changePiece(p,structural=false){
  touchProgrammer?.resetSelection();
  renderEditor();renderSetup();paintAll();touchProgrammer?.render();
  window.dispatchEvent(new CustomEvent('plegadox:pieceChanged',{detail:piece}));
- if(!plannerApplying)schedulePlanner({apply:plannerMode==='auto'&&plannerAutoAllowed});
+ if(!plannerApplying)schedulePlanner({apply:true});
 }
 
 /** R31: la optimización conjunta no puede aplicar resultados de otra versión de pieza. */
@@ -399,6 +398,7 @@ function configure(){
   // La Rm introducida sólo corresponde al material para el que se eligió.
   // Al cambiar de material se vuelve a la referencia orientativa visible.
   if(key==='material'&&v!==piece.material)updated.rmMPa=null;
+  if(['die','punch','punchOrientation'].includes(key))setToolingMode('manual',{replan:false});
   changePiece(updated,true);
  });
  $('kFactor').addEventListener('change',e=>changePiece({...piece,kFactor:e.target.value===''?null:finite(e.target.value,.36)}));
@@ -411,11 +411,10 @@ function configure(){
   changePiece({...piece,rmMPa:raw===''?null:Number(raw)});
  });
  $('newBtn').onclick=()=>{detachLibraryPiece();setPlannerMode('auto',{replan:false});changePiece({name:'Nueva pieza',flanges:[100,100],angles:[0],order:[0],material:'s235',thickness:2,width:500,die:'v16',punch:'straight88'},true);};
- $('sampleBtn').onclick=()=>{detachLibraryPiece();setPlannerMode('manual',{replan:false});changePiece(EXAMPLE,true);};
+ $('sampleBtn').onclick=()=>{detachLibraryPiece();changePiece(EXAMPLE,true);};
  $('cybelecReferenceBtn').onclick=()=>{
   if(!window.confirm('¿Cargar la referencia de las fotos Cybelec? Los cambios sin guardar en esta pieza se sustituirán. Exporta antes cualquier pieza que quieras conservar.'))return;
   detachLibraryPiece();
-  setPlannerMode('manual',{replan:false});
   changePiece(cybelecReferencePreset(),true);
  };
  $('addFlange').onclick=()=>{if(piece.flanges.length>=20)return;changePiece({...piece,flanges:[...piece.flanges,50],angles:[...piece.angles,90],order:[...piece.order,piece.angles.length],stopByBend:[...piece.stopByBend,1],gaugeSideByBend:[...piece.gaugeSideByBend,'auto']},true);};
@@ -504,23 +503,16 @@ function configure(){
    '. Revisar montaje e interferencias reales antes de fabricar.';
  };
  $('sequencePlannerMode').value=plannerMode;
- $('sequencePlannerMode').addEventListener('change',e=>
-  setPlannerMode(e.target.value));
- $('sequenceAutoRecalculate').onclick=()=>schedulePlanner({
-  apply:plannerMode==='auto'&&plannerAutoAllowed,force:true
- });
- $('sequenceAutoApply').onclick=()=>{
-  const advice=pendingPlanner;
-  if(!advice||plannerPieceKey(piece)!==advice.key){
-   $('sequenceAutoStatus').textContent='Propuesta caducada; recalcula antes de aplicarla.';
-   $('sequenceAutoApply').disabled=true;pendingPlanner=null;return;
-  }
-  setPlannerMode('manual',{replan:false});
-  changePiece({...piece,order:[...advice.order]},true);
-  $('sequenceAutoStatus').textContent='Has seleccionado manualmente '+
-   plannerOrderLabel(advice.order)+
-   '. Sigue pendiente la validación real de colisiones de máquina.';
- };
+ $('toolingPlannerMode').value=toolingMode;
+ $('sequencePlannerMode').addEventListener('change',e=>setPlannerMode(e.target.value));
+ $('toolingPlannerMode').addEventListener('change',e=>setToolingMode(e.target.value));
+ // Comprobar no equivale a aceptar; al pulsar un botón de análisis bajo
+ // demanda se muestran alternativas, pero no se cambia la pieza automáticamente.
+ $('sequenceAutoRecalculate').onclick=()=>schedulePlanner({apply:false,force:true});
+ $('setupAutoRecalculate').onclick=()=>schedulePlanner({apply:false,force:true});
+ $('setupAutoFull').onclick=()=>schedulePlanner({apply:false,force:true,full:true});
+ $('sequenceAutoApply').onclick=()=>usePlannerProposal({complete:false});
+ $('setupAutoApply').onclick=()=>usePlannerProposal({complete:true});
  $('touchOrderMode').onclick=toggleTouchOrder;
  $('finalCanvas').addEventListener('pointerdown',pickBendFromDrawing);
  $('saveBtn').onclick=save;
@@ -771,6 +763,7 @@ function renderToolAdvisor(){
     $('toolAdvisorResult').textContent+=' Datos pendientes incorporados: revisa la nueva propuesta y pulsa aplicar de nuevo.';
     return;
    }
+   setToolingMode('manual',{replan:false});
    changePiece({...draft,die:pair.dieId,punch:pair.punchId},true);
   };
   el.append(header,data,picture,warnings,apply);choices.append(el);
@@ -1667,12 +1660,11 @@ setupToolDxfImporter({add:(tool,kind)=>{
  const option=document.createElement('option');
  option.value=tool.id;option.textContent=tool.name;
  $(field).append(option);
+ setToolingMode('manual',{replan:false});
  changePiece({...piece,[field]:tool.id},true);
 }});
 window.PLEGADOX_STATE=()=>({piece,sim});
 window.PLEGADOX_MACHINE_VIEW=machineView;
 window.PLEGADOX_REDRAW=()=>paintAll();
-window.addEventListener('plegadox:machineChanged',()=>schedulePlanner({
- apply:plannerMode==='auto'&&plannerAutoAllowed
-}));
-schedulePlanner({apply:false});
+window.addEventListener('plegadox:machineChanged',()=>schedulePlanner({apply:true}));
+schedulePlanner({apply:true});
