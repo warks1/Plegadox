@@ -251,7 +251,7 @@ function setPlannerMode(mode,{replan=true}={}){
  catch(error){notifyStorageFailure('No se pudo guardar el modo de secuencia',error);}
  if(replan)schedulePlanner({apply:mode==='auto'});
 }
-function schedulePlanner({apply=true}={}){
+function schedulePlanner({apply=true,force=false}={}){
  if(plannerApplying)return;
  const ticket=++plannerTicket;
  if(plannerTimer!==null)clearTimeout(plannerTimer);
@@ -259,8 +259,17 @@ function schedulePlanner({apply=true}={}){
  const applyButton=$('sequenceAutoApply');
  if(applyButton)applyButton.disabled=true;
  const status=$('sequenceAutoStatus');
+ if(plannerMode==='manual'&&!force){
+  if(status)status.textContent='Orden manual protegido: '+
+   plannerOrderLabel(piece.order)+'. No se modificará automáticamente.';
+  const details=$('sequenceAutoDetails');
+  if(details)details.textContent='Puedes elegir Automático para que analice y '+
+   'aplique mejoras, o pulsar Recalcular para revisar alternativas sin cambiarlas. '+
+   SEQUENCE_LIMITATIONS;
+  return;
+ }
  if(status)status.textContent='Examinando posibles órdenes de plegado…';
- plannerTimer=setTimeout(()=>{plannerTimer=null;runPlanner(ticket,apply);},180);
+ plannerTimer=setTimeout(()=>{plannerTimer=null;runPlanner(ticket,apply);},350);
 }
 async function runPlanner(ticket,apply){
  const status=$('sequenceAutoStatus'),details=$('sequenceAutoDetails');
@@ -449,7 +458,9 @@ function configure(){
  $('sequencePlannerMode').value=plannerMode;
  $('sequencePlannerMode').addEventListener('change',e=>
   setPlannerMode(e.target.value));
- $('sequenceAutoRecalculate').onclick=()=>schedulePlanner({apply:plannerMode==='auto'});
+ $('sequenceAutoRecalculate').onclick=()=>schedulePlanner({
+  apply:plannerMode==='auto'&&plannerAutoAllowed,force:true
+ });
  $('sequenceAutoApply').onclick=()=>{
   const advice=pendingPlanner;
   if(!advice||plannerPieceKey(piece)!==advice.key){
