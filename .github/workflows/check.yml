@@ -75,6 +75,8 @@ jobs:
           node tests/pwa-offline-smoke.mjs
           node tests/tool-dxf-browser-smoke.mjs
           node tests/punch-orientation-r27-smoke.mjs
+          node tests/automatic-sequence-browser-smoke.mjs
+          node tests/automatic-setup-browser-smoke.mjs
       - name: Guardar capturas de escritorio y móvil
         if: always()
         uses: actions/upload-artifact@v4

@@ -1161,3 +1161,37 @@ Las fotografías facilitadas muestran **cinco caras de 50 mm**, ángulos de perf
 El cálculo anterior de PlegadoX con V16/88°, radio estimado 2,56 mm, K=0,36 y criterio de cotas exteriores da aproximadamente **234,13 mm**. El botón **Cargar referencia Cybelec** usa una **matriz genérica V16/30°**, punzón genérico 30° y radio 2,63 mm; propone un **K equivalente matemático** calculado para reproducir el L DIN nominal de 233,94 mm con la convención actual del motor. No se afirma que ese K sea el parámetro original del control, que el acero sea S235 real, ni que el DIN sea longitud de corte medida. No reemplaza otras piezas guardadas sin acción explícita.
 
 La pantalla inicial **TITANIUM** incluye animación SVG de chapa plegándose entre punzón y matriz, barra de progreso vinculada a la carga efectiva de los módulos, identidad PlegadoX y aviso © A.M.S TECNOLIGICS. No se oculta hasta completar el arranque; si falla, muestra un error y permite reintentar. Se adapta a PC, tablet y móvil, con alternativa para movimiento reducido. El resto de la interfaz mantiene su diseño previo.
+
+
+## R30 · Planificación automática multi-interferencia con control manual (11-11-2026)
+
+**Objetivo:** no obligar al operario a ordenar cada pliegue a mano. Tras editar la pieza, el asesor compara automáticamente secuencias completas y, en modo **Automático**, aplica **solo mejoras detectadas** en los barridos geométricos 2D sin agravar ninguna clase de riesgo grave. **Una secuencia predefinida o personalizada (como la omega 1→2→4→3) se abre en Manual**, sin modificar el orden; crear una pieza nueva activa Automático. También puede activarse Automático expresamente sobre la pieza abierta. El primer arranque solo analiza y propone, sin reordenar silenciosamente una pieza ya existente.
+
+- **4 golpes o menos:** se enumeran y examinan **todas las permutaciones** con el mismo muestreo de chapa, punzón/matriz y tope; para 4 son 24. A partir de 5 se usa una búsqueda limitada (con informe de cobertura) para evitar bloquear móviles.
+- **Chapa:** inspección de cruces, solapes, contactos y holguras entre alas a lo largo de cada secuencia. Los cruces del perfil final se indican como **no corregibles solo con otro orden**.
+- **Punzón y matriz:** se emplea `inspectSequenceTools` sobre los perfiles de herramienta disponibles y la orientación seleccionada, no dibujos sueltos. Las penetraciones se priorizan por delante de avisos leves.
+- **Tope trasero:** se usa `scanGaugeSequence` para detectar posibles penetraciones, chapa por detrás del tope, falta de asiento, referencia interior y holgura insuficiente.
+- **Automático/Manual:** los botones para subir/bajar operaciones y los puntos de orden del editor táctil/ratón **siguen disponibles**. Cualquier reordenación explícita pone **Manual**, persistente en este dispositivo; ningún cálculo posterior puede sobreescribirla. Se conserva un botón para aplicar expresamente una alternativa.
+- **Progreso y cancelación:** la búsqueda libera el hilo de la interfaz entre secuencias. Si cambian ala, ángulo, herramientas, topes o la propia secuencia mientras calcula, el resultado obsoleto se descarta.
+- **Conservación de proyecto:** se mantiene el formato de piezas, ángulos, signos, material, herramientas y posiciones de tope. La elección automática cambia solamente `order`. La librería de piezas guardadas no se sobrescribe hasta que el operario guarde su revisión.
+
+**Alcance industrial pendiente:** el cribado es **DISCRETO y 2D**, y varias geometrías siguen siendo provisionales. No se puede afirmar que un orden esté libre de colisiones físicas en una TruBend V85 (falta CAD acotado de todos los útiles, amarres y dedos, detección 3D del volteo, trayectorias reales X/R/Z, piezas con recortes, límites de carga y validación de máquina). Una secuencia con cero avisos 2D es una **preselección**, no un programa CNC seguro ni autorización de fabricación.
+
+La omega 50/50/50/50/50 conserva la posibilidad de 1→2→4→3. La numeración P1…P4 describe los pliegues sobre el perfil; G1…G4 indica su orden temporal. El programa no fuerza ninguna secuencia específica por tratarse de una omega: usa el mismo cribado que con cualquier pieza.
+
+
+## R31 · Selección conjunta de útiles y secuencia para TODAS las piezas
+
+Corrige la limitación de R30: **el asesor comienza también con las piezas existentes y los ejemplos**. Una secuencia definida (por ejemplo Omega G1→P1, G2→P2, G3→P4, G4→P3) **no se considera automáticamente manual**: se compara y se puede mejorar cuando el usuario tiene seleccionado el modo Automático. Si una persona mueve los golpes, selecciona un punzón o cambia una matriz, el control correspondiente pasa a Manual. Se pueden volver a activar ambos modos independientemente.
+
+El nuevo motor `automatic-setup-planner.js` combina las siguientes etapas:
+
+1. **Preselección de herramientas:** se cotejan las referencias reales registradas en `DIES` y `PUNCHES`, descartando combinaciones con ángulo incluido demasiado abierto, apertura V fuera de los límites orientativos 5–14 × e, ala menor que 0,7×V, ancho superior a la longitud documentada del segmento, tonelaje nominal estimado superior a máquina o familias de amarre incompatibles conocidas. La selección de útiles con amarre no verificado es orientativa, no aprobada.
+2. **Orientación:** cuando la geometría es asimétrica, se comprueba el punzón en orientación original y giro completo de 180° durante el montaje (NO se supone que rote durante el ciclo de plegado).
+3. **Secuencia:** para los mejores candidatos se compara el orden de pliegues con el motor de detección de auto-interferencia de chapa, punzón, matriz y tope trasero en sección 2D. El programa ordena primero las penetraciones/cruces, luego los avisos de holgura.
+4. **Cobertura transparente:** el modo rápido limita el número de parejas y de secuencias profundas para evitar bloquear el móvil. El botón **Análisis ampliado** aumenta cobertura cuando se necesita estudiar más combinaciones. La pantalla indica cuántas se examinaron; NO dice que una búsqueda acotada sea exhaustiva.
+5. **Control manual:** elegir una matriz o punzón desde desplegables, tarjetas o el comparador bloquea solo las herramientas. Reordenar golpes bloquea solo la secuencia. El resultado alternativo puede aplicarse expresamente desde el panel.
+
+La carga de una pieza ya guardada no modifica ni elimina el historial: las preselecciones editan la pieza activa; el usuario debe guardar una nueva revisión de biblioteca. Los análisis antiguos se invalidan al cambiar la pieza, útiles, topes o cotas.
+
+**Estado y límite crítico:** el análisis de herramientas y colisiones actuales sigue siendo **2D provisional**. Aunque no detecte conflictos graves en las poses muestreadas, **NO GARANTIZA** ausencia de choques reales con trancha, mesa, sujetadores, tope, punzón o matriz. Para esa validación se necesitan CAD 3D acotados de todos los útiles y componentes, montaje real, cargas admisibles, ejes X/R/Z, trayectoria continua y ensayo de máquina. No se autoriza fabricar ni cargar programas CNC directamente.

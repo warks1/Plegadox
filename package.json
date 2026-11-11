@@ -1,6 +1,6 @@
 {
   "name": "plegadox",
-  "version": "0.9.5",
+  "version": "0.9.7",
   "private": true,
   "type": "module",
   "description": "Control y simulador de plegado independiente",

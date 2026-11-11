@@ -7,7 +7,7 @@
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="./icon-180.png">
 <link rel="manifest" href="./manifest.webmanifest">
-<meta name="plegadox-build" content="PLEGADOX-20261102-R29">
+<meta name="plegadox-build" content="PLEGADOX-20261111-R31">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="PlegadoX">
 </head><body>
@@ -35,7 +35,7 @@
 </div></div>
 <div id="app">
 <header class="topbar">
-<div class="header-logo"><span class="logo-title">PLEGADO<span>DO</span><em>X</em></span><small>PRECISIÓN EN CADA ÁNGULO</small><small id="buildMark" class="px-build-mark" aria-label="Versión instalada de PlegadoX">PLEGADOX-20261102-R29</small></div>
+<div class="header-logo"><span class="logo-title">PLEGADO<span>DO</span><em>X</em></span><small>PRECISIÓN EN CADA ÁNGULO</small><small id="buildMark" class="px-build-mark" aria-label="Versión instalada de PlegadoX">PLEGADOX-20261111-R31</small></div>
 <div class="header-project"><span class="h-icon" aria-hidden="true"><svg class="px-icon"><use href="./icons.svg#project"/></svg></span><div class="h-content"><small>PROYECTO ACTUAL</small><strong id="topProject">Omega · ejemplo geométrico</strong></div></div>
 <div class="header-stats"><div><small>Material</small><strong id="topMaterial">Acero S235</strong></div><div><small>Espesor</small><strong id="topThickness">2,00 mm</strong></div><div><small>Ángulo</small><strong id="topAngle">+90°</strong></div><div><small>Apertura V</small><strong id="topV">16 mm</strong></div><div><small>Punzón</small><strong id="topPunch">Recto 88°</strong></div><div><small>Matriz</small><strong id="topDie">V16</strong></div></div>
 <div class="header-right"><div class="header-status"><button id="topPlayBtn" class="led" type="button" aria-label="Reproducir simulación" aria-pressed="false" title="Reproducir / pausar simulación">▶</button><span id="topState">Simulación lista</span></div><span id="clock" aria-label="Hora"></span><button id="forceUpdateBtn" class="header-icon-button px-refresh-button" title="Actualizar PlegadoX sin borrar piezas" aria-label="Actualizar PlegadoX sin borrar piezas"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#refresh"/></svg></button><button id="saveBtn" class="header-icon-button" title="Guardar pieza" aria-label="Guardar pieza"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#save"/></svg></button></div>
@@ -47,7 +47,7 @@
 <button class="nav" data-tab="herramientas"><span class="nav-picto" aria-hidden="true"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#tools"/></svg></span><span>HERRAMIENTAS</span></button>
 <button class="nav" data-tab="desarrollo"><span class="nav-picto" aria-hidden="true"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#ruler"/></svg></span><span>DESARROLLO</span></button>
 <button class="nav" data-tab="maquina"><span class="nav-picto" aria-hidden="true"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#settings"/></svg></span><span>MÁQUINA</span></button>
-<div class="nav-spacer"></div><button class="side-action" id="sideSave" title="Guardar pieza" aria-label="Guardar pieza"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#save"/></svg><span>GUARDAR</span></button><button class="side-action" id="sideImport" title="Importar pieza JSON" aria-label="Importar pieza JSON"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#upload"/></svg><span>IMPORTAR</span></button><div class="nav-version">AMS · PLEGADOX v0.9.5</div>
+<div class="nav-spacer"></div><button class="side-action" id="sideSave" title="Guardar pieza" aria-label="Guardar pieza"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#save"/></svg><span>GUARDAR</span></button><button class="side-action" id="sideImport" title="Importar pieza JSON" aria-label="Importar pieza JSON"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#upload"/></svg><span>IMPORTAR</span></button><div class="nav-version">AMS · PLEGADOX v0.9.7</div>
 </nav>
 <main>
 <section class="panel" id="tab-programacion">
@@ -130,7 +130,40 @@
  <span><i class="sheet-amber" aria-hidden="true"></i> Ámbar: contacto puntual o separación inferior al espesor</span>
  <small>Vista geométrica 2D; NO certifica colisiones reales con máquina y utillaje.</small>
  </div><div class="summary" id="geometrySummary"></div><p class="hint">Vista final calculada desde la pieza recta; no se muestra una omega ya formada antes del primer golpe.</p></article></div>
-<article class="card"><div class="cardhead"><h2>Orden de plegado</h2><span class="smalllabel">Pulsa un pliegue para subirlo o bajarlo en la secuencia</span></div><p class="hint">En las fotos Cybelec se numeran las caras/pliegues del perfil (P1…P4), no necesariamente los golpes reales (G1…G4). La secuencia física se indica aparte.</p><div id="sequence" class="sequence"></div><div class="sequence-advisor"><div class="inline-actions"><button type="button" id="evaluateOrder">Analizar órdenes posibles (chapa 2D)</button><button type="button" id="applySuggestedOrder" disabled>Aplicar orden sugerido</button></div><p id="sequenceAdvice" role="status" aria-live="polite">Sin analizar este programa. La secuencia actual se conserva.</p><small>Comparación orientativa entre alas. NO evalúa accesibilidad de punzón, matriz, mesa, volteos ni carrera de máquina. No aplica nada sin pulsar «Aplicar».</small></div><p class="hint">La secuencia de operaciones no cambia el signo de cada pliegue. La forma final se obtiene aplicando únicamente los golpes ejecutados.</p></article>
+<article class="card"><div class="cardhead"><h2>Orden de plegado</h2><span class="smalllabel">Pulsa un pliegue para subirlo o bajarlo en la secuencia</span></div><p class="hint">En las fotos Cybelec se numeran las caras/pliegues del perfil (P1…P4), no necesariamente los golpes reales (G1…G4). La secuencia física se indica aparte.</p><div id="sequence" class="sequence"></div>
+<div class="sequence-auto-planner" id="sequenceAutoPlanner">
+ <div class="sequence-auto-header">
+  <div><strong><span aria-hidden="true">◇</span> PLANIFICADOR DE PLEGADO</strong>
+   <small>Compara órdenes, útiles, orientación y topes en secciones 2D</small></div>
+  <label class="sequence-mode-label" for="sequencePlannerMode">Control del orden
+   <select id="sequencePlannerMode" aria-label="Control del orden de plegado">
+    <option value="auto">Automático · proponer y aplicar mejoras</option>
+    <option value="manual">Manual · conservar mi orden</option>
+   </select>
+  </label>
+ </div>
+ <div class="sequence-auto-header"><div><strong>Selección de matriz y punzón</strong><small>El motor analiza distintas parejas, orientaciones y órdenes. No valida amarres ni colisiones 3D reales.</small></div>
+<label class="sequence-mode-label" for="toolingPlannerMode">Selección de útiles
+<select id="toolingPlannerMode" aria-label="Selección automática o manual de matriz y punzón">
+<option value="auto">Automática · recomendar y preseleccionar</option>
+<option value="manual">Manual · conservar mis herramientas</option>
+</select></label></div>
+<div id="setupAutoStatus" class="sequence-auto-status" role="status" aria-live="polite">Preparado para comparar útiles del catálogo y secuencias.</div>
+<div id="setupAutoDetails" class="sequence-auto-details">SIN VALIDACIÓN 3D: confirmar mesa, trancha, amarres, tope, carga y perfiles físicos antes de fabricar.</div>
+<div class="inline-actions">
+<button type="button" id="setupAutoRecalculate">Comparar útiles y orden</button>
+<button type="button" id="setupAutoFull">Análisis ampliado (más lento)</button>
+<button type="button" id="setupAutoApply" disabled>Aplicar propuesta completa</button>
+</div>
+<div id="sequenceAutoStatus" class="sequence-auto-status" role="status" aria-live="polite">Analizador preparado; comprobando el programa…</div>
+ <div id="sequenceAutoDetails" class="sequence-auto-details">Cualquier resultado será un cribado 2D orientativo, nunca una validación CNC.</div>
+ <div class="inline-actions">
+  <button type="button" id="sequenceAutoRecalculate">Recalcular colisiones y orden</button>
+  <button type="button" id="sequenceAutoApply" disabled>Aplicar alternativa manualmente</button>
+ </div>
+ <p class="hint">Siempre puedes tocar los pliegues o moverlos con las flechas para imponer otro orden. Al hacerlo se activa el modo Manual y no se sobrescribe tu elección. Los perfiles provisionales y el barrido discreto NO garantizan ausencia de colisiones reales.</p>
+</div>
+<div class="sequence-advisor"><div class="inline-actions"><button type="button" id="evaluateOrder">Analizar órdenes posibles (chapa 2D)</button><button type="button" id="applySuggestedOrder" disabled>Aplicar orden sugerido</button></div><p id="sequenceAdvice" role="status" aria-live="polite">Sin analizar este programa. La secuencia actual se conserva.</p><small>Comparación orientativa entre alas. NO evalúa accesibilidad de punzón, matriz, mesa, volteos ni carrera de máquina. No aplica nada sin pulsar «Aplicar».</small></div><p class="hint">La secuencia de operaciones no cambia el signo de cada pliegue. La forma final se obtiene aplicando únicamente los golpes ejecutados.</p></article>
 </section>
 <section class="panel active cockpit-page" id="tab-simulacion">
 <div class="cockpit-banner">
@@ -246,7 +279,7 @@
  * PlegadoX anteriores y cargar luego todos los módulos secuencialmente.
  * Nunca se elimina localStorage, IndexedDB ni los proyectos del usuario.
  */
-const BUILD="PLEGADOX-20261102-R29";
+const BUILD="PLEGADOX-20261111-R31";
 const STATUS=document.getElementById('buildMark');
 const KEY='plegadox:verified-loader-build';
 const BASE=new URL('./',document.baseURI);

@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 const get=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 test('La compilación visible, el manifiesto de recuperación y el SW tienen la misma marca',()=>{
  const build=JSON.parse(get('build-info.json')).build;
- assert.match(build,/^(TOPE-20261101-R|PLEGADOX-20261102-R)/);
+ assert.match(build,/^PLEGADOX-\d{8}-R\d+$/);
  const html=get('index.html');
  assert.ok(html.includes('id="buildMark"'));
  assert.ok(html.includes('id="forceUpdateBtn"'));
