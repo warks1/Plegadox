@@ -1,0 +1,32 @@
+/* TITANIUM · pantalla de entrada animada: acero plata y azul. */
+.px-titanium-splash[hidden]{display:none!important}
+.px-titanium-splash{position:fixed;inset:0;z-index:999999;overflow:auto;display:grid;place-items:center;padding:clamp(18px,4vw,48px);background:radial-gradient(ellipse at 50% 17%,#20435c 0%,#0b1f32 46%,#030a13 90%);color:#edfaff;font-family:Inter,system-ui,sans-serif}
+.px-titanium-splash::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.25;background-image:linear-gradient(#9de2ff10 1px,transparent 1px),linear-gradient(90deg,#9de2ff10 1px,transparent 1px);background-size:32px 32px;mask-image:linear-gradient(#0005,#0000 95%)}
+.px-splash-border{position:absolute;inset:14px;border:1px solid #82bde43c;box-shadow:inset 0 0 70px #0c4f7b21;pointer-events:none}
+.px-splash-border::before,.px-splash-border::after{content:"";position:absolute;width:60px;height:4px;background:#48c5ff;box-shadow:0 0 20px #48c5ff}
+.px-splash-border::before{top:-2px;left:5%}.px-splash-border::after{bottom:-2px;right:5%}
+.px-splash-main{position:relative;z-index:1;width:min(100%,1000px);display:flex;flex-direction:column;align-items:center;gap:clamp(9px,2vh,21px);text-align:center}
+.px-splash-kicker{font-size:clamp(9px,1.2vw,12px);font-weight:800;letter-spacing:.32em;color:#a0bed5}
+.px-splash-logo{margin:0;font-size:clamp(40px,9vw,92px);line-height:1;font-weight:900;letter-spacing:.07em;color:#edf7ff;text-shadow:0 4px 28px #7bc9ff55;white-space:nowrap}
+.px-splash-logo em{font-style:normal;color:#4dcaff;text-shadow:0 0 18px #46c9ffb0}
+.px-splash-subtitle{margin:0;color:#cbdde8;font-size:clamp(10px,1.6vw,15px);font-weight:600;letter-spacing:.16em}
+.px-splash-stage{width:min(100%,740px);height:auto;display:block;filter:drop-shadow(0 7px 28px #22a8e83d);border:1px solid #67bfe435;background:linear-gradient(155deg,#102c42a0,#071729b0);border-radius:14px}
+.px-splash-hud{position:absolute;top:12px;left:14px;font-size:11px;letter-spacing:.14em;font-weight:700;fill:#9cd2f3}
+.px-splash-stage .px-sheet-path{filter:drop-shadow(0 2px 6px #60eaff66)}
+.px-splash-ram{animation:px-splash-press 3.6s ease-in-out infinite}
+@keyframes px-splash-press{0%,12%,85%,100%{transform:translateY(0)}31%,65%{transform:translateY(65px)}}
+.px-splash-glint{animation:px-splash-pulse 1.7s ease-in-out infinite alternate}
+@keyframes px-splash-pulse{from{opacity:.35}to{opacity:1}}
+.px-splash-caption{font-size:11px;letter-spacing:.19em;font-weight:800;color:#6ad5ff}
+.px-splash-load{width:min(100%,620px);display:grid;gap:9px}
+.px-splash-load-head{display:flex;justify-content:space-between;gap:16px;align-items:center;font:700 clamp(10px,1.4vw,13px)/1.3 ui-monospace,monospace;letter-spacing:.1em;color:#a7d0e7}
+.px-splash-load-bar{height:9px;border:1px solid #3d86a8;border-radius:20px;background:#081522;overflow:hidden;box-shadow:0 0 16px #46c6f522}
+.px-splash-load-bar>span{display:block;width:0;height:100%;border-radius:20px;background:linear-gradient(90deg,#3c7399,#b3d8f1 55%,#00c2ff);transition:width .26s ease;box-shadow:0 0 18px #55dfff}
+.px-splash-loading-state{margin:0;min-height:1.5em;font-size:12px;color:#9abdd6}
+.px-splash-copy{font:600 clamp(9px,1.2vw,11px) ui-monospace,monospace;letter-spacing:.15em;color:#7495ae}
+.px-titanium-splash.is-complete{opacity:0;visibility:hidden;transition:opacity .52s ease,visibility .52s ease}
+.px-titanium-splash.is-error .px-splash-load-bar>span{background:#fb8b75}
+.px-splash-retry{display:none;min-height:44px;padding:9px 22px;border:1px solid #61d6ff;border-radius:7px;background:#124867;color:#fff;font-weight:800;cursor:pointer}
+.px-titanium-splash.is-error .px-splash-retry{display:block}
+@media(max-width:600px){.px-titanium-splash{padding:15px}.px-splash-border{inset:8px}.px-splash-stage{min-height:170px}.px-splash-copy{letter-spacing:.05em}.px-splash-kicker{letter-spacing:.12em}}
+@media(prefers-reduced-motion:reduce){.px-splash-ram,.px-splash-glint{animation:none!important}.px-splash-stage animate{display:none}.px-titanium-splash.is-complete{transition:none}}
