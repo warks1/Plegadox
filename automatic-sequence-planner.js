@@ -49,7 +49,12 @@ function prepare(piece,options={}){
    return hardA-hardB||a.score.score-b.score.score||a.index-b.index;
   });
  }
- const reviewed=p.order.length<=4?sheet:
+ const limitedFour=options.deepLimitFour==null?null:
+  Math.max(1,Math.min(24,Math.trunc(options.deepLimitFour)));
+ const rated=limitedFour!=null&&p.order.length<=4?
+  [sheet[0],...sheet.slice(1).sort((a,b)=>
+   a.score.score-b.score.score||a.index-b.index)].slice(0,limitedFour):null;
+ const reviewed=p.order.length<=4?(rated||sheet):
   [sheet.find(x=>x.index===0),
    ...sheet.filter(x=>x.index!==0)].slice(
     0,Math.min(16,Math.max(2,Math.trunc(options.maxDeepCandidates??10))));
