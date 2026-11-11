@@ -1139,3 +1139,14 @@ de giro del punzón entre operaciones. Para cambiarla físicamente hay que
 detener la máquina, comprobar la admisibilidad de inversión del amarre,
 la longitud, el centrado y los despejes. No se afirma que un golpe sea
 seguro porque desaparezca un aviso 2D en la vista invertida.
+
+
+## R28 · Detección de penetración y endurecimiento de publicación PWA
+
+- En el contacto con el tope, una coincidencia nominal del canto con la cara elegida **no** permite penetrar en el interior: el cribado 2D detecta penetraciones someras, incluso inferiores a la mitad del espesor. Sigue siendo una advertencia geométrica, no una garantía de seguridad CNC.
+- Identificadores de compilación y caché sincronizados a **PLEGADOX-20261102-R28 / v0.9.4**. Los módulos se importan con `?build=R28` (identificador completo codificado en la URL) y la revisión del Service Worker cambia de nombre para evitar mezclar revisiones.
+- Los errores de almacenamiento local se muestran en un aviso visible y persistente; Guardar ya no confirma éxito si falla el guardado de la pieza. Si el rollback del backup también falla, se informa de las claves que requieren revisión.
+- Iconos PNG de 192 y 512 px (más 180 px para iOS), generados a partir del diseño SVG PlegadoX, sin perder el favicon original. El generador reproducible es `tools/generate-pwa-icons.py`.
+- El CI valida la sintaxis de **todos** los módulos JavaScript y comprueba la coherencia de build, caché, versión e iconos para evitar regresiones de publicación.
+
+**Recuperación de una instalación antigua:** abre `https://warks1.github.io/Plegadox/?rev=PLEGADOX-20261102-R28` con conexión o usa el botón **Actualizar**. Los proyectos locales no se eliminan al renovar la caché, pero conviene exportar copia de las piezas antes de cualquier actualización mayor.
