@@ -1,6 +1,6 @@
 {
-  "build": "PLEGADOX-20261111-R31",
-  "version": "0.9.7",
+  "build": "PLEGADOX-20261111-R32",
+  "version": "0.9.8",
   "gauge": "shallow-penetration-near-front-contact",
-  "cache": "plegadox-static-0.9.7-titanium-cybelec-r31"
+  "cache": "plegadox-static-0.9.8-titanium-cybelec-r32"
 }

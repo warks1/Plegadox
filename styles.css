@@ -1460,35 +1460,127 @@ html{background:#020913}
 @media(max-width:560px){.px-storage-error{font-size:12px;flex-direction:column}.px-storage-error button{align-self:flex-end}}
 
 
-/* TITANIUM · pantalla de entrada animada: acero plata y azul. */
+/* 02 · TITANIUM — Acero y azul plata. Pantalla de ARRANQUE, no menú. */
 .px-titanium-splash[hidden]{display:none!important}
-.px-titanium-splash{position:fixed;inset:0;z-index:999999;overflow:auto;display:grid;place-items:center;padding:clamp(18px,4vw,48px);background:radial-gradient(ellipse at 50% 17%,#20435c 0%,#0b1f32 46%,#030a13 90%);color:#edfaff;font-family:Inter,system-ui,sans-serif}
-.px-titanium-splash::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.25;background-image:linear-gradient(#9de2ff10 1px,transparent 1px),linear-gradient(90deg,#9de2ff10 1px,transparent 1px);background-size:32px 32px;mask-image:linear-gradient(#0005,#0000 95%)}
-.px-splash-border{position:absolute;inset:14px;border:1px solid #82bde43c;box-shadow:inset 0 0 70px #0c4f7b21;pointer-events:none}
-.px-splash-border::before,.px-splash-border::after{content:"";position:absolute;width:60px;height:4px;background:#48c5ff;box-shadow:0 0 20px #48c5ff}
+.px-titanium-splash{
+ position:fixed;inset:0;z-index:999999;isolation:isolate;overflow-y:auto;
+ display:grid;place-items:center;min-height:100svh;min-height:100dvh;
+ padding:clamp(14px,3.2vmin,38px);color:#edf7ff;
+ background:
+  radial-gradient(ellipse 65% 36% at 50% 22%,#24496088,transparent 87%),
+  radial-gradient(ellipse 80% 90% at 50% 110%,#122d46,#030912 80%);
+ font-family:Inter,ui-sans-serif,system-ui,sans-serif;
+}
+.px-titanium-splash::before{
+ content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+ background-image:linear-gradient(#96dfff09 1px,transparent 1px),
+  linear-gradient(90deg,#96dfff09 1px,transparent 1px);
+ background-size:50px 50px;mask-image:radial-gradient(ellipse at center,#000c,transparent 75%);
+}
+.px-splash-halo{
+ position:absolute;inset:9% 9% 24%;z-index:-1;pointer-events:none;
+ background:radial-gradient(ellipse at center,#53bff81c,#010a1600 70%);
+ filter:blur(34px);animation:px-splash-halo-pulse 3.4s ease-in-out infinite alternate;
+}
+@keyframes px-splash-halo-pulse{from{opacity:.5;transform:scale(.92)}to{opacity:1;transform:scale(1.08)}}
+.px-splash-border{position:fixed;inset:clamp(8px,1.5vw,20px);border:1px solid #85ccf82c;box-shadow:inset 0 0 90px #0a3d5a20,0 0 60px #000b18;pointer-events:none}
+.px-splash-border::before,.px-splash-border::after{content:"";position:absolute;width:clamp(35px,6vw,86px);height:3px;background:linear-gradient(90deg,#33adf7,#dcfaff);box-shadow:0 0 18px #50ceffb8}
 .px-splash-border::before{top:-2px;left:5%}.px-splash-border::after{bottom:-2px;right:5%}
-.px-splash-main{position:relative;z-index:1;width:min(100%,1000px);display:flex;flex-direction:column;align-items:center;gap:clamp(9px,2vh,21px);text-align:center}
-.px-splash-kicker{font-size:clamp(9px,1.2vw,12px);font-weight:800;letter-spacing:.32em;color:#a0bed5}
-.px-splash-logo{margin:0;font-size:clamp(40px,9vw,92px);line-height:1;font-weight:900;letter-spacing:.07em;color:#edf7ff;text-shadow:0 4px 28px #7bc9ff55;white-space:nowrap}
-.px-splash-logo em{font-style:normal;color:#4dcaff;text-shadow:0 0 18px #46c9ffb0}
-.px-splash-subtitle{margin:0;color:#cbdde8;font-size:clamp(10px,1.6vw,15px);font-weight:600;letter-spacing:.16em}
-.px-splash-stage{width:min(100%,740px);height:auto;display:block;filter:drop-shadow(0 7px 28px #22a8e83d);border:1px solid #67bfe435;background:linear-gradient(155deg,#102c42a0,#071729b0);border-radius:14px}
-.px-splash-hud{position:absolute;top:12px;left:14px;font-size:11px;letter-spacing:.14em;font-weight:700;fill:#9cd2f3}
-.px-splash-stage .px-sheet-path{filter:drop-shadow(0 2px 6px #60eaff66)}
-.px-splash-ram{animation:px-splash-press 3.6s ease-in-out infinite}
-@keyframes px-splash-press{0%,12%,85%,100%{transform:translateY(0)}31%,65%{transform:translateY(53px)}}
-.px-splash-glint{animation:px-splash-pulse 1.7s ease-in-out infinite alternate}
-@keyframes px-splash-pulse{from{opacity:.35}to{opacity:1}}
-.px-splash-caption{font-size:11px;letter-spacing:.19em;font-weight:800;color:#6ad5ff}
-.px-splash-load{width:min(100%,620px);display:grid;gap:9px}
-.px-splash-load-head{display:flex;justify-content:space-between;gap:16px;align-items:center;font:700 clamp(10px,1.4vw,13px)/1.3 ui-monospace,monospace;letter-spacing:.1em;color:#a7d0e7}
-.px-splash-load-bar{height:9px;border:1px solid #3d86a8;border-radius:20px;background:#081522;overflow:hidden;box-shadow:0 0 16px #46c6f522}
-.px-splash-load-bar>span{display:block;width:0;height:100%;border-radius:20px;background:linear-gradient(90deg,#3c7399,#b3d8f1 55%,#00c2ff);transition:width .26s ease;box-shadow:0 0 18px #55dfff}
-.px-splash-loading-state{margin:0;min-height:1.5em;font-size:12px;color:#9abdd6}
-.px-splash-copy{font:600 clamp(9px,1.2vw,11px) ui-monospace,monospace;letter-spacing:.15em;color:#7495ae}
-.px-titanium-splash.is-complete{opacity:0;visibility:hidden;transition:opacity .52s ease,visibility .52s ease}
-.px-titanium-splash.is-error .px-splash-load-bar>span{background:#fb8b75}
+.px-splash-main{
+ position:relative;z-index:1;width:min(100%,1020px);
+ display:flex;flex-direction:column;align-items:center;
+ gap:clamp(6px,1.6dvh,18px);text-align:center;min-width:0;
+}
+.px-splash-kicker{
+ display:flex;justify-content:center;align-items:center;gap:clamp(6px,1vw,14px);flex-wrap:wrap;
+ font-size:clamp(9px,1.1vw,12px);font-weight:800;letter-spacing:.2em;
+ text-transform:uppercase;color:#a8cadd;text-shadow:0 0 10px #306a91;
+}
+.px-splash-kicker-sep{color:#3ea8e2;opacity:.8}
+.px-splash-led,.px-splash-signal{
+ display:inline-block;flex:none;width:7px;height:7px;border-radius:50%;
+ background:#58e6ff;box-shadow:0 0 9px #4ce1ff,0 0 20px #1d9bc8;
+ animation:px-splash-led 1.7s ease-in-out infinite alternate;
+}
+@keyframes px-splash-led{from{opacity:.5;box-shadow:0 0 4px #4ce1ff}to{opacity:1;box-shadow:0 0 14px #4ce1ff,0 0 20px #1d9bc8}}
+.px-splash-logo{
+ margin:0;line-height:.99;letter-spacing:.055em;
+ font-size:clamp(39px,8vw,96px);font-weight:950;white-space:nowrap;
+ color:#e3f0fa;background:linear-gradient(173deg,#ffffff 5%,#b1d4e9 24%,#e6faff 39%,#728fa7 52%,#f1fbff 67%,#80adc9 86%);
+ -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+ filter:drop-shadow(0 5px 2px #000a) drop-shadow(0 0 24px #2a9dda5c);
+}
+.px-splash-logo em{font-style:normal;background:linear-gradient(155deg,#eaffff 8%,#77dfff 35%,#2d8bd2 63%,#e2faff 100%);
+ -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+ filter:drop-shadow(0 0 14px #33c6ff)}
+.px-splash-subtitle{margin:0;font-size:clamp(10px,1.4vw,15px);font-weight:800;letter-spacing:.24em;color:#9dc5db;text-transform:uppercase}
+.px-splash-subtitle span{color:#43caff}
+.px-splash-viewport{
+ width:min(100%,900px);position:relative;min-width:0;overflow:hidden;
+ border:1px solid #89ceef6b;border-radius:19px;
+ background:linear-gradient(160deg,#12334a,#020b17);
+ box-shadow:0 16px 60px #000a,0 0 30px #3db8fc20,inset 0 0 28px #b6edff0b;
+}
+.px-splash-viewport::before{
+ content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
+ background:linear-gradient(114deg,transparent 33%,#a1e8ff13 48%,transparent 61%);
+ animation:px-splash-light-sweep 4.4s ease-in-out infinite;
+}
+@keyframes px-splash-light-sweep{0%,23%{transform:translateX(-140%)}70%,100%{transform:translateX(140%)}}
+.px-splash-stage{width:100%;max-height:min(43dvh,410px);height:auto;display:block;aspect-ratio:900/410}
+.px-splash-viewport-label{
+ position:absolute;z-index:3;left:clamp(10px,2vw,22px);bottom:clamp(9px,1.5vw,17px);
+ padding:7px 11px;background:#041a2bc7;border:1px solid #3c9fd26e;border-radius:4px;
+ color:#a9dff5;letter-spacing:.14em;font:800 clamp(8px,1.1vw,11px) ui-monospace,monospace;
+ display:flex;align-items:center;gap:10px;
+}
+.px-splash-beam{animation:px-splash-beam 2.2s ease-in-out infinite alternate}
+@keyframes px-splash-beam{from{opacity:.08}to{opacity:.4}}
+.px-splash-load{width:min(100%,720px);display:grid;gap:clamp(6px,1dvh,10px);padding-inline:clamp(2px,1vw,12px)}
+.px-splash-load-head{
+ display:flex;justify-content:space-between;align-items:center;gap:10px;
+ color:#c4dfea;font:800 clamp(10px,1.1vw,13px)/1.4 ui-monospace,monospace;letter-spacing:.12em;
+}
+.px-splash-load-head>span{display:flex;gap:8px;align-items:center}
+.px-splash-load-bar{
+ overflow:hidden;position:relative;height:clamp(9px,1.3vh,13px);
+ border-radius:30px;border:1px solid #67abd6;background:linear-gradient(#071522,#0c2b43);
+ box-shadow:inset 0 0 10px #000b,0 0 25px #1b8bc329;
+}
+.px-splash-load-bar::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 38px,#06182a85 39px 41px);pointer-events:none}
+.px-splash-load-bar>span{
+ display:block;width:0;height:100%;border-radius:30px;
+ background:linear-gradient(90deg,#1c689c,#69b9e4 46%,#dcf8ff 74%,#44bfff);
+ box-shadow:0 0 22px #54d3ff;transition:width .18s linear;
+}
+.px-splash-loading-state{margin:0;min-height:1.4em;font-size:clamp(10px,1.1vw,13px);line-height:1.4;color:#82acc7}
+.px-splash-copy{
+ color:#789bb6;font:700 clamp(9px,1vw,11px)/1.45 ui-monospace,monospace;
+ letter-spacing:.14em;overflow-wrap:anywhere;
+}
+.px-titanium-splash.is-complete{opacity:0;visibility:hidden;transition:opacity .4s ease,visibility .4s ease}
+.px-titanium-splash.is-error .px-splash-load-bar>span{background:linear-gradient(90deg,#a84e43,#ffb29d)}
 .px-splash-retry{display:none;min-height:44px;padding:9px 22px;border:1px solid #61d6ff;border-radius:7px;background:#124867;color:#fff;font-weight:800;cursor:pointer}
 .px-titanium-splash.is-error .px-splash-retry{display:block}
-@media(max-width:600px){.px-titanium-splash{padding:15px}.px-splash-border{inset:8px}.px-splash-stage{min-height:170px}.px-splash-copy{letter-spacing:.05em}.px-splash-kicker{letter-spacing:.12em}}
-@media(prefers-reduced-motion:reduce){.px-splash-ram,.px-splash-glint{animation:none!important}.px-splash-stage animate{display:none}.px-titanium-splash.is-complete{transition:none}}
+@media(max-width:600px){
+ .px-titanium-splash{padding:12px 13px}.px-splash-border{inset:7px}
+ .px-splash-kicker{letter-spacing:.11em;font-size:9px}
+ .px-splash-subtitle{letter-spacing:.1em}.px-splash-logo{font-size:clamp(36px,10.4vw,64px)}
+ .px-splash-viewport{border-radius:10px}
+ .px-splash-viewport-label{font-size:8px;bottom:6px;left:7px;padding:4px 5px;gap:5px}
+ .px-splash-copy{letter-spacing:.06em}
+}
+@media(max-height:540px){
+ .px-titanium-splash{padding:6px 16px}
+ .px-splash-main{gap:3px}
+ .px-splash-logo{font-size:clamp(28px,7vh,48px)}
+ .px-splash-subtitle,.px-splash-kicker{font-size:9px}
+ .px-splash-stage{max-height:38dvh}
+ .px-splash-viewport{width:min(100%,760px)}
+ .px-splash-load{gap:3px}.px-splash-loading-state{min-height:0}
+ .px-splash-copy{font-size:9px}
+}
+@media(prefers-reduced-motion:reduce){
+ .px-splash-halo,.px-splash-viewport::before,.px-splash-led,.px-splash-signal,.px-splash-beam{animation:none!important}
+ .px-splash-stage animate{display:none}.px-titanium-splash.is-complete{transition:none}
+}
