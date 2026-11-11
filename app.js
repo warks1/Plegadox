@@ -1316,7 +1316,7 @@ function toolCard(tool,kind){
   'Algunas medidas proceden de ficha; el contorno 2D/3D continúa siendo paramétrico, no CAD completo.':
   'Contorno paramétrico sin cotas CAD completas de fabricante ni validación física.';
  button.append(image,title,meta,brand,notice);
- button.onclick=()=>changePiece({...piece,[kind==='punch'?'punch':'die']:tool.id},true);
+ button.onclick=()=>{setToolingMode('manual',{replan:false});changePiece({...piece,[kind==='punch'?'punch':'die']:tool.id},true);};
  return button;
 }
 function renderToolCards(){
@@ -1352,7 +1352,7 @@ function renderVComparison(){
   button.textContent=d.id===piece.die?'Actual':'Elegir';
   button.disabled=d.id===piece.die;
   button.setAttribute('aria-label','Seleccionar matriz '+d.name);
-  button.addEventListener('click',()=>changePiece({...piece,die:d.id},true));
+  button.addEventListener('click',()=>{setToolingMode('manual',{replan:false});changePiece({...piece,die:d.id},true);});
   action.append(button);tr.append(action);return tr;
  });
  root.dataset.key=key;root.replaceChildren(...rows);
