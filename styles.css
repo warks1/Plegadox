@@ -1476,7 +1476,7 @@ html{background:#020913}
 .px-splash-hud{position:absolute;top:12px;left:14px;font-size:11px;letter-spacing:.14em;font-weight:700;fill:#9cd2f3}
 .px-splash-stage .px-sheet-path{filter:drop-shadow(0 2px 6px #60eaff66)}
 .px-splash-ram{animation:px-splash-press 3.6s ease-in-out infinite}
-@keyframes px-splash-press{0%,12%,85%,100%{transform:translateY(0)}31%,65%{transform:translateY(65px)}}
+@keyframes px-splash-press{0%,12%,85%,100%{transform:translateY(0)}31%,65%{transform:translateY(53px)}}
 .px-splash-glint{animation:px-splash-pulse 1.7s ease-in-out infinite alternate}
 @keyframes px-splash-pulse{from{opacity:.35}to{opacity:1}}
 .px-splash-caption{font-size:11px;letter-spacing:.19em;font-weight:800;color:#6ad5ff}
