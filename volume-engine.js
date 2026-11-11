@@ -9,6 +9,7 @@
 import {normalized,getTooling} from './engine.js';
 import {getV85,gaugeOutline} from './machine-config.js';
 import {gaugePlacement} from './backgauge-placement.js';
+import {sheetSolidMesh} from './sheet-solid.js';
 const EPS=1e-8;
 const v=(x,y)=>({x,y});
 const isFinitePoint=p=>p&&Number.isFinite(p.x)&&Number.isFinite(p.y);
@@ -106,11 +107,16 @@ function strip(a,b,t){
 export function buildVolumeScene(scene,{machine=getV85()}={}){
  const p=normalized(scene.piece);
  const width=p.width,half=width/2;
+ // Compartir EXACTAMENTE el contorno de espesor del visor 3D,
+ // incluyendo uniones de alas y radios representados, evitando dos
+ // motores incompatibles de normales/desplazamiento en las esquinas.
  const segments=[];
  const contour=scene.sheetDisplay||scene.sheet;
- for(let i=0;i<contour.length-1;i++){
-  const shape=strip(contour[i],contour[i+1],p.thickness);
-  if(shape)segments.push(makePrism('chapa-ala-'+(i+1),shape,-half,half,'fibra-modelada'));
+ const skin=sheetSolidMesh(contour,width,p.thickness);
+ for(let i=0;i<skin.outer.length-1;i++){
+  const shape=[skin.outer[i],skin.outer[i+1],
+   skin.inner[i+1],skin.inner[i]];
+  segments.push(makePrism('chapa-ala-'+(i+1),shape,-half,half,'malla-chapa-compartida'));
  }
  const punch=scene.punch,die=scene.die;
  const registered=getTooling(p);
