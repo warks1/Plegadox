@@ -1165,7 +1165,7 @@ La pantalla inicial **TITANIUM** incluye animación SVG de chapa plegándose ent
 
 ## R30 · Planificación automática multi-interferencia con control manual (11-11-2026)
 
-**Objetivo:** no obligar al operario a ordenar cada pliegue a mano. Tras editar la pieza, el asesor compara automáticamente secuencias completas y, en modo **Automático**, aplica **solo mejoras detectadas** en los barridos geométricos 2D que no incrementen los riesgos graves de la pieza. Cuando se ha guardado ya una pieza, el primer arranque solo **analiza y propone**: no la reordena silenciosamente al abrir la aplicación. Se puede pulsar **Recalcular colisiones y orden** o activar de nuevo Automático.
+**Objetivo:** no obligar al operario a ordenar cada pliegue a mano. Tras editar la pieza, el asesor compara automáticamente secuencias completas y, en modo **Automático**, aplica **solo mejoras detectadas** en los barridos geométricos 2D sin agravar ninguna clase de riesgo grave. **Una secuencia predefinida o personalizada (como la omega 1→2→4→3) se abre en Manual**, sin modificar el orden; crear una pieza nueva activa Automático. También puede activarse Automático expresamente sobre la pieza abierta. El primer arranque solo analiza y propone, sin reordenar silenciosamente una pieza ya existente.
 
 - **4 golpes o menos:** se enumeran y examinan **todas las permutaciones** con el mismo muestreo de chapa, punzón/matriz y tope; para 4 son 24. A partir de 5 se usa una búsqueda limitada (con informe de cobertura) para evitar bloquear móviles.
 - **Chapa:** inspección de cruces, solapes, contactos y holguras entre alas a lo largo de cada secuencia. Los cruces del perfil final se indican como **no corregibles solo con otro orden**.
