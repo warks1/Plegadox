@@ -184,7 +184,8 @@ function render(ms){
  const status=progress<22?'Preparando geometría de chapa y herramientas…':progress<48?'Calculando trayectorias y secuencia de plegado…':progress<72?'Sincronizando simulación CNC en tiempo real…':progress<96?'Verificando colisiones y parámetros de máquina…':'PlegadoX listo para comenzar.';
  nodes.status.textContent=externalStatus??status;
 }
-function tick(now){if(!hold)render(now-start);requestAnimationFrame(tick)}
+const reducedMotion=window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+function tick(now){if(!hold)render(reducedMotion?6000:now-start);requestAnimationFrame(tick)}
 requestAnimationFrame(tick);
 $('replay').addEventListener('click',()=>{hold=false;start=performance.now();render(0)});
 window.PlegadoXLoading={setProgress(value){manual=Math.max(0,Math.min(100,Number(value)||0));},setStatus(value){externalStatus=String(value??'');nodes.status.textContent=externalStatus;},automatic(){manual=null;},finish(){manual=100;hold=true;render(10000);externalStatus='PlegadoX listo para comenzar.';nodes.status.textContent=externalStatus;},restart(){manual=null;hold=false;start=performance.now();render(0);},pause(){hold=true;},resume(){hold=false;start=performance.now();}};
