@@ -117,7 +117,21 @@ export function optimizeBendPlan(input,options={}){
     punchName:currentPunch.name,score:100};
   current=makePlan(pair,originalOrder,p.punchOrientation,'manual');
  }
- const finalists=plans.slice(0,maxFinalists);
+ // Reservar una evaluación de tope para cada pareja preseleccionada
+ // antes de llenar las plazas restantes: las variantes de una sola V
+ // no deben desplazar del cotejo a las demás matrices/punzones.
+ const finalists=[],coveredPairs=new Set(),selectedPlans=new Set();
+ for(const plan of plans){
+  const pairKey=plan.dieId+'|'+plan.punchId;
+  if(coveredPairs.has(pairKey))continue;
+  coveredPairs.add(pairKey);selectedPlans.add(keyOf(plan));finalists.push(plan);
+  if(finalists.length>=maxFinalists)break;
+ }
+ for(const plan of plans){
+  if(finalists.length>=maxFinalists)break;
+  if(selectedPlans.has(keyOf(plan)))continue;
+  selectedPlans.add(keyOf(plan));finalists.push(plan);
+ }
  if(current&&!finalists.some(plan=>keyOf(plan)===keyOf(current)))
   finalists.push(current);
  for(const plan of finalists){
