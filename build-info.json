@@ -1,6 +1,6 @@
 {
-  "build": "PLEGADOX-20261102-R27",
-  "version": "0.9.3",
-  "gauge": "low-front-lip-riser-thickness-overlap-and-framing",
-  "cache": "plegadox-static-0.9.3-safe-dxf-r27"
+  "build": "PLEGADOX-20261102-R28",
+  "version": "0.9.4",
+  "gauge": "shallow-penetration-near-front-contact",
+  "cache": "plegadox-static-0.9.4-safe-dxf-r28"
 }

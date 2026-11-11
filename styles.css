@@ -1452,3 +1452,9 @@ html{background:#020913}
  .px-touch-program[data-input-mode="mouse"] .px-touch-editor{grid-template-columns:1fr}
  .px-touch-program[data-input-mode="mouse"] .px-touch-keyboard{max-width:none}
 }
+
+
+/* R28: aviso persistente de fallo de almacenamiento, accesible en móvil/PC. */
+.px-storage-error{position:fixed;z-index:99999;left:max(12px,env(safe-area-inset-left));right:max(12px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));display:flex;align-items:flex-start;justify-content:space-between;gap:12px;max-width:800px;margin:0 auto;padding:14px 16px;background:#4a1720;color:#fff3ee;border:2px solid #ff947b;border-radius:11px;box-shadow:0 6px 28px #0009;font:600 14px/1.45 system-ui,sans-serif;overflow-wrap:anywhere}
+.px-storage-error button{flex:none;min-height:36px;border:1px solid #ffbeae;border-radius:8px;padding:7px 12px;background:#782f38;color:#fff;font:inherit;cursor:pointer}
+@media(max-width:560px){.px-storage-error{font-size:12px;flex-direction:column}.px-storage-error button{align-self:flex-end}}

@@ -1,6 +1,7 @@
 import {roundedRectPath} from './canvas-path.js';
 import {MATERIALS,DIES,PUNCHES,EXAMPLE,normalized,profile,bendPreviewPath,bounds,development,estimateAirBendForce,REFERENCE_RM_MPA,stage,stopAtStage,gaugeReference,orientedForMachine,getTooling,selfIntersects,clamp,finite} from './engine.js';
 import {drawIndustrialMachine} from './machine-visual.js';
+import {notifyStorageFailure} from './storage-notice.js';
 import {registerCatalogue} from './catalog.js';
 import {analyzeSequence} from './validation.js';
 import {inspectSequenceTools,currentToolContact,describeToolIssue} from './tool-collision.js';
@@ -32,7 +33,8 @@ const $=id=>document.getElementById(id);
 const storeKey='plegadox:piece:v1';
 let piece=restore();
 let selectedLibraryId=null;
-try{selectedLibraryId=getActiveLibraryId(localStorage);}catch{}
+try{selectedLibraryId=getActiveLibraryId(localStorage);}
+catch(error){notifyStorageFailure('No se pudo leer la pieza activa de la biblioteca',error);}
 let sim={playing:false,time:0,last:null,speed:1,blocked:null,error:null};
 let pauseOn2DPenetration=false; // Vista previa continua por defecto.
 let camera={yaw:-.62,pitch:.45,zoom:1};
@@ -57,10 +59,16 @@ function geometryReport(){
  return geometryCache.result;
 }
 const numbers=(n,d=1)=>Number(n).toLocaleString('es-ES',{maximumFractionDigits:d,minimumFractionDigits:d});
-function restore(){try{const saved=localStorage.getItem(storeKey);return normalized(saved?JSON.parse(saved):EXAMPLE);}catch{return normalized(EXAMPLE);}}
-function persist(){try{localStorage.setItem(storeKey,JSON.stringify(piece));}catch{}}
+function restore(){
+ try{const saved=localStorage.getItem(storeKey);return normalized(saved?JSON.parse(saved):EXAMPLE);}
+ catch(error){notifyStorageFailure('No se pudo recuperar la pieza guardada',error);return normalized(EXAMPLE);}
+}
+function persist(){
+ try{localStorage.setItem(storeKey,JSON.stringify(piece));return true;}
+ catch(error){notifyStorageFailure('No se pudo guardar la pieza activa',error);return false;}
+}
 function save(){
- persist();
+ if(!persist())return;
  const message=$('libraryActiveLabel');
  try{
   const current=saveLibraryPiece(localStorage,piece,{id:selectedLibraryId,
@@ -72,6 +80,7 @@ function save(){
   renderProjectLibrary();
  }catch(error){
   if(message)message.textContent='No se ha podido guardar en biblioteca: '+error.message;
+  notifyStorageFailure('No se pudo guardar en la biblioteca local',error);
   return;
  }
  const button=$('saveBtn');
@@ -87,7 +96,8 @@ function save(){
 }
 function detachLibraryPiece(){
  selectedLibraryId=null;
- try{setActiveLibraryId(localStorage,null);}catch{}
+ try{setActiveLibraryId(localStorage,null);}
+ catch(error){notifyStorageFailure('No se pudo actualizar la referencia de biblioteca',error);}
  if($('libraryClient'))$('libraryClient').value='';
  if($('libraryActiveLabel'))$('libraryActiveLabel').textContent=
   'Pieza activa sin guardar en la biblioteca';
@@ -125,7 +135,8 @@ function renderProjectLibrary(){
    if(JSON.stringify(piece)!==JSON.stringify(loaded.piece)&&
     !window.confirm('¿Abrir esta pieza? Los cambios sin guardar en la biblioteca se perderán.'))return;
    selectedLibraryId=entry.id;
-   try{setActiveLibraryId(localStorage,entry.id);}catch{}
+   try{setActiveLibraryId(localStorage,entry.id);}
+    catch(error){notifyStorageFailure('No se pudo recordar la pieza abierta de la biblioteca',error);}
    changePiece(loaded.piece,true);
    if($('libraryClient'))$('libraryClient').value=entry.client;
    if(current)current.textContent='Abierta '+entry.piece.name+
@@ -454,7 +465,8 @@ function configure(){
    JSON.stringify(piece)===JSON.stringify(current.piece)?
     'Última guardada: '+current.piece.name+' · r'+current.revision:
     'Cambios sin guardar en la revisión de la biblioteca';
- }catch{selectedLibraryId=null;}}
+ }catch(error){selectedLibraryId=null;
+   notifyStorageFailure('No se pudo restaurar la selección de biblioteca',error);}}
 }
 function bindViewport(canvas,kind){
  let last=null,dist=null;const points=new Map();

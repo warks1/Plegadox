@@ -11,49 +11,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Comprobar sintaxis del motor y la interfaz
+      - name: Generar iconos PWA para validar las pruebas
+        run: python3 tools/generate-pwa-icons.py
+      - name: Comprobar sintaxis de todos los módulos y pruebas
         run: |
-          node --check engine.js
-          node --check app.js
-          node --check catalog.js
-          node --check cockpit.js
-          node --check boceto2.js
-          node --check machine-visual.js
-          node --check tool-profiles.js
-          node --check tool-height-audit.js
-          node --check workshop-audit.js
-          node --check project-backup.js
-          node --check project-library.js
-          node --check workshop-measurements.js
-          node --check tooling-advisor.js
-          node --check touch-programmer.js
-          node --check mouse-programmer.js
-          node --check tool-dxf.js
-          node --check tool-import-ui.js
-          node --check technical-section.js
-          node --check tool-collision.js
-          node --check machine-config.js
-          node --check machine-editor.js
-          node --check bend-contact.js
-          node --check responsive.js
-          node --check studio.js
-          node --check render-enhancements.js
-          node --check validation.js
-          node --check viewer-profile.js
-          node --check sheet-solid.js
-          node --check dxf-export.js
-          node --check flat-layout.js
-          node --check sheet-interference.js
-          node --check sequence-advisor.js
-          node --check canvas-path.js
-          node --check pwa.js
-          node --check sw.js
-          node --check backgauge-placement.js
-          node --check collision-playback-guard.js
-          node --check gauge-side-review.js
-          node --check gauge-interference.js
-          node --check gauge-sequence-review.js
-          node --check incident-navigation.js
+          set -eu
+          find . -maxdepth 1 -type f -name '*.js' -print0 | xargs -0 -r -n 1 node --check
+          find tests -type f -name '*.mjs' -print0 | xargs -0 -r -n 1 node --check
+          python3 -m py_compile tools/generate-pwa-icons.py
       - name: Pruebas de dirección, secuencia y desarrollo
         run: npm test
 
@@ -65,6 +30,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Generar iconos PWA para navegador
+        run: python3 tools/generate-pwa-icons.py
       - name: Instalar navegador de prueba
         run: |
           npm install --no-save playwright
