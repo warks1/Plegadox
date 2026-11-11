@@ -13,6 +13,7 @@ import {sheetSolidMesh} from './sheet-solid.js';
 import {exportProfileDXF,exportFlatDXF} from './dxf-export.js';
 import {flatBendLayout} from './flat-layout.js';
 import {suggestBendOrder} from './sequence-advisor.js';
+import {planBendSequenceAsync,SEQUENCE_LIMITATIONS} from './automatic-sequence-planner.js';
 import {CYBELEC_OMEGA,cybelecReferencePreset,compareCybelecOmega} from './cybelec-reference.js';
 import {compareGaugeSides} from './gauge-side-review.js';
 import {sectionPunch,sectionDie} from './tool-profiles.js';
@@ -43,6 +44,11 @@ let machineView={panX:0,panY:0,zoom:1};
 let touchOrderEnabled=false,chosenTouchOrder=[];
 let touchProgrammer=null;
 let pendingSequenceAdvice=null;
+const plannerModeKey='plegadox:sequence-mode:v1';
+let plannerMode='auto';
+try{if(localStorage.getItem(plannerModeKey)==='manual')plannerMode='manual';}
+catch(error){notifyStorageFailure('No se pudo leer el modo de secuencia',error);}
+let plannerTicket=0,plannerTimer=null,plannerApplying=false,pendingPlanner=null;
 let measurementInputKey=measurementKey(piece),lastSavedMeasurement=null;
 const geometryCache={key:null,result:null};
 function geometryReport(){
@@ -205,6 +211,112 @@ function changePiece(p,structural=false){
  touchProgrammer?.resetSelection();
  renderEditor();renderSetup();paintAll();touchProgrammer?.render();
  window.dispatchEvent(new CustomEvent('plegadox:pieceChanged',{detail:piece}));
+ if(!plannerApplying)schedulePlanner({apply:plannerMode==='auto'});
+}
+
+/** R30: una sugerencia nunca se aplica a una pieza que ya cambió. */
+function plannerPieceKey(p){
+ return JSON.stringify([p.flanges,p.angles,p.order,p.thickness,p.width,p.material,
+  p.die,p.punch,p.punchOrientation,p.stopByBend,p.gaugeSideByBend]);
+}
+function plannerOrderLabel(order){
+ return order.map((bend,i)=>'G'+(i+1)+'→P'+(bend+1)).join(' · ');
+}
+function riskLabel(screen){
+ if(!screen)return 'Sin resultados';
+ return screen.hard+' incidencias graves 2D; '+screen.soft+
+  ' avisos 2D. Chapa: '+screen.sheet.counts.cross+' cruces, '+
+  screen.sheet.counts.overlap+' solapes, '+screen.sheet.counts.touch+
+  ' contactos y '+screen.sheet.counts.close+' proximidades muestreadas; '+
+  'punzón/matriz: '+(screen.tool?.penetrationOperations??'—')+
+  ' golpes con penetración posible; tope: '+screen.gauge.penetracion+
+  ' operaciones con penetración, '+screen.gauge['chapa-detras']+
+  ' con chapa detrás y '+screen.gauge['sin-asiento']+' sin apoyo detectado';
+}
+function setPlannerMode(mode,{replan=true}={}){
+ if(!['auto','manual'].includes(mode))return;
+ plannerMode=mode;
+ const select=$('sequencePlannerMode');if(select)select.value=mode;
+ try{localStorage.setItem(plannerModeKey,mode);}
+ catch(error){notifyStorageFailure('No se pudo guardar el modo de secuencia',error);}
+ if(replan)schedulePlanner({apply:mode==='auto'});
+}
+function schedulePlanner({apply=true}={}){
+ if(plannerApplying)return;
+ const ticket=++plannerTicket;
+ if(plannerTimer!==null)clearTimeout(plannerTimer);
+ pendingPlanner=null;
+ const applyButton=$('sequenceAutoApply');
+ if(applyButton)applyButton.disabled=true;
+ const status=$('sequenceAutoStatus');
+ if(status)status.textContent='Examinando posibles órdenes de plegado…';
+ plannerTimer=setTimeout(()=>{plannerTimer=null;runPlanner(ticket,apply);},180);
+}
+async function runPlanner(ticket,apply){
+ const status=$('sequenceAutoStatus'),details=$('sequenceAutoDetails');
+ if(!status||!details)return;
+ const snapshot=normalized(piece),key=plannerPieceKey(snapshot);
+ try{
+  const result=await planBendSequenceAsync(snapshot,{
+   maxCandidates:60,maxDeepCandidates:10,toolSamples:3,gaugeSamples:8,
+   cancelled:()=>ticket!==plannerTicket,
+   onProgress:(done,total)=>{
+    if(ticket===plannerTicket)
+     status.textContent='Barrido 2D de chapa, punzón, matriz y tope: '+
+      done+'/'+total+' secuencias…';
+   }
+  });
+  if(!result||ticket!==plannerTicket||plannerPieceKey(piece)!==key)return;
+  const coverage='Analizadas '+result.deepChecked+'/'+result.compared+
+   ' secuencias'+(result.exhaustive?' (todas las permutaciones de este perfil)':
+    ' (búsqueda limitada)')+'. ';
+  const riskBefore=riskLabel(result.current),riskAfter=riskLabel(result.best);
+  const warnings=result.finalGeometryAffected&&
+   (result.finalRisks.cross||result.finalRisks.overlap)?
+   ' La pieza FINAL tiene cruces/solapes que no se solucionan cambiando el orden.':'';
+  details.textContent='Actual: '+riskBefore+'. Propuesta: '+riskAfter+
+   '. Muestras: '+result.toolSamples+' de útiles y '+result.gaugeSamples+
+   ' de tope por golpe.'+warnings+' '+SEQUENCE_LIMITATIONS;
+  const canOffer=result.improved&&!result.incomplete&&
+   !result.best.unavailable;
+  pendingPlanner=canOffer?{key,order:[...result.order]}:null;
+  const accept=$('sequenceAutoApply');if(accept)accept.disabled=!canOffer;
+  if(result.incomplete){
+   status.textContent=coverage+'⚠ No se pudo comprobar toda la geometría. '+
+    'No se aplica ninguna secuencia automáticamente; revisa los avisos y el modelo.';
+   return;
+  }
+  if(result.improved){
+   const label=plannerOrderLabel(result.order);
+   if(plannerMode==='auto'&&apply&&result.automaticApplicable){
+    // No alterar longitud, signos, topes ni geometría de herramientas.
+    plannerApplying=true;
+    try{changePiece({...piece,order:[...result.order]},true);}
+    finally{plannerApplying=false;}
+    pendingPlanner=null;if(accept)accept.disabled=true;
+    status.textContent=coverage+'Orden automático provisional: '+label+
+     '. Menos incidencias en las muestras 2D; NO certifica ausencia de colisiones reales.';
+    details.textContent='Antes: '+riskBefore+'. Después: '+riskAfter+
+     '. '+SEQUENCE_LIMITATIONS;
+   }else{
+    const reason=plannerMode==='manual'?'Modo manual: se respeta tu orden.':
+     !apply?'Tu orden inicial se conserva hasta que lo edites o actives Automático.':
+     'No se aplica sin revisar los conflictos persistentes del perfil.';
+    status.textContent=coverage+'Propuesta: '+label+'. '+reason;
+   }
+  }else{
+   status.textContent=coverage+
+    'No hay alternativa con menor riesgo en las muestras revisadas. '+
+    'Se conserva el orden '+plannerOrderLabel(piece.order)+'.';
+  }
+ }catch(error){
+  if(ticket!==plannerTicket)return;
+  status.textContent='⚠ No se pudo completar el planificador: '+
+   (error instanceof Error?error.message:String(error))+
+   '. Se conserva tu secuencia sin cambios.';
+  details.textContent=SEQUENCE_LIMITATIONS;
+  console.error('PlegadoX · planificador',error);
+ }
 }
 function configure(){
  const options=(select,items,current)=>{select.replaceChildren(...items.map(item=>{const o=document.createElement('option');o.value=item.id;o.textContent=item.name;return o;}));select.value=current;};
@@ -239,7 +351,7 @@ function configure(){
   changePiece(cybelecReferencePreset(),true);
  };
  $('addFlange').onclick=()=>{if(piece.flanges.length>=20)return;changePiece({...piece,flanges:[...piece.flanges,50],angles:[...piece.angles,90],order:[...piece.order,piece.angles.length],stopByBend:[...piece.stopByBend,1],gaugeSideByBend:[...piece.gaugeSideByBend,'auto']},true);};
- $('resetOrder').onclick=()=>changePiece({...piece,order:piece.angles.map((_,i)=>i)},true);
+ $('resetOrder').onclick=()=>{setPlannerMode('manual',{replan:false});changePiece({...piece,order:piece.angles.map((_,i)=>i)},true);};
  for(const value of [1,2])$('chooseGauge'+value).onclick=()=>{
   const current=stopAtStage(piece,sim.time),modes=[...piece.stopByBend];
   modes[current.bend]=value;
@@ -317,10 +429,27 @@ function configure(){
    return;
   }
   const order=[...advice.order];
+  setPlannerMode('manual',{replan:false});
   changePiece({...piece,order},true);
   $('sequenceAdvice').textContent='Secuencia propuesta aplicada: '+
    order.map((bend,i)=>'G'+(i+1)+'→P'+(bend+1)).join(' · ')+
    '. Revisar montaje e interferencias reales antes de fabricar.';
+ };
+ $('sequencePlannerMode').value=plannerMode;
+ $('sequencePlannerMode').addEventListener('change',e=>
+  setPlannerMode(e.target.value));
+ $('sequenceAutoRecalculate').onclick=()=>schedulePlanner({apply:plannerMode==='auto'});
+ $('sequenceAutoApply').onclick=()=>{
+  const advice=pendingPlanner;
+  if(!advice||plannerPieceKey(piece)!==advice.key){
+   $('sequenceAutoStatus').textContent='Propuesta caducada; recalcula antes de aplicarla.';
+   $('sequenceAutoApply').disabled=true;pendingPlanner=null;return;
+  }
+  setPlannerMode('manual',{replan:false});
+  changePiece({...piece,order:[...advice.order]},true);
+  $('sequenceAutoStatus').textContent='Has seleccionado manualmente '+
+   plannerOrderLabel(advice.order)+
+   '. Sigue pendiente la validación real de colisiones de máquina.';
  };
  $('touchOrderMode').onclick=toggleTouchOrder;
  $('finalCanvas').addEventListener('pointerdown',pickBendFromDrawing);
@@ -828,7 +957,7 @@ function renderEditor(){
  const seq=$('sequence');seq.replaceChildren();
  piece.order.forEach((id,i)=>{const c=document.createElement('div');c.className='seq-card';const text=document.createElement('div');const b=document.createElement('b');b.textContent=(i+1)+'. Pliegue '+(id+1)+' (G'+(i+1)+'→P'+(id+1)+')';const small=document.createElement('span');small.textContent=' '+(piece.angles[id]>0?'+':'')+piece.angles[id]+'°';text.append(b,small);const up=document.createElement('button');up.textContent='←';up.title='Hacer antes';up.disabled=!i;up.onclick=()=>reorder(i,-1);const down=document.createElement('button');down.textContent='→';down.title='Hacer después';down.disabled=i===piece.order.length-1;down.onclick=()=>reorder(i,1);c.append(text,up,down);seq.append(c);});
 }
-function reorder(i,delta){const order=[...piece.order];[order[i],order[i+delta]]=[order[i+delta],order[i]];changePiece({...piece,order},true);}
+function reorder(i,delta){const order=[...piece.order];[order[i],order[i+delta]]=[order[i+delta],order[i]];setPlannerMode('manual',{replan:false});changePiece({...piece,order},true);}
 function touchOrderMessage(message){
  const hint=$('touchOrderHint');
  if(hint)hint.textContent=message;
@@ -862,6 +991,7 @@ function pickBendFromDrawing(e){
  chosenTouchOrder.push(picked);
  if(chosenTouchOrder.length===piece.angles.length){
    const order=[...chosenTouchOrder];touchOrderEnabled=false;chosenTouchOrder=[];
+   setPlannerMode('manual',{replan:false});
    changePiece({...piece,order},true);
    touchOrderMessage('Secuencia aplicada: '+order.map((id,i)=>(i+1)+'→pliegue '+(id+1)).join(' · '));
  }else{
@@ -1453,7 +1583,11 @@ function tick(now){
 }
 configure();
 touchProgrammer=installTouchProgrammer({root:$('touchProgramPanel'),getPiece:()=>piece,
- onChange:(modified,structural)=>changePiece(modified,structural)});
+ onChange:(modified,structural)=>{
+  if(JSON.stringify(modified.order)!==JSON.stringify(piece.order))
+   setPlannerMode('manual',{replan:false});
+  changePiece(modified,structural);
+ }});
 setupToolDxfImporter({add:(tool,kind)=>{
  // Persistir ANTES de alterar el catálogo: si falla la cuota, no se
  // añade una herramienta efímera que desaparezca al recargar.
@@ -1468,3 +1602,5 @@ setupToolDxfImporter({add:(tool,kind)=>{
 window.PLEGADOX_STATE=()=>({piece,sim});
 window.PLEGADOX_MACHINE_VIEW=machineView;
 window.PLEGADOX_REDRAW=()=>paintAll();
+window.addEventListener('plegadox:machineChanged',()=>schedulePlanner({apply:plannerMode==='auto'}));
+schedulePlanner({apply:false});
