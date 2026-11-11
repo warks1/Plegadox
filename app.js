@@ -586,6 +586,24 @@ function renderToolAdvisor(){
  advice.alternatives.forEach(pair=>addPair(pair,false));
 }
 function applyIntegratedRecommendation(plan){
+ // Un campo numérico aún enfocado puede contener cifras no confirmadas.
+ // No aplicar nunca una combinación calculada para la geometría anterior.
+ const draft={...piece,thickness:finite($('thickness').value,piece.thickness),
+  width:finite($('width').value,piece.width),
+  material:$('material').value||piece.material,
+  name:$('pieceName').value||piece.name,
+  flanges:[...piece.flanges],angles:[...piece.angles]};
+ document.querySelectorAll('#flangeRows input[aria-label^="Longitud ala "]')
+  .forEach((input,i)=>{if(i<draft.flanges.length)
+   draft.flanges[i]=finite(input.value,piece.flanges[i]);});
+ document.querySelectorAll('#flangeRows .angle-input')
+  .forEach((input,i)=>{if(i<draft.angles.length)
+   draft.angles[i]=finite(input.value.replace(',','.'),piece.angles[i]);});
+ if(JSON.stringify(normalized(draft))!==JSON.stringify(piece)){
+  changePiece(draft,true);
+  $('integratedPlannerStatus').textContent='Se han incorporado los datos pendientes. Revisa la nueva propuesta antes de aplicarla.';
+  return;
+ }
  const current=pendingIntegratedPlan;
  if(!current||!plan||JSON.stringify(piece)!==current.key){
   pendingIntegratedPlan=null;
