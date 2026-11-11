@@ -1161,3 +1161,20 @@ Las fotografías facilitadas muestran **cinco caras de 50 mm**, ángulos de perf
 El cálculo anterior de PlegadoX con V16/88°, radio estimado 2,56 mm, K=0,36 y criterio de cotas exteriores da aproximadamente **234,13 mm**. El botón **Cargar referencia Cybelec** usa una **matriz genérica V16/30°**, punzón genérico 30° y radio 2,63 mm; propone un **K equivalente matemático** calculado para reproducir el L DIN nominal de 233,94 mm con la convención actual del motor. No se afirma que ese K sea el parámetro original del control, que el acero sea S235 real, ni que el DIN sea longitud de corte medida. No reemplaza otras piezas guardadas sin acción explícita.
 
 La pantalla inicial **TITANIUM** incluye animación SVG de chapa plegándose entre punzón y matriz, barra de progreso vinculada a la carga efectiva de los módulos, identidad PlegadoX y aviso © A.M.S TECNOLIGICS. No se oculta hasta completar el arranque; si falla, muestra un error y permite reintentar. Se adapta a PC, tablet y móvil, con alternativa para movimiento reducido. El resto de la interfaz mantiene su diseño previo.
+
+
+## R30 · Planificación automática multi-interferencia con control manual (11-11-2026)
+
+**Objetivo:** no obligar al operario a ordenar cada pliegue a mano. Tras editar la pieza, el asesor compara automáticamente secuencias completas y, en modo **Automático**, aplica **solo mejoras detectadas** en los barridos geométricos 2D que no incrementen los riesgos graves de la pieza. Cuando se ha guardado ya una pieza, el primer arranque solo **analiza y propone**: no la reordena silenciosamente al abrir la aplicación. Se puede pulsar **Recalcular colisiones y orden** o activar de nuevo Automático.
+
+- **4 golpes o menos:** se enumeran y examinan **todas las permutaciones** con el mismo muestreo de chapa, punzón/matriz y tope; para 4 son 24. A partir de 5 se usa una búsqueda limitada (con informe de cobertura) para evitar bloquear móviles.
+- **Chapa:** inspección de cruces, solapes, contactos y holguras entre alas a lo largo de cada secuencia. Los cruces del perfil final se indican como **no corregibles solo con otro orden**.
+- **Punzón y matriz:** se emplea `inspectSequenceTools` sobre los perfiles de herramienta disponibles y la orientación seleccionada, no dibujos sueltos. Las penetraciones se priorizan por delante de avisos leves.
+- **Tope trasero:** se usa `scanGaugeSequence` para detectar posibles penetraciones, chapa por detrás del tope, falta de asiento, referencia interior y holgura insuficiente.
+- **Automático/Manual:** los botones para subir/bajar operaciones y los puntos de orden del editor táctil/ratón **siguen disponibles**. Cualquier reordenación explícita pone **Manual**, persistente en este dispositivo; ningún cálculo posterior puede sobreescribirla. Se conserva un botón para aplicar expresamente una alternativa.
+- **Progreso y cancelación:** la búsqueda libera el hilo de la interfaz entre secuencias. Si cambian ala, ángulo, herramientas, topes o la propia secuencia mientras calcula, el resultado obsoleto se descarta.
+- **Conservación de proyecto:** se mantiene el formato de piezas, ángulos, signos, material, herramientas y posiciones de tope. La elección automática cambia solamente `order`. La librería de piezas guardadas no se sobrescribe hasta que el operario guarde su revisión.
+
+**Alcance industrial pendiente:** el cribado es **DISCRETO y 2D**, y varias geometrías siguen siendo provisionales. No se puede afirmar que un orden esté libre de colisiones físicas en una TruBend V85 (falta CAD acotado de todos los útiles, amarres y dedos, detección 3D del volteo, trayectorias reales X/R/Z, piezas con recortes, límites de carga y validación de máquina). Una secuencia con cero avisos 2D es una **preselección**, no un programa CNC seguro ni autorización de fabricación.
+
+La omega 50/50/50/50/50 conserva la posibilidad de 1→2→4→3. La numeración P1…P4 describe los pliegues sobre el perfil; G1…G4 indica su orden temporal. El programa no fuerza ninguna secuencia específica por tratarse de una omega: usa el mismo cribado que con cualquier pieza.
