@@ -20,6 +20,7 @@ import {getV85,updateV85} from './machine-config.js';
 import {gaugePlacement} from './backgauge-placement.js';
 import {technicalScene} from './technical-section.js';
 import {recommendTooling} from './tooling-advisor.js';
+import {optimizeBendPlan,applyBendPlan} from './integrated-bend-planner.js';
 import {installTouchProgrammer} from './touch-programmer.js';
 import {auditForWorkshop} from './workshop-audit.js';
 import {buildProjectBackup,restoreProjectBackup,readStoredToolsForBackup} from './project-backup.js';
@@ -43,6 +44,9 @@ let machineView={panX:0,panY:0,zoom:1};
 let touchOrderEnabled=false,chosenTouchOrder=[];
 let touchProgrammer=null;
 let pendingSequenceAdvice=null;
+let pendingIntegratedPlan=null;
+let integratedPlannerTimer=null;
+let integratedPlannerEpoch=0;
 let measurementInputKey=measurementKey(piece),lastSavedMeasurement=null;
 const geometryCache={key:null,result:null};
 function geometryReport(){
@@ -196,7 +200,7 @@ function changePiece(p,structural=false){
   touchOrderMessage('Pieza modificada: selección táctil reiniciada. Activa el modo para empezar de nuevo.');
  }
  // Una edición invalida la comparación anterior y evita aplicar resultados obsoletos.
- pendingSequenceAdvice=null;
+ pendingSequenceAdvice=null;pendingIntegratedPlan=null;
  if($('applySuggestedOrder'))$('applySuggestedOrder').disabled=true;
  if($('sequenceAdvice'))$('sequenceAdvice').textContent='Sin analizar este programa. La secuencia actual se conserva.';
  if($('gaugeSideReview')){$('gaugeSideReview').dataset.bend='';
@@ -267,6 +271,8 @@ function configure(){
   node.textContent='Golpe '+(result.operation+1)+' · '+rows.join(' · ')+'.'+recommendation+
    ' NO valida la joroba real de la pata de cabra, ni topes, mesa o volteos.';
  };
+ $('applyIntegratedPlan').onclick=()=>applyIntegratedRecommendation(pendingIntegratedPlan?.plan);
+ window.addEventListener('plegadox:machineChanged',()=>scheduleIntegratedAdvisor());
  $('evaluateOrder').onclick=()=>{
   const message=$('sequenceAdvice'),apply=$('applySuggestedOrder');
   apply.disabled=true;pendingSequenceAdvice=null;
@@ -579,6 +585,106 @@ function renderToolAdvisor(){
  addPair(primary,true);
  advice.alternatives.forEach(pair=>addPair(pair,false));
 }
+function applyIntegratedRecommendation(plan){
+ const current=pendingIntegratedPlan;
+ if(!current||!plan||JSON.stringify(piece)!==current.key){
+  pendingIntegratedPlan=null;
+  $('integratedPlannerStatus').textContent='Los datos han cambiado. Recalculando la propuesta.';
+  scheduleIntegratedAdvisor();return;
+ }
+ try{
+  // No cambiar alas, signos, material, radios, apoyos ni referencias de tope.
+  // El operador conserva la opción de editar los tres campos después.
+  const selected=applyBendPlan(piece,plan);
+  changePiece(selected,true);
+  $('integratedPlannerStatus').textContent='Plan aplicado por decisión del operario. La pieza sigue SIN VALIDACIÓN INDUSTRIAL: revisar perfiles reales y colisiones antes de plegar.';
+ }catch(error){
+  $('integratedPlannerStatus').textContent='No se ha aplicado el plan: '+error.message;
+ }
+}
+function scheduleIntegratedAdvisor(){
+ const status=$('integratedPlannerStatus'),options=$('integratedPlannerOptions');
+ if(!status||!options)return;
+ const epoch=++integratedPlannerEpoch;
+ clearTimeout(integratedPlannerTimer);
+ pendingIntegratedPlan=null;
+ $('applyIntegratedPlan').disabled=true;
+ options.replaceChildren();
+ status.dataset.state='pending';
+ status.textContent='Comparando automáticamente útiles, secuencias y orientación de la pieza activa…';
+ // No ejecutar el cribado de numerosos perfiles en cada pulsación de teclado.
+ // Las piezas de muestra y biblioteca usan este mismo punto de entrada.
+ integratedPlannerTimer=setTimeout(()=>{
+  if(epoch!==integratedPlannerEpoch)return;
+  try{
+   const complex=piece.angles.length>6;
+   const report=optimizeBendPlan(piece,{
+    machine:getV85(),maxPairs:complex?3:6,maxOrders:complex?2:3,
+    maxFinalists:complex?3:6,toolSamples:complex?2:3,gaugeSamples:8
+   });
+   if(epoch!==integratedPlannerEpoch)return;
+   if(!report.best){
+    status.dataset.state='none';
+    status.textContent='No se encontró ninguna pareja preseleccionada válida. '+
+     report.reasons.join(' ')+' Mantén o cambia tus herramientas manualmente; revisa sus límites.';
+    return;
+   }
+   const best=report.best;
+   const describe=plan=>
+    'V / punzón: '+plan.dieName+' + '+plan.punchName+
+    ' · orientación '+(plan.orientation==='reversed'?'invertida':'normal')+
+    ' · orden '+plan.order.map(i=>'P'+(i+1)).join(' → ')+
+    ' · avisos chapa/útiles/topes (2D): '+plan.sheetWarnings+' / '+
+    plan.toolWarnings+' / '+(plan.gaugeChecked?plan.gaugeWarnings:'sin comprobar')+
+    ' · penetraciones posibles de útil: '+plan.toolPenetrations;
+   status.dataset.state=best.possibleInterference?'warning':'suggested';
+   status.textContent='Cotejadas '+report.candidatePairs+' parejas preseleccionadas; '+
+    report.pairsScreened+' parejas y '+report.planVariantsChecked+
+    ' variantes de orden/orientación analizadas en detalle'+
+    (report.truncated?' (búsqueda limitada). ':'. ')+
+    'Mejor estimación: '+describe(best)+'. '+
+    (report.machineWidthExceeded?'⚠ Ancho superior a la zona de máquina configurada. ':'')+
+    (best.possibleInterference?'⚠ Persisten avisos o datos sin comprobar. ':
+     'No se han detectado avisos en las muestras revisadas; esto NO acredita seguridad. ')+
+    'Mesa, trancha y colisiones 3D reales: SIN VERIFICAR.';
+   const key=JSON.stringify(piece);
+   pendingIntegratedPlan={key,plan:best};
+   const active=plan=>piece.die===plan.dieId&&piece.punch===plan.punchId&&
+    piece.punchOrientation===plan.orientation&&
+    plan.order.every((bend,i)=>piece.order[i]===bend);
+   $('applyIntegratedPlan').disabled=active(best);
+   for(const [i,plan] of [best,...report.alternatives].entries()){
+    const card=document.createElement('div');
+    card.className='px-advisor-option'+(i===0?' primary':'');
+    const title=document.createElement('strong');
+    title.textContent=(i===0?'Plan recomendado (orientativo)':'Alternativa '+i)+
+     ' · '+plan.dieName+' + '+plan.punchName;
+    const detail=document.createElement('small');detail.textContent=describe(plan)+
+     (plan.possibleInterference?' · ⚠ Requiere revisión de interferencias':' · Sin avisos en muestras');
+    const button=document.createElement('button');button.type='button';
+    button.className='mini px-advisor-apply';
+    button.textContent=active(plan)?'Es el plan actual':'Aplicar este plan';
+    button.disabled=active(plan);
+    button.addEventListener('pointerdown',e=>{if(e.isPrimary)e.preventDefault();});
+    button.onclick=()=>applyIntegratedRecommendation(plan);
+    card.append(title,detail,button);
+    options.append(card);
+   }
+   if(report.manual){
+    const original=document.createElement('p');original.className='hint';
+    original.textContent='Programa elegido por el operario: '+
+     describe(report.manual)+'. El cálculo nunca modifica esta elección por sí solo.';
+    options.append(original);
+   }
+  }catch(error){
+   pendingIntegratedPlan=null;
+   status.dataset.state='none';
+   status.textContent='No se ha podido completar el cotejo: '+
+    (error instanceof Error?error.message:String(error))+
+    '. La elección manual se mantiene.';
+  }
+ },80);
+}
 function showAdvisorToolDrawing(tool,kind){
  let dialog=$('advisorToolDialog');
  if(!dialog){
@@ -773,6 +879,7 @@ function renderSetup(){
  $('rmMPa').value=piece.rmMPa??'';
  $('rmMPa').placeholder=String(REFERENCE_RM_MPA[piece.material]||450)+' (referencia)';
  renderToolAdvisor();
+ scheduleIntegratedAdvisor();
  renderWorkshopAudit();
  syncMeasurementPiece();
 }
