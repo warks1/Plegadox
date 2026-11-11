@@ -782,7 +782,8 @@ function renderWorkshopAudit(){
   ' incompatibilidades · '+audit.summary.missing+
   ' verificaciones pendientes · '+audit.summary.reviews+
   ' advertencias (incluye '+audit.summary.gaugeWarnings+
-  ' golpes con avisos de tope 2D).';
+  ' golpes con avisos de tope 2D, '+audit.summary.volumeWarnings+
+  ' riesgos de envolvente 3D).';
  body.replaceChildren();
  for(const level of ['block','missing','review']){
   const rows=audit.issues.filter(x=>x.level===level);
@@ -795,6 +796,36 @@ function renderWorkshopAudit(){
   for(const item of rows){const li=document.createElement('li');li.textContent=item.message;list.append(li);}
   details.append(summary,list);body.append(details);
  }
+ const review=document.createElement('details');review.open=false;
+ const reviewHeading=document.createElement('summary');
+ reviewHeading.textContent='Revisión volumétrica por golpe (trancha, mesa, tope y útiles · 2,5D)';
+ review.append(reviewHeading);
+ const notice=document.createElement('p');notice.className='hint';
+ notice.textContent='Cotas V85 Cybelec incorporadas. Los sólidos de máquina son envolventes reconstruidas, no CAD de fabricante; recorridos entre muestras y posición Z real de topes SIN VALIDAR.';
+ review.append(notice);
+ for(const op of audit.volumeScan.operations){
+  const button=document.createElement('button');button.type='button';
+  button.className='px-gauge-operation';
+  const first=op.earliest;
+  const risk=op.findings.filter(f=>['ram','bed','gauge'].includes(f.kind));
+  button.dataset.warning=String(op.possibleInterference);
+  const title=document.createElement('strong');
+  title.textContent='G'+(op.operation+1)+' → P'+(op.bend+1)+
+   ' · '+(risk.length?'⚠ '+risk.map(f=>({ram:'TRANCHA',bed:'MESA',gauge:'TOPE'})[f.kind]).join(', '):
+    'Sin choque de máquina detectado en muestras');
+  const details=document.createElement('small');
+  details.textContent=op.samples+' posiciones estudiadas · '+
+   (first?'ver intervalo t='+numbers(first.time,2)+' s':
+    'sin hallazgos en muestras; NO verificado entre poses');
+  button.append(title,details);
+  button.onclick=()=>{
+   pausePlayback();sim.blocked=null;
+   sim.time=first?.time??op.operation*5+.5;
+   document.querySelector('.nav[data-tab="simulacion"]')?.click();paintAll();
+  };
+  review.append(button);
+ }
+ body.append(review);
 }
 function downloadProjectJson(data,filename){
  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json;charset=utf-8'});
