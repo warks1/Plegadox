@@ -48,6 +48,7 @@ jobs:
           node tests/tool-height-browser-smoke.mjs
           node tests/technical-section-smoke.mjs
           node tests/tooling-advisor-smoke.mjs
+          node tests/integrated-bend-planner-smoke.mjs
           node tests/touch-programmer-browser-smoke.mjs
           node tests/mouse-programmer-browser-smoke.mjs
           node tests/playback-controls-r26-smoke.mjs
