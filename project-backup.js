@@ -238,13 +238,20 @@ export function restoreProjectBackup(storage,source){
    else storage.setItem(key,value);
   }
  }catch(error){
+  const rollbackFailed=[];
   for(let i=attempted-1;i>=0;i--){
    try{
     if(old[i][1]===null)storage.removeItem(old[i][0]);
     else storage.setItem(old[i][0],old[i][1]);
-   }catch{}
+   }catch(rollbackError){
+    rollbackFailed.push(old[i][0]);
+    console.error('PlegadoX: fallo al revertir '+old[i][0],rollbackError);
+   }
   }
-  throw Error('No se pudo restaurar el proyecto completo: '+error.message);
+  throw Error('No se pudo restaurar el proyecto completo: '+error.message+
+   (rollbackFailed.length?'. ATENCIÓN: tampoco se pudieron revertir estas claves: '+
+    rollbackFailed.join(', ')+'. Comprueba y exporta los datos antes de continuar.':
+    '. Se han revertido las escrituras anteriores.'));
  }
  return {...data,importedTools:merged,measurements:records||data.measurements,
   library:finalLibrary};
