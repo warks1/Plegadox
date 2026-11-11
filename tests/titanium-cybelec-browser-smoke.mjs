@@ -11,8 +11,9 @@ try{
   const page=await context.newPage(),errors=[];
   page.on('pageerror',e=>errors.push(e.message));
   page.on('dialog',d=>d.accept());
-  await page.goto('http://127.0.0.1:4389/',{waitUntil:'domcontentloaded',timeout:30000});
+  await page.goto('http://127.0.0.1:4389/',{waitUntil:'commit',timeout:30000});
   const splash=page.locator('#pxTitaniumSplash');
+  await splash.waitFor({state:'visible',timeout:30000});
   assert.equal(await splash.isVisible(),true,view.name+': el splash aparece al entrar');
   assert.match(await splash.textContent(),/A\.M\.S TECNOLIGICS/);
   assert.ok(await page.locator('.px-splash-stage animate').count()>0);
