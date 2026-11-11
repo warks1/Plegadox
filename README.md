@@ -1150,3 +1150,14 @@ seguro porque desaparezca un aviso 2D en la vista invertida.
 - El CI valida la sintaxis de **todos** los módulos JavaScript y comprueba la coherencia de build, caché, versión e iconos para evitar regresiones de publicación.
 
 **Recuperación de una instalación antigua:** abre `https://warks1.github.io/Plegadox/?rev=PLEGADOX-20261102-R28` con conexión o usa el botón **Actualizar**. Los proyectos locales no se eliminan al renovar la caché, pero conviene exportar copia de las piezas antes de cualquier actualización mayor.
+
+
+## R29 · Referencia de las dos plegadoras Cybelec y splash TITANIUM (11-11-2026)
+
+Las fotografías facilitadas muestran **cinco caras de 50 mm**, ángulos de perfil **+90°, −90°, −90°, +90°**, espesor **2 mm**, **matriz V16/30°** y **L DIN 233,94 mm** en ambas pantallas. La pantalla antigua indica además **Ri 2,63 mm** y punzón **1-835**, mientras la otra identifica un punzón **1238_28**. No hay prueba de que ambos punzones tengan la misma geometría ni amarre.
+
+**CARA/N en Cybelec es la numeración de la geometría**, no evidencia del orden de fabricación de los golpes. En PlegadoX distinguimos el pliegue P1…P4 del golpe G1…G4. El ejemplo anterior conserva el orden elegido por el usuario **G1→P1, G2→P2, G3→P4, G4→P3**. Este orden no está certificado libre de colisiones; debe comprobarse en máquina.
+
+El cálculo anterior de PlegadoX con V16/88°, radio estimado 2,56 mm, K=0,36 y criterio de cotas exteriores da aproximadamente **234,13 mm**. El botón **Cargar referencia Cybelec** usa una **matriz genérica V16/30°**, punzón genérico 30° y radio 2,63 mm; propone un **K equivalente matemático** calculado para reproducir el L DIN nominal de 233,94 mm con la convención actual del motor. No se afirma que ese K sea el parámetro original del control, que el acero sea S235 real, ni que el DIN sea longitud de corte medida. No reemplaza otras piezas guardadas sin acción explícita.
+
+La pantalla inicial **TITANIUM** incluye animación SVG de chapa plegándose entre punzón y matriz, barra de progreso vinculada a la carga efectiva de los módulos, identidad PlegadoX y aviso © A.M.S TECNOLIGICS. No se oculta hasta completar el arranque; si falla, muestra un error y permite reintentar. Se adapta a PC, tablet y móvil, con alternativa para movimiento reducido. El resto de la interfaz mantiene su diseño previo.
