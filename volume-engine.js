@@ -152,7 +152,13 @@ export function buildVolumeScene(scene,{machine=getV85()}={}){
    bed:'envolvente del visor, no contorno CAD/amarre verificado',
    gauge:'L1–L6 documentados, posición y anchura Z no verificadas',
    punch:punchPrism.provenance,die:diePrism.provenance,
-   machineTonnage:85,ramWidth:machine.ramWidth,holderWidth:machine.holderWidth},
+   machineTonnage:85,ramWidth:machine.ramWidth,holderWidth:machine.holderWidth,
+   documentedDimensions:{
+    ramL:[...machine.ram],bedL:[...machine.bed],
+    stopL:[...machine.stop],supportL:[...machine.support],
+    toolWorkingDistance:machine.toolWorkingDistance
+   },
+   geometryMapping:'Se utiliza ram L7 como anchura orientativa y mesa L2 como anchura orientativa; las demás cotas se conservan pero NO se convierten sin plano de caras referenciado.'},
   verified:false};
 }
 /**
