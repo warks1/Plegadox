@@ -47,12 +47,15 @@ let pendingSequenceAdvice=null;
 const plannerModeKey='plegadox:sequence-mode:v1';
 // El orden existente (de ejemplo, biblioteca o programación anterior)
 // se conserva por defecto. El operador puede activar Auto expresamente.
-let plannerMode=piece.order.every((bend,i)=>bend===i)?'auto':'manual';
+const existingSequenceIsCustom=piece.order.some((bend,i)=>bend!==i);
+let plannerMode=existingSequenceIsCustom?'manual':'auto';
 try{
  const storedMode=localStorage.getItem(plannerModeKey);
- if(storedMode==='manual'||storedMode==='auto')plannerMode=storedMode;
+ // Un orden no trivial prevalece sobre el selector global al volver a abrir.
+ if(storedMode==='manual')plannerMode='manual';
+ if(storedMode==='auto'&&!existingSequenceIsCustom)plannerMode='auto';
 }catch(error){notifyStorageFailure('No se pudo leer el modo de secuencia',error);}
-let plannerAutoAllowed=piece.order.every((bend,i)=>bend===i);
+let plannerAutoAllowed=!existingSequenceIsCustom;
 let plannerTicket=0,plannerTimer=null,plannerApplying=false,pendingPlanner=null;
 let measurementInputKey=measurementKey(piece),lastSavedMeasurement=null;
 const geometryCache={key:null,result:null};
