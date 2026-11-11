@@ -27,6 +27,7 @@ const APP_FILES=[
  "./index.html",
  "./titanium-loading-original.html",
  "./splash-foto-premium.html",
+ "./plegadox-premium-selected.png",
  "./machine-config.js",
  "./machine-editor.js",
  "./machine-visual.js",
