@@ -1492,3 +1492,19 @@ html{background:#020913}
 .px-titanium-splash.is-error .px-splash-retry{display:block}
 @media(max-width:600px){.px-titanium-splash{padding:15px}.px-splash-border{inset:8px}.px-splash-stage{min-height:170px}.px-splash-copy{letter-spacing:.05em}.px-splash-kicker{letter-spacing:.12em}}
 @media(prefers-reduced-motion:reduce){.px-splash-ram,.px-splash-glint{animation:none!important}.px-splash-stage animate{display:none}.px-titanium-splash.is-complete{transition:none}}
+
+/* R30 · planificador de secuencia 2D con control explícito automático/manual. */
+.sequence-auto-planner{display:grid;gap:11px;margin:12px 0 15px;padding:15px;border:1px solid #3e9ec2;background:linear-gradient(145deg,#103047,#091f33);border-radius:12px;color:#dceefa;min-width:0}
+.sequence-auto-header{display:flex;align-items:flex-start;justify-content:space-between;gap:15px;flex-wrap:wrap}
+.sequence-auto-header>div{display:grid;gap:5px}
+.sequence-auto-header strong{font-size:13px;letter-spacing:.07em;color:#b0e7ff}
+.sequence-auto-header small{font-size:11px;color:#a7bcca;line-height:1.5}
+.sequence-mode-label{display:grid;gap:5px;color:#a5d1e9;font-size:11px;font-weight:750;min-width:min(100%,275px)}
+.sequence-mode-label select{max-width:100%;font-size:12px;background:#0d324c;border:1px solid #5ca7c8;color:#eef8ff;border-radius:7px;min-height:40px;padding:6px}
+.sequence-auto-status{font-size:13px;font-weight:750;line-height:1.6;color:#e8f6ff;overflow-wrap:anywhere}
+.sequence-auto-details{font-size:12px;line-height:1.6;color:#b7d3e1;overflow-wrap:anywhere}
+.sequence-auto-planner .inline-actions{display:flex;flex-wrap:wrap;gap:8px}
+.sequence-auto-planner .inline-actions button{border:1px solid #56aaca;border-radius:8px;padding:10px 12px;min-height:42px;background:#195476;color:#f0fbff;font-weight:750;flex:1 1 215px}
+.sequence-auto-planner .inline-actions button:disabled{opacity:.5;cursor:not-allowed}
+.sequence-auto-planner .hint{margin:0;color:#a5b9cc;font-size:11px;line-height:1.6}
+@media(max-width:600px){.sequence-auto-planner{padding:10px}.sequence-auto-header{flex-direction:column}.sequence-mode-label{width:100%}}
