@@ -1,5 +1,5 @@
 // PlegadoX · caché offline estática. Se versiona para no arrastrar JS obsoleto.
-const CACHE='plegadox-static-0.9.6-titanium-cybelec-r30';
+const CACHE='plegadox-static-0.9.7-titanium-cybelec-r31';
 const APP_FILES=[
  "./",
  "./app.js",
@@ -34,6 +34,8 @@ const APP_FILES=[
  "./responsive.js",
  "./sequence-advisor.js",
  "./integrated-bend-planner.js",
+ "./volume-engine.js",
+ "./volume-trajectory-review.js",
  "./sheet-interference.js",
  "./sheet-solid.js",
  "./studio.js",
