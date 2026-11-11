@@ -134,7 +134,7 @@
 <div class="sequence-auto-planner" id="sequenceAutoPlanner">
  <div class="sequence-auto-header">
   <div><strong><span aria-hidden="true">◇</span> PLANIFICADOR DE PLEGADO</strong>
-   <small>Analiza chapa, punzón, matriz y tope en las poses 2D disponibles</small></div>
+   <small>Compara órdenes, útiles, orientación y topes en secciones 2D</small></div>
   <label class="sequence-mode-label" for="sequencePlannerMode">Control del orden
    <select id="sequencePlannerMode" aria-label="Control del orden de plegado">
     <option value="auto">Automático · proponer y aplicar mejoras</option>
@@ -142,7 +142,20 @@
    </select>
   </label>
  </div>
- <div id="sequenceAutoStatus" class="sequence-auto-status" role="status" aria-live="polite">Analizador preparado; comprobando el programa…</div>
+ <div class="sequence-auto-header"><div><strong>Selección de matriz y punzón</strong><small>El motor analiza distintas parejas, orientaciones y órdenes. No valida amarres ni colisiones 3D reales.</small></div>
+<label class="sequence-mode-label" for="toolingPlannerMode">Selección de útiles
+<select id="toolingPlannerMode" aria-label="Selección automática o manual de matriz y punzón">
+<option value="auto">Automática · recomendar y preseleccionar</option>
+<option value="manual">Manual · conservar mis herramientas</option>
+</select></label></div>
+<div id="setupAutoStatus" class="sequence-auto-status" role="status" aria-live="polite">Preparado para comparar útiles del catálogo y secuencias.</div>
+<div id="setupAutoDetails" class="sequence-auto-details">SIN VALIDACIÓN 3D: confirmar mesa, trancha, amarres, tope, carga y perfiles físicos antes de fabricar.</div>
+<div class="inline-actions">
+<button type="button" id="setupAutoRecalculate">Comparar útiles y orden</button>
+<button type="button" id="setupAutoFull">Análisis ampliado (más lento)</button>
+<button type="button" id="setupAutoApply" disabled>Aplicar propuesta completa</button>
+</div>
+<div id="sequenceAutoStatus" class="sequence-auto-status" role="status" aria-live="polite">Analizador preparado; comprobando el programa…</div>
  <div id="sequenceAutoDetails" class="sequence-auto-details">Cualquier resultado será un cribado 2D orientativo, nunca una validación CNC.</div>
  <div class="inline-actions">
   <button type="button" id="sequenceAutoRecalculate">Recalcular colisiones y orden</button>
