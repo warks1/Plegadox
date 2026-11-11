@@ -110,7 +110,7 @@ export function recommendTooling(input,options={}){
   reasons.push('Guía de apertura objetivo: '+targetVRatio(p.thickness)+' × espesor; ajustada según alas, ángulo y fuerza.');
   reasons.push('Ala más corta adyacente: '+minimumFlange.toFixed(1)+' mm; mínimo orientativo con V'+choice.dieOpening+': '+choice.flangeLimit.toFixed(1)+' mm.');
  }
- return {choice,alternatives,candidateCount:candidates.length,
+ return {choice,alternatives,candidates,candidateCount:candidates.length,
   minimumFlange,minimumInterior,requiresClearance,
   targetOpening:p.thickness*targetVRatio(p.thickness),reasons,verified:false};
 }
