@@ -1,16 +1,18 @@
 import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
+import {mkdirSync} from 'node:fs';
 import {chromium} from 'playwright';
 
+mkdirSync('test-results',{recursive:true});
 const server=spawn('python3',['-m','http.server','4392','--bind','127.0.0.1'],{stdio:'ignore'});
 let browser;
 try{
  browser=await chromium.launch({headless:true,args:['--no-sandbox']});
  const devices=[
-  {name:'PC',w:1440,h:900,mobile:false},
-  {name:'iPhone vertical',w:390,h:844,mobile:true},
-  {name:'iPhone horizontal',w:844,h:390,mobile:true},
-  {name:'tablet',w:820,h:1180,mobile:true}
+  {name:'PC',slug:'pc',w:1440,h:900,mobile:false},
+  {name:'iPhone vertical',slug:'iphone-vertical',w:390,h:844,mobile:true},
+  {name:'iPhone horizontal',slug:'iphone-horizontal',w:844,h:390,mobile:true},
+  {name:'tablet',slug:'tablet',w:820,h:1180,mobile:true}
  ];
  for(const dev of devices){
   const context=await browser.newContext({
@@ -19,48 +21,56 @@ try{
   });
   const page=await context.newPage(),errors=[];
   page.on('pageerror',e=>errors.push(e.message));
-  // Ralentizar SOLO la prueba, nunca el arranque publicado: permite
-  // observar dos fotogramas distintos de la chapa antes de terminar.
+  // Se retiene app.js SOLO durante la prueba para observar el ciclo de la
+  // referencia ORIGINAL antes de que termine la inicialización real.
   await page.route('**/app.js*',async route=>{
-   await new Promise(resolve=>setTimeout(resolve,1350));
+   await new Promise(resolve=>setTimeout(resolve,3700));
    await route.continue();
   });
   await page.goto('http://127.0.0.1:4392/',{waitUntil:'commit',timeout:30000});
   const splash=page.locator('#pxTitaniumSplash');
   await splash.waitFor({state:'visible',timeout:15000});
-  assert.match(await splash.textContent(),/02 · TITANIUM/);
-  assert.match(await splash.textContent(),/A\.M\.S TECNOLIGICS/);
-  assert.match(await splash.textContent(),/© 2026 A\.M\.S TECNOLIGICS/);
-  assert.ok(await page.locator('.px-splash-stage animate').count()>0);
-  const sheet=page.locator('#pxSplashSheet');
-  const ram=page.locator('#pxSplashRam');
-  const before=await sheet.getAttribute('d');
-  const top=await ram.getAttribute('transform');
-  await page.waitForTimeout(730);
-  const after=await sheet.getAttribute('d');
-  const moved=await ram.getAttribute('transform');
-  assert.notEqual(after,before,dev.name+': la chapa debe plegarse, no permanecer estática');
-  assert.notEqual(moved,top,dev.name+': el punzón debe moverse');
+  const original=page.frameLocator('#pxSplashReference');
+  const sheet=original.locator('#sheetFront'),ram=original.locator('#punchGroup');
+  await sheet.waitFor({state:'attached',timeout:15000});
+  assert.match(await original.locator('.version').textContent(),/02 · TITANIUM/);
+  assert.match(await original.locator('.company').textContent(),/A\.M\.S TECNOLIGICS/);
+  assert.match(await original.locator('.brand').textContent(),/PLEGADOX/);
+  assert.match(await original.locator('.copyright').textContent(),/A\.M\.S Tecnoligics/);
+  const before=await sheet.getAttribute('d'),ramBefore=await ram.getAttribute('transform');
+  await page.waitForTimeout(1900);
+  const after=await sheet.getAttribute('d'),ramAfter=await ram.getAttribute('transform');
+  assert.notEqual(after,before,dev.name+': la chapa se pliega de forma real, no imagen estática');
+  assert.notEqual(ramAfter,ramBefore,dev.name+': el punzón se mueve');
+  await page.screenshot({path:'test-results/titanium-original-'+dev.slug+'.png'});
   const geometry=await page.evaluate(()=>{
-   const el=document.querySelector('#pxTitaniumSplash'),svg=document.querySelector('.px-splash-stage');
-   const bounds=svg.getBoundingClientRect();
-   const logo=document.querySelector('.px-splash-logo').getBoundingClientRect();
-   const bar=document.querySelector('.px-splash-load-bar');
-   return {scrollWidth:el.scrollWidth,clientWidth:el.clientWidth,
-    svgLeft:bounds.left,svgRight:bounds.right,
+   const frame=document.getElementById('pxSplashReference');
+   const doc=frame.contentDocument;
+   const bounds=doc.querySelector('.machineFrame').getBoundingClientRect();
+   const logo=doc.querySelector('.brand').getBoundingClientRect();
+   const bar=doc.getElementById('progressArea');
+   return {scrollWidth:doc.documentElement.scrollWidth,
+    clientWidth:doc.documentElement.clientWidth,
+    machineLeft:bounds.left,machineRight:bounds.right,
     logoLeft:logo.left,logoRight:logo.right,
-    progress:Number(bar.getAttribute('aria-valuenow'))};
+    progress:Number(bar.getAttribute('aria-valuenow')),
+    replay:!!doc.getElementById('replay'),source:doc.title};
   });
-  assert.ok(geometry.scrollWidth<=geometry.clientWidth+2,dev.name+': sin desplazamiento horizontal');
-  assert.ok(geometry.svgLeft>=-2&&geometry.svgRight<=dev.w+2,dev.name+': cabina visible');
-  assert.ok(geometry.logoLeft>=-2&&geometry.logoRight<=dev.w+2,dev.name+': marca sin recortes');
-  assert.ok(geometry.progress>=0&&geometry.progress<100,'No anunciar 100% antes de inicializar');
+  assert.ok(geometry.scrollWidth<=geometry.clientWidth+2,
+   dev.name+': sin desplazamiento horizontal ni contenido oculto');
+  assert.ok(geometry.machineLeft>=-2&&geometry.machineRight<=dev.w+2,
+   dev.name+': máquina completa en pantalla');
+  assert.ok(geometry.logoLeft>=-2&&geometry.logoRight<=dev.w+2,
+   dev.name+': logotipo sin recortes');
+  assert.equal(geometry.progress<100,true,'La barra no debe indicar listo antes de que termine la carga real');
+  assert.equal(geometry.replay,true,'Mantener todos los elementos de la referencia aprobada');
+  assert.match(geometry.source,/TITANIUM/);
   await splash.waitFor({state:'hidden',timeout:35000});
-  assert.equal(await page.locator('.px-splash-load-bar').getAttribute('aria-valuenow'),'100');
-  await page.waitForFunction(()=>!!window.PLEGADOX_STATE(),null,{timeout:30000});
-  assert.ok(await page.locator('#machineCanvas').isVisible(),dev.name+': aplicación operativa');
-  assert.deepEqual(errors,[],dev.name+': sin fallos JavaScript');
+  assert.equal(await original.locator('#progressArea').getAttribute('aria-valuenow'),'100');
+  await page.waitForFunction(()=>!!window.PLEGADOX_STATE?.(),null,{timeout:30000});
+  assert.ok(await page.locator('#machineCanvas').isVisible(),dev.name+': app operativa');
+  assert.deepEqual(errors,[],dev.name+': sin fallos JS');
   await context.close();
  }
- console.log('TITANIUM_02_SELECTED_SPLASH_BROWSER_OK');
+ console.log('TITANIUM_ORIGINAL_SCREEN_R33_BROWSER_OK');
 }finally{await browser?.close();server.kill();}
