@@ -13,7 +13,8 @@ import {sheetSolidMesh} from './sheet-solid.js';
 import {exportProfileDXF,exportFlatDXF} from './dxf-export.js';
 import {flatBendLayout} from './flat-layout.js';
 import {suggestBendOrder} from './sequence-advisor.js';
-import {planBendSequenceAsync,SEQUENCE_LIMITATIONS} from './automatic-sequence-planner.js';
+import {SEQUENCE_LIMITATIONS} from './automatic-sequence-planner.js';
+import {planCompleteSetup,SETUP_LIMITATIONS} from './automatic-setup-planner.js';
 import {CYBELEC_OMEGA,cybelecReferencePreset,compareCybelecOmega} from './cybelec-reference.js';
 import {compareGaugeSides} from './gauge-side-review.js';
 import {sectionPunch,sectionDie} from './tool-profiles.js';
@@ -44,18 +45,15 @@ let machineView={panX:0,panY:0,zoom:1};
 let touchOrderEnabled=false,chosenTouchOrder=[];
 let touchProgrammer=null;
 let pendingSequenceAdvice=null;
-const plannerModeKey='plegadox:sequence-mode:v1';
-// El orden existente (de ejemplo, biblioteca o programación anterior)
-// se conserva por defecto. El operador puede activar Auto expresamente.
-const existingSequenceIsCustom=piece.order.some((bend,i)=>bend!==i);
-let plannerMode=existingSequenceIsCustom?'manual':'auto';
+const plannerModeKey='plegadox:sequence-mode:v2';
+const toolingModeKey='plegadox:tooling-mode:v1';
+// R31: analizar TODAS las piezas, incluidas las de muestra, aunque su orden
+// ya venga definido. Manual SOLO cuando el usuario lo elige expresamente.
+let plannerMode='auto',toolingMode='auto';
 try{
- const storedMode=localStorage.getItem(plannerModeKey);
- // Un orden no trivial prevalece sobre el selector global al volver a abrir.
- if(storedMode==='manual')plannerMode='manual';
- if(storedMode==='auto'&&!existingSequenceIsCustom)plannerMode='auto';
-}catch(error){notifyStorageFailure('No se pudo leer el modo de secuencia',error);}
-let plannerAutoAllowed=!existingSequenceIsCustom;
+ if(localStorage.getItem(plannerModeKey)==='manual')plannerMode='manual';
+ if(localStorage.getItem(toolingModeKey)==='manual')toolingMode='manual';
+}catch(error){notifyStorageFailure('No se pudieron leer los modos automáticos',error);}
 let plannerTicket=0,plannerTimer=null,plannerApplying=false,pendingPlanner=null;
 let measurementInputKey=measurementKey(piece),lastSavedMeasurement=null;
 const geometryCache={key:null,result:null};
@@ -223,118 +221,168 @@ function changePiece(p,structural=false){
  if(!plannerApplying)schedulePlanner({apply:plannerMode==='auto'&&plannerAutoAllowed});
 }
 
-/** R30: una sugerencia nunca se aplica a una pieza que ya cambió. */
+/** R31: la optimización conjunta no puede aplicar resultados de otra versión de pieza. */
 function plannerPieceKey(p){
- return JSON.stringify([p.flanges,p.angles,p.order,p.thickness,p.width,p.material,
-  p.die,p.punch,p.punchOrientation,p.stopByBend,p.gaugeSideByBend]);
+ const cfg=getV85();
+ return JSON.stringify([p.flanges,p.angles,p.order,p.thickness,p.width,
+  p.material,p.rmMPa,p.radius,p.kFactor,p.die,p.punch,p.punchOrientation,
+  p.stopByBend,p.gaugeSideByBend,cfg.ramWidth,cfg.holderWidth,cfg.stop,cfg.support]);
 }
 function plannerOrderLabel(order){
  return order.map((bend,i)=>'G'+(i+1)+'→P'+(bend+1)).join(' · ');
 }
-function riskLabel(screen){
- if(!screen)return 'Sin resultados';
- return screen.hard+' incidencias graves 2D; '+screen.soft+
-  ' avisos 2D. Chapa: '+screen.sheet.counts.cross+' cruces, '+
-  screen.sheet.counts.overlap+' solapes, '+screen.sheet.counts.touch+
-  ' contactos y '+screen.sheet.counts.close+' proximidades muestreadas; '+
-  'punzón/matriz: '+(screen.tool?.penetrationOperations??'—')+
-  ' golpes con penetración posible; tope: '+screen.gauge.penetracion+
-  ' operaciones con penetración, '+screen.gauge['chapa-detras']+
-  ' con chapa detrás y '+screen.gauge['sin-asiento']+' sin apoyo detectado';
-}
 function setPlannerMode(mode,{replan=true}={}){
  if(!['auto','manual'].includes(mode))return;
  plannerMode=mode;
- plannerAutoAllowed=mode==='auto';
- const select=$('sequencePlannerMode');if(select)select.value=mode;
+ const element=$('sequencePlannerMode');if(element)element.value=mode;
  try{localStorage.setItem(plannerModeKey,mode);}
- catch(error){notifyStorageFailure('No se pudo guardar el modo de secuencia',error);}
- if(replan)schedulePlanner({apply:mode==='auto'});
+ catch(error){notifyStorageFailure('No se pudo guardar el modo del orden',error);}
+ if(replan)schedulePlanner({apply:true});
 }
-function schedulePlanner({apply=true,force=false}={}){
+function setToolingMode(mode,{replan=true}={}){
+ if(!['auto','manual'].includes(mode))return;
+ toolingMode=mode;
+ const element=$('toolingPlannerMode');if(element)element.value=mode;
+ try{localStorage.setItem(toolingModeKey,mode);}
+ catch(error){notifyStorageFailure('No se pudo guardar el modo de herramientas',error);}
+ if(replan)schedulePlanner({apply:true});
+}
+function schedulePlanner({apply=true,force=false,full=false}={}){
  if(plannerApplying)return;
  const ticket=++plannerTicket;
  if(plannerTimer!==null)clearTimeout(plannerTimer);
  pendingPlanner=null;
- const applyButton=$('sequenceAutoApply');
- if(applyButton)applyButton.disabled=true;
- const status=$('sequenceAutoStatus');
- if(plannerMode==='manual'&&!force){
-  if(status)status.textContent='Orden manual protegido: '+
-   plannerOrderLabel(piece.order)+'. No se modificará automáticamente.';
-  const details=$('sequenceAutoDetails');
-  if(details)details.textContent='Puedes elegir Automático para que analice y '+
-   'aplique mejoras, o pulsar Recalcular para revisar alternativas sin cambiarlas. '+
-   SEQUENCE_LIMITATIONS;
+ for(const id of ['sequenceAutoApply','setupAutoApply']){
+  if($(id))$(id).disabled=true;
+ }
+ const message='Evaluando herramientas, tope, chapa y secuencias en 2D…';
+ if($('sequenceAutoStatus'))$('sequenceAutoStatus').textContent=message;
+ if($('setupAutoStatus'))$('setupAutoStatus').textContent=message;
+ plannerTimer=setTimeout(()=>{plannerTimer=null;
+  void runPlanner(ticket,{apply,force,full});
+ },force?50:900);
+}
+function riskLabel(candidate){
+ const plan=candidate?.plan?.best;
+ if(!candidate?.usable||!plan)return 'Sin evaluación completa de esta combinación';
+ return plan.hard+' posibles conflictos graves 2D, '+plan.soft+' avisos; '+
+  'punzón/matriz '+plan.tool.penetrationOperations+
+  ' golpes con penetración posible; tope '+plan.gauge.penetracion+
+  ' con penetración y '+plan.gauge['chapa-detras']+' con chapa detrás; '+
+  'chapa '+plan.sheet.counts.cross+' cruces / '+plan.sheet.counts.overlap+
+  ' solapes';
+}
+function clearPlannerProposal(){
+ pendingPlanner=null;
+ if($('sequenceAutoApply'))$('sequenceAutoApply').disabled=true;
+ if($('setupAutoApply'))$('setupAutoApply').disabled=true;
+}
+function usePlannerProposal({complete=false}={}){
+ const pending=pendingPlanner;
+ if(!pending||plannerPieceKey(piece)!==pending.key){
+  clearPlannerProposal();
+  const label='La recomendación ha caducado: vuelve a analizar la pieza.';
+  if($('sequenceAutoStatus'))$('sequenceAutoStatus').textContent=label;
+  if($('setupAutoStatus'))$('setupAutoStatus').textContent=label;
   return;
  }
- if(status)status.textContent='Examinando posibles órdenes de plegado…';
- plannerTimer=setTimeout(()=>{plannerTimer=null;runPlanner(ticket,apply);},350);
+ const chosen=pending.chosen;
+ if(!chosen)return;
+ const updated=complete?{...piece,die:chosen.die,punch:chosen.punch,
+  punchOrientation:chosen.punchOrientation,order:[...chosen.order]}:
+  {...piece,order:[...chosen.order]};
+ if(complete){
+  setToolingMode('manual',{replan:false});
+  setPlannerMode('manual',{replan:false});
+ }else setPlannerMode('manual',{replan:false});
+ plannerApplying=true;
+ try{changePiece(updated,true);}
+ finally{plannerApplying=false;}
+ clearPlannerProposal();
+ const status='Preselección aplicada a la vista: '+
+  (complete?chosen.punch+' / '+chosen.die+' · ':'')+
+  plannerOrderLabel(updated.order)+'. '+SETUP_LIMITATIONS;
+ if($('sequenceAutoStatus'))$('sequenceAutoStatus').textContent=status;
+ if($('setupAutoStatus'))$('setupAutoStatus').textContent=status;
 }
-async function runPlanner(ticket,apply){
- const status=$('sequenceAutoStatus'),details=$('sequenceAutoDetails');
- if(!status||!details)return;
+async function runPlanner(ticket,{apply=true,force=false,full=false}={}){
+ const status=$('sequenceAutoStatus'),details=$('sequenceAutoDetails'),
+  toolStatus=$('setupAutoStatus'),toolDetails=$('setupAutoDetails');
+ if(!status||!details||!toolStatus||!toolDetails)return;
  const snapshot=normalized(piece),key=plannerPieceKey(snapshot);
+ const quick=!full;
  try{
-  const result=await planBendSequenceAsync(snapshot,{
-   maxCandidates:60,maxDeepCandidates:10,toolSamples:3,gaugeSamples:8,
+  const result=await planCompleteSetup(snapshot,{
+   maxSetups:quick?2:6,ordersPerSetup:quick?2:24,
+   maxCandidates:60,toolSamples:quick?2:3,gaugeSamples:8,
+   lockOrder:plannerMode==='manual'&&!force,
+   lockTools:toolingMode==='manual'&&!force,
    cancelled:()=>ticket!==plannerTicket,
    onProgress:(done,total)=>{
-    if(ticket===plannerTicket)
-     status.textContent='Barrido 2D de chapa, punzón, matriz y tope: '+
-      done+'/'+total+' secuencias…';
+    if(ticket!==plannerTicket)return;
+    status.textContent='Comparando útiles y secuencias '+done+'/'+total+'…';
+    toolStatus.textContent='Barrido de matrices/punzones '+done+'/'+total+'…';
    }
   });
   if(!result||ticket!==plannerTicket||plannerPieceKey(piece)!==key)return;
-  const coverage='Analizadas '+result.deepChecked+'/'+result.compared+
-   ' secuencias'+(result.exhaustive?' (todas las permutaciones de este perfil)':
-    ' (búsqueda limitada)')+'. ';
-  const riskBefore=riskLabel(result.current),riskAfter=riskLabel(result.best);
-  const warnings=result.finalGeometryAffected&&
-   (result.finalRisks.cross||result.finalRisks.overlap)?
-   ' La pieza FINAL tiene cruces/solapes que no se solucionan cambiando el orden.':'';
-  details.textContent='Actual: '+riskBefore+'. Propuesta: '+riskAfter+
-   '. Muestras: '+result.toolSamples+' de útiles y '+result.gaugeSamples+
-   ' de tope por golpe.'+warnings+' '+SEQUENCE_LIMITATIONS;
-  const canOffer=result.improved&&!result.incomplete&&
-   !result.best.unavailable;
-  pendingPlanner=canOffer?{key,order:[...result.order]}:null;
-  const accept=$('sequenceAutoApply');if(accept)accept.disabled=!canOffer;
-  if(result.incomplete){
-   status.textContent=coverage+'⚠ No se pudo comprobar toda la geometría. '+
-    'No se aplica ninguna secuencia automáticamente; revisa los avisos y el modelo.';
-   return;
+  const best=result.best;
+  const chosen=result.chosen;
+  const coverage='Combinaciones examinadas '+result.checked+'/'+
+   result.available+'; hasta '+result.coverage.ordersPerSetup+
+   ' órdenes examinados por pareja. ';
+  const select=chosen?
+   'Punzón '+chosen.punch+' · matriz '+chosen.die+
+   ' · montaje '+(chosen.punchOrientation==='reversed'?'invertido':'normal')+
+   ' · secuencia '+plannerOrderLabel(chosen.order)+'.':'';
+  const report='Actual: '+riskLabel(result.baseline)+
+   '. Propuesta: '+riskLabel(best)+'. '+result.limitations;
+  details.textContent=report;
+  toolDetails.textContent=report;
+  if(!chosen){
+   status.textContent=coverage+'No hay una combinación que pueda preseleccionarse con estos datos.';
+   toolStatus.textContent=coverage+'No se ha identificado pareja de herramientas admisible. Revisa ángulo, ancho, montaje y fuerza.';
+   clearPlannerProposal();return;
   }
-  if(result.improved){
-   const label=plannerOrderLabel(result.order);
-   if(plannerMode==='auto'&&apply&&result.automaticApplicable){
-    // No alterar longitud, signos, topes ni geometría de herramientas.
-    plannerApplying=true;
-    try{changePiece({...piece,order:[...result.order]},true);}
-    finally{plannerApplying=false;}
-    pendingPlanner=null;if(accept)accept.disabled=true;
-    status.textContent=coverage+'Orden automático provisional: '+label+
-     '. Menos incidencias en las muestras 2D; NO certifica ausencia de colisiones reales.';
-    details.textContent='Antes: '+riskBefore+'. Después: '+riskAfter+
-     '. '+SEQUENCE_LIMITATIONS;
-   }else{
-    const reason=plannerMode==='manual'?'Modo manual: se respeta tu orden.':
-     !apply?'Tu orden inicial se conserva hasta que lo edites o actives Automático.':
-     'No se aplica sin revisar los conflictos persistentes del perfil.';
-    status.textContent=coverage+'Propuesta: '+label+'. '+reason;
+  pendingPlanner={key,chosen,result};
+  $('sequenceAutoApply').disabled=!result.changes.order;
+  $('setupAutoApply').disabled=!result.foundAlternative;
+  const variant=result.canPropose?
+   'Preselección 2D sin conflictos graves en las muestras; SIN validación industrial.':
+   'Hay conflictos/lagunas que impiden confirmar este montaje; revisar antes de fabricar.';
+  status.textContent=coverage+select+' '+variant;
+  toolStatus.textContent=coverage+select+' '+variant;
+  if(result.foundAlternative&&result.canPropose&&apply&&!force&&
+   (plannerMode==='auto'||toolingMode==='auto')){
+   const draft={...piece};
+   if(toolingMode==='auto'){
+    draft.die=chosen.die;draft.punch=chosen.punch;
+    draft.punchOrientation=chosen.punchOrientation;
    }
-  }else{
-   status.textContent=coverage+
-    'No hay alternativa con menor riesgo en las muestras revisadas. '+
-    'Se conserva el orden '+plannerOrderLabel(piece.order)+'.';
+   if(plannerMode==='auto')draft.order=[...chosen.order];
+   const hasChanged=draft.die!==piece.die||draft.punch!==piece.punch||
+    draft.punchOrientation!==piece.punchOrientation||
+    draft.order.some((id,i)=>id!==piece.order[i]);
+   if(hasChanged){
+    plannerApplying=true;
+    try{changePiece(draft,true);}
+    finally{plannerApplying=false;}
+    clearPlannerProposal();
+    status.textContent=coverage+'Preselección aplicada en modo Automático: '+
+     plannerOrderLabel(draft.order)+'. SIN validación CNC.';
+    toolStatus.textContent=coverage+'Punzón '+draft.punch+' / matriz '+
+     draft.die+' preseleccionados; comprueba montaje, cargas y máquina real.';
+   }
   }
  }catch(error){
   if(ticket!==plannerTicket)return;
-  status.textContent='⚠ No se pudo completar el planificador: '+
+  clearPlannerProposal();
+  const message='No se pudo completar el análisis automático: '+
    (error instanceof Error?error.message:String(error))+
-   '. Se conserva tu secuencia sin cambios.';
-  details.textContent=SEQUENCE_LIMITATIONS;
-  console.error('PlegadoX · planificador',error);
+   '. La pieza se conserva.';
+  status.textContent=message;toolStatus.textContent=message;
+  details.textContent=SETUP_LIMITATIONS;
+  toolDetails.textContent=SETUP_LIMITATIONS;
+  console.error('PlegadoX · asesor conjunto',error);
  }
 }
 function configure(){
