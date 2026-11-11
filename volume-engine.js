@@ -6,7 +6,7 @@
  * inspector 2D no considera. NO equivale a CAD 3D OEM: perfiles, amarres,
  * ejes, radios y carrera reales siguen requiriendo evidencia y calibración.
  */
-import {normalized} from './engine.js';
+import {normalized,getTooling} from './engine.js';
 import {getV85,gaugeOutline} from './machine-config.js';
 import {gaugePlacement} from './backgauge-placement.js';
 const EPS=1e-8;
@@ -113,13 +113,14 @@ export function buildVolumeScene(scene,{machine=getV85()}={}){
   if(shape)segments.push(makePrism('chapa-ala-'+(i+1),shape,-half,half,'fibra-modelada'));
  }
  const punch=scene.punch,die=scene.die;
- const pLength=Number(punch?.length),dLength=Number(die?.length);
+ const registered=getTooling(p);
+ const pLength=Number(registered.punch?.length),dLength=Number(registered.die?.length);
  const pSpan=Number.isFinite(pLength)&&pLength>0?pLength:width;
  const dSpan=Number.isFinite(dLength)&&dLength>0?dLength:width;
  const punchPrism=makePrism('punzon',scene.punchPolygon,-pSpan/2,pSpan/2,
-  punch?.profileAccuracy==='verified'?'perfil-acotado':'perfil-provisional');
+  registered.punch?.profileAccuracy==='verified'?'perfil-acotado':'perfil-provisional');
  const diePrism=makePrism('matriz',scene.diePolygon,-dSpan/2,dSpan/2,
-  die?.profileAccuracy==='verified'?'perfil-acotado':'perfil-provisional');
+  registered.die?.profileAccuracy==='verified'?'perfil-acotado':'perfil-provisional');
  const top=scene.kinematics.tipHeight-scene.punch.height;
  // ALZADO PROVISIONAL: alturas relativas proceden del dibujo actual del
  // portaherramientas, NO se deducen de L1=1340 mm como si fuese carrera.
