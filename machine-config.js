@@ -9,6 +9,7 @@
  * amarre ni topes; no usar estos perfiles para validar una colisión.
  */
 import {MACHINE} from './engine.js';
+import {notifyStorageFailure} from './storage-notice.js';
 
 export const V85_FACTORY=Object.freeze({
  name:'Trumpf V85 · Cybelec',tonnage:85,
@@ -56,13 +57,15 @@ let cached=null;
 export function getV85(){
  if(cached)return cached;
  let stored;
- try{stored=JSON.parse(localStorage.getItem(V85_STORAGE_KEY)||'null');}catch{}
+ try{stored=JSON.parse(localStorage.getItem(V85_STORAGE_KEY)||'null');}
+ catch(error){notifyStorageFailure('No se pudo leer la configuración Trumpf V85',error);}
  cached=normalizeV85(stored||V85_FACTORY);
  return cached;
 }
 export function updateV85(input){
  cached=normalizeV85(input);
- try{localStorage.setItem(V85_STORAGE_KEY,JSON.stringify(cached));}catch{}
+ try{localStorage.setItem(V85_STORAGE_KEY,JSON.stringify(cached));}
+ catch(error){notifyStorageFailure('No se pudo guardar la configuración Trumpf V85',error);}
  if(typeof window!=='undefined')
   window.dispatchEvent(new CustomEvent('plegadox:machineChanged',{detail:cached}));
  return cached;
