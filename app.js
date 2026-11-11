@@ -45,9 +45,14 @@ let touchOrderEnabled=false,chosenTouchOrder=[];
 let touchProgrammer=null;
 let pendingSequenceAdvice=null;
 const plannerModeKey='plegadox:sequence-mode:v1';
-let plannerMode='auto';
-try{if(localStorage.getItem(plannerModeKey)==='manual')plannerMode='manual';}
-catch(error){notifyStorageFailure('No se pudo leer el modo de secuencia',error);}
+// El orden existente (de ejemplo, biblioteca o programación anterior)
+// se conserva por defecto. El operador puede activar Auto expresamente.
+let plannerMode=piece.order.every((bend,i)=>bend===i)?'auto':'manual';
+try{
+ const storedMode=localStorage.getItem(plannerModeKey);
+ if(storedMode==='manual'||storedMode==='auto')plannerMode=storedMode;
+}catch(error){notifyStorageFailure('No se pudo leer el modo de secuencia',error);}
+let plannerAutoAllowed=piece.order.every((bend,i)=>bend===i);
 let plannerTicket=0,plannerTimer=null,plannerApplying=false,pendingPlanner=null;
 let measurementInputKey=measurementKey(piece),lastSavedMeasurement=null;
 const geometryCache={key:null,result:null};
@@ -142,6 +147,7 @@ function renderProjectLibrary(){
    if(JSON.stringify(piece)!==JSON.stringify(loaded.piece)&&
     !window.confirm('¿Abrir esta pieza? Los cambios sin guardar en la biblioteca se perderán.'))return;
    selectedLibraryId=entry.id;
+   setPlannerMode('manual',{replan:false});
    try{setActiveLibraryId(localStorage,entry.id);}
     catch(error){notifyStorageFailure('No se pudo recordar la pieza abierta de la biblioteca',error);}
    changePiece(loaded.piece,true);
@@ -211,7 +217,7 @@ function changePiece(p,structural=false){
  touchProgrammer?.resetSelection();
  renderEditor();renderSetup();paintAll();touchProgrammer?.render();
  window.dispatchEvent(new CustomEvent('plegadox:pieceChanged',{detail:piece}));
- if(!plannerApplying)schedulePlanner({apply:plannerMode==='auto'});
+ if(!plannerApplying)schedulePlanner({apply:plannerMode==='auto'&&plannerAutoAllowed});
 }
 
 /** R30: una sugerencia nunca se aplica a una pieza que ya cambió. */
@@ -236,6 +242,7 @@ function riskLabel(screen){
 function setPlannerMode(mode,{replan=true}={}){
  if(!['auto','manual'].includes(mode))return;
  plannerMode=mode;
+ plannerAutoAllowed=mode==='auto';
  const select=$('sequencePlannerMode');if(select)select.value=mode;
  try{localStorage.setItem(plannerModeKey,mode);}
  catch(error){notifyStorageFailure('No se pudo guardar el modo de secuencia',error);}
@@ -343,11 +350,12 @@ function configure(){
   }
   changePiece({...piece,rmMPa:raw===''?null:Number(raw)});
  });
- $('newBtn').onclick=()=>{detachLibraryPiece();changePiece({name:'Nueva pieza',flanges:[100,100],angles:[0],order:[0],material:'s235',thickness:2,width:500,die:'v16',punch:'straight88'},true);};
- $('sampleBtn').onclick=()=>{detachLibraryPiece();changePiece(EXAMPLE,true);};
+ $('newBtn').onclick=()=>{detachLibraryPiece();setPlannerMode('auto',{replan:false});changePiece({name:'Nueva pieza',flanges:[100,100],angles:[0],order:[0],material:'s235',thickness:2,width:500,die:'v16',punch:'straight88'},true);};
+ $('sampleBtn').onclick=()=>{detachLibraryPiece();setPlannerMode('manual',{replan:false});changePiece(EXAMPLE,true);};
  $('cybelecReferenceBtn').onclick=()=>{
   if(!window.confirm('¿Cargar la referencia de las fotos Cybelec? Los cambios sin guardar en esta pieza se sustituirán. Exporta antes cualquier pieza que quieras conservar.'))return;
   detachLibraryPiece();
+  setPlannerMode('manual',{replan:false});
   changePiece(cybelecReferencePreset(),true);
  };
  $('addFlange').onclick=()=>{if(piece.flanges.length>=20)return;changePiece({...piece,flanges:[...piece.flanges,50],angles:[...piece.angles,90],order:[...piece.order,piece.angles.length],stopByBend:[...piece.stopByBend,1],gaugeSideByBend:[...piece.gaugeSideByBend,'auto']},true);};
@@ -1602,5 +1610,7 @@ setupToolDxfImporter({add:(tool,kind)=>{
 window.PLEGADOX_STATE=()=>({piece,sim});
 window.PLEGADOX_MACHINE_VIEW=machineView;
 window.PLEGADOX_REDRAW=()=>paintAll();
-window.addEventListener('plegadox:machineChanged',()=>schedulePlanner({apply:plannerMode==='auto'}));
+window.addEventListener('plegadox:machineChanged',()=>schedulePlanner({
+ apply:plannerMode==='auto'&&plannerAutoAllowed
+}));
 schedulePlanner({apply:false});
