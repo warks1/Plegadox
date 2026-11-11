@@ -33,6 +33,9 @@ test('datos Cybelec 2040 mm se usan para los prismas de trancha y mesa',()=>{
  assert.equal(model.objects.bed.zMax-model.objects.bed.zMin,2040);
  assert.equal(model.objects.gauge.provenance,'Z-del-dedo-desconocida-envolvente-conservadora');
  assert.ok(model.sheet.length>0);
+ assert.deepEqual(model.provenance.documentedDimensions.ramL,V85_FACTORY.ram);
+ assert.deepEqual(model.provenance.documentedDimensions.bedL,V85_FACTORY.bed);
+ assert.equal(model.provenance.documentedDimensions.toolWorkingDistance,30);
  assert.equal(model.verified,false);
 });
 test('motor no emite una falsa autorización industrial',()=>{
