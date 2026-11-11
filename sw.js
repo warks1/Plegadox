@@ -38,7 +38,6 @@ const APP_FILES=[
  "./studio.js",
  "./storage-notice.js",
  "./styles.css",
- "./titanium-splash.css",
  "./sw.js",
  "./technical-section.js",
  "./tool-collision.js",
