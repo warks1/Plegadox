@@ -10,6 +10,7 @@ import {inspectSequenceTools} from './tool-collision.js';
 import {scanSheetSequence} from './sheet-interference.js';
 import {scanGaugeSequence} from './gauge-sequence-review.js';
 import {toolHeightAudit} from './tool-height-audit.js';
+import {scanVolumeTrajectory} from './volume-trajectory-review.js';
 
 const round=n=>Math.round(n*100)/100;
 function item(code,level,message,bend=null){
@@ -64,11 +65,21 @@ export function auditForWorkshop(input,options={}){
   if(!Number.isFinite(Number(t.maxLoadKNm))||Number(t.maxLoadKNm)<=0)
    push('load-'+kind,'missing','Falta el límite de carga por metro certificado de '+kind+' ('+t.name+').');
  }
- push('machine-3d','missing','Faltan sólidos CAD completos de máquina, amarres y topes con sus recorridos y límites de ejes X/R/Z.');
+ push('machine-3d','missing','Se dispone de cotas L1–L10/L1–L7 y anchos de la V85 Cybelec, pero NO de sólidos CAD completos ni trayectorias CNC verificadas de máquina, amarres y topes.');
  push('material-test','missing','Faltan ensayos/calibración de radios, recuperación elástica y deducciones con material/lote y útiles reales.');
  const toolScan=options.toolScan||inspectSequenceTools(p,3);
  const sheetScan=options.sheetScan||scanSheetSequence(p,8);
  const gaugeScan=options.gaugeScan||scanGaugeSequence(p,{samplesPerOperation:18});
+ const volumeScan=options.volumeScan||scanVolumeTrajectory(p,{
+  machine:cfg,samplesPerOperation:6
+ });
+ if(volumeScan.modeledMachineWarnings>0)
+  push('volume-model','review',volumeScan.modeledMachineWarnings+
+   ' elemento(s) de máquina con posible interferencia de envolventes 3D extruidas (trancha, mesa o tope). Son CROQUIS y deben verificarse en máquina.');
+ if(volumeScan.uncertainSweptIntervals>0)
+  push('volume-swept','review',volumeScan.uncertainSweptIntervals+
+   ' intervalo(s) del recorrido con cruce de envolventes barridas, sin colisión volumétrica continua resuelta.');
+ push('volume-unverified','missing','La evaluación volumétrica usa cuerpos 2,5D, no sólidos OEM ni carrera de ejes X/R/Z ni volteos físicos verificados.');
  if(toolScan.warningCount>0)
   push('tool-2d','review',toolScan.warningCount+' operación(es) con candidatos de interferencia 2D entre chapa y herramientas; inspeccionar cada golpe.');
  if(sheetScan.warningCount>0)
@@ -107,7 +118,9 @@ export function auditForWorkshop(input,options={}){
   issues,summary:{blocks:block.length,missing:missing.length,reviews:review.length,
    toolWarnings:toolScan.warningCount,sheetWarnings:sheetScan.warningCount,
    gaugeWarnings:gaugeScan.warningCount,
-   gaugeContactNotObserved:gaugeScan.contactNotObserved},gaugeScan,
+   gaugeContactNotObserved:gaugeScan.contactNotObserved,
+   volumeWarnings:volumeScan.modeledMachineWarnings,
+   volumeSweptIntervals:volumeScan.uncertainSweptIntervals},gaugeScan,volumeScan,
   status:'SIN_VALIDACION_INDUSTRIAL',verified:false,canApproveForMachine:false,
-  limitations:'Vista previa 2D/2.5D. Sin volumetría CAD verificada, calibración ni verificación CNC. Este informe no autoriza fabricación.'};
+  limitations:'Volumetría extruida (2,5D) y recorrido temporal muestreado; sin volúmenes CAD OEM de mesa/trancha/mordazas, posición Z exacta de topes ni validación CNC. No autoriza fabricación.'};
 }
