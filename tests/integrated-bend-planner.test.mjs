@@ -20,7 +20,7 @@ test('la optimización compara punzón, matriz y secuencia sin alterar pieza',()
  const initial=structuredClone(EXAMPLE);
  const report=optimizeBendPlan(EXAMPLE,{
   toolingAdvice:guidance(pair('v16','straight88'),pair('v12','goose',2)),
-  sheetEvaluator:sheet,toolEvaluator:tool,gaugeEvaluator:gauge,
+  sheetEvaluator:sheet,toolEvaluator:tool,gaugeEvaluator:gauge,volumeEvaluator:()=>({modeledMachineWarnings:0,uncertainSweptIntervals:0,framesChecked:6}),
   maxPairs:2,maxOrders:2
  });
  assert.deepEqual(EXAMPLE,initial);
@@ -45,6 +45,7 @@ test('el cribado de tope influye en elegir una pareja frente a otra',()=>{
   toolEvaluator:piece=>({operations:piece.order.map(()=>({
    samples:1,possibleToolIntrusion:false,possibleToolInterference:false
   }))}),
+  volumeEvaluator:()=>({modeledMachineWarnings:0,uncertainSweptIntervals:0,framesChecked:6}),
   gaugeEvaluator:piece=>piece.die==='v16'?
    {warningCount:1,operations:[{findings:[{kind:'penetracion'}]}]}:gauge(),
   maxOrders:1,maxPairs:2,maxFinalists:5
@@ -67,7 +68,7 @@ test('la búsqueda permanece acotada en piezas complejas',()=>{
   angles:Array(19).fill(90),order:Array.from({length:19},(_,i)=>i)};
  const r=optimizeBendPlan(part,{
   toolingAdvice:guidance(pair('v16','straight88'),pair('v12','goose')),
-  sheetEvaluator:sheet,toolEvaluator:tool,gaugeEvaluator:gauge,
+  sheetEvaluator:sheet,toolEvaluator:tool,gaugeEvaluator:gauge,volumeEvaluator:()=>({modeledMachineWarnings:0,uncertainSweptIntervals:0,framesChecked:6}),
   maxPairs:1,maxOrders:2,maxFinalists:2
  });
  assert.ok(r.planVariantsChecked<=4);
@@ -85,7 +86,8 @@ test('un plan inválido no cambia el programa',()=>{
 test('los punzones pata de cabra se exploran en las dos orientaciones',()=>{
  const r=optimizeBendPlan(EXAMPLE,{
   toolingAdvice:guidance(pair('v16','goose')),
-  sheetEvaluator:sheet,gaugeEvaluator:gauge,
+  sheetEvaluator:sheet,gaugeEvaluator:gauge,volumeEvaluator:()=>({modeledMachineWarnings:0,uncertainSweptIntervals:0,framesChecked:6}),
+  volumeEvaluator:()=>({modeledMachineWarnings:0,uncertainSweptIntervals:0,framesChecked:6}),
   toolEvaluator:part=>({operations:part.order.map(()=>({
    samples:1,possibleToolIntrusion:part.punchOrientation==='normal',
    possibleToolInterference:part.punchOrientation==='normal'
