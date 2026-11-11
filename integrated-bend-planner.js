@@ -13,6 +13,7 @@ import {normalized,DIES,PUNCHES,MACHINE} from './engine.js';
 import {recommendTooling} from './tooling-advisor.js';
 import {scoreBendOrder,scoreToolOrder,sequenceCandidates} from './sequence-advisor.js';
 import {scanGaugeSequence} from './gauge-sequence-review.js';
+import {scanVolumeTrajectory} from './volume-trajectory-review.js';
 
 const integer=(value,fallback,min,max)=>{
  const n=Number(value);
@@ -21,6 +22,8 @@ const integer=(value,fallback,min,max)=>{
 const same=(a,b)=>a.length===b.length&&a.every((x,i)=>x===b[i]);
 const keyOf=p=>[p.dieId,p.punchId,p.orientation,p.order.join(',')].join('|');
 const weight=plan=>
+  (plan.volumeMachineWarnings||0)*300000+
+  (plan.volumeSweptSuspects||0)*10000+
   plan.toolPenetrations*1000000+
   plan.sheetCross*100000+
   plan.sheetOverlap*60000+
@@ -48,6 +51,11 @@ export function optimizeBendPlan(input,options={}){
  const maxFinalists=integer(options.maxFinalists,6,1,20);
  const samples=integer(options.toolSamples,3,1,7);
  const gaugeSamples=integer(options.gaugeSamples,8,8,50);
+ const volumeSamples=integer(options.volumeSamples,4,4,24);
+ const maxVolumeCandidates=integer(options.maxVolumeCandidates,4,1,12);
+ const volumeEvaluator=options.volumeEvaluator===undefined?
+  part=>scanVolumeTrajectory(part,{machine:options.machine,samplesPerOperation:volumeSamples}):
+  options.volumeEvaluator;
  const tooling=options.toolingAdvice||recommendTooling(p,{dies,punches});
  const candidates=(tooling.candidates||[tooling.choice,...(tooling.alternatives||[])].filter(Boolean));
  const pairCandidates=candidates.slice(0,maxPairs);
@@ -91,6 +99,8 @@ export function optimizeBendPlan(input,options={}){
    toolSamples:checked.sampledPositions,
    gaugeWarnings:0,gaugePenetrations:0,gaugeContactNotObserved:0,
    gaugeChecked:false,gaugeError:null,
+   volumeChecked:false,volumeMachineWarnings:0,volumeSweptSuspects:0,
+   volumeFramesChecked:0,volumeStatus:'SIN_COMPROBAR',volumeError:null,
    machineWidthExceeded:widthExceeded,pairScore:Number(pair.score)||0,
    preliminary:true,verified:false
   };
@@ -156,26 +166,62 @@ export function optimizeBendPlan(input,options={}){
   if(a.gaugeChecked!==b.gaugeChecked)return a.gaugeChecked?-1:1;
   return compare(a,b);
  });
- const best=finalists.find(plan=>plan.source==='automatico')||null;
  const manual=finalists.find(plan=>current&&keyOf(plan)===keyOf(current))||current;
+ // Un cálculo volumétrico de las variantes finalistas, separado del
+ // cribado rápido. Siempre incluir el programa manual aunque no cumpla
+ // la preselección de utillaje. El muestreo NO acredita seguridad.
+ if(volumeEvaluator){
+  const toCheck=finalists.filter(plan=>plan.source==='automatico')
+   .slice(0,maxVolumeCandidates);
+  if(manual&&!toCheck.includes(manual))toCheck.push(manual);
+  for(const plan of toCheck){
+   const candidate={...p,die:plan.dieId,punch:plan.punchId,
+    order:plan.order,punchOrientation:plan.orientation};
+   try{
+    const scanned=volumeEvaluator(candidate);
+    plan.volumeMachineWarnings=Number(scanned.modeledMachineWarnings)||0;
+    plan.volumeSweptSuspects=Number(scanned.uncertainSweptIntervals)||0;
+    plan.volumeFramesChecked=Number(scanned.framesChecked)||0;
+    plan.volumeStatus=scanned.status||'MODELO_PRELIMINAR';
+    plan.volumeChecked=true;
+   }catch(error){
+    plan.volumeError=error instanceof Error?error.message:String(error);
+   }
+   plan.possibleInterference ||=plan.volumeMachineWarnings>0||
+    plan.volumeSweptSuspects>0||!plan.volumeChecked;
+   plan.score=weight(plan);
+  }
+ }
+ finalists.sort((a,b)=>{
+  if(a.volumeChecked!==b.volumeChecked)return a.volumeChecked?-1:1;
+  if(a.gaugeChecked!==b.gaugeChecked)return a.gaugeChecked?-1:1;
+  return compare(a,b);
+ });
+ const best=finalists.find(plan=>plan.source==='automatico'&&
+  (volumeEvaluator?plan.volumeChecked:true))||
+  finalists.find(plan=>plan.source==='automatico')||null;
  return {
   best,manual,
-  alternatives:finalists.filter(plan=>plan.source==='automatico'&&plan!==best).slice(0,3),
+  alternatives:finalists.filter(plan=>plan.source==='automatico'&&plan!==best&&
+   (!volumeEvaluator||plan.volumeChecked)).slice(0,3),
   candidatePairs:candidates.length,
   pairsScreened:pairCandidates.length,
   ordersCompared:rankedOrders.length,
   ordersScreened:selectedOrders.length,
   planVariantsChecked:plans.length,
   finalistsGaugeChecked:finalists.filter(plan=>plan.gaugeChecked).length,
+  finalistsVolumeChecked:finalists.filter(plan=>plan.volumeChecked).length,
+  volumeSamplesPerOperation:volumeSamples,
   machineWidthExceeded:widthExceeded,
   status:!best?'SIN_PAREJA_PRESELECCIONADA':
-   best.possibleInterference?'INCIDENCIAS_2D_O_DATOS_PENDIENTES':
-   'SIN_AVISOS_EN_MUESTRAS_2D',
+   !best.volumeChecked&&volumeEvaluator?'VOLUMEN_SIN_ANALIZAR':
+   best.possibleInterference?'RIESGOS_2D_3D_PROVISIONALES':
+   'SIN_AVISOS_EN_MUESTRAS_NO_CERTIFICA_SEGURIDAD',
   reasons:tooling.reasons||[],
   truncated:candidates.length>pairCandidates.length||
    rankedOrders.length>selectedOrders.length,
   verified:false,canApproveForMachine:false,
-  limitations:'Comparación limitada y discreta en sección 2D. Sin CAD sólido real de mesa, trancha, punzón, matriz, mordazas y topes ni comprobación de cinemática 3D/CNC. La ausencia de avisos NO garantiza ausencia de colisiones.'
+  limitations:'Comparación limitada de sólidos extruidos en Z y posiciones temporales muestreadas. Las envolventes de mesa/trancha, las posiciones Z de los topes y los movimientos CNC NO son CAD industrial verificado. Ausencia de avisos NO garantiza ausencia de colisiones.'
  };
 }
 /** Aplicación explícita: ningún cálculo modifica por sí solo la pieza. */
