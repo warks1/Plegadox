@@ -166,6 +166,7 @@ export function optimizeBendPlan(input,options={}){
   if(a.gaugeChecked!==b.gaugeChecked)return a.gaugeChecked?-1:1;
   return compare(a,b);
  });
+ const manual=finalists.find(plan=>current&&keyOf(plan)===keyOf(current))||current;
  // Un cálculo volumétrico de las variantes finalistas, separado del
  // cribado rápido. Siempre incluir el programa manual aunque no cumpla
  // la preselección de utillaje. El muestreo NO acredita seguridad.
@@ -199,7 +200,6 @@ export function optimizeBendPlan(input,options={}){
  const best=finalists.find(plan=>plan.source==='automatico'&&
   (volumeEvaluator?plan.volumeChecked:true))||
   finalists.find(plan=>plan.source==='automatico')||null;
- const manual=finalists.find(plan=>current&&keyOf(plan)===keyOf(current))||current;
  return {
   best,manual,
   alternatives:finalists.filter(plan=>plan.source==='automatico'&&plan!==best&&
