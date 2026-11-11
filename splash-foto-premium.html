@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#08121d"><title>PlegadoX · Boceto 1 premium seleccionado</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;background:#060c16;color:#fff;font-family:Inter,system-ui,sans-serif}
+body{display:grid;place-items:center}
+#screen{position:relative;width:min(100vw,177.6833vh);width:min(100vw,177.6833dvh);height:min(100vh,56.2799vw);height:min(100dvh,56.2799vw);aspect-ratio:1672/941}
+#photo{display:block;width:100%;height:100%;object-fit:fill;-webkit-user-drag:none;user-select:none}
+#progress{position:absolute;left:10.76%;top:81.4%;width:78.12%;height:7.2%;display:flex;gap:2%;align-items:center;padding:0 .3%;border-radius:80px;background:linear-gradient(180deg,#07111b 0%,#050d17 12%,#0b1928 52%,#050b14 94%);box-shadow:0 0 3px #060d16}
+#rail{position:relative;flex:1;height:67%;border:2px solid #9eb9c6;border-radius:80px;background:linear-gradient(180deg,#2c455a,#041224 42%,#0b2739 85%,#425566);box-shadow:inset 0 1px 4px #9ac9e355;overflow:hidden}
+#fill{height:100%;width:0;transition:width .23s ease-out;border-radius:80px;background:linear-gradient(180deg,#8af8ff,#04e2fc 30%,#0099ef 72%,#0950b7);box-shadow:0 0 13px #06b7fc}
+#fill::before{content:"";display:block;height:100%;background:repeating-linear-gradient(120deg,transparent 0 22px,#e2faff33 23px 25px,transparent 27px 44px)}
+#percent{min-width:7.5%;font-weight:900;font-size:clamp(10px,2.2vw,34px);font-variant-numeric:tabular-nums;text-align:center;text-shadow:0 3px 5px #000}
+#message{position:absolute;left:11.3%;top:77.75%;font-weight:750;font-style:italic;font-size:clamp(11px,2.12vw,34px);letter-spacing:.02em;text-shadow:0 2px 7px #000e;max-width:75%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#retry{display:none;position:absolute;top:73%;right:11%;padding:10px 16px;background:#092e4f;color:#fff;border:1px solid #63c4ff;border-radius:7px;cursor:pointer}
+.is-error #retry{display:block}
+@media(max-width:560px){#rail{border-width:1px}#message{font-size:clamp(8px,2.1vw,12px)}#percent{font-size:clamp(9px,2vw,15px)}}
+@media(prefers-reduced-motion:reduce){#fill{transition:none}}
+</style>
+</head><body>
+<main id="screen" role="status" aria-label="PlegadoX Premium, pantalla original elegida">
+<img id="photo" src="./plegadox-premium-selected.png" width="1672" height="941"
+ alt="Boceto 1 PlegadoX: prensa plegadora cromada plegando chapa azul plata" draggable="false">
+<div id="message" aria-live="polite">Cargando...</div>
+<div id="progress" role="progressbar" aria-label="Carga real de PlegadoX" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="rail"><div id="fill"></div></div><output id="percent">0%</output></div>
+<button id="retry" type="button" onclick="window.parent.location.reload()">Reintentar inicio</button>
+</main>
+<script>
+(()=>{
+'use strict';
+const photo=document.getElementById('photo');
+photo.onerror=()=>{location.replace('./titanium-loading-original.html');};
+const progress=document.getElementById('progress');
+const fill=document.getElementById('fill'),percent=document.getElementById('percent'),message=document.getElementById('message');
+window.PlegadoXLoading={
+ setProgress(value){const v=Number(value);if(!Number.isFinite(v))return;
+ const n=Math.max(0,Math.min(100,v));progress.setAttribute('aria-valuenow',String(Math.round(n)));
+ fill.style.width=n+'%';percent.textContent=Math.round(n)+'%';},
+ setStatus(value){message.textContent=String(value??'Cargando...');},
+ finish(){this.setProgress(100);this.setStatus('PlegadoX listo');},
+ error(msg){document.body.classList.add('is-error');this.setStatus(msg||'Error de arranque');}
+};
+})();
+</script>
+</body></html>
