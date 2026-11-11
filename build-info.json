@@ -1,6 +1,6 @@
 {
-  "build": "PLEGADOX-20261111-R30",
-  "version": "0.9.6",
+  "build": "PLEGADOX-20261111-R31",
+  "version": "0.9.7",
   "gauge": "shallow-penetration-near-front-contact",
-  "cache": "plegadox-static-0.9.6-auto-sequence-r30"
+  "cache": "plegadox-static-0.9.7-tools-sequence-r31"
 }
