@@ -15,8 +15,11 @@ try{
   const splash=page.locator('#pxTitaniumSplash');
   await splash.waitFor({state:'visible',timeout:30000});
   assert.equal(await splash.isVisible(),true,view.name+': el splash aparece al entrar');
-  assert.match(await splash.textContent(),/A\.M\.S TECNOLIGICS/);
-  assert.ok(await page.locator('.px-splash-stage animate').count()>0);
+  const original=page.frameLocator('#pxSplashReference');
+  await original.locator('#sheetFront').waitFor({state:'attached'});
+  assert.match(await original.locator('.company').textContent(),/A\.M\.S TECNOLIGICS/);
+  assert.match(await original.locator('.version').textContent(),/02 · TITANIUM/);
+  assert.equal(await original.locator('#punchGroup').count(),1);
   await splash.waitFor({state:'hidden',timeout:30000});
   await page.waitForFunction(()=>!!window.PLEGADOX_STATE,null,{timeout:30000});
   await page.locator('[data-tab="programacion"]').click();
