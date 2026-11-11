@@ -39,6 +39,7 @@ jobs:
       - name: Comprobar pantallas, selección y simulación
         run: |
           node tests/titanium-cybelec-browser-smoke.mjs
+          node tests/titanium-selected-splash-r32-smoke.mjs
           node tests/browser-smoke.mjs
           node tests/responsive-smoke.mjs
           node tests/studio-smoke.mjs
