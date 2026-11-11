@@ -1,8 +1,9 @@
 // PlegadoX · caché offline estática. Se versiona para no arrastrar JS obsoleto.
-const CACHE='plegadox-static-0.9.4-safe-dxf-r28';
+const CACHE='plegadox-static-0.9.5-titanium-cybelec-r29';
 const APP_FILES=[
  "./",
  "./app.js",
+ "./cybelec-reference.js",
  "./backgauge-placement.js",
  "./build-info.json",
  "./bend-contact.js",

@@ -7,13 +7,35 @@
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="./icon-180.png">
 <link rel="manifest" href="./manifest.webmanifest">
-<meta name="plegadox-build" content="PLEGADOX-20261102-R28">
+<meta name="plegadox-build" content="PLEGADOX-20261102-R29">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="PlegadoX">
 </head><body>
+<div id="pxTitaniumSplash" class="px-titanium-splash" role="status" aria-live="polite" aria-label="Iniciando PlegadoX">
+<div class="px-splash-border" aria-hidden="true"></div><div class="px-splash-main">
+<div class="px-splash-kicker">A.M.S TECNOLIGICS · INDUSTRIAL SOFTWARE</div>
+<h1 class="px-splash-logo">PLEGADO<em>X</em></h1>
+<p class="px-splash-subtitle">PRECISIÓN EN CADA ÁNGULO / EDICIÓN TITANIUM</p>
+<svg class="px-splash-stage" viewBox="0 0 760 320" role="img" aria-label="Animación de una chapa de acero plegándose entre un punzón y una matriz">
+<defs><linearGradient id="ti-sheet"><stop stop-color="#6383a5"/><stop offset=".37" stop-color="#f5fcff"/><stop offset=".7" stop-color="#a3b9d4"/><stop offset="1" stop-color="#5a829d"/></linearGradient><linearGradient id="ti-tool"><stop stop-color="#c6ecff"/><stop offset=".6" stop-color="#6996b9"/><stop offset="1" stop-color="#1d3950"/></linearGradient></defs>
+<g stroke="#6caacc" stroke-dasharray="3 9" opacity=".28"><path d="M20 70H740M20 140H740M20 250H740M380 14V300"/></g>
+<text x="22" y="28" fill="#9fdaf8" font-size="12" letter-spacing="2">TRUBEND / SIMULACIÓN 2D</text>
+<g class="px-splash-ram"><rect x="292" y="8" width="176" height="29" fill="url(#ti-tool)" rx="4"/><path d="M322 37H440L394 60L380 70L366 60Z" fill="url(#ti-tool)" stroke="#bdefff" stroke-width="2"/><path d="M380 70L394 60" stroke="#2fcbff" stroke-width="3" class="px-splash-glint"/></g>
+<path d="M226 238H284L329 292H430L476 238H534V305H226Z" fill="url(#ti-tool)" stroke="#95c4e0" stroke-width="3"/>
+<path d="M284 238L329 292H430L476 238" fill="none" stroke="#061626" stroke-width="7"/>
+<path d="M105 230 L215 230 L325 230 L435 230 L545 230 L655 230" stroke="url(#ti-sheet)" stroke-width="13" stroke-linejoin="round" stroke-linecap="round" fill="none"><animate attributeName="d" dur="3.6s" repeatCount="indefinite" keyTimes="0;.10;.22;.34;.46;.60;.71;.82;.93;1" values="M105 230 L215 230 L325 230 L435 230 L545 230 L655 230;M105 230 L215 230 L325 230 L435 230 L545 230 L655 230;M113.37 230 L223.37 230 L325 187.9 L435 187.9 L536.63 230 L646.63 230;M137.22 230 L247.22 230 L325 152.22 L435 152.22 L512.78 230 L622.78 230;M172.9 230 L282.9 230 L325 128.37 L435 128.37 L477.1 230 L587.1 230;M215 230 L325 230 L325 120 L435 120 L435 230 L545 230;M215 230 L325 230 L325 120 L435 120 L435 230 L545 230;M137.22 230 L247.22 230 L325 152.22 L435 152.22 L512.78 230 L622.78 230;M105 230 L215 230 L325 230 L435 230 L545 230 L655 230;M105 230 L215 230 L325 230 L435 230 L545 230 L655 230"/></path>
+<text x="20" y="307" font-size="11" fill="#8cbdd9" letter-spacing="2">CHAPA · 2 MM</text>
+<text x="739" y="307" font-size="11" fill="#8cbdd9" text-anchor="end" letter-spacing="2">V16 / 30°</text>
+</svg>
+<div class="px-splash-caption">SIMULACIÓN INDUSTRIAL · ARRANQUE DE MOTORES</div>
+<div class="px-splash-load"><div class="px-splash-load-head"><span>INICIANDO SISTEMA</span><span id="pxSplashPercent">0%</span></div><div class="px-splash-load-bar"><span id="pxSplashBar"></span></div></div>
+<p id="pxSplashMessage" class="px-splash-loading-state">Preparando programación y simulación…</p>
+<button id="pxSplashRetry" class="px-splash-retry" type="button" onclick="location.reload()">Reintentar inicio</button>
+<div class="px-splash-copy">© 2026 A.M.S TECNOLIGICS · TODOS LOS DERECHOS RESERVADOS</div>
+</div></div>
 <div id="app">
 <header class="topbar">
-<div class="header-logo"><span class="logo-title">PLEGADO<span>DO</span><em>X</em></span><small>PRECISIÓN EN CADA ÁNGULO</small><small id="buildMark" class="px-build-mark" aria-label="Versión instalada de PlegadoX">PLEGADOX-20261102-R28</small></div>
+<div class="header-logo"><span class="logo-title">PLEGADO<span>DO</span><em>X</em></span><small>PRECISIÓN EN CADA ÁNGULO</small><small id="buildMark" class="px-build-mark" aria-label="Versión instalada de PlegadoX">PLEGADOX-20261102-R29</small></div>
 <div class="header-project"><span class="h-icon" aria-hidden="true"><svg class="px-icon"><use href="./icons.svg#project"/></svg></span><div class="h-content"><small>PROYECTO ACTUAL</small><strong id="topProject">Omega · ejemplo geométrico</strong></div></div>
 <div class="header-stats"><div><small>Material</small><strong id="topMaterial">Acero S235</strong></div><div><small>Espesor</small><strong id="topThickness">2,00 mm</strong></div><div><small>Ángulo</small><strong id="topAngle">+90°</strong></div><div><small>Apertura V</small><strong id="topV">16 mm</strong></div><div><small>Punzón</small><strong id="topPunch">Recto 88°</strong></div><div><small>Matriz</small><strong id="topDie">V16</strong></div></div>
 <div class="header-right"><div class="header-status"><button id="topPlayBtn" class="led" type="button" aria-label="Reproducir simulación" aria-pressed="false" title="Reproducir / pausar simulación">▶</button><span id="topState">Simulación lista</span></div><span id="clock" aria-label="Hora"></span><button id="forceUpdateBtn" class="header-icon-button px-refresh-button" title="Actualizar PlegadoX sin borrar piezas" aria-label="Actualizar PlegadoX sin borrar piezas"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#refresh"/></svg></button><button id="saveBtn" class="header-icon-button" title="Guardar pieza" aria-label="Guardar pieza"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#save"/></svg></button></div>
@@ -25,7 +47,7 @@
 <button class="nav" data-tab="herramientas"><span class="nav-picto" aria-hidden="true"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#tools"/></svg></span><span>HERRAMIENTAS</span></button>
 <button class="nav" data-tab="desarrollo"><span class="nav-picto" aria-hidden="true"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#ruler"/></svg></span><span>DESARROLLO</span></button>
 <button class="nav" data-tab="maquina"><span class="nav-picto" aria-hidden="true"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#settings"/></svg></span><span>MÁQUINA</span></button>
-<div class="nav-spacer"></div><button class="side-action" id="sideSave" title="Guardar pieza" aria-label="Guardar pieza"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#save"/></svg><span>GUARDAR</span></button><button class="side-action" id="sideImport" title="Importar pieza JSON" aria-label="Importar pieza JSON"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#upload"/></svg><span>IMPORTAR</span></button><div class="nav-version">AMS · PLEGADOX v0.9.4</div>
+<div class="nav-spacer"></div><button class="side-action" id="sideSave" title="Guardar pieza" aria-label="Guardar pieza"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#save"/></svg><span>GUARDAR</span></button><button class="side-action" id="sideImport" title="Importar pieza JSON" aria-label="Importar pieza JSON"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#upload"/></svg><span>IMPORTAR</span></button><div class="nav-version">AMS · PLEGADOX v0.9.5</div>
 </nav>
 <main>
 <section class="panel" id="tab-programacion">
@@ -102,13 +124,13 @@
 <div id="libraryItems" class="px-project-library-items" role="region" aria-label="Lista de piezas guardadas"></div>
 <p class="hint">Guardar crea una revisión; abrir una pieza no modifica la anterior. Las piezas se conservan en este navegador. Para mover toda la biblioteca y sus revisiones a otro dispositivo utiliza «Descargar proyecto completo».</p>
 </article>
-<div class="twocol"><article class="card"><div class="cardhead"><h2>Alas y pliegues</h2><button id="addFlange">+ Añadir ala</button></div><p class="hint">Las longitudes se miden sobre el perfil teórico. El signo del ángulo determina el sentido de giro. El primer tramo no lleva pliegue.</p><div class="table-scroll"><table class="edit-table"><thead><tr><th>Ala</th><th>Longitud (mm)</th><th>Pliegue anterior</th><th>Tope</th><th>Ala de apoyo</th><th>Orden</th><th></th></tr></thead><tbody id="flangeRows"></tbody></table></div><div class="inline-actions"><button id="sampleBtn">Ejemplo omega</button><button id="resetOrder">Orden 1, 2, 3…</button></div></article>
+<div class="twocol"><article class="card"><div class="cardhead"><h2>Alas y pliegues</h2><button id="addFlange">+ Añadir ala</button></div><p class="hint">Las longitudes se miden sobre el perfil teórico. El signo del ángulo determina el sentido de giro. El primer tramo no lleva pliegue.</p><div class="table-scroll"><table class="edit-table"><thead><tr><th>Ala</th><th>Longitud (mm)</th><th>Pliegue anterior</th><th>Tope</th><th>Ala de apoyo</th><th>Orden</th><th></th></tr></thead><tbody id="flangeRows"></tbody></table></div><div class="inline-actions"><button id="sampleBtn">Ejemplo omega</button><button id="cybelecReferenceBtn" type="button">Cargar referencia Cybelec</button><button id="resetOrder">Orden 1, 2, 3…</button></div></article>
 <article class="card"><div class="cardhead"><h2>Pieza final · perfil 2D</h2><span id="validity" class="tag">Listo</span></div><div class="touch-order-controls"><button id="touchOrderMode" type="button" aria-pressed="false">☝ Asignar orden tocando pliegues</button><p id="touchOrderHint" aria-live="polite">Activa este modo y toca los vértices de la pieza en el orden de trabajo.</p></div><canvas id="finalCanvas" class="canvas drawing" aria-label="Perfil final de la pieza; permite seleccionar los pliegues por toque"></canvas><div class="sheet-collision-legend" aria-label="Leyenda de interferencias de chapa">
  <span><i class="sheet-red" aria-hidden="true"></i> Rojo: cruce o solapamiento</span>
  <span><i class="sheet-amber" aria-hidden="true"></i> Ámbar: contacto puntual o separación inferior al espesor</span>
  <small>Vista geométrica 2D; NO certifica colisiones reales con máquina y utillaje.</small>
  </div><div class="summary" id="geometrySummary"></div><p class="hint">Vista final calculada desde la pieza recta; no se muestra una omega ya formada antes del primer golpe.</p></article></div>
-<article class="card"><div class="cardhead"><h2>Orden de plegado</h2><span class="smalllabel">Pulsa un pliegue para subirlo o bajarlo en la secuencia</span></div><div id="sequence" class="sequence"></div><div class="sequence-advisor"><div class="inline-actions"><button type="button" id="evaluateOrder">Analizar órdenes posibles (chapa 2D)</button><button type="button" id="applySuggestedOrder" disabled>Aplicar orden sugerido</button></div><p id="sequenceAdvice" role="status" aria-live="polite">Sin analizar este programa. La secuencia actual se conserva.</p><small>Comparación orientativa entre alas. NO evalúa accesibilidad de punzón, matriz, mesa, volteos ni carrera de máquina. No aplica nada sin pulsar «Aplicar».</small></div><p class="hint">La secuencia de operaciones no cambia el signo de cada pliegue. La forma final se obtiene aplicando únicamente los golpes ejecutados.</p></article>
+<article class="card"><div class="cardhead"><h2>Orden de plegado</h2><span class="smalllabel">Pulsa un pliegue para subirlo o bajarlo en la secuencia</span></div><p class="hint">En las fotos Cybelec se numeran las caras/pliegues del perfil (P1…P4), no necesariamente los golpes reales (G1…G4). La secuencia física se indica aparte.</p><div id="sequence" class="sequence"></div><div class="sequence-advisor"><div class="inline-actions"><button type="button" id="evaluateOrder">Analizar órdenes posibles (chapa 2D)</button><button type="button" id="applySuggestedOrder" disabled>Aplicar orden sugerido</button></div><p id="sequenceAdvice" role="status" aria-live="polite">Sin analizar este programa. La secuencia actual se conserva.</p><small>Comparación orientativa entre alas. NO evalúa accesibilidad de punzón, matriz, mesa, volteos ni carrera de máquina. No aplica nada sin pulsar «Aplicar».</small></div><p class="hint">La secuencia de operaciones no cambia el signo de cada pliegue. La forma final se obtiene aplicando únicamente los golpes ejecutados.</p></article>
 </section>
 <section class="panel active cockpit-page" id="tab-simulacion">
 <div class="cockpit-banner">
@@ -118,7 +140,7 @@
 <div class="cockpit-main">
 <aside class="card cp-operations">
 <div class="cardhead"><h2>SECUENCIA DE PLEGADO</h2><span class="head-dots">⌃</span></div>
-<div id="simSequence" class="op-list"></div>
+<div id="simSequence" class="op-list"></div><p id="cybelecSequenceHint" class="cp-help" aria-live="polite">G = golpe; P = pliegue en el perfil.</p>
 <div class="cp-actions"><button id="jumpToProgramming">✎ Editar secuencia</button><button id="jumpToDevelopment">⌗ Desarrollo</button><button id="cpAddFold" class="cp-add-fold" type="button" title="Añadir un nuevo pliegue y su ala">＋ Añadir pliegue</button></div>
 <div class="cp-help">Pulsa una operación para verla. Los signos +90° y −90° conservan su sentido.</div>
 </aside>
@@ -173,7 +195,7 @@
  <p class="hint" id="toolDxfStatus" role="status" aria-live="polite">Selecciona un DXF en milímetros. Los perfiles se guardan sólo en este navegador; conserva también el archivo original.</p>
 </details>
 <div class="twocol"><article class="card"><h2>Matrices</h2><div id="dieCards" class="toolcards"></div></article><article class="card"><h2>Punzones</h2><div id="punchCards" class="toolcards"></div></article></div><article class="card"><h2>Perfil de herramientas seleccionadas</h2><canvas id="toolCanvas" class="canvas tools"></canvas><p class="hint">Representación genérica de geometría nominal. No equivale a un perfil acotado de fabricante ni permite certificar colisiones todavía.</p></article></section>
-<section class="panel" id="tab-desarrollo"><div class="page-title"><div><h1>Desarrollo de chapa</h1><p>Estimación de fibra neutra, radios y deducciones según material y herramienta.</p></div></div><div class="formgrid"><label>Factor K (editable)<input type="number" id="kFactor" min=".15" max=".6" step=".01"></label><label>Radio interior (mm)<input type="number" id="insideRadius" min=".1" max="100" step=".1"></label><label>Rm tracción (MPa; vacío = referencia)<input type="number" id="rmMPa" min="50" max="1800" step="1" inputmode="decimal"></label><label>Criterio de cota<select id="datum"><option value="outside">Cotas exteriores teóricas</option><option value="neutral">Longitud sobre fibra neutra</option></select></label></div><div class="twocol"><article class="card"><h2>Resultado estimado</h2><div id="devSummary" class="big-result"></div><div id="forceDetails" class="hint" role="status" aria-live="polite">Fuerza al aire 90° orientativa; sin validación industrial.</div></article><article class="card"><h2>Detalle por pliegue</h2><div class="table-scroll"><table class="edit-table"><thead><tr><th>Pliegue</th><th>Ángulo</th><th>BA</th><th>BD</th></tr></thead><tbody id="devRows"></tbody></table></div></article></div><article class="card"><h2>Comparador de matrices V</h2><p class="hint">Compara las V genéricas de 88° y la matriz activa; utiliza la misma pieza, material, espesor, Rm y factor K. Las variaciones son aproximadas.</p><div class="table-scroll"><table class="edit-table" aria-label="Comparador de matrices V"><thead><tr><th>Matriz</th><th>V/t</th><th>Radio aprox.</th><th>Desarrollo</th><th>Δ desarrollo</th><th>Fuerza aire*</th><th>Revisión</th><th>Aplicar</th></tr></thead><tbody id="vComparisonRows"></tbody></table></div><p class="hint">*Fuerza de aire alrededor de 90°, no válida para fondo, acuñado ni aprobación de útiles. Una V fuera de la guía V/t requiere revisión en taller. Las longitudes y radios dependen de hipótesis K/radio.</p></article><article class="card px-workshop-calibration" id="workshopCalibrationPanel">
+<section class="panel" id="tab-desarrollo"><div class="page-title"><div><h1>Desarrollo de chapa</h1><p>Estimación de fibra neutra, radios y deducciones según material y herramienta.</p></div></div><div class="formgrid"><label>Factor K (editable)<input type="number" id="kFactor" min=".15" max=".6" step=".01"></label><label>Radio interior (mm)<input type="number" id="insideRadius" min=".1" max="100" step=".1"></label><label>Rm tracción (MPa; vacío = referencia)<input type="number" id="rmMPa" min="50" max="1800" step="1" inputmode="decimal"></label><label>Criterio de cota<select id="datum"><option value="outside">Cotas exteriores teóricas</option><option value="neutral">Longitud sobre fibra neutra</option></select></label></div><article class="card px-cybelec-reference"><div class="cardhead"><h2>Comparación con dos plegadoras Cybelec</h2><span class="smalllabel">FOTOS DE TALLER · L DIN NOMINAL</span></div><div id="cybelecDevelopmentCompare" role="status" aria-live="polite">Comprobando geometría…</div><p class="hint">Ambas fotografías: 50/50/50/50/50 mm, +90°/−90°/−90°/+90°, espesor 2 mm, matriz V16/30° y L DIN 233,94 mm. La primera muestra radio interior de 2,63 mm. Los punzones 1-835 y 1238_28 no equivalen automáticamente a los genéricos de esta app. L DIN no es un desarrollo de corte medido.</p></article><div class="twocol"><article class="card"><h2>Resultado estimado</h2><div id="devSummary" class="big-result"></div><div id="forceDetails" class="hint" role="status" aria-live="polite">Fuerza al aire 90° orientativa; sin validación industrial.</div></article><article class="card"><h2>Detalle por pliegue</h2><div class="table-scroll"><table class="edit-table"><thead><tr><th>Pliegue</th><th>Ángulo</th><th>BA</th><th>BD</th></tr></thead><tbody id="devRows"></tbody></table></div></article></div><article class="card"><h2>Comparador de matrices V</h2><p class="hint">Compara las V genéricas de 88° y la matriz activa; utiliza la misma pieza, material, espesor, Rm y factor K. Las variaciones son aproximadas.</p><div class="table-scroll"><table class="edit-table" aria-label="Comparador de matrices V"><thead><tr><th>Matriz</th><th>V/t</th><th>Radio aprox.</th><th>Desarrollo</th><th>Δ desarrollo</th><th>Fuerza aire*</th><th>Revisión</th><th>Aplicar</th></tr></thead><tbody id="vComparisonRows"></tbody></table></div><p class="hint">*Fuerza de aire alrededor de 90°, no válida para fondo, acuñado ni aprobación de útiles. Una V fuera de la guía V/t requiere revisión en taller. Las longitudes y radios dependen de hipótesis K/radio.</p></article><article class="card px-workshop-calibration" id="workshopCalibrationPanel">
 <div class="cardhead"><h2>Mediciones reales · contrastar desarrollo</h2><span class="smalllabel">DATOS DE TALLER · SIN APROBACIÓN AUTOMÁTICA</span></div>
 <p class="hint">Introduce la longitud real del desarrollo y, si lo has medido, el radio interior de una pieza de prueba. Sólo se propone un factor K orientativo si confirmas que las cotas y ángulos del plegado coinciden con el programa. No modifica nada automáticamente.</p>
 <div class="formgrid">
@@ -224,10 +246,25 @@
  * PlegadoX anteriores y cargar luego todos los módulos secuencialmente.
  * Nunca se elimina localStorage, IndexedDB ni los proyectos del usuario.
  */
-const BUILD="PLEGADOX-20261102-R28";
+const BUILD="PLEGADOX-20261102-R29";
 const STATUS=document.getElementById('buildMark');
 const KEY='plegadox:verified-loader-build';
 const BASE=new URL('./',document.baseURI);
+const SPLASH=document.getElementById('pxTitaniumSplash');
+const splashStarted=Date.now();
+const splashStep=(percent,label)=>{
+ if(!SPLASH)return;
+ document.getElementById('pxSplashBar').style.width=Math.min(100,Math.max(0,percent))+'%';
+ document.getElementById('pxSplashPercent').textContent=Math.round(percent)+'%';
+ document.getElementById('pxSplashMessage').textContent=label;
+};
+const finishSplash=async()=>{
+ const ms=Math.max(0,1450-(Date.now()-splashStarted));
+ if(ms)await new Promise(resolve=>setTimeout(resolve,ms));
+ splashStep(100,'Módulos preparados · entrando en PlegadoX');
+ SPLASH?.classList.add('is-complete');
+ setTimeout(()=>{if(SPLASH)SPLASH.hidden=true;},560);
+};
 const serverBuild=async()=>{
  try{
   const r=await fetch(new URL('build-info.json?check='+encodeURIComponent(BUILD),BASE),{
@@ -245,18 +282,23 @@ const clearOldCode=async()=>{
 const loadModules=async()=>{
  const scripts=['pwa.js','app.js','cockpit.js','boceto2.js',
   'responsive.js','studio.js','machine-editor.js'];
- for(const path of scripts)await import('./'+path+'?build='+encodeURIComponent(BUILD));
+ for(const [index,path] of scripts.entries()){
+  splashStep(18+Math.round(72*(index+1)/scripts.length),'Cargando '+path.replace('.js','')+'…');
+  await import('./'+path+'?build='+encodeURIComponent(BUILD));
+ }
 };
 const show=message=>{if(STATUS)STATUS.textContent=message;};
 try{
  // Los datos personales del usuario NO están en CacheStorage.
  // Si falla la red, no purgar nunca la copia que permite trabajar offline.
+ splashStep(8,'Comprobando versión publicada…');
  const verified=await serverBuild();
  if(verified&&localStorage.getItem(KEY)!==BUILD){
   await clearOldCode();
   localStorage.setItem(KEY,BUILD);
  }
  await loadModules();
+ await finishSplash();
  const refresh=document.getElementById('forceUpdateBtn');
  if(refresh)refresh.addEventListener('click',async()=>{
   if(!navigator.onLine){show('Sin conexión · no se puede actualizar');return;}
@@ -285,6 +327,8 @@ try{
  });
 }catch(error){
  show('Error de arranque: '+error.message);
+ splashStep(100,'Error de inicio: '+error.message+' · pulsa Reintentar');
+ SPLASH?.classList.add('is-error');
  console.error('PlegadoX no ha podido cargar la versión',error);
 }
 </script></body></html>

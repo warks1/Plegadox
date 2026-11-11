@@ -13,6 +13,7 @@ import {sheetSolidMesh} from './sheet-solid.js';
 import {exportProfileDXF,exportFlatDXF} from './dxf-export.js';
 import {flatBendLayout} from './flat-layout.js';
 import {suggestBendOrder} from './sequence-advisor.js';
+import {CYBELEC_OMEGA,cybelecReferencePreset,compareCybelecOmega} from './cybelec-reference.js';
 import {compareGaugeSides} from './gauge-side-review.js';
 import {sectionPunch,sectionDie} from './tool-profiles.js';
 import {getV85,updateV85} from './machine-config.js';
@@ -232,6 +233,11 @@ function configure(){
  });
  $('newBtn').onclick=()=>{detachLibraryPiece();changePiece({name:'Nueva pieza',flanges:[100,100],angles:[0],order:[0],material:'s235',thickness:2,width:500,die:'v16',punch:'straight88'},true);};
  $('sampleBtn').onclick=()=>{detachLibraryPiece();changePiece(EXAMPLE,true);};
+ $('cybelecReferenceBtn').onclick=()=>{
+  if(!window.confirm('¿Cargar la referencia de las fotos Cybelec? Los cambios sin guardar en esta pieza se sustituirán. Exporta antes cualquier pieza que quieras conservar.'))return;
+  detachLibraryPiece();
+  changePiece(cybelecReferencePreset(),true);
+ };
  $('addFlange').onclick=()=>{if(piece.flanges.length>=20)return;changePiece({...piece,flanges:[...piece.flanges,50],angles:[...piece.angles,90],order:[...piece.order,piece.angles.length],stopByBend:[...piece.stopByBend,1],gaugeSideByBend:[...piece.gaugeSideByBend,'auto']},true);};
  $('resetOrder').onclick=()=>changePiece({...piece,order:piece.angles.map((_,i)=>i)},true);
  for(const value of [1,2])$('chooseGauge'+value).onclick=()=>{
@@ -820,7 +826,7 @@ function renderEditor(){
   changePiece({...piece,flanges,angles,order,stopByBend,gaugeSideByBend},true);};actionCell.append(remove);}row.append(actionCell);tb.append(row);
  });
  const seq=$('sequence');seq.replaceChildren();
- piece.order.forEach((id,i)=>{const c=document.createElement('div');c.className='seq-card';const text=document.createElement('div');const b=document.createElement('b');b.textContent=(i+1)+'. Pliegue '+(id+1);const small=document.createElement('span');small.textContent=' '+(piece.angles[id]>0?'+':'')+piece.angles[id]+'°';text.append(b,small);const up=document.createElement('button');up.textContent='←';up.title='Hacer antes';up.disabled=!i;up.onclick=()=>reorder(i,-1);const down=document.createElement('button');down.textContent='→';down.title='Hacer después';down.disabled=i===piece.order.length-1;down.onclick=()=>reorder(i,1);c.append(text,up,down);seq.append(c);});
+ piece.order.forEach((id,i)=>{const c=document.createElement('div');c.className='seq-card';const text=document.createElement('div');const b=document.createElement('b');b.textContent=(i+1)+'. Pliegue '+(id+1)+' (G'+(i+1)+'→P'+(id+1)+')';const small=document.createElement('span');small.textContent=' '+(piece.angles[id]>0?'+':'')+piece.angles[id]+'°';text.append(b,small);const up=document.createElement('button');up.textContent='←';up.title='Hacer antes';up.disabled=!i;up.onclick=()=>reorder(i,-1);const down=document.createElement('button');down.textContent='→';down.title='Hacer después';down.disabled=i===piece.order.length-1;down.onclick=()=>reorder(i,1);c.append(text,up,down);seq.append(c);});
 }
 function reorder(i,delta){const order=[...piece.order];[order[i],order[i+delta]]=[order[i+delta],order[i]];changePiece({...piece,order},true);}
 function touchOrderMessage(message){
@@ -1188,6 +1194,27 @@ function renderFlatBendRows(){
  }
 }
 function renderDevelopment(){
+ const c=compareCybelecOmega(piece),comparison=$('cybelecDevelopmentCompare');
+ if(comparison){
+  const orderText=c.executionOrder.map(op=>'G'+op.operation+'→P'+op.bend).join(' · ');
+  const geomText=c.geometryOrder.map(x=>'P'+x.bend+' '+(x.angle>0?'+':'')+x.angle+'°').join(' · ');
+  if(!c.sameGeometry){
+   comparison.textContent='La pieza actual no coincide con las cinco alas/ángulos de las fotos. '+
+    'Referencia de caras: '+geomText+'. Orden actual de golpes: '+orderText+'.';
+  }else if(!c.compatibleDie||piece.datum!=='outside'){
+   comparison.textContent='Geometría de las fotos reconocida; para comparar DIN 233,94 mm selecciona '+
+    'matriz V16/30° y cotas exteriores. Desarrollo actual: '+numbers(c.estimated,2)+
+    ' mm. Secuencia actual: '+orderText+'.';
+  }else{
+   const delta=c.delta;
+   comparison.textContent='DIN Cybelec: '+numbers(c.expected,2)+' mm · PlegadoX: '+
+    numbers(c.estimated,2)+' mm · Diferencia: '+(delta>0?'+':'')+numbers(delta,2)+
+    ' mm · Ri asumido: '+numbers(c.radius,2)+' mm · K: '+numbers(c.k,4)+
+    '. Orden en pantalla: '+geomText+'. Golpes simulados: '+orderText+
+    '. K equivalente '+numbers(c.referenceKEquivalent,4)+
+    ' solo reproduce numéricamente el DIN fotografiado; NO es una calibración de material.';
+  }
+ }
  const d=development(piece),check=geometryReport(),force=estimateAirBendForce(piece);
  const items=[['Nominal',d.nominal,'mm'],['Desarrollo',d.length,'mm'],
   ['Deducción total',d.totalBD,'mm'],['Radio interior',d.radius,'mm'],
@@ -1309,6 +1336,12 @@ function renderSimulationText(){
  }
 
  $('phaseText').textContent=sim.blocked?'⚠ CHAPA / PUNZÓN · POSIBLE PENETRACIÓN 2D · REVISAR PRESENTACIÓN':st.completed?'Pieza final · secuencia completada':st.phase+' · pliegue '+(st.activeBend+1)+' ('+(a>0?'+':'')+a+'°)';
+ const mapping=$('cybelecSequenceHint');
+ if(mapping){
+  mapping.textContent='P1…P'+piece.angles.length+' = pliegues numerados en el perfil Cybelec. '+
+   'Orden de golpes: '+piece.order.map((bend,i)=>'G'+(i+1)+'→P'+(bend+1)).join(' · ')+
+   '. Los números del plano no acreditan esta secuencia física.';
+ }
  $('stepText').textContent='Golpe '+st.finished+'/'+st.count;
  $('foldedCount').textContent=st.finished+' de '+st.count+' pliegues';
  $('timeline').value=Math.round(1000*st.time/st.duration);
@@ -1323,13 +1356,13 @@ function renderSimulationText(){
      const el=document.createElement('button');
      el.type='button';el.className='op';el.dataset.step=String(i);
      el.setAttribute('aria-label','Ver golpe '+(i+1)+' · pliegue '+(bend+1));
-     const n=document.createElement('span');n.className='op-num';n.textContent=String(i+1);
+     const n=document.createElement('span');n.className='op-num';n.textContent='G'+(i+1);
      const visual=document.createElement('span');visual.className='op-preview';
      const angle=piece.angles[bend];
      const outline=bendPreviewPath(angle);
      visual.innerHTML='<svg viewBox="0 0 70 52" aria-hidden="true" focusable="false"><defs><linearGradient id="pgrad'+i+'" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e8f6ff"/><stop offset=".45" stop-color="#7897ae"/><stop offset="1" stop-color="#3f566b"/></linearGradient></defs><path d="'+outline+'" stroke="url(#pgrad'+i+')" stroke-width="8" stroke-linejoin="round" stroke-linecap="round" fill="none"/><path d="'+outline+'" stroke="#a9e4ff" stroke-width="1.5" fill="none"/></svg>';
      const values=document.createElement('span');values.className='op-values';
-     const a=document.createElement('strong');a.textContent=(angle>0?'+':'')+angle+'°';
+     const a=document.createElement('strong');a.textContent='P'+(bend+1)+' · '+(angle>0?'+':'')+angle+'°';
      const l=document.createElement('small');l.textContent='L = '+numbers(piece.flanges[bend+1],1)+' mm';
      const g=document.createElement('small');
      const r=gaugeReference(piece,bend);
