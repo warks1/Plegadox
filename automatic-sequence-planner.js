@@ -38,7 +38,7 @@ function gaugeCounts(report){
 function prepare(piece,options={}){
  const p=normalized(piece),maxCandidates=p.order.length<=4?
   24:Math.min(120,Math.max(1,Math.trunc(options.maxCandidates??60)));
- const all=sequenceCandidates(p.order,maxCandidates);
+ const all=options.lockOrder?[[...p.order]]:sequenceCandidates(p.order,maxCandidates);
  const sheet=all.map((order,index)=>({order,index,score:scoreBendOrder(p,order)}));
  // Nunca discriminar por chapa si hay sólo 4 golpes: comparar TODOS los
  // órdenes también contra punzón/matriz/tope para hallar mejoría SOLO de útiles.
