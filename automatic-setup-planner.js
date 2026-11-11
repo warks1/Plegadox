@@ -11,6 +11,7 @@
 import {normalized} from './engine.js';
 import {recommendTooling} from './tooling-advisor.js';
 import {planBendSequenceAsync,SEQUENCE_LIMITATIONS} from './automatic-sequence-planner.js';
+import {reviewMachine3DSweep} from './machine-3d-broadphase.js';
 
 export const SETUP_LIMITATIONS=
  'Selección orientativa basada en apertura V, ángulo, ala mínima, fuerza '+
@@ -62,6 +63,7 @@ export function setupCandidates(input,{pairs,limit=4,includeReverse=true}={}){
  */
 export async function planCompleteSetup(input,options={}){
  const original=normalized(input),baselineKey=JSON.stringify(original);
+ const machine3D=reviewMachine3DSweep(options.machineFrames||[]);
  const availableSetups=setupCandidates(original,{pairs:options.toolPairs,
   limit:options.maxSetups??3,includeReverse:options.includeReverse!==false});
  const candidates=options.lockTools===true?{
@@ -112,9 +114,10 @@ export async function planCompleteSetup(input,options={}){
  // Incluso cuando mejora un aviso, se mantiene estado "no verificado".
  const canPropose=Boolean(best&&best.usable&&
   best.plan.best.hard===0&&best.plan.finalRisks.cross===0&&
-  best.plan.finalRisks.overlap===0);
+  best.plan.finalRisks.overlap===0&&
+  machine3D.possibleContacts?.length===0);
  return {input:original,baseline,best,results,chosen,changes,foundAlternative,
-  canPropose,checked:results.length,available:candidates.available,
+  canPropose,machine3D,checked:results.length,available:candidates.available,
   eligiblePairs:candidates.eligiblePairs,coverage:{
    ordersPerSetup:cap,fullRequested:options.full===true,
    setupsChecked:results.length,setsAvailable:candidates.available
