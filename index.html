@@ -99,6 +99,14 @@
 <div id="toolAdvisorOptions" class="px-advisor-options"></div>
 <p class="hint">Guía preliminar para plegado al aire: V/e, ala mínima ≈ 0,7 × V cerca de 90° y fuerza de referencia. <strong>No comprueba</strong> amarres, carga máxima de cada útil, radio exacto, colisiones 3D, topes, ni compatibilidad CNC. Comprueba las fichas de fabricante y realiza una prueba de taller antes de fabricar.</p>
 </article>
+<article class="card px-tool-advisor" id="integratedPlannerPanel" aria-labelledby="integratedPlannerTitle">
+<div class="cardhead"><h2 id="integratedPlannerTitle">Planificador conjunto · herramientas + orden</h2><span class="smalllabel">REVISIÓN AUTOMÁTICA · ELECCIÓN MANUAL SIEMPRE DISPONIBLE</span></div>
+<p class="hint">Se ejecuta para la pieza activa, las muestras, las importadas y las piezas guardadas al abrirlas. Compara parejas del catálogo, secuencias, orientación de pata de cabra y muestras 2D de chapa, punzón, matriz y topes. Nunca sobrescribe tus decisiones sin pulsar «Aplicar».</p>
+<div id="integratedPlannerStatus" class="px-advisor-result" role="status" aria-live="polite">Preparando comparación conjunta…</div>
+<div id="integratedPlannerOptions" class="px-advisor-options"></div>
+<div class="inline-actions"><button type="button" class="mini" id="applyIntegratedPlan" disabled>Aplicar herramientas y orden recomendados</button></div>
+<p class="hint"><strong>Seguridad:</strong> la mesa, la trancha, los amarres, los volúmenes 3D, los recorridos CNC y las fuerzas admisibles por útil no están validados con CAD real. Ninguna recomendación significa «sin colisiones garantizado» ni autoriza fabricación. Se muestran las incertidumbres y se mantiene el control manual.</p>
+</article>
 <article class="card px-workshop-audit" id="workshopAuditPanel" aria-labelledby="workshopAuditTitle">
 <div class="cardhead"><h2 id="workshopAuditTitle">Auditoría técnica previa a taller</h2><span class="smalllabel">SIN CERTIFICACIÓN CNC</span></div>
 <div id="workshopAuditStatus" class="px-audit-status" role="status" aria-live="polite">Analizando datos de la pieza...</div>
