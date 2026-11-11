@@ -38,6 +38,7 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Comprobar pantallas, selección y simulación
         run: |
+          node tests/titanium-cybelec-browser-smoke.mjs
           node tests/browser-smoke.mjs
           node tests/responsive-smoke.mjs
           node tests/studio-smoke.mjs
@@ -74,7 +75,6 @@ jobs:
           node tests/pwa-offline-smoke.mjs
           node tests/tool-dxf-browser-smoke.mjs
           node tests/punch-orientation-r27-smoke.mjs
-          node tests/titanium-cybelec-browser-smoke.mjs
       - name: Guardar capturas de escritorio y móvil
         if: always()
         uses: actions/upload-artifact@v4
