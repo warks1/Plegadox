@@ -75,6 +75,7 @@ export async function planCompleteSetup(input,options={}){
   if(pair.eligible){
    try{
     plan=await evaluate(trial,{deepLimitFour:cap,maxDeepCandidates:cap,
+     lockOrder:options.lockOrder===true,
      maxCandidates:options.maxCandidates??60,
      toolSamples:options.toolSamples??2,gaugeSamples:options.gaugeSamples??8,
      cancelled:options.cancelled});
@@ -106,7 +107,9 @@ export async function planCompleteSetup(input,options={}){
  }:{die:false,punch:false,orientation:false,order:false};
  const foundAlternative=Object.values(changes).some(Boolean);
  // Incluso cuando mejora un aviso, se mantiene estado "no verificado".
- const canPropose=Boolean(best&&!best.plan.finalRisks.cross&&!best.plan.finalRisks.overlap);
+ const canPropose=Boolean(best&&best.usable&&
+  best.plan.best.hard===0&&best.plan.finalRisks.cross===0&&
+  best.plan.finalRisks.overlap===0);
  return {input:original,baseline,best,results,chosen,changes,foundAlternative,
   canPropose,checked:results.length,available:candidates.available,
   eligiblePairs:candidates.eligiblePairs,coverage:{
