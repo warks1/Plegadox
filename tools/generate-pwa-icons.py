@@ -79,7 +79,7 @@ def write_png(size):
                 rgb = [0, 0, 0]
             rows.extend((*rgb, alpha))
     ihdr = struct.pack(">IIBBBBB", size, size, 8, 6, 0, 0, 0)
-    encoded = (b"\\x89PNG\\r\\n\\x1a\\n" + chunk(b"IHDR", ihdr) +
+    encoded = (b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", ihdr) +
                chunk(b"IDAT", zlib.compress(rows, level=9)) +
                chunk(b"IEND", b""))
     dest = ROOT / f"icon-{size}.png"
