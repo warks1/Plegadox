@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>PlegadoX | TITANIUM · Pantalla de carga animada</title>
+<style>
+:root{color-scheme:dark;--icy:#8de9ff;--blue:#46bbff;--silver:#c8d6e6;--dim:#7c98b0;--ink:#050914}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#060b13;color:#f3f9ff;font-family:Inter,Segoe UI,Arial,sans-serif;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse 55% 55% at 50% 52%,#14416b40,transparent 78%),linear-gradient(116deg,#070c17,#101e30 48%,#040810);z-index:-2}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.27;background:repeating-linear-gradient(115deg,transparent 0 2px,#c4e9ff05 2px 4px),linear-gradient(90deg,transparent 49.94%,#92cfff14 50%,transparent 50.06%);z-index:-1}
+.ambient{position:fixed;inset:-25%;pointer-events:none;background:conic-gradient(from 100deg at 50% 48%,transparent,#57b3f312,transparent,#9bd4ff10,transparent);filter:blur(90px);animation:rot 25s linear infinite;z-index:-1}@keyframes rot{to{transform:rotate(360deg)}}
+.shell{width:min(100%,1680px);min-height:100vh;margin:auto;padding:clamp(18px,3vw,48px) clamp(20px,4.2vw,78px) 21px;display:flex;flex-direction:column;position:relative}
+.top{display:flex;align-items:center;justify-content:space-between;gap:14px;z-index:4}.company{display:flex;align-items:center;gap:12px;color:#c8dbeb;font-size:12px;letter-spacing:.21em;font-weight:730}.logo{width:34px;height:34px;display:grid;place-items:center;border:1px solid #9fdfff6e;background:linear-gradient(135deg,#11273c,#263d52 48%,#060f1f);box-shadow:inset 0 0 12px #b8dfff20,0 0 16px #4ebdff18;transform:rotate(-45deg)}.logo span{transform:rotate(45deg);font-size:21px;font-weight:900;color:#b3e5ff}.version{font-size:11px;font-weight:700;letter-spacing:.18em;color:#87a5ba}.version b{color:#9ceaff;border:1px solid #5ea5c74f;padding:9px 12px;margin-right:13px;background:#73c7ff0a}
+.hero{margin-top:clamp(20px,3vh,40px);text-align:center;z-index:3}.eyebrow{font-size:clamp(9px,1vw,13px);letter-spacing:.42em;color:#86cee9;font-weight:800}.brand{margin:7px 0 0;font-size:clamp(58px,8.7vw,136px);line-height:1;font-weight:900;letter-spacing:-.078em;filter:drop-shadow(0 18px 34px #0009)}.brand .metal{background:linear-gradient(176deg,#f8fbff 7%,#b2c4d6 20%,#f1f6fa 36%,#687e95 56%,#dceefa 66%,#fff 91%);-webkit-background-clip:text;background-clip:text;color:transparent}.brand .x{color:#a8efff;text-shadow:0 0 6px #37b4ff88,0 0 37px #158fe155;display:inline-block;transform:skew(-6deg);padding-right:.06em}
+.subtitle{margin-top:8px;font-weight:620;letter-spacing:.47em;color:#a1b2c4;font-size:clamp(9px,1.05vw,13px)}
+.machineFrame{position:relative;flex:1;min-height:350px;margin-top:8px;border:1px solid #6085a23e;overflow:hidden;background:linear-gradient(180deg,#06131f77,#081321c2 38%,#091424ab);box-shadow:inset 0 1px #c1e8ff1b,inset 0 -1px #64adcf22,0 28px 65px #0006;clip-path:polygon(0 0,98.6% 0,100% 18px,100% 100%,1.3% 100%,0 calc(100% - 18px))}
+.machineFrame::before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,transparent,#72d5ff0a,transparent);animation:sweep 7s ease-in-out infinite}@keyframes sweep{0%,100%{transform:translateX(-90%)}52%{transform:translateX(90%)}}
+.gridlines{position:absolute;inset:0;opacity:.27;background-image:linear-gradient(#77adce22 1px,transparent 1px),linear-gradient(90deg,#77adce22 1px,transparent 1px);background-size:43px 43px;mask-image:linear-gradient(to bottom,transparent,#000 12%,#000 90%,transparent)}
+.hudTop{position:absolute;top:20px;left:27px;right:27px;display:flex;justify-content:space-between;align-items:flex-start;z-index:2;pointer-events:none}.hudTop .code{font-size:10px;letter-spacing:.17em;color:#79c7e7;font-weight:800}.hudTop .meta{font-size:11px;letter-spacing:.09em;color:#8b9dad;margin-top:6px}.live{display:flex;gap:9px;align-items:center;color:#a2dfff;font-size:10px;letter-spacing:.18em;font-weight:800}.live i{width:6px;height:6px;border-radius:50%;background:#7cf8fc;box-shadow:0 0 12px #63f5ff;animation:blink 1.3s infinite}@keyframes blink{50%{opacity:.3}}
+.machine{position:absolute;inset:6% 3% 3%;width:94%;height:91%;filter:drop-shadow(0px 24px 21px #0008)}
+#punchGroup{filter:drop-shadow(0 0 13px #6bcfff23)}#sheetFront{filter:drop-shadow(0px 1px 7px #5fe3ff88)}
+.mark{font-family:Consolas,monospace;fill:#6fa3c2;font-size:12px;letter-spacing:1.5px}.angle{fill:#b3ecff;font-size:32px;font-family:Consolas,monospace;font-weight:700}.gauge{position:absolute;bottom:20px;left:27px;right:27px;z-index:3;display:flex;justify-content:space-between;align-items:flex-end;gap:18px;pointer-events:none}.technical{display:flex;gap:28px}.technical .k{font-size:9px;letter-spacing:.19em;color:#6997ad;font-weight:800}.technical .v{font-family:Consolas,monospace;font-size:17px;color:#ccedff;margin-top:5px}.rightCode{text-align:right;color:#7793a8;letter-spacing:.12em;font:10px/1.8 Consolas,monospace}
+.btm{padding:21px 2px 8px;position:relative;z-index:4}.loadingline{display:flex;justify-content:space-between;align-items:end;gap:14px}.loadingline .small{font-size:10px;color:#63a5c6;letter-spacing:.24em;font-weight:850}.loadingline .message{font-size:clamp(13px,1.6vw,19px);letter-spacing:.055em;font-weight:670;margin-top:7px}.pct{font:700 clamp(28px,4vw,48px)/1 Consolas,monospace;color:#dff9ff;text-shadow:0 0 22px #76e6ff56}.progressBack{position:relative;height:12px;background:linear-gradient(180deg,#14293e,#07121e);border:1px solid #588ca880;padding:2px;margin-top:16px;box-shadow:inset 0 1px 7px #000a}.progress{height:100%;width:0;background:linear-gradient(90deg,#2375b1,#47bfff 55%,#d7faff);box-shadow:0 0 13px #54cfff9c,0 0 19px #30c0ffa0;position:relative}.progress:after{content:"";position:absolute;right:0;top:-4px;width:3px;height:13px;background:#f0ffff;box-shadow:0 0 16px #a4fcff}.ticks{display:flex;justify-content:space-between;color:#647b94;font:10px Consolas,monospace;margin-top:7px}.bottomline{display:flex;justify-content:space-between;gap:15px;align-items:center;margin-top:18px;border-top:1px solid #4c78912b;padding-top:13px}.copyright{color:#788fa5;font-size:11px;letter-spacing:.065em}.footerRight{display:flex;align-items:center;gap:18px}.footerRight .edition{font-size:10px;letter-spacing:.2em;color:#577c98}.replay{cursor:pointer;display:inline-flex;align-items:center;gap:8px;color:#c3ebfa;font:800 11px Segoe UI,Arial,sans-serif;letter-spacing:.08em;background:#12314c88;border:1px solid #72bbdb65;padding:10px 13px;transition:.2s}.replay:hover{border-color:#abefff;background:#1a466a}.replay:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.corner{position:absolute;width:24px;height:24px;z-index:2;pointer-events:none}.c1{left:0;top:0;border-top:2px solid #91dfff;border-left:2px solid #91dfff}.c2{right:0;bottom:0;border-bottom:2px solid #91dfff;border-right:2px solid #91dfff}
+@media(max-width:720px){.shell{padding:17px 13px 19px}.company{font-size:9px;letter-spacing:.12em}.version{font-size:8px;letter-spacing:.08em}.version b{padding:7px;margin-right:0}.version .word{display:none}.hero{margin-top:30px}.eyebrow{letter-spacing:.20em}.brand{font-size:clamp(50px,13vw,82px)}.subtitle{letter-spacing:.2em;font-size:9px}.machineFrame{min-height:295px;flex:0 0 40vh;margin-top:24px}.machine{width:130%;left:-15%;inset:8% auto 5% -15%;height:86%}.hudTop{left:12px;right:12px;top:14px}.hudTop .meta{display:none}.gauge{left:12px;right:12px;bottom:13px}.technical{gap:14px}.technical .k{font-size:8px}.technical .v{font-size:13px}.rightCode{display:none}.bottomline{align-items:flex-start}.copyright{font-size:9px;max-width:65%;line-height:1.5}.footerRight .edition{display:none}.replay{font-size:10px;padding:9px 11px}.bottomline{margin-top:18px}}
+@media(max-height:760px) and (min-width:721px){.shell{padding-top:19px}.hero{margin-top:6px}.brand{font-size:clamp(55px,7vw,102px)}.machineFrame{min-height:280px}.btm{padding-top:13px}.bottomline{margin-top:11px}}
+@media(prefers-reduced-motion:reduce){.ambient,.machineFrame::before,.live i{animation:none}}
+
+/* Adaptación responsive fiel al arte original, sin ocultar detalles del HUD */
+@media(max-width:720px){
+ .top{flex-wrap:wrap;justify-content:space-between}
+ .machine{width:100%;height:91%;inset:6% 0 3% 0}
+ .hudTop .meta{display:block;font-size:8px;line-height:1.25}
+ .rightCode{display:block;font-size:8px}
+ .version .word{display:inline;font-size:8px}
+ .technical{gap:9px}
+ .gauge{gap:8px}
+}
+@media(max-width:460px){
+ .top{justify-content:center;text-align:center;gap:8px}
+ .company{justify-content:center}
+ .version{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap}
+ .machineFrame{min-height:265px;margin-top:14px}
+ .gauge{bottom:8px}
+ .technical .v{font-size:12px}
+ .brand{font-size:clamp(42px,12.5vw,76px)}
+ .bottomline{gap:8px}
+}
+@media(max-height:530px) and (min-width:721px){
+ .shell{padding:8px 16px 13px}
+ .hero{margin-top:2px}
+ .brand{font-size:clamp(35px,10vh,58px)}
+ .subtitle{margin-top:2px}
+ .machineFrame{min-height:205px;margin-top:4px}
+ .machine{inset:1.5% 3% 2%;height:96%}
+ .hudTop{top:8px}
+ .gauge{bottom:8px}
+ .btm{padding:6px 2px 3px}
+ .progressBack{margin-top:7px}
+ .bottomline{margin-top:6px;padding-top:5px}
+ .ticks{margin-top:3px}
+}
+</style>
+</head>
+<body>
+<div class="ambient"></div>
+<div class="shell">
+<header class="top"><div class="company"><div class="logo" aria-hidden="true"><span>⌁</span></div><span>A.M.S TECNOLIGICS</span></div><div class="version"><b>02 · TITANIUM</b><span class="word">INDUSTRIAL EDITION · 2026</span></div></header>
+<section class="hero"><div class="eyebrow">INGENIERÍA DE PLEGADO DE NUEVA GENERACIÓN</div><h1 class="brand"><span class="metal">PLEGADO</span><span class="x">X</span></h1><div class="subtitle">LA PRECISIÓN TOMA FORMA</div></section>
+<main class="machineFrame" aria-label="Animación de una chapa de acero doblándose mediante un punzón sobre matriz en V">
+<div class="gridlines"></div><i class="corner c1"></i><i class="corner c2"></i>
+<div class="hudTop"><div><div class="code">MÓDULO / SIMULACIÓN CINEMÁTICA</div><div class="meta">PRENSA PLEGADORA · MATRIZ V · PERFIL TRANSVERSAL</div></div><div class="live"><i></i> ANIMACIÓN EN TIEMPO REAL</div></div>
+<svg class="machine" viewBox="0 0 1000 590" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="El punzón baja y dobla la chapa dentro de la matriz en V, después regresa y repite">
+<defs>
+ <linearGradient id="beam" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#a9bdcd"/><stop offset=".09" stop-color="#4b647d"/><stop offset=".18" stop-color="#1d3850"/><stop offset=".60" stop-color="#0d1e30"/><stop offset=".88" stop-color="#526d82"/><stop offset="1" stop-color="#9bb4c6"/></linearGradient>
+ <linearGradient id="punch" x1="0" y1="0" x2="1" y2=".9"><stop stop-color="#e3f4ff"/><stop offset=".12" stop-color="#a4bccc"/><stop offset=".29" stop-color="#526f84"/><stop offset=".48" stop-color="#c8d9e4"/><stop offset=".61" stop-color="#243f58"/><stop offset=".9" stop-color="#819bae"/><stop offset="1" stop-color="#d6efff"/></linearGradient>
+ <linearGradient id="die" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d4e2ec"/><stop offset=".07" stop-color="#7995a7"/><stop offset=".2" stop-color="#29445a"/><stop offset=".49" stop-color="#0d2235"/><stop offset=".83" stop-color="#47687e"/><stop offset="1" stop-color="#acc9dc"/></linearGradient>
+ <linearGradient id="sheet" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#f5fcff"/><stop offset=".22" stop-color="#d9eefe"/><stop offset=".44" stop-color="#8dc5e2"/><stop offset=".6" stop-color="#2c8cbd"/><stop offset=".81" stop-color="#a8e7ff"/><stop offset="1" stop-color="#edfaff"/></linearGradient>
+ <linearGradient id="sheetTop" x1="0" x2=".85" y1="0" y2="1"><stop stop-color="#e5f7ff"/><stop offset=".3" stop-color="#9ac8e5"/><stop offset=".8" stop-color="#36799f"/><stop offset="1" stop-color="#e4fcff"/></linearGradient>
+ <radialGradient id="halo"><stop stop-color="#0bb6ff" stop-opacity=".33"/><stop offset=".75" stop-color="#3cb9ff" stop-opacity=".07"/><stop offset="1" stop-opacity="0"/></radialGradient>
+ <filter id="soft"><feGaussianBlur stdDeviation="7"/></filter>
+ <pattern id="ribs" width="15" height="25" patternUnits="userSpaceOnUse"><path d="M2 0 V25" stroke="#d4edff" stroke-opacity=".08" stroke-width="2"/></pattern>
+</defs>
+<!-- Machine cavity lights & architecture -->
+<ellipse cx="500" cy="385" rx="445" ry="255" fill="url(#halo)"/>
+<g opacity=".55" stroke="#5ebce8" fill="none">
+ <circle cx="500" cy="344" r="245" stroke-opacity=".10" stroke-dasharray="2 12"/>
+ <circle cx="500" cy="344" r="188" stroke-opacity=".11" stroke-dasharray="23 14"/>
+ <path d="M500 75 V540 M105 365 H895" stroke-opacity=".11" stroke-dasharray="7 9"/>
+ <path d="M120 192 H880 M120 514 H880" stroke-opacity=".08"/>
+</g>
+<g opacity=".9">
+ <path d="M115 130 H885 L906 145 V184 H94 V145Z" fill="url(#beam)" stroke="#b1defb" stroke-opacity=".45" stroke-width="2"/>
+ <path d="M115 130 L140 112 H860 L885 130Z" fill="#5d7587"/>
+ <path d="M94 153 H906" stroke="#d8f4ff" stroke-opacity=".32"/>
+ <path d="M112 187 V483 H155 V199 M845 199 V483 H888 V187" fill="none" stroke="#446179" stroke-opacity=".36" stroke-width="18"/>
+ <g fill="#9fdbf7"><circle cx="162" cy="160" r="3"/><circle cx="835" cy="160" r="3"/></g>
+ <path d="M226 149 H774" stroke="#35bfff" stroke-opacity=".5" stroke-width="3"/>
+</g>
+<!-- Machine bed, die base -->
+<ellipse cx="500" cy="550" rx="345" ry="35" fill="#000" opacity=".50" filter="url(#soft)"/>
+<path d="M198 536 H802 L830 554 L807 572 H191 L167 554 Z" fill="#0a1728" stroke="#719ab0" stroke-opacity=".4" stroke-width="2"/>
+<path d="M192 544 H808 V557 H192Z" fill="#344f62"/><path d="M205 544 H795" stroke="#b7d8ee" stroke-opacity=".42" stroke-width="3"/>
+<!-- perspective top edge of V-die -->
+<path d="M280 390 L317 372 L379 372 L528 487 L650 372 L713 372 L739 390 L674 390 L500 521 L326 390Z" fill="#43677e" stroke="#8bc8e6" stroke-opacity=".36"/>
+<path d="M264 391 L330 391 L500 521 L670 391 L736 391 L736 539 L264 539 Z" fill="url(#die)" stroke="#b9daf0" stroke-opacity=".61" stroke-width="3"/>
+<path d="M264 391 L330 391 L500 521 L670 391 L736 391" fill="none" stroke="#dcefff" stroke-opacity=".85" stroke-width="5" stroke-linejoin="round"/>
+<path d="M264 399 L328 399 L500 530 L672 399 L736 399" fill="none" stroke="#0a1d30" stroke-opacity=".75" stroke-width="3"/>
+<path d="M275 410 V530 M725 410 V530" stroke="#e2f4ff" stroke-opacity=".16" stroke-width="2"/>
+<path d="M265 530 H735" stroke="#a2c5d9" stroke-opacity=".53" stroke-width="5"/>
+<g opacity=".55" fill="#9cc4df"><circle cx="282" cy="523" r="3"/><circle cx="718" cy="523" r="3"/><circle cx="300" cy="415" r="3"/><circle cx="700" cy="415" r="3"/></g>
+<!-- Blank metal sheet; SVG path coordinates are updated per frame. -->
+<g id="metalSheet">
+ <path id="sheetBack" fill="#457ea0" opacity=".68" d=""/>
+ <path id="sheetTopFace" fill="url(#sheetTop)" stroke="#dcf6ff" stroke-width="1.4" stroke-opacity=".7" d=""/>
+ <path id="sheetFront" fill="url(#sheet)" stroke="#b3efff" stroke-width="1.7" stroke-linejoin="round" d=""/>
+ <path id="sheetHighlight" d="" fill="none" stroke="#f8ffff" stroke-opacity=".95" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+ <path id="sheetShadow" d="" fill="none" stroke="#13618f" stroke-opacity=".65" stroke-width="4"/>
+</g>
+<!-- moving upper ram and punch -->
+<g id="punchGroup">
+ <rect x="431" y="182" width="138" height="59" rx="4" fill="url(#beam)" stroke="#bce5fa" stroke-opacity=".64" stroke-width="2"/>
+ <rect x="446" y="217" width="108" height="31" fill="#1b3e57" stroke="#9acde2" stroke-opacity=".5"/>
+ <path d="M452 241 H548 V273 L517 327 L500 341 L483 327 L452 273 Z" fill="url(#punch)" stroke="#dbf4ff" stroke-opacity=".78" stroke-width="2.3"/>
+ <path d="M500 341 V260" stroke="#e6faff" stroke-opacity=".4" stroke-width="1.8"/>
+ <path d="M452 253 H548" stroke="#effdff" stroke-opacity=".6" stroke-width="2"/>
+ <rect x="464" y="188" width="72" height="9" fill="#75cefd" opacity=".28"/>
+ <path d="M446 226 H554" stroke="#4fbaff" stroke-opacity=".67" stroke-width="3"/>
+ <g fill="#a2c8dd"><circle cx="447" cy="204" r="3"/><circle cx="552" cy="204" r="3"/></g>
+</g>
+<g fill="#7ad8ff" opacity=".7"><path d="M161 336 H227 M773 336 H838" stroke="#6aaed9" stroke-width="1.5"/><path d="M161 328 V344 M838 328 V344" stroke="#6aaed9" stroke-width="1.5"/></g>
+<text x="120" y="310" class="mark">Y1 / Y2</text><text x="755" y="310" class="mark">TOOL V90</text>
+<g transform="translate(110 440)"><text class="mark">ÁNGULO</text><text id="angleText" x="0" y="43" class="angle">0.0°</text><text x="0" y="61" class="mark">OBJ. 90.0°</text></g>
+<g transform="translate(752 443)"><text class="mark">MATERIAL</text><text x="0" y="27" class="mark" style="fill:#d2ecfb">S235 · 2.0 MM</text><text x="0" y="45" class="mark">V / 24</text></g>
+</svg>
+<div class="gauge"><div class="technical"><div><div class="k">OPERACIÓN</div><div class="v" id="opCode">FORMACIÓN</div></div><div><div class="k">CONTROL</div><div class="v">CNC / READY</div></div></div><div class="rightCode">CORE · GEOMETRY ENGINE<br>HUD PROFILE 02/TI</div></div>
+</main>
+<section class="btm" aria-label="Progreso de carga"><div class="loadingline"><div><div class="small">SISTEMA DE INICIALIZACIÓN</div><div class="message" id="status">Preparando geometría de chapa y herramientas…</div></div><div class="pct" id="percent" aria-live="off">00%</div></div><div class="progressBack" role="progressbar" aria-label="Carga de PlegadoX" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressArea"><div class="progress" id="progress"></div></div><div class="ticks"><span>00 / INICIO</span><span>CONTROL · HERRAMIENTAS · CINEMÁTICA</span><span>100 / LISTO</span></div><footer class="bottomline"><span class="copyright">© 2026 A.M.S Tecnoligics · Todos los derechos reservados. Software propietario.</span><div class="footerRight"><span class="edition">PRECISION ENGINEERING INTERFACE</span><button id="replay" class="replay" aria-label="Reproducir animación desde el principio">↻ &nbsp;REPRODUCIR</button></div></footer></section>
+</div>
+<script>
+(()=>{'use strict';
+const $=(id)=>document.getElementById(id);
+const nodes={metal:$('metalSheet'),back:$('sheetBack'),top:$('sheetTopFace'),front:$('sheetFront'),line:$('sheetHighlight'),shadow:$('sheetShadow'),punch:$('punchGroup'),angle:$('angleText'),op:$('opCode'),status:$('status'),pct:$('percent'),progress:$('progress'),area:$('progressArea')};
+const smooth=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x);};
+const lerp=(a,b,t)=>a+(b-a)*t;
+function sheetPath(p){
+ // Each section moves into the die while the short free ends remain supported.
+ const y0=384, yCenter=384+129*p, l=330, r=670;
+ const top=[[196,y0],[l,y0],[500,yCenter],[r,y0],[804,y0]];
+ const down=top.map(([x,y])=>[x,y+9]);
+ const poly=a=>a.map((v,i)=>(i?'L':'M')+v[0].toFixed(2)+','+v[1].toFixed(2)).join(' ');
+ nodes.front.setAttribute('d',poly(top)+' '+poly(down.slice().reverse()).replace(/^M/,'L')+' Z');
+ nodes.line.setAttribute('d',poly(top));nodes.shadow.setAttribute('d',poly(down));
+ const off=top.map(([x,y])=>[x+23,y-13]);
+ nodes.top.setAttribute('d',poly(off)+' '+poly(top.slice().reverse()).replace(/^M/,'L')+' Z');
+ nodes.back.setAttribute('d',poly(off)+' '+poly(down.slice().reverse()).replace(/^M/,'L')+' Z');
+}
+// A synchronized, repeatable loading demonstration. Actual app integration can
+// call window.PlegadoXLoading.setProgress(0..100) and finish() when ready.
+let start=performance.now(),hold=false,manual=0,externalStatus=null;
+const duration=11200;
+function render(ms){
+ let t=(ms%duration)/duration;
+ // Approach, bend into V, hold, retract, reset. Punch moves with formed sheet.
+ // First the ram meets the flat sheet, then the sheet follows the punch into the die.
+ // After bending, the ram retracts but the newly formed sheet retains its angle.
+ const bendPhase=smooth((t-.14)/.37);
+ let bend=t<.14?0:t<.51?bendPhase:t<.95?1:0;
+ const approach=t<.12?40*smooth(t/.12):40;
+ let down=t<.14?approach:t<.51?40+129*bendPhase:t<.64?169:t<.83?169*(1-smooth((t-.64)/.19)):0;
+ const exiting=t>=.83&&t<.95;
+ const exit=exiting?smooth((t-.83)/.12):0;
+ const reenter=t>=.95?smooth((t-.95)/.05):1;
+ sheetPath(bend);
+ nodes.metal.setAttribute('transform',exiting?`translate(${(exit*275).toFixed(2)} ${(-exit*158).toFixed(2)})`:t>=.95?`translate(${(-180*(1-reenter)).toFixed(2)} 0)`:'translate(0 0)');
+ nodes.metal.style.opacity=exiting?String(1-smooth((t-.89)/.06)):t>=.95?String(reenter):'1';
+ nodes.punch.setAttribute('transform',`translate(0 ${down.toFixed(2)})`);
+ nodes.angle.textContent=(bend*90).toFixed(1)+'°';
+ nodes.op.textContent=t<.14?'POSICIONAR':t<.51?'PLEGAR':t<.64?'ÁNGULO / OK':t<.83?'RETORNO':t<.95?'DESCARGAR':'REPOSO';
+ const progress=manual===null?Math.min(100,Math.floor(t*101)):manual;
+ nodes.pct.textContent=String(progress).padStart(2,'0')+'%';
+ nodes.progress.style.width=progress+'%';nodes.area.setAttribute('aria-valuenow',String(progress));
+ const status=progress<22?'Preparando geometría de chapa y herramientas…':progress<48?'Calculando trayectorias y secuencia de plegado…':progress<72?'Sincronizando simulación CNC en tiempo real…':progress<96?'Verificando colisiones y parámetros de máquina…':'PlegadoX listo para comenzar.';
+ nodes.status.textContent=externalStatus??status;
+}
+function tick(now){if(!hold)render(now-start);requestAnimationFrame(tick)}
+requestAnimationFrame(tick);
+$('replay').addEventListener('click',()=>{hold=false;start=performance.now();render(0)});
+window.PlegadoXLoading={setProgress(value){manual=Math.max(0,Math.min(100,Number(value)||0));},setStatus(value){externalStatus=String(value??'');nodes.status.textContent=externalStatus;},automatic(){manual=null;},finish(){manual=100;hold=true;render(10000);externalStatus='PlegadoX listo para comenzar.';nodes.status.textContent=externalStatus;},restart(){manual=null;hold=false;start=performance.now();render(0);},pause(){hold=true;},resume(){hold=false;start=performance.now();}};
+// Used only for deterministic offline video export; no external dependencies.
+window.__setPreview=(normalized)=>{hold=true;manual=null;render(Math.min(0.99999,Math.max(0,normalized))*duration);};
+})();
+</script>
+</body>
+</html>
