@@ -62,8 +62,11 @@ export function setupCandidates(input,{pairs,limit=4,includeReverse=true}={}){
  */
 export async function planCompleteSetup(input,options={}){
  const original=normalized(input),baselineKey=JSON.stringify(original);
- const candidates=setupCandidates(original,{pairs:options.toolPairs,
+ const availableSetups=setupCandidates(original,{pairs:options.toolPairs,
   limit:options.maxSetups??3,includeReverse:options.includeReverse!==false});
+ const candidates=options.lockTools===true?{
+  ...availableSetups,selected:availableSetups.selected.slice(0,1)
+ }:availableSetups;
  const results=[];
  const evaluate=options.plan||planBendSequenceAsync;
  const cap=options.full===true?24:Math.max(1,Math.min(8,options.ordersPerSetup??2));
