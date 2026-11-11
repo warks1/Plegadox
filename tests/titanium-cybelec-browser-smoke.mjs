@@ -15,11 +15,14 @@ try{
   const splash=page.locator('#pxTitaniumSplash');
   await splash.waitFor({state:'visible',timeout:30000});
   assert.equal(await splash.isVisible(),true,view.name+': el splash aparece al entrar');
-  const original=page.frameLocator('#pxSplashReference');
-  await original.locator('#sheetFront').waitFor({state:'attached'});
-  assert.match(await original.locator('.company').textContent(),/A\.M\.S TECNOLIGICS/);
-  assert.match(await original.locator('.version').textContent(),/02 · TITANIUM/);
-  assert.equal(await original.locator('#punchGroup').count(),1);
+  const selected=page.frameLocator('#pxSplashReference');
+  const photo=selected.locator('#photo');
+  await photo.waitFor({state:'visible'});
+  await page.waitForFunction(()=>{
+   const img=document.querySelector('#pxSplashReference')?.contentDocument?.getElementById('photo');
+   return img?.complete&&img.naturalWidth===1672&&img.naturalHeight===941;
+  },null,{timeout:20000});
+  assert.equal(await selected.locator('#progress').getAttribute('role'),'progressbar');
   await splash.waitFor({state:'hidden',timeout:30000});
   await page.waitForFunction(()=>!!window.PLEGADOX_STATE,null,{timeout:30000});
   await page.locator('[data-tab="programacion"]').click();
