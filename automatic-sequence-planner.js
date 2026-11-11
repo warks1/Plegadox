@@ -30,7 +30,7 @@ function gaugeCounts(report){
   'sin-asiento':0,'referencia-interior':0};
  for(const op of report?.operations||[]){
   const kinds=new Set((op.findings||[]).map(f=>f.kind));
-  for(const kind of kinds)if(Object.hasOwn(counts,kind))counts[kind]++;
+  for(const kind of kinds)if(Object.prototype.hasOwnProperty.call(counts,kind))counts[kind]++;
  }
  return counts;
 }
@@ -55,7 +55,7 @@ function prepare(piece,options={}){
     0,Math.min(16,Math.max(2,Math.trunc(options.maxDeepCandidates??10))));
  const final=inspectProfile(profile(p,p.angles.map(()=>1)).points,p.thickness);
  const finalCounts={cross:0,overlap:0,touch:0,close:0};
- for(const hit of final)if(Object.hasOwn(finalCounts,hit.kind))finalCounts[hit.kind]++;
+ for(const hit of final)if(Object.prototype.hasOwnProperty.call(finalCounts,hit.kind))finalCounts[hit.kind]++;
  return {p,all,reviewed,finalCounts,finalIssues:final.length,options};
 }
 
@@ -66,8 +66,16 @@ function analyze(ctx,item){
  const current=normalized({...p,order:item.order});
  let tool=null,gauge=null,error=null;
  try{
-  tool=scoreToolOrder(current,item.order,toolSamples,
-   options.toolEvaluator||inspectSequenceTools);
+  // Un analizador que no devuelve todas las operaciones es DESCONOCIDO,
+  // nunca una aprobación vacía de ausencia de colisiones.
+  const evaluator=options.toolEvaluator||inspectSequenceTools;
+  tool=scoreToolOrder(current,item.order,toolSamples,(candidate,samples)=>{
+   const result=evaluator(candidate,samples);
+   if(!result||!Array.isArray(result.operations)||
+      result.operations.length!==current.order.length)
+    throw Error('El cribado punzón/matriz no devolvió todos los golpes');
+   return result;
+  });
   gauge=(options.gaugeEvaluator||scanGaugeSequence)(current,
    {samplesPerOperation:gaugeSamples});
   if(!gauge||!Array.isArray(gauge.operations)||
@@ -110,7 +118,15 @@ function finalize(ctx,results){
   a.order.join(',').localeCompare(b.order.join(',')))[0]||current;
  const improved=Boolean(best&&!best.unavailable&&current&&!current.unavailable&&
   cmp(best.riskVector,current.riskVector)<0);
- const automaticApplicable=improved&&
+ const nonIncreasingHard=Boolean(best&&current&&!best.unavailable&&!current.unavailable&&
+  best.sheet.counts.cross<=current.sheet.counts.cross&&
+  best.sheet.counts.overlap<=current.sheet.counts.overlap&&
+  best.tool.penetrationOperations<=current.tool.penetrationOperations&&
+  best.gauge.penetracion<=current.gauge.penetracion&&
+  best.gauge['chapa-detras']<=current.gauge['chapa-detras']&&
+  best.gauge['sin-asiento']<=current.gauge['sin-asiento']);
+ // No sustituir automáticamente una penetración por otra en otra herramienta.
+ const automaticApplicable=improved&&nonIncreasingHard&&
   best.hard<=current.hard&&ctx.finalCounts.cross===0&&ctx.finalCounts.overlap===0;
  return {
   current,best:best||current,order:improved?[...best.order]:[...ctx.p.order],
