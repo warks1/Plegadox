@@ -14,7 +14,8 @@ try{
   await page.waitForFunction(()=>!!window.PLEGADOX_STATE,null,{timeout:30000});
   await page.locator('[data-tab="programacion"]').click();
   const mode=page.locator('#sequencePlannerMode');
-  assert.equal(await mode.inputValue(),'auto');
+  assert.equal(await mode.inputValue(),'manual',
+   'La omega preprogramada 1→2→4→3 se respeta al abrir por primera vez');
   assert.equal(await page.locator('#sequenceAutoRecalculate').isVisible(),true);
   // Una corrección manual nunca puede ser reemplazada por el planificador.
   await page.locator('#resetOrder').click();
@@ -31,6 +32,11 @@ try{
   await page.waitForFunction(()=>document.querySelector('#sequenceAutoStatus').textContent
    .includes('Analizadas'),null,{timeout:60000});
   assert.equal(await page.locator('#sequenceAutoDetails').isVisible(),true);
+  // Una pieza nueva sí entra en Automático; el operario conserva siempre
+  // los botones para editar a mano la propuesta de la aplicación.
+  await page.locator('#newBtn').click();
+  assert.equal(await mode.inputValue(),'auto');
+  assert.equal((await page.evaluate(()=>window.PLEGADOX_STATE().piece.order)).length,1);
   assert.deepEqual(errors,[],device.name+': sin errores de navegador');
   await context.close();
  }
