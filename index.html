@@ -130,7 +130,27 @@
  <span><i class="sheet-amber" aria-hidden="true"></i> Ámbar: contacto puntual o separación inferior al espesor</span>
  <small>Vista geométrica 2D; NO certifica colisiones reales con máquina y utillaje.</small>
  </div><div class="summary" id="geometrySummary"></div><p class="hint">Vista final calculada desde la pieza recta; no se muestra una omega ya formada antes del primer golpe.</p></article></div>
-<article class="card"><div class="cardhead"><h2>Orden de plegado</h2><span class="smalllabel">Pulsa un pliegue para subirlo o bajarlo en la secuencia</span></div><p class="hint">En las fotos Cybelec se numeran las caras/pliegues del perfil (P1…P4), no necesariamente los golpes reales (G1…G4). La secuencia física se indica aparte.</p><div id="sequence" class="sequence"></div><div class="sequence-advisor"><div class="inline-actions"><button type="button" id="evaluateOrder">Analizar órdenes posibles (chapa 2D)</button><button type="button" id="applySuggestedOrder" disabled>Aplicar orden sugerido</button></div><p id="sequenceAdvice" role="status" aria-live="polite">Sin analizar este programa. La secuencia actual se conserva.</p><small>Comparación orientativa entre alas. NO evalúa accesibilidad de punzón, matriz, mesa, volteos ni carrera de máquina. No aplica nada sin pulsar «Aplicar».</small></div><p class="hint">La secuencia de operaciones no cambia el signo de cada pliegue. La forma final se obtiene aplicando únicamente los golpes ejecutados.</p></article>
+<article class="card"><div class="cardhead"><h2>Orden de plegado</h2><span class="smalllabel">Pulsa un pliegue para subirlo o bajarlo en la secuencia</span></div><p class="hint">En las fotos Cybelec se numeran las caras/pliegues del perfil (P1…P4), no necesariamente los golpes reales (G1…G4). La secuencia física se indica aparte.</p><div id="sequence" class="sequence"></div>
+<div class="sequence-auto-planner" id="sequenceAutoPlanner">
+ <div class="sequence-auto-header">
+  <div><strong><span aria-hidden="true">◇</span> PLANIFICADOR DE PLEGADO</strong>
+   <small>Analiza chapa, punzón, matriz y tope en las poses 2D disponibles</small></div>
+  <label class="sequence-mode-label" for="sequencePlannerMode">Control del orden
+   <select id="sequencePlannerMode" aria-label="Control del orden de plegado">
+    <option value="auto">Automático · proponer y aplicar mejoras</option>
+    <option value="manual">Manual · conservar mi orden</option>
+   </select>
+  </label>
+ </div>
+ <div id="sequenceAutoStatus" class="sequence-auto-status" role="status" aria-live="polite">Analizador preparado; comprobando el programa…</div>
+ <div id="sequenceAutoDetails" class="sequence-auto-details">Cualquier resultado será un cribado 2D orientativo, nunca una validación CNC.</div>
+ <div class="inline-actions">
+  <button type="button" id="sequenceAutoRecalculate">Recalcular colisiones y orden</button>
+  <button type="button" id="sequenceAutoApply" disabled>Aplicar alternativa manualmente</button>
+ </div>
+ <p class="hint">Siempre puedes tocar los pliegues o moverlos con las flechas para imponer otro orden. Al hacerlo se activa el modo Manual y no se sobrescribe tu elección. Los perfiles provisionales y el barrido discreto NO garantizan ausencia de colisiones reales.</p>
+</div>
+<div class="sequence-advisor"><div class="inline-actions"><button type="button" id="evaluateOrder">Analizar órdenes posibles (chapa 2D)</button><button type="button" id="applySuggestedOrder" disabled>Aplicar orden sugerido</button></div><p id="sequenceAdvice" role="status" aria-live="polite">Sin analizar este programa. La secuencia actual se conserva.</p><small>Comparación orientativa entre alas. NO evalúa accesibilidad de punzón, matriz, mesa, volteos ni carrera de máquina. No aplica nada sin pulsar «Aplicar».</small></div><p class="hint">La secuencia de operaciones no cambia el signo de cada pliegue. La forma final se obtiene aplicando únicamente los golpes ejecutados.</p></article>
 </section>
 <section class="panel active cockpit-page" id="tab-simulacion">
 <div class="cockpit-banner">
