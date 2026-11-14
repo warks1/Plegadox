@@ -107,6 +107,8 @@ export function removeMachineCad(storage,kind){
  */
 export function positionMachineCad(record,origin,options={}){
  const p=normalizeMachineCad(record);
+ if(p.unitsAssumed)
+  throw Error('Perfil CAD conservado pero excluido de colisiones: el DXF original no declaró milímetros ($INSUNITS=4). Reimporta el perfil con escala explícita.');
  if(p.machineConfigKey&&options.machine&&
   p.machineConfigKey!==machineConfigurationKey(options.machine))
   throw Error('CAD de '+p.kind+' no coincide con la revisión actual de cotas de máquina');
