@@ -31,11 +31,11 @@ try{
   assert.deepEqual(geometry.mirrored,geometry.old);
   assert.equal(geometry.mirrored[5].x,0,'la pestaña baja sale hacia la izquierda');
   assert.equal(geometry.mirrored[4].x,30,'la contrahuella que sube está detrás de la pestaña');
-  assert.equal(geometry.face.point.x,30,'apoyo sobre pestaña baja en Support');
-  assert.deepEqual(geometry.world[5],geometry.place.contact.from);
-  assert.deepEqual(geometry.world[4],geometry.place.contact.to);
-  assert.equal(geometry.face.from.y,geometry.face.to.y);
-  assert.equal(geometry.place.contact.point.y,geometry.place.point.y-1);
+  assert.equal(geometry.face.point.x,0,'cara frontal del dedo sin apoyo superior');
+  assert.deepEqual(geometry.world[0],geometry.place.contact.from);
+  assert.deepEqual(geometry.world[5],geometry.place.contact.to);
+  assert.equal(geometry.face.from.x,geometry.face.to.x);
+  assert.equal(geometry.place.contact.point.y,geometry.place.point.y);
   await page.screenshot({path:'test-results/support-orientation-'+device.name+'.png',fullPage:false});
   const input=page.locator('#machineSupportFields input[data-path="support.0"]');
   await input.fill('55');await input.dispatchEvent('change');
