@@ -107,7 +107,7 @@ export function sweptPrismAgainstStatic(from,to,staticBody){
   if(hit.unknown){unknown=true;continue;}
   if(hit.intersects)return {intersects:true,unknown:false,
    method:'linear-2.5d-xyz',
-   reason:'penetración modelada ENTRE poses en ventana de solape Z',
+   reason:'penetración modelada ENTRE posiciones en ventana de solape Z',
    crossingEdge:i,areaMm2:hit.area,zOverlapMm:depth,
    zWindow:[window.start,window.end]};
  }
