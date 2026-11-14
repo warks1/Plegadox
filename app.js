@@ -411,6 +411,8 @@ function configure(){
  $('completeProjectInput').onchange=async e=>{
   const file=e.target.files?.[0],status=$('completeProjectStatus');
   if(!file)return;
+  status.textContent='Validando copia seleccionada…';
+  status.dataset.state='pending';
   try{
    if(file.size>2*1024*1024)throw Error('La copia supera 2 MB');
    const restored=restoreProjectBackup(localStorage,await file.text());
