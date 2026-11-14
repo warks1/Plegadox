@@ -11,7 +11,7 @@ export const MOTION_AXES=Object.freeze(['Y1','Y2','X','R','Z1','Z2']);
 export function motionPieceKey(input){
  const p=normalized(input);
  const data=JSON.stringify([p.flanges,p.angles,p.order,p.material,
-  p.thickness,p.width,p.punch,p.die,p.punchOrientation,p.gaugeSideByBend]);
+  p.thickness,p.width,p.punch,p.die,p.punchOrientation,p.gaugeSideByBend,p.gaugeContactByBend]);
  // Clave de consistencia local (no firma criptográfica).
  let hash=2166136261;
  for(let i=0;i<data.length;i++){

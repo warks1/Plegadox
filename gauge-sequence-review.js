@@ -16,7 +16,7 @@ const make=(kind,time,scene,place)=>({
  reason:kind==='penetracion'?'Posible penetración 2D chapa/tope':
   kind==='holgura'?'Posible holgura 2D menor que el espesor':
   kind==='chapa-detras'?'Chapa por detrás de la cara frontal del tope':
-  kind==='sin-asiento'?'Chapa sin asiento válido en el escalón':
+  kind==='sin-asiento'?'Chapa sin apoyo o contacto válido en la cara frontal':
   'La referencia recae en un vértice interior, no en un borde libre'
 });
 /**
@@ -60,11 +60,11 @@ export function inspectGaugeOperation(piece,operation,{
   let kind=null;
   if(issue?.warning&&['penetracion','holgura'].includes(issue.kind))
    kind=issue.kind;
-  else if(approaching&&!transitioning&&place.freeEdge&&place.sheetInFront===false)
+  else if(approaching&&!transitioning&&(place.freeEdge||place.frontFlange)&&place.sheetInFront===false)
    kind='chapa-detras';
-  else if(approaching&&!transitioning&&place.freeEdge&&place.seat?.seated===false)
+  else if(approaching&&!transitioning&&(place.freeEdge||place.frontFlange)&&place.seat?.seated===false)
    kind='sin-asiento';
-  else if(approaching&&!transitioning&&place.freeEdge===false)
+  else if(approaching&&!transitioning&&place.freeEdge===false&&!place.frontFlange)
    kind='referencia-interior';
   times.push(time);
   if(kind){

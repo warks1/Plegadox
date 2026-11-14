@@ -9,8 +9,10 @@
 import {normalized,stage,presentedAtStage,presentedForMachine,gaugeReference,getTooling,development,clamp} from './engine.js';
 import {sectionPunch,sectionDie,sectionBounds} from './tool-profiles.js';
 import {contactKinematics,roundedCorner} from './bend-contact.js';
-import {gaugePlacement,gaugeContourAtContact} from './backgauge-placement.js';
+import {gaugePlacement,gaugeContourAtContact,gaugeFoldedFlangeFace} from './backgauge-placement.js';
 import {getV85} from './machine-config.js';
+import {predictGaugeRetract,previewGaugeRetractState,
+ adjustStageForPinch} from './gauge-retract-planner.js';
 
 const mm=v=>Number.isFinite(+v)?+v:0;
 const mPoint=(x,y)=>({x:mm(x),y:mm(y)});
@@ -36,10 +38,10 @@ export function technicalWorldBounds(scene){
  if(transition){
   // Reserva fija durante TODA la retirada: origen, destino y posición
   // posterior extrema. El perfil se TRASLADA rígido, nunca se espeja.
-  const withdraw=Math.max(transition.from.x,transition.to.x)+
-   Math.max(12,scene.die.opening||16);
+  const withdraw=Math.max(transition.from.x,transition.actualFrom?.x??-Infinity,
+   transition.to.x)+Math.max(12,scene.die.opening||16);
   for(const reference of [
-   transition.from,transition.to,
+   transition.from,transition.actualFrom||transition.from,transition.to,
    {x:withdraw,y:transition.from.y},{x:withdraw,y:transition.to.y}
   ]){
    const dx=reference.x-place.point.x,dy=reference.y-place.point.y;
@@ -54,8 +56,19 @@ export function technicalWorldBounds(scene){
   maxY:Math.max(...valid.map(pt=>pt.y))};
 }
 
-export function technicalScene(piece,instant=0){
- const p=normalized(piece),st=typeof instant==='number'?stage(p,instant):instant;
+export function technicalScene(piece,instant=0,options={}){
+ const p=normalized(piece);
+ let st=typeof instant==='number'?stage(p,instant):instant;
+ // Modelo del ciclo TRUMPF: sujetar en punto de pinzado, desplazar X,
+ // doblar DESPUÉS. No se envía jamás como orden CNC.
+ const retractPlan=!options.disableGaugeRetraction&&typeof instant==='number'?
+  predictGaugeRetract(p,st.activeOperation,time=>
+   technicalScene(p,time,{disableGaugeRetraction:true})):null;
+ st=adjustStageForPinch(st,retractPlan);
+ const relative=st.completed?1:(st.time%5)/5;
+ const gaugeRetraction=retractPlan?.required&&(relative<.84||
+  st.activeOperation===p.order.length-1)?
+  previewGaugeRetractState(retractPlan,relative):null;
  const tooling=getTooling(p),die=sectionDie(tooling.die),punch=sectionPunch(tooling.punch);
  const t=p.thickness;
  // One real-world coordinate system (millimetres, matrix top at y=0).
@@ -101,10 +114,19 @@ export function technicalScene(piece,instant=0){
  // anterior ANTES de retirar la chapa. El factor visual spin es
  // sólo para dibujar el giro de la CHAPA: nunca debe mover los ejes
  // X/R del TOPE ni cambiar su origen durante el mismo traslado.
- const fixedGaugePoint=setup.points[reference.sourceIndex];
+ // En alas verticales ya plegadas el control no debe posicionar el
+ // plano de parada sobre la FIBRA MEDIA: se requiere la cara exterior,
+ // e/2 más a la derecha. En cantos libres mantenemos X nominal.
+ // La geometría de preparación se guarda para el comprobador del tope.
+ const gaugeSetupSheet=setup.points.map(pt=>({
+  x:(feedMirror?-1:1)*pt.x,y:pt.y+p.thickness/2
+ }));
+ const fixedGaugePoint=gaugeSetupSheet[reference.sourceIndex];
+ const fixedFlange=gaugeFoldedFlangeFace(gaugeSetupSheet,
+  reference.sourceIndex,p.thickness);
  const gaugeAnchor={
-  x:(feedMirror?-1:1)*fixedGaugePoint.x,
-  y:fixedGaugePoint.y+p.thickness/2
+  x:fixedFlange?.faceX??fixedGaugePoint.x,
+  y:fixedGaugePoint.y
  };
  // El tope es un dedo rígido con ejes X/R: durante la retirada no debe
  // teletransportarse al cambiar de pliegue. Se RETRAE, se reposiciona
@@ -114,19 +136,27 @@ export function technicalScene(piece,instant=0){
   const nextReference=gaugeReference(p,nextBend);
   const nextFractions=[...st.fractions];nextFractions[nextBend]=0;
   const nextSetup=presentedForMachine(p,nextFractions,nextBend);
-  const nextPoint=nextSetup.points[nextReference.sourceIndex];
-  const target={x:(nextReference.side==='before'?-1:1)*nextPoint.x,
-   y:nextPoint.y+p.thickness/2};
+  const nextSheet=nextSetup.points.map(pt=>({
+   x:(nextReference.side==='before'?-1:1)*pt.x,
+   y:pt.y+p.thickness/2
+  }));
+  const nextPoint=nextSheet[nextReference.sourceIndex];
+  const nextFlange=gaugeFoldedFlangeFace(nextSheet,
+   nextReference.sourceIndex,p.thickness);
+  const target={x:nextFlange?.faceX??nextPoint.x,
+   y:nextPoint.y};
   const sub=(st.time/5)%1,raw=Math.max(0,Math.min(1,(sub-.84)/.16));
   const smooth=t=>t*t*(3-2*t);
-  const withdraw=Math.max(gaugeAnchor.x,target.x)+Math.max(12,die.opening||16);
+  const startX=gaugeAnchor.x+(retractPlan?.required?retractPlan.distanceMm:0);
+  const fromAnchor={x:startX,y:gaugeAnchor.y};
+  const withdraw=Math.max(startX,target.x)+Math.max(12,die.opening||16);
   const x=raw<.22?
-    gaugeAnchor.x+(withdraw-gaugeAnchor.x)*smooth(raw/.22):
+    startX+(withdraw-startX)*smooth(raw/.22):
     raw<.78?withdraw:
     withdraw+(target.x-withdraw)*smooth((raw-.78)/.22);
   const middle=smooth(Math.max(0,Math.min(1,(raw-.22)/.56)));
   gaugeTransition={point:{x,y:gaugeAnchor.y+(target.y-gaugeAnchor.y)*middle},
-   from:gaugeAnchor,to:target,raw,progress:middle,
+   from:gaugeAnchor,actualFrom:fromAnchor,to:target,raw,progress:middle,
    withdrawn:raw>=.22&&raw<=.78,nextBend};
  }
  const kinematics=contactKinematics({
@@ -158,10 +188,12 @@ export function technicalScene(piece,instant=0){
  // Include the selected punch, the V and all sheet wings in view bounds.
  const world=technicalWorldBounds({
   piece:p,stage:st,sheet,sheetDisplay,diePolygon,punchPolygon,die,
-  gaugeReference:reference,gaugeAnchor,gaugeTransition,feedMirrored:feedMirror
+  gaugeReference:reference,gaugeAnchor,gaugeTransition,gaugeRetraction,
+  feedMirrored:feedMirror
  });
  return {piece:p,stage:st,presentation,sheet,sheetDisplay,kinematics,diePolygon,punchPolygon,die,punch,
-         gaugeReference:reference,gaugeAnchor,gaugeTransition,feedMirrored:feedMirror,
+         gaugeReference:reference,gaugeAnchor,gaugeTransition,gaugeRetraction,
+         gaugeRetractPlan:retractPlan,gaugeSetupSheet,feedMirrored:feedMirror,
          dimensions:{opening:die.opening,dieAngle:die.angle,depth:die.depth,
            punchAngle:punch.angle,punchHeight:punch.height,
            punchTipDiameter:tooling.punch.tip,thickness:t,engagement},

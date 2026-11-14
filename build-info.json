@@ -1,6 +1,6 @@
 {
-  "build": "PLEGADOX-20261114-R36",
-  "version": "0.9.12",
-  "gauge": "cad-axis-geometry-sweep-r36",
-  "cache": "plegadox-static-0.9.12-axis-geometry-r36-b"
+  "build": "PLEGADOX-20261115-R37",
+  "version": "0.9.13",
+  "gauge": "v85-backgauge-front-contact-r37",
+  "cache": "plegadox-static-0.9.13-v85-front-dx-r37-mecos"
 }

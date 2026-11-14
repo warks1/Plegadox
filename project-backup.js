@@ -40,6 +40,10 @@ function checkedPiece(p){
  if(p.stopByBend!=null)
   check(Array.isArray(p.stopByBend)&&p.stopByBend.length===p.angles.length&&
    p.stopByBend.every(x=>x===1||x===2),'Selección de tope incoherente');
+ if(p.gaugeContactByBend!=null)
+  check(Array.isArray(p.gaugeContactByBend)&&p.gaugeContactByBend.length===p.angles.length&&
+   p.gaugeContactByBend.every(x=>x==='front'||x==='shelf'),
+   'Contacto frontal o superior por pliegue incoherente');
  if(p.gaugeSideByBend!=null)
   check(Array.isArray(p.gaugeSideByBend)&&p.gaugeSideByBend.length===p.angles.length&&
    p.gaugeSideByBend.every(x=>['before','after','auto'].includes(x)),'Referencia de apoyo incoherente');

@@ -17,34 +17,23 @@ test('los dos perfiles completos tienen escalones orientados a la izquierda, no 
   assert.equal(pts[2].x,values[1]);
  }
 });
-test('cara inferior STOP en contacto frontal, repisa y frente vertical SUPPORT a la vez',()=>{
+test('ambos topes detienen el CANTO por su cara frontal; nunca sobre escalón',()=>{
  const p=normalized(EXAMPLE),scene=technicalScene(p,.5),before=structuredClone(p);
  const a=gaugePlacement(scene,1),b=gaugePlacement(scene,2);
- const stop=gaugeContourAtContact(a,V85_FACTORY.stop);
- const support=gaugeContourAtContact(b,V85_FACTORY.support);
- assert.equal(a.sheetInFront,true,'STOP: chapa delante');
- assert.equal(b.sheetInFront,true,'SUPPORT: chapa delante');
- assert.equal(a.contact.surface,'vertical-front');
- assert.equal(b.contact.surface,'horizontal-top');
- assert.equal(a.contactEngaged,true);
- assert.equal(b.contactEngaged,true);
- assert.equal(a.contact.from.x,a.point.x);
- assert.equal(a.contact.to.x,a.point.x);
- // El canto termina exactamente en el extremo trasero del escalón.
- close(b.contact.to.x,b.point.x,'borde coincide con la contrahuella');
- close(b.contact.frontFace.from.x,b.point.x,'frente vertical bajo el canto');
- close(b.contact.frontFace.to.x,b.point.x,'frente vertical sobre el canto');
- // La CARA INFERIOR de chapa descansa SOBRE el escalón.
- close(b.contact.from.y,b.point.y-p.thickness/2,'cara superior de la repisa');
- close(b.contact.to.y,b.point.y-p.thickness/2,'repisas al mismo nivel');
- assert.ok(b.contact.from.x<b.point.x,'repisa entra bajo la chapa, hacia la izquierda');
- assert.ok(b.contact.frontFace.to.y>b.point.y,'contrahuella posterior sube para detener el canto');
- assert.deepEqual(stop[0],a.contact.from);
- assert.deepEqual(stop[5],a.contact.to);
- assert.deepEqual(support[5],b.contact.from);
- assert.deepEqual(support[4],b.contact.to);
- assert.deepEqual(support[3],b.contact.frontFace.to);
- assert.deepEqual(a.point,b.point,'Cambiar tipo de dedo no mueve la referencia de pieza');
+ for(const [n,place,values] of [[1,a,V85_FACTORY.stop],[2,b,V85_FACTORY.support]]){
+  const world=gaugeContourAtContact(place,values);
+  assert.equal(place.sheetInFront,true,'dedo '+n+' delante');
+  assert.equal(place.contact.surface,'vertical-front');
+  assert.equal(place.contactEngaged,true);
+  close(place.contact.from.x,place.point.x,'frente '+n);
+  close(place.contact.to.x,place.point.x,'frente '+n);
+  assert.deepEqual(world[0],place.contact.from);
+  assert.deepEqual(world[5],place.contact.to);
+  assert.ok(world.every(pt=>pt.x>=place.point.x-1e-8),
+   'Todo el dedo detrás de la chapa');
+  assert.equal(place.gaugeInterference.warning,false);
+ }
+ assert.deepEqual(a.point,b.point,'Cambiar dedo no cambia X/R nominal de la pieza');
  assert.deepEqual(p,before,'Sin modificar pieza, signos ni orden');
 });
 test('chapa llegando por detrás del tope NO puede anunciar apoyo válido aunque coincida el punto',()=>{

@@ -36,7 +36,7 @@ try{
    assert.equal(res.engaged,true);
    assert.equal(res.measured.valid,true);
    assert.match(res.label,/contacto nominal 2D/);
-   assert.match(res.label,/chapa sobre primer escalón|chapa contra cara frontal inferior/);
+   assert.match(res.label,/chapa contra cara frontal SUPPORT 2|chapa contra cara frontal inferior STOP 1/);
   }
   await page.locator('#timeline').evaluate(input=>{
    input.value='230';input.dispatchEvent(new Event('input',{bubbles:true}));

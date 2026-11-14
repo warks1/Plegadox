@@ -28,6 +28,7 @@ import {readProjectLibrary,saveLibraryPiece,getLibraryPiece,deleteLibraryPiece,s
 import {measurementKey,calibrationSuggestion,readMeasurements,createMeasurement,persistMeasurement,deleteMeasurement} from './workshop-measurements.js';
 import {loadImportedTools,registerImportedTools,persistImportedTool} from './tool-dxf.js';
 import {setupToolDxfImporter} from './tool-import-ui.js';
+import {setupToolCADAudit} from './tool-cad-audit.js';
 import {loadMachineCad} from './machine-cad.js';
 import {loadAxisMotion} from './machine-axis-motion.js';
 import {loadAxisMapping} from './machine-axis-geometry.js';
@@ -53,7 +54,7 @@ let integratedPlannerEpoch=0;
 let measurementInputKey=measurementKey(piece),lastSavedMeasurement=null;
 const geometryCache={key:null,result:null};
 function geometryReport(){
- const key=JSON.stringify([piece.flanges,piece.angles,piece.order,piece.thickness,piece.width,piece.material,piece.rmMPa,piece.punch,piece.die,piece.punchOrientation,piece.gaugeSideByBend,getV85().ramWidth,getV85().holderWidth]);
+ const key=JSON.stringify([piece.flanges,piece.angles,piece.order,piece.thickness,piece.width,piece.material,piece.rmMPa,piece.punch,piece.die,piece.punchOrientation,piece.gaugeSideByBend,piece.gaugeContactByBend,getV85().ramWidth,getV85().holderWidth]);
  if(key!==geometryCache.key){
   const report=analyzeSequence(piece),tools=inspectSequenceTools(piece,6),
    sheetScan=scanSheetSequence(piece,15);
@@ -245,13 +246,21 @@ function configure(){
   detachLibraryPiece();
   changePiece(cybelecReferencePreset(),true);
  };
- $('addFlange').onclick=()=>{if(piece.flanges.length>=20)return;changePiece({...piece,flanges:[...piece.flanges,50],angles:[...piece.angles,90],order:[...piece.order,piece.angles.length],stopByBend:[...piece.stopByBend,1],gaugeSideByBend:[...piece.gaugeSideByBend,'auto']},true);};
+ $('addFlange').onclick=()=>{if(piece.flanges.length>=20)return;changePiece({...piece,flanges:[...piece.flanges,50],angles:[...piece.angles,90],order:[...piece.order,piece.angles.length],stopByBend:[...piece.stopByBend,1],gaugeContactByBend:[...piece.gaugeContactByBend,'front'],gaugeSideByBend:[...piece.gaugeSideByBend,'auto']},true);};
  $('resetOrder').onclick=()=>changePiece({...piece,order:piece.angles.map((_,i)=>i)},true);
  for(const value of [1,2])$('chooseGauge'+value).onclick=()=>{
   const current=stopAtStage(piece,sim.time),modes=[...piece.stopByBend];
   modes[current.bend]=value;
   changePiece({...piece,stopByBend:modes},false);
  };
+ for(const mode of ['front','shelf']){
+  const id=mode==='front'?'chooseContactFront':'chooseContactShelf';
+  $(id).onclick=()=>{
+   const current=stopAtStage(piece,sim.time),modes=[...piece.gaugeContactByBend];
+   modes[current.bend]=mode;
+   changePiece({...piece,gaugeContactByBend:modes},false);
+  };
+ }
  for(const mode of ['auto','before','after']){
   const suffix=mode==='auto'?'Auto':mode==='before'?'Before':'After';
   $('chooseSide'+suffix).onclick=()=>{
@@ -1553,15 +1562,17 @@ function renderSimulationText(){
  const freeEnd=ref.sourceIndex===0||ref.sourceIndex===piece.flanges.length;
  const chosenGauge=gaugePlacement(technicalScene(piece,sim.time),gauge.value);
  $('activeGaugeReference').textContent=ref.label+' · '+numbers(ref.distance,1)+
-  ' mm nominales desde el pliegue · '+(gauge.value===2?'chapa sobre primer escalón SUPPORT 2':'chapa contra cara frontal inferior STOP 1')+
+  ' mm nominales desde el pliegue · '+(chosenGauge.contactMode==='shelf'?
+   'APOYO SUPERIOR manual · LAY ON FINGER':
+   'CONTACTO FRONTAL · chapa delante y tope detrás')+
    ' · '+(ref.side==='before'?'presentación invertida':'presentación directa')+
-  (freeEnd?' · borde libre':' · ⚠ vértice interior: verificar apoyo')+
-  (freeEnd&&!chosenGauge.sheetInFront?
+  (freeEnd?' · borde libre':chosenGauge.frontFlange?' · cara exterior de ala plegada':' · ⚠ vértice interior: verificar apoyo')+
+  ((freeEnd||chosenGauge.frontFlange)&&!chosenGauge.sheetInFront?
    ' · ⚠ CHAPA POR DETRÁS DEL TOPE: revisar presentación':'')+
   (chosenGauge.seat&&!chosenGauge.seat.seated?
    (chosenGauge.seat.required?
-    ' · ⚠ CHAPA SIN APOYO O SIN CONTRAHUELLA ÚTIL EN EL ESCALÓN':
-    ' · ⚠ CARA FRONTAL DEL TOPE SIN SOLAPE DE ESPESOR'):'')+
+    ' · ⚠ CHAPA SIN CARA DE PARADA ACCESIBLE':
+    ' · ⚠ CARA FRONTAL DEL TOPE SIN SOLAPE FÍSICO SUFICIENTE'):'')+
   (chosenGauge.gaugeInterference?.warning?
    ' · ⚠ POSIBLE INTERFERENCIA 2D DEL TOPE CON LA CHAPA: revisar apoyo y retirada':
    !chosenGauge.contactEngaged?' · sin contacto confirmado en esta fase':' · contacto nominal 2D')+
@@ -1575,6 +1586,11 @@ function renderSimulationText(){
  }
  for(const n of [1,2]){
   const btn=$('chooseGauge'+n),active=gauge.value===n;
+  btn.classList.toggle('selected',active);btn.setAttribute('aria-pressed',String(active));
+ }
+ for(const mode of ['front','shelf']){
+  const btn=$(mode==='front'?'chooseContactFront':'chooseContactShelf');
+  const active=chosenGauge.contactMode===mode;
   btn.classList.toggle('selected',active);btn.setAttribute('aria-pressed',String(active));
  }
 
@@ -1707,7 +1723,9 @@ setupToolDxfImporter({add:(tool,kind)=>{
  option.value=tool.id;option.textContent=tool.name;
  $(field).append(option);
  changePiece({...piece,[field]:tool.id},true);
+ window.dispatchEvent(new Event('plegadox:toolCADChanged'));
 }});
+setupToolCADAudit();
 window.PLEGADOX_STATE=()=>({piece,sim});
 window.PLEGADOX_MACHINE_VIEW=machineView;
 window.PLEGADOX_REDRAW=()=>paintAll();

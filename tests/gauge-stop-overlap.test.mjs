@@ -25,34 +25,32 @@ test('no aceptar STOP: una cara frontal minúscula no detiene un canto de espeso
  assert.equal(checked.required,false,'STOP no necesita apoyo horizontal');
  assert.match(checked.reason,/sin solape suficiente/);
 });
-test('no aceptar SUPPORT: la pared no llega a un cuarto del espesor en sección',()=>{
- const small=gaugeContactFeature([70,100,.3,25,12,8],2);
- const info=gaugeStopOverlap(small,2);
+test('no aceptar SUPPORT: una cara frontal excesivamente corta no puede parar el canto',()=>{
+ const tiny=gaugeContactFeature([70,100,24.8,25,12,8],2);
+ const info=gaugeStopOverlap(tiny,2);
  assert.equal(info.valid,false);
  assert.ok(info.overlap<info.minimum);
  const ref={sheet:[{x:0,y:1},{x:50,y:1}]},point={x:50,y:1};
- const seat=gaugeSeatAssessment(ref,1,ref.point,2,small);
+ const seat=gaugeSeatAssessment(ref,1,ref.point,2,tiny);
  assert.equal(seat.seated,false);
- assert.equal(seat.required,true);
- assert.match(seat.reason,/contrahuella sin solape/);
+ assert.equal(seat.required,false,'la parada frontal NO exige repisa horizontal');
+ assert.match(seat.reason,/sin solape suficiente/);
 });
-test('el espesor debe contar: misma pared puede no alcanzar un canto mucho más grueso',()=>{
+test('el espesor cuenta: la cara frontal debe solapar al menos 1/4 del canto',()=>{
  const sup=gaugeContactFeature(V85_FACTORY.support,2);
  assert.equal(gaugeStopOverlap(sup,2).valid,true);
- const heavy=gaugeStopOverlap(sup,40);
- assert.equal(heavy.overlap,8);
- assert.equal(heavy.minimum,10);
+ const heavy=gaugeStopOverlap(sup,80);
+ assert.equal(heavy.overlap,17);
+ assert.equal(heavy.minimum,20);
  assert.equal(heavy.valid,false);
 });
-test('pared vertical ausente o desviada no puede habilitar el apoyo',()=>{
+test('cara frontal desplazada o sin vértices nunca se acredita como apoyo',()=>{
  const sup=gaugeContactFeature(V85_FACTORY.support,2);
- assert.equal(gaugeStopOverlap({...sup,frontFace:null},2).valid,false);
- const moved={...sup,frontFace:{from:{x:40,y:-8},to:{x:40,y:0}}};
- assert.equal(gaugeStopOverlap(moved,2).valid,true,
-  'Sólo el solape vertical no valida el contacto horizontal del canto');
+ assert.equal(gaugeStopOverlap({...sup,from:null},2).valid,false);
+ const shifted={...sup,from:{...sup.from,x:4},to:{...sup.to,x:4}};
+ assert.equal(gaugeStopOverlap(shifted,2).valid,false);
  const flat={sheet:[{x:0,y:1},{x:50,y:1}]},p={x:50,y:1};
- assert.equal(gaugeSeatAssessment(flat,1,p,2,moved).seated,false,
-  'La pared debe empezar exactamente al terminar la repisa');
+ assert.equal(gaugeSeatAssessment(flat,1,p,2,shifted).seated,false);
 });
 test('referencia omega 1-2-4-3 conserva contactos nominales durante posicionamiento, no durante retirada',()=>{
  const piece=normalized(EXAMPLE);

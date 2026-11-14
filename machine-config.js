@@ -106,31 +106,35 @@ export function gaugeOutline(values,stopNumber=1){
  ];
 }
 /**
- * Caras de contacto diferenciadas en el croquis del control:
- * Stop 1: chapa frontal contra la cara inferior vertical del dedo.
- * Support 2: chapa ENCIMA del primer escalón horizontal.
- * El perfil físico NO se invierte al cambiar entre estas dos funciones.
- * Sin garantía de accesibilidad ni cinemática CNC.
+ * R37 · cara de PARADA frontal en ambos dedos para la simulación de
+ * plegado. La TrumaBend V permite apoyo sobre distintas repisas, pero
+ * ése es un MODO DE APOYO distinto, que no debe activarse por elegir
+ * solamente Stop 1 o Support 2: hacerlo colocaba las alas encima del
+ * dedo y generaba colisiones falsas en la omega.
+ *
+ * Convención: la chapa está a la IZQUIERDA del plano frontal X=0,
+ * y TODO el cuerpo del dedo queda a su DERECHA. Ni el contorno ni
+ * sus escalones se espejan. Geometría esquemática, NO CAD OEM.
  */
-export function gaugeContactFeature(values,stopNumber=1){
+export function gaugeContactFeature(values,stopNumber=1,mode='front'){
  const outline=gaugeOutline(values,stopNumber);
  const height=-Math.min(...outline.map(p=>p.y));
  const outer=Math.max(...outline.map(p=>p.x));
  const ledge=outline[4].x,stepDepth=-outline[4].y;
  const support=Number(stopNumber)===2;
- // STOP 1: borde o ala doblada contra frente izquierdo BAJO 0→5.
- // SUPPORT 2: chapa ENCIMA del saliente bajo 5→4, con el canto
- // detenido en el resalte VERTICAL 4→3 que sube por DETRÁS.
- // Un único perfil en ambos modos, sin espejar una parte.
- const from={...outline[support?5:0]};
- const to={...outline[support?4:5]};
- const point=support?{...to}:{x:0,y:-(height+stepDepth)/2};
+ const onShelf=mode==='shelf';
+ const from={...outline[onShelf?5:0]},to={...outline[onShelf?4:5]};
+ const point=onShelf?{...outline[4]}:{x:0,y:(outline[0].y+outline[5].y)/2};
  const usable=height>stepDepth&&stepDepth>0&&ledge>0&&ledge<outer;
- const frontFace=support?{from:{...outline[4]},to:{...outline[3]}}:
-  {from:{...outline[0]},to:{...outline[5]}};
- return {kind:support?'support-step':'stop-face',
-  surface:support?'horizontal-top':'vertical-front',frontFace,
-  label:support?'TOPE 2 · APOYO SOBRE PRIMER ESCALÓN':'TOPE 1 · CARA FRONTAL INFERIOR',
+ return {kind:onShelf?'support-step':support?'support-step':'stop-face',
+  mode:onShelf?'shelf':'front',
+  surface:onShelf?'horizontal-top':'vertical-front',
+  frontFace:onShelf?
+   {from:{...outline[4]},to:{...outline[3]}}:
+   {from:{...from},to:{...to}},
+  label:onShelf?'APOYO SUPERIOR MANUAL · LAY ON FINGER':
+   support?'TOPE 2 · CARA FRONTAL DEL DEDO (NO REPISA)':
+   'TOPE 1 · CARA FRONTAL INFERIOR',
   from,to,point,usable,verified:false};
 }
 /** Envolvente del perfil esquemático, sin interpretar una cota L como CAD. */

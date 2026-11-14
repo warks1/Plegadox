@@ -33,6 +33,35 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#060c16;col
  #percent{font-size:clamp(10px,3vh,18px)}
 }
 @media(prefers-reduced-motion:reduce){#fill{transition:none}}
+/* La fotografía elegida permanece SIN alteraciones; en vertical se
+   incorpora un visor miniatura ORIGINAL animado de una chapa en V. */
+#foldLive{display:none;position:fixed;left:50%;bottom:calc(155px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(83vw,400px);height:clamp(85px,17vh,165px);border:1px solid #6dbce344;border-radius:14px;background:linear-gradient(170deg,#0a1c30ed,#06101df2);box-shadow:0 0 35px #2aa4ff1c;overflow:hidden;z-index:2;pointer-events:none}
+#foldLive svg{display:block;width:100%;height:100%}
+#foldCaption{position:absolute;bottom:4px;left:0;right:0;text-align:center;color:#a8dff2;font-weight:800;font-size:clamp(8px,2vw,11px);letter-spacing:.15em}
+#animatedSheet{stroke:#a9e8ff;stroke-width:7;stroke-linecap:round;stroke-linejoin:round;fill:none;filter:drop-shadow(0 0 5px #34cfff)}
+#animatedPunch{fill:url(#titaniumPunch);stroke:#e7f9ff;stroke-width:1.5}
+@media(orientation:portrait) and (max-aspect-ratio:4/5){
+ /* La fotografía elegida YA lleva una barra dibujada. La anterior CSS
+    movía la barra REAL al pie y dejaba visible el porcentaje fijo: dos
+    barras contradictorias en el iPhone. La barra funcional debe TAPAR
+    la ilustrada, dentro de la foto y en la MISMA posición. */
+ #foldLive{display:block}
+ #frame{margin-top:0!important;transform:translateY(-18vh)}
+ #progress{position:absolute;left:10.76%;right:auto;top:81.4%;bottom:auto;
+  width:78.12%;height:7.2%;padding:0 .3%;gap:2%;border:0;
+  box-shadow:0 0 4px #050c16;background:linear-gradient(180deg,#07111b,#050d17 12%,#0b1928 52%,#050b14)}
+ #rail{height:67%;border-width:1px}
+ #percent{min-width:7.5%;font-size:clamp(9px,2.5vw,14px)}
+ #message{position:absolute;left:11.3%;right:auto;top:77.75%;bottom:auto;
+  max-width:75%;text-align:left;font-size:clamp(8px,2.5vw,13px);
+  text-shadow:0 0 5px #000;overflow:hidden;white-space:nowrap}
+ #screen::before{filter:blur(14px) brightness(.48) saturate(1.15)}
+}
+@media(orientation:portrait) and (max-height:620px){
+ #foldLive{height:80px;bottom:calc(130px + env(safe-area-inset-bottom))}
+ #frame{transform:translateY(-14vh)}
+}
+@media(prefers-reduced-motion:reduce){#foldLive animate,#foldLive animateTransform{display:none}}
 </style>
 </head><body>
 <main id="screen" role="status" aria-label="PlegadoX Premium, pantalla original elegida">
@@ -42,6 +71,17 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#060c16;col
 <div id="message" aria-live="polite">Cargando...</div>
 <div id="progress" role="progressbar" aria-label="Carga real de PlegadoX" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="rail"><div id="fill"></div></div><output id="percent">0%</output></div>
 </div>
+<div id="foldLive" aria-hidden="true">
+<svg viewBox="0 0 600 210" preserveAspectRatio="xMidYMid meet">
+<defs><linearGradient id="titaniumPunch" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#39566b"/><stop offset=".5" stop-color="#effbff"/><stop offset="1" stop-color="#1d445b"/></linearGradient></defs>
+<path d="M145 195 L225 195 L255 140 L300 184 L345 140 L375 195 L455 195" fill="none" stroke="#6d9dba" stroke-width="17" stroke-linejoin="round" opacity=".86"/>
+<g><path id="animatedPunch" d="M257 15 L343 15 L320 90 L300 120 L280 90 Z"/>
+<animateTransform attributeName="transform" type="translate" values="0 0;0 43;0 43;0 0;0 0" keyTimes="0;.34;.6;.8;1" dur="3.6s" repeatCount="indefinite" calcMode="linear"/></g>
+<path id="animatedSheet" d="M108 125 L300 125 L492 125">
+<animate attributeName="d" values="M108 125 L300 125 L492 125;M108 91 L300 164 L492 91;M108 91 L300 164 L492 91;M108 125 L300 125 L492 125;M108 125 L300 125 L492 125" keyTimes="0;.34;.6;.8;1" dur="3.6s" repeatCount="indefinite"/>
+</path>
+<circle cx="300" cy="125" r="2" fill="#fff" opacity=".65"/>
+</svg><span id="foldCaption">PLEGADOX · CINEMÁTICA DE PLEGADO</span></div>
 <button id="retry" type="button" onclick="window.parent.location.reload()">Reintentar inicio</button>
 </main>
 <script>
