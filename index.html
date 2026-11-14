@@ -171,6 +171,11 @@
 <p class="cp-disclaimer" role="note"><strong>Alcance técnico:</strong> PlegadoX no controla la máquina. Desarrollo, fuerza y detección de interferencias son estimaciones y deben verificarse con herramientas, planos y procedimiento de taller reales antes de fabricar.</p>
 </section>
 <section class="panel" id="tab-herramientas"><div class="page-title"><div><h1>Biblioteca de herramientas</h1><p>Perfiles paramétricos y perfiles DXF 2D aportados por el usuario. Comprueba siempre medidas y montaje.</p></div></div>
+<details class="card" id="toolCADAuditPanel"><summary>Inventario de herramientas y perfiles CAD pendientes</summary>
+<p id="toolCADAuditStatus" class="hint" role="status" aria-live="polite">Revisando referencias y geometrías importadas.</p>
+<div id="toolCADAuditItems" class="px-cad-inventory"></div>
+<p class="hint">El catálogo general y los perfiles DXF aportados son bibliotecas diferentes. Ninguna referencia pasa a ser un sólido CAD exacto solo por tener su altura, ángulo o radio. Verifica el amarre y la disponibilidad del útil antes de fabricar.</p>
+</details>
 <details class="card px-dxf-import" id="toolDxfPanel">
  <summary>Importar contorno de punzón o matriz desde DXF (mm)</summary>
  <p class="hint">DXF ASCII con un contorno cerrado: LWPOLYLINE (se admiten arcos bulge) o líneas LINE consecutivas, aunque estén desordenadas. Sin STEP, splines, bloques ni agujeros. El dibujo debe estar en perfil lateral, con base abajo (Y=0 al importar). No incorpora amarre ni verificación de seguridad.</p>
