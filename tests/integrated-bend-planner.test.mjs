@@ -27,6 +27,10 @@ test('la optimización compara punzón, matriz y secuencia sin alterar pieza',()
  assert.equal(report.candidatePairs,2);
  assert.equal(report.best.punchId,'goose','No elegir el útil con penetración detectada');
  assert.equal(report.best.toolPenetrations,0);
+ assert.equal(report.best.toolingMountVerified,false);
+ assert.equal(report.best.toolGeometryVerified,false);
+ assert.ok(report.best.toolProfileEvidence.punch);
+ assert.ok(report.best.toolProfileEvidence.die);
  assert.equal(report.manual.punchId,'straight88');
  assert.ok(report.manual.toolPenetrations>0);
  assert.equal(report.verified,false);

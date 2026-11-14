@@ -10,6 +10,7 @@ import {normalized,getTooling} from './engine.js';
 import {getV85,gaugeOutline} from './machine-config.js';
 import {gaugePlacement} from './backgauge-placement.js';
 import {sheetSolidMesh} from './sheet-solid.js';
+import {loadMachineCad,positionMachineCad} from './machine-cad.js';
 const EPS=1e-8;
 const v=(x,y)=>({x,y});
 const isFinitePoint=p=>p&&Number.isFinite(p.x)&&Number.isFinite(p.y);
@@ -104,8 +105,30 @@ function strip(a,b,t){
  return [v(a.x+nx,a.y+ny),v(b.x+nx,b.y+ny),
   v(b.x-nx,b.y-ny),v(a.x-nx,a.y-ny)];
 }
-export function buildVolumeScene(scene,{machine=getV85()}={}){
+export function buildVolumeScene(scene,{machine=getV85(),machineCAD=null}={}){
  const p=normalized(scene.piece);
+ // Los perfiles DXF sólo se usan si el fichero y su colocación están
+ // explícitamente dados. Las cotas L* no se convierten en CAD inventado.
+ let records=machineCAD||{};
+ let cadError=null;
+ if(machineCAD===null&&typeof localStorage!=='undefined'){
+  try{records=loadMachineCad(localStorage);}
+  catch(error){cadError=String(error?.message||error);}
+ }
+ const usedCAD=[];
+ const cadPrism=(kind,id,origin)=>{
+  if(!records[kind])return null;
+  try{
+   const located=positionMachineCad(records[kind],origin,{machine});
+   const prism=makePrism(id,located.polygon,located.zMin,
+    located.zMax,located.provenance);
+   if(prism.valid)usedCAD.push(kind);
+   return prism;
+  }catch(error){
+   cadError=kind+': '+String(error?.message||error);
+   return null;
+  }
+ };
  const width=p.width,half=width/2;
  // Compartir EXACTAMENTE el contorno de espesor del visor 3D,
  // incluyendo uniones de alas y radios representados, evitando dos
@@ -127,17 +150,21 @@ export function buildVolumeScene(scene,{machine=getV85()}={}){
   registered.punch?.profileAccuracy==='verified'?'perfil-acotado':'perfil-provisional');
  const diePrism=makePrism('matriz',scene.diePolygon,-dSpan/2,dSpan/2,
   registered.die?.profileAccuracy==='verified'?'perfil-acotado':'perfil-provisional');
- const top=scene.kinematics.tipHeight-scene.punch.height;
+ // La punta está a tipHeight y el perfil del punzón crece en +Y.
+ // Restar H colocaba la trancha BAJO el punzón (falso sólido de colisión).
+ const top=scene.kinematics.tipHeight+scene.punch.height;
  // ALZADO PROVISIONAL: alturas relativas proceden del dibujo actual del
  // portaherramientas, NO se deducen de L1=1340 mm como si fuese carrera.
  // Una L* sin referencia de caras no define por sí sola un sólido CAD.
  const ramHalf=(Number(machine.ram?.[6])||125)/2;
- const ram=makePrism('trancha-envolvente',rect(-ramHalf,top-65,
-  ramHalf,top+10),-(machine.ramWidth||2040)/2,(machine.ramWidth||2040)/2,
-  'envolvente-ilustrativa-sin-CAD');
+ const ram=cadPrism('ram','trancha-CAD',{x:0,y:scene.kinematics.tipHeight})||
+  makePrism('trancha-envolvente',rect(-ramHalf,top,
+   ramHalf,top+75),-(machine.ramWidth||2040)/2,(machine.ramWidth||2040)/2,
+   'envolvente-ilustrativa-sin-CAD');
  const bedHalf=(Number(machine.bed?.[1])||80)/2;
  const bottom=-scene.die.height;
- const bed=makePrism('mesa-envolvente',rect(-bedHalf,bottom-50,
+ const bed=cadPrism('bed','mesa-CAD',{x:0,y:0})||
+  makePrism('mesa-envolvente',rect(-bedHalf,bottom-50,
   bedHalf,bottom),-(machine.holderWidth||2040)/2,(machine.holderWidth||2040)/2,
   'envolvente-ilustrativa-sin-CAD');
  const stopNumber=p.stopByBend[scene.stage.activeBend]===2?2:1;
@@ -148,15 +175,20 @@ export function buildVolumeScene(scene,{machine=getV85()}={}){
   .map(q=>v(q.x+origin.x,q.y+origin.y));
  // Se desconoce el ancho y la posición Z del dedo real; adoptar el ancho
  // de pieza es una ENVOLVENTE CONSERVADORA de posible contacto, no su volumen.
- const gauge=makePrism('tope-'+stopNumber,gaugePolygon,-half,half,
-  'Z-del-dedo-desconocida-envolvente-conservadora');
+ const gauge=cadPrism(stopNumber===2?'support':'stop',
+  'tope-CAD-'+stopNumber,origin)||
+  makePrism('tope-'+stopNumber,gaugePolygon,-half,half,
+   'Z-del-dedo-desconocida-envolvente-conservadora');
  return {sheet:segments,objects:{punch:punchPrism,die:diePrism,ram,bed,gauge},
   gaugePlacement:placement,
+  cadProfilesUsed:usedCAD,cadImportError:cadError,
+  missingCadComponents:['ram','bed',stopNumber===2?'support':'stop']
+   .filter(k=>!usedCAD.includes(k)),
   geometryKnown:segments.every(s=>s.valid)&&punchPrism.valid&&diePrism.valid,
   provenance:{machineDimensions:'cotas Cybelec del usuario 30-10-2026',
-   ram:'envolvente del visor, no contorno CAD/amarre verificado',
-   bed:'envolvente del visor, no contorno CAD/amarre verificado',
-   gauge:'L1–L6 documentados, posición y anchura Z no verificadas',
+   ram:ram.provenance,
+   bed:bed.provenance,
+   gauge:gauge.provenance,
    punch:punchPrism.provenance,die:diePrism.provenance,
    machineTonnage:85,ramWidth:machine.ramWidth,holderWidth:machine.holderWidth,
    documentedDimensions:{
@@ -164,7 +196,8 @@ export function buildVolumeScene(scene,{machine=getV85()}={}){
     stopL:[...machine.stop],supportL:[...machine.support],
     toolWorkingDistance:machine.toolWorkingDistance
    },
-   geometryMapping:'Se utiliza ram L7 como anchura orientativa y mesa L2 como anchura orientativa; las demás cotas se conservan pero NO se convierten sin plano de caras referenciado.'},
+   geometryMapping:'Con CAD se utilizan los vértices/las referencias declaradas. Sin CAD hay envolventes provisionales. L1–L10 no se reinterpretan como posiciones CNC.',
+   cadProfilesUsed:usedCAD,cadImportError:cadError},
   verified:false};
 }
 /**

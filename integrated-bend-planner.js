@@ -22,6 +22,8 @@ const integer=(value,fallback,min,max)=>{
 const same=(a,b)=>a.length===b.length&&a.every((x,i)=>x===b[i]);
 const keyOf=p=>[p.dieId,p.punchId,p.orientation,p.order.join(',')].join('|');
 const weight=plan=>
+  (plan.axisViolations||0)*2000000+
+  (plan.axisModeledCollisions||0)*2000000+
   (plan.volumeMachineWarnings||0)*300000+
   (plan.volumeSweptSuspects||0)*10000+
   plan.toolPenetrations*1000000+
@@ -34,6 +36,13 @@ const weight=plan=>
   plan.sheetScore+
   plan.pairScore;
 const compare=(a,b)=>weight(a)-weight(b)||keyOf(a).localeCompare(keyOf(b));
+const toolProfileEvidence=tool=>{
+ if(!tool)return 'SIN_REFERENCIA_CAD';
+ if(tool.importedDxf===true)return 'DXF_USUARIO_AMARRE_NO_VERIFICADO';
+ if(tool.profileAccuracy==='verified'&&tool.verifiedSpecs===true)
+  return 'FICHA_ACOTADA_MONTAJE_NO_VERIFICADO';
+ return 'CONTORNO_PARAMETRICO_PROVISIONAL';
+};
 const stopProblems=scan=>{
  const operations=Array.isArray(scan?.operations)?scan.operations:[];
  let severe=0;
@@ -104,10 +113,15 @@ export function optimizeBendPlan(input,options={}){
    order:orderData.order,punchOrientation:orientation};
   const checked=scoreToolOrder(candidate,candidate.order,samples,
    toolEvaluator||undefined);
+  const profilePunch=toolProfileEvidence(punches.find(x=>x.id===pair.punchId));
+  const profileDie=toolProfileEvidence(dies.find(x=>x.id===pair.dieId));
   const counts=orderData.sheet.counts||{};
   return {
    dieId:pair.dieId,punchId:pair.punchId,orientation,order:[...orderData.order],
    dieName:pair.dieName,punchName:pair.punchName,source,
+   toolProfileEvidence:{punch:profilePunch,die:profileDie},
+   toolingMountVerified:false,
+   toolGeometryVerified:false,
    sheetScore:Number(orderData.sheet.score)||0,
    sheetCross:counts.cross||0,sheetOverlap:counts.overlap||0,
    sheetWarnings:Object.values(counts).reduce((sum,n)=>sum+(Number(n)||0),0),
@@ -117,6 +131,10 @@ export function optimizeBendPlan(input,options={}){
    gaugeWarnings:0,gaugePenetrations:0,gaugeContactNotObserved:0,
    gaugeChecked:false,gaugeError:null,
    volumeChecked:false,volumeMachineWarnings:0,volumeSweptSuspects:0,
+   axisChecked:false,axisViolations:0,axisStatus:'EJES_SIN_PROGRAMA_FISICO',
+   axisGeometryChecked:false,axisModeledCollisions:0,
+   axisGeometryStatus:'EJES_SIN_DATUM_CAD',axisGeometryUnresolved:0,
+   cadProfilesUsed:[],cadMissing:[],cadImportError:null,
    volumeFramesChecked:0,volumeStatus:'SIN_COMPROBAR',volumeError:null,
    machineWidthExceeded:widthExceeded,pairScore:Number(pair.score)||0,
    preliminary:true,verified:false
@@ -209,11 +227,22 @@ export function optimizeBendPlan(input,options={}){
     plan.volumeSweptSuspects=Number(scanned.uncertainSweptIntervals)||0;
     plan.volumeFramesChecked=Number(scanned.framesChecked)||0;
     plan.volumeStatus=scanned.status||'MODELO_PRELIMINAR';
+    plan.axisChecked=scanned.axisReport?.checked===true;
+    plan.axisViolations=Number(scanned.axisViolationCount)||0;
+    plan.axisStatus=scanned.axisReport?.status||'EJES_SIN_PROGRAMA_FISICO';
+    plan.axisGeometryChecked=scanned.axisGeometry?.checked===true;
+    plan.axisModeledCollisions=Number(scanned.axisModeledCollisions)||0;
+    plan.axisGeometryStatus=scanned.axisGeometry?.status||'EJES_SIN_DATUM_CAD';
+    plan.axisGeometryUnresolved=Number(scanned.axisGeometry?.unresolved)||0;
+    plan.cadProfilesUsed=scanned.cadProfilesUsed||[];
+    plan.cadMissing=scanned.missingCadComponents||[];
+    plan.cadImportError=scanned.cadImportError||null;
     plan.volumeChecked=true;
    }catch(error){
     plan.volumeError=error instanceof Error?error.message:String(error);
    }
-   plan.possibleInterference ||=plan.volumeMachineWarnings>0||
+   plan.possibleInterference ||=plan.axisViolations>0||plan.axisModeledCollisions>0||
+    plan.volumeMachineWarnings>0||
     plan.volumeSweptSuspects>0||!plan.volumeChecked;
    plan.score=weight(plan);
   }
@@ -230,6 +259,7 @@ export function optimizeBendPlan(input,options={}){
   plan.sheetCross>0||plan.sheetOverlap>0||
   plan.toolPenetrations>0||plan.gaugePenetrations>0||
   !plan.gaugeChecked||
+  plan.axisViolations>0||plan.axisModeledCollisions>0||
   (volumeEvaluator&&(!plan.volumeChecked||plan.volumeMachineWarnings>0));
  const best=finalists.find(plan=>plan.source==='automatico'&&
   !modeledBlockingRisk(plan))||null;

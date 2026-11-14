@@ -65,7 +65,7 @@ export function auditForWorkshop(input,options={}){
   if(!Number.isFinite(Number(t.maxLoadKNm))||Number(t.maxLoadKNm)<=0)
    push('load-'+kind,'missing','Falta el límite de carga por metro certificado de '+kind+' ('+t.name+').');
  }
- push('machine-3d','missing','Se dispone de cotas L1–L10/L1–L7 y anchos de la V85 Cybelec, pero NO de sólidos CAD completos ni trayectorias CNC verificadas de máquina, amarres y topes.');
+ push('machine-3d','missing','Se dispone de cotas L1–L10/L1–L7 de la V85 y de importación CAD opcional, pero NO de un conjunto de sólidos OEM, amarres y trayectorias CNC acreditados.');
  push('material-test','missing','Faltan ensayos/calibración de radios, recuperación elástica y deducciones con material/lote y útiles reales.');
  const toolScan=options.toolScan||inspectSequenceTools(p,3);
  const sheetScan=options.sheetScan||scanSheetSequence(p,8);
@@ -75,11 +75,26 @@ export function auditForWorkshop(input,options={}){
  });
  if(volumeScan.modeledMachineWarnings>0)
   push('volume-model','review',volumeScan.modeledMachineWarnings+
-   ' elemento(s) de máquina con posible interferencia de envolventes 3D extruidas (trancha, mesa o tope). Son CROQUIS y deben verificarse en máquina.');
+   ' elemento(s) de máquina con posible interferencia de sólidos 2,5D (trancha, mesa o tope). Se han podido utilizar CAD importados, pero no equivale a validar la máquina.');
+ if(volumeScan.linearSweptPenetrations>0)
+  push('volume-swept-linear','review',volumeScan.linearSweptPenetrations+
+   ' penetración(es) modelada(s) ENTRE poses del visor mediante barrido de traslación lineal 2,5D; no representa necesariamente el movimiento CNC real.');
+ if(volumeScan.axisViolationCount>0)
+  push('axis-travel-limits','block',volumeScan.axisViolationCount+
+   ' infracción(es) de límites o velocidad de la trayectoria CNC documentada. Revisar antes de cualquier operación.');
+ if(volumeScan.axisModeledCollisions>0)
+  push('axis-cad-sweep','block',volumeScan.axisModeledCollisions+
+   ' posible(s) interferencia(s) entre sólidos CAD y recorrido de ejes calibrado (sólo en fases declaradas de chapa inmóvil).');
+ if(volumeScan.axisGeometry?.unresolved>0)
+  push('axis-geometry-unknown','review',volumeScan.axisGeometry.unresolved+
+   ' tramo(s) o sólido(s) de ejes CAD con geometría/recorrido no resuelto.');
+ if((volumeScan.missingCadComponents||[]).length)
+  push('machine-cad-missing','missing','Faltan perfiles CAD para '+volumeScan.missingCadComponents.join(', ')+
+   '; se utilizan envolventes ilustrativas, nunca equivalentes al fabricante.');
  if(volumeScan.uncertainSweptIntervals>0)
   push('volume-swept','review',volumeScan.uncertainSweptIntervals+
    ' intervalo(s) del recorrido con cruce de envolventes barridas, sin colisión volumétrica continua resuelta.');
- push('volume-unverified','missing','La evaluación volumétrica usa cuerpos 2,5D, no sólidos OEM ni carrera de ejes X/R/Z ni volteos físicos verificados.');
+ push('volume-unverified','missing','La evaluación volumétrica combina cuerpos CAD 2,5D y envolventes provisionales; puede proyectar un recorrido CNC calibrado sólo sobre chapa inmóvil. No cubre completamente ambos dedos Z, amarres, volteos ni deformaciones reales.');
  if(toolScan.warningCount>0)
   push('tool-2d','review',toolScan.warningCount+' operación(es) con candidatos de interferencia 2D entre chapa y herramientas; inspeccionar cada golpe.');
  if(sheetScan.warningCount>0)
@@ -120,7 +135,10 @@ export function auditForWorkshop(input,options={}){
    gaugeWarnings:gaugeScan.warningCount,
    gaugeContactNotObserved:gaugeScan.contactNotObserved,
    volumeWarnings:volumeScan.modeledMachineWarnings,
-   volumeSweptIntervals:volumeScan.uncertainSweptIntervals},gaugeScan,volumeScan,
+   volumeSweptIntervals:volumeScan.uncertainSweptIntervals,
+   volumeSweptPenetrations:volumeScan.linearSweptPenetrations,
+   axisGeometryCollisions:volumeScan.axisModeledCollisions,
+   axisTravelViolations:volumeScan.axisViolationCount},gaugeScan,volumeScan,
   status:'SIN_VALIDACION_INDUSTRIAL',verified:false,canApproveForMachine:false,
-  limitations:'Volumetría extruida (2,5D) y recorrido temporal muestreado; sin volúmenes CAD OEM de mesa/trancha/mordazas, posición Z exacta de topes ni validación CNC. No autoriza fabricación.'};
+  limitations:'Sólidos extruidos 2,5D con CAD importado opcional; barridos lineales del visor y de ejes CNC sólo con datum explícito y chapa inmóvil. No existen sólidos OEM y amarres completos, control de ambos dedos, inclinación Y1/Y2, deformación real ni ensayo certificado. No autoriza fabricar.'};
 }

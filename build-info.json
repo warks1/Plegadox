@@ -1,6 +1,6 @@
 {
-  "build": "PLEGADOX-20261114-R35",
-  "version": "0.9.11",
-  "gauge": "bd-calibration-planner-splash-r35",
-  "cache": "plegadox-static-0.9.11-precision-r35"
+  "build": "PLEGADOX-20261114-R36",
+  "version": "0.9.12",
+  "gauge": "cad-axis-geometry-sweep-r36",
+  "cache": "plegadox-static-0.9.12-axis-geometry-r36-b"
 }

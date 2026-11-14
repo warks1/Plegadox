@@ -1,5 +1,5 @@
 // PlegadoX · caché offline estática. Se versiona para no arrastrar JS obsoleto.
-const CACHE='plegadox-static-0.9.11-precision-r35';
+const CACHE='plegadox-static-0.9.12-axis-geometry-r36-b';
 const APP_FILES=[
  "./",
  "./app.js",
@@ -30,6 +30,11 @@ const APP_FILES=[
  "./plegadox-premium-selected.png",
  "./machine-config.js",
  "./machine-editor.js",
+ "./machine-cad.js",
+ "./machine-cad-ui.js",
+ "./machine-axis-motion.js",
+ "./machine-axis-geometry.js",
+ "./swept-volume.js",
  "./machine-visual.js",
  "./manifest.webmanifest",
  "./pwa.js",

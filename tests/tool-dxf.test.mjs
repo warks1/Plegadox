@@ -14,6 +14,9 @@ const lw=(coords,closed=true)=>['0','LWPOLYLINE','8','PERFIL','90',String(coords
 const rectangle=()=>wrap(lw([[-20,100],[20,100],[20,0],[-20,0]]));
 const line=(x,y,x2,y2)=>['0','LINE','8','0','10',String(x),'20',String(y),
  '11',String(x2),'21',String(y2)];
+const arc=(cx,cy,r,start,end,extra=[])=>['0','ARC','8','PERFIL',
+ '10',String(cx),'20',String(cy),'40',String(r),
+ '50',String(start),'51',String(end),...extra];
 test('DXF ASCII cerrado conserva cotas y reubica el contorno en milímetros',()=>{
  const d=parseToolDxf(rectangle());
  assert.equal(d.width,40);
@@ -38,11 +41,30 @@ test('arcos bulge de LWPOLYLINE se muestrean sin cambiar la forma a un rectángu
 });
 test('rechaza unidades pulgadas, entidades no compatibles, contornos abiertos y autointersección',()=>{
  assert.throws(()=>parseToolDxf(wrap(lw([[-20,100],[20,100],[20,0],[-20,0]]),1)),/no milimétricas/);
- assert.throws(()=>parseToolDxf(wrap(['0','ARC','10','0','20','0','40','20'])),/ARC no admitida/);
+ assert.throws(()=>parseToolDxf(wrap(['0','ARC','10','0','20','0','40','20'])),/Ángulo inicial ARC/);
  assert.throws(()=>parseToolDxf(wrap(lw([[-20,100],[20,100],[20,0],[-20,0]],false))),/cerrada/);
  assert.throws(()=>parseToolDxf(wrap(lw([[-20,100],[20,0],[-20,0],[20,100]]))),/autointersecado|área/);
  assert.throws(()=>parseToolDxf(wrap([...line(0,0,40,0),...line(40,0,40,90),...line(40,90,0,90)])),/cerrar el contorno/);
  assert.throws(()=>validateContour([[-20,0],[20,0],[20,0],[-20,100]]),/duplicados/);
+});
+test('un perfil CAD con ARC real y LINE se ensambla por los extremos en cualquier orden',()=>{
+ const shape=wrap([
+  ...line(-20,0,20,0),
+  ...arc(0,80,20,0,180),
+  ...line(20,0,20,80),
+  ...line(-20,80,-20,0)
+ ]);
+ const parsed=parseToolDxf(shape);
+ assert.equal(parsed.width,40);
+ assert.ok(Math.abs(parsed.height-100)<.001);
+ assert.ok(parsed.points.length>20);
+ assert.equal(parsed.unitsAssumed,false);
+});
+test('un arco ARC OCS inclinado o sin ángulos no se importa como sección plana',()=>{
+ const base=[...line(-20,0,20,0),...line(20,0,20,80),
+  ...arc(0,80,20,0,180,['210','1']),...line(-20,80,-20,0)];
+ assert.throws(()=>parseToolDxf(wrap(base)),/fuera del plano XY|extrusión OCS/);
+ assert.throws(()=>parseToolDxf(wrap([...arc(0,80,30000,0,180)])),/800 puntos|dos segmentos/);
 });
 test('punch y matriz importados comparten el contorno DXF con la sección técnica (no CAD certificado)',()=>{
  const d=parseToolDxf(rectangle());

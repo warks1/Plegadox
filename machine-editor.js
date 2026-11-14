@@ -2,6 +2,7 @@
 // Las dimensiones editadas también actualizan la máquina dibujada en cabina.
 import {V85_FACTORY,getV85,updateV85,resetV85,gaugeOutline,gaugeBounds,gaugeContactFeature} from './machine-config.js';
 import {roundedRectPath} from './canvas-path.js';
+import {loadMachineCad,machineConfigurationKey} from './machine-cad.js';
 
 const $=id=>document.getElementById(id);
 const locale=n=>Number(n).toLocaleString('es-ES',{minimumFractionDigits:0,maximumFractionDigits:2});
@@ -127,6 +128,30 @@ function barCanvas(ctx,w,h,cfg,key){
  }
  label(ctx,key==='ram'?'TRANCHA · L1–L10':'MESA · L1–L7',10,18,11,'#9ddaf5');
 }
+/** Dibujar el CONTORNO DXF incorporado en lugar del gráfico paramétrico.
+ * Este dibujo es informativo: la referencia CAD todavía no está certificada.
+ */
+function cadCanvas(ctx,w,h,record){
+ const pts=record.points.map(([x,y])=>({x:x+record.offsetX,y:y+record.offsetY}));
+ const xs=pts.map(p=>p.x),ys=pts.map(p=>p.y);
+ const minX=Math.min(...xs),maxX=Math.max(...xs);
+ const minY=Math.min(...ys),maxY=Math.max(...ys);
+ const usableW=Math.max(2,w-54),usableH=Math.max(2,h-73);
+ const scale=Math.min(usableW/Math.max(1,maxX-minX),usableH/Math.max(1,maxY-minY));
+ const xp=x=>w/2+(x-(minX+maxX)/2)*scale;
+ const yp=y=>h/2-(y-(minY+maxY)/2)*scale+8;
+ ctx.beginPath();
+ pts.forEach((p,i)=>i?ctx.lineTo(xp(p.x),yp(p.y)):ctx.moveTo(xp(p.x),yp(p.y)));
+ ctx.closePath();
+ const gradient=ctx.createLinearGradient(0,0,w,h);
+ gradient.addColorStop(0,'#6195b7');gradient.addColorStop(1,'#163149');
+ ctx.fillStyle=gradient;ctx.fill();
+ ctx.strokeStyle='#bcefff';ctx.lineWidth=2;ctx.stroke();
+ label(ctx,'CONTORNO DXF 2D · SIN VALIDACIÓN CNC',10,16,11,'#bdedff');
+ label(ctx,record.dimensionWidth.toFixed(2)+' × '+record.dimensionHeight.toFixed(2)+
+  ' mm · Z '+record.zMin+'…'+record.zMax+' mm',w/2,h-27,11,'#bcefff','center');
+ label(ctx,record.source.slice(0,64),w/2,h-10,9,'#e9cba7','center');
+}
 function draw(canvas,key){
  if(!canvas||!canvas.clientWidth)return;
  const rect=canvas.getBoundingClientRect(),w=rect.width,h=rect.height;
@@ -137,8 +162,17 @@ function draw(canvas,key){
  g.addColorStop(0,'#0c263d');g.addColorStop(1,'#061524');
  ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
  const cfg=getV85();
- if(key==='ram'||key==='bed')barCanvas(ctx,w,h,cfg,key);
- else gaugeCanvas(ctx,w,h,cfg,key);
+ let record=null,stale=false;
+ try{
+  record=loadMachineCad(localStorage)[key]||null;
+  stale=!!record?.machineConfigKey&&record.machineConfigKey!==machineConfigurationKey(cfg);
+ }catch{stale=true;}
+ if(record&&!stale)cadCanvas(ctx,w,h,record);
+ else{
+  if(key==='ram'||key==='bed')barCanvas(ctx,w,h,cfg,key);
+  else gaugeCanvas(ctx,w,h,cfg,key);
+  if(stale)label(ctx,'⚠ CAD fuera de configuración actual',w/2,h-12,11,'#ffbd88','center');
+ }
 }
 function render(refreshFields=true){
  if(refreshFields)fields();const cfg=getV85();
