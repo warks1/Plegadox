@@ -8,6 +8,10 @@ import {normalizeV85,V85_STORAGE_KEY} from './machine-config.js';
 import {TOOL_DXF_STORAGE_KEY,validateContour} from './tool-dxf.js';
 import {MEASUREMENTS_KEY,readMeasurements,mergeMeasurements} from './workshop-measurements.js';
 import {PROJECT_LIBRARY_KEY,ACTIVE_LIBRARY_ID,readProjectLibrary} from './project-library.js';
+import {MACHINE_CAD_KEY,MACHINE_CAD_KINDS,normalizeMachineCad,
+ loadMachineCad} from './machine-cad.js';
+import {MOTION_KEY,normalizeAxisMotion,loadAxisMotion} from './machine-axis-motion.js';
+import {AXIS_MAPPING_KEY,normalizeAxisMapping,loadAxisMapping} from './machine-axis-geometry.js';
 export const PROJECT_FORMAT='plegadox-complete-project-v1';
 export const PIECE_KEY='plegadox:piece:v1';
 const MAX_TOOLS=30;
@@ -137,7 +141,25 @@ function checkedActiveId(id,library){
   'La pieza activa no figura en la biblioteca del backup');
  return id;
 }
+function checkedMachineCAD(source){
+ check(source&&typeof source==='object'&&!Array.isArray(source),
+  'Biblioteca CAD de máquina incorrecta');
+ check(Object.keys(source).every(k=>MACHINE_CAD_KINDS.includes(k)),
+  'La biblioteca CAD contiene componentes desconocidos');
+ const cad={};
+ for(const kind of MACHINE_CAD_KINDS){
+  if(source[kind]==null)continue;
+  const part=normalizeMachineCad(source[kind]);
+  check(part.kind===kind,'Componente CAD guardado con nombre distinto: '+kind);
+  cad[kind]=part;
+ }
+ return cad;
+}
+function checkedAxisMotion(source){
+ return source==null?null:normalizeAxisMotion(source);
+}
 export function buildProjectBackup({piece,machine,tools,measurements=[],library=[],activeLibraryId=null,
+ machineCad={},axisMotion=null,axisMapping=null,
  exportedAt=new Date().toISOString()}){
  const p=checkedPiece(piece),t=checkedTools(tools);
  validateToolReferences(p,t);
@@ -150,11 +172,15 @@ export function buildProjectBackup({piece,machine,tools,measurements=[],library=
   'Falta el DXF de la matriz asociada a la pieza');
  const tested=mergeMeasurements([],measurements);
  const checked=checkedLibrary(library,t);
+ const geometry=checkedMachineCAD(machineCad);
+ const trajectory=checkedAxisMotion(axisMotion);
+ const axesDatum=axisMapping==null?null:normalizeAxisMapping(axisMapping);
  checkedActiveId(activeLibraryId,checked);
  return {format:PROJECT_FORMAT,schemaVersion:1,exportedAt,
   piece:p,machine:normalizeV85(machine),importedTools:t,measurements:tested,
-  library:checked,activeLibraryId,
-  notes:'Backup local: pieza, V85, DXF, biblioteca, revisiones y ensayos. No autoriza fabricación.'};
+  library:checked,activeLibraryId,machineCad:geometry,axisMotion:trajectory,
+  axisMapping:axesDatum,
+  notes:'Backup local: pieza, V85, DXF, CAD de máquina, ejes registrados, biblioteca, revisiones y ensayos. No autoriza fabricación.'};
 }
 /** Puro; nunca modifica el navegador si el formato o contenido son inválidos. */
 export function parseProjectBackup(source){
@@ -179,8 +205,16 @@ export function parseProjectBackup(source){
  const library=hasLibrary?checkedLibrary(raw.library,tools):null;
  const activeLibraryId=hasLibrary?
   checkedActiveId(raw.activeLibraryId===undefined?null:raw.activeLibraryId,library):null;
+ const hasMachineCad=Object.prototype.hasOwnProperty.call(raw,'machineCad');
+ const hasAxisMotion=Object.prototype.hasOwnProperty.call(raw,'axisMotion');
+ const machineCad=hasMachineCad?checkedMachineCAD(raw.machineCad):null;
+ const axisMotion=hasAxisMotion?checkedAxisMotion(raw.axisMotion):null;
+ const hasAxisMapping=Object.prototype.hasOwnProperty.call(raw,'axisMapping');
+ const axisMapping=hasAxisMapping&&raw.axisMapping!=null?
+  normalizeAxisMapping(raw.axisMapping):null;
  return {piece:p,machine:normalizeV85(raw.machine),importedTools:tools,
-  measurements,hasMeasurements,library,activeLibraryId};
+  measurements,hasMeasurements,library,activeLibraryId,
+  machineCad,hasMachineCad,axisMotion,hasAxisMotion,axisMapping,hasAxisMapping};
 }
 /** Importar sin borrar útiles DXF existentes. Rollback si falla el almacenamiento. */
 /**
@@ -221,10 +255,40 @@ export function restoreProjectBackup(storage,source){
   check(finalLibrary.length<=60,
    'La biblioteca combinada supera 60 piezas: exporta copias separadas');
  }
+ // El backup de R36 nunca reemplaza un CAD o recorrido distinto sin avisar.
+ // No borrar datos nuevos al abrir una copia histórica anterior a R36.
+ let mergedCAD=null;
+ if(data.hasMachineCad){
+  const existing=loadMachineCad(storage);
+  mergedCAD={...existing};
+  for(const kind of MACHINE_CAD_KINDS)if(data.machineCad[kind]){
+   if(existing[kind])
+    check(JSON.stringify(existing[kind])===JSON.stringify(data.machineCad[kind]),
+     'Conflicto CAD de máquina '+kind+': exporta ambos proyectos antes de reemplazar el perfil');
+   else mergedCAD[kind]=data.machineCad[kind];
+  }
+ }
+ let mergedAxis=null;
+ if(data.hasAxisMotion&&data.axisMotion!==null){
+  const local=loadAxisMotion(storage);
+  if(local)check(JSON.stringify(local)===JSON.stringify(data.axisMotion),
+   'Conflicto de trayectoria CNC: exporta las dos copias antes de sobrescribir');
+  mergedAxis=data.axisMotion;
+ }
+ let mergedMapping=null;
+ if(data.hasAxisMapping&&data.axisMapping!==null){
+  const existing=loadAxisMapping(storage);
+  if(existing)check(JSON.stringify(existing)===JSON.stringify(data.axisMapping),
+   'Conflicto de datum de ejes: exporta ambas calibraciones antes de sobrescribir');
+  mergedMapping=data.axisMapping;
+ }
  const entries=[[TOOL_DXF_STORAGE_KEY,JSON.stringify(merged)],
   [V85_STORAGE_KEY,JSON.stringify(data.machine)],
   [PIECE_KEY,JSON.stringify(data.piece)]];
  if(records!==null)entries.push([MEASUREMENTS_KEY,JSON.stringify(records)]);
+ if(mergedCAD!==null)entries.push([MACHINE_CAD_KEY,JSON.stringify(mergedCAD)]);
+ if(mergedAxis!==null)entries.push([MOTION_KEY,JSON.stringify(mergedAxis)]);
+ if(mergedMapping!==null)entries.push([AXIS_MAPPING_KEY,JSON.stringify(mergedMapping)]);
  if(finalLibrary!==null){
   entries.push([PROJECT_LIBRARY_KEY,JSON.stringify(finalLibrary)]);
   entries.push([ACTIVE_LIBRARY_ID,data.activeLibraryId]);
@@ -254,5 +318,6 @@ export function restoreProjectBackup(storage,source){
     '. Se han revertido las escrituras anteriores.'));
  }
  return {...data,importedTools:merged,measurements:records||data.measurements,
-  library:finalLibrary};
+  library:finalLibrary,machineCad:mergedCAD??data.machineCad,
+  axisMotion:mergedAxis??data.axisMotion,axisMapping:mergedMapping??data.axisMapping};
 }

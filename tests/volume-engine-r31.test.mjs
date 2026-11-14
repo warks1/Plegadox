@@ -67,6 +67,8 @@ test('intervalo barrido indica riesgo entre poses aunque sus extremos estén lib
     objects:{ram:fixed,bed:null,gauge:null,punch:null,die:null}}
   })
  });
- assert.ok(scan.uncertainSweptIntervals>0);
+ assert.ok(scan.linearSweptPenetrations+scan.uncertainSweptIntervals>0,
+  'Debe marcar contacto en barrido lineal o intervalo imposible de resolver');
+ assert.ok(scan.operations[0].findings.some(item=>item.kind==='ram'));
  assert.equal(scan.verified,false);
 });

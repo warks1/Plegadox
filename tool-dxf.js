@@ -150,7 +150,7 @@ function intersects(a,b,c,d){
  return onSegment(c,a,b)||onSegment(d,a,b)||
         onSegment(a,c,d)||onSegment(b,c,d);
 }
-export function validateContour(raw){
+export function validateContour(raw,options={}){
  if(!Array.isArray(raw)||raw.length<3||raw.length>MAX_POINTS)
   throw Error('El contorno necesita entre 3 y 800 vértices');
  const points=raw.map((p,i)=>{
@@ -171,8 +171,10 @@ export function validateContour(raw){
  }
  const xs=points.map(p=>p[0]),ys=points.map(p=>p[1]);
  const width=Math.max(...xs)-Math.min(...xs),height=Math.max(...ys)-Math.min(...ys);
- if(width<.5||height<2||width>1000||height>600)
-  throw Error('Perfil fuera de dimensiones admitidas: ancho 0,5–1000 mm y alto 2–600 mm');
+ const maxWidth=Number.isFinite(options.maxWidth)?options.maxWidth:1000;
+ const maxHeight=Number.isFinite(options.maxHeight)?options.maxHeight:600;
+ if(width<.5||height<2||width>maxWidth||height>maxHeight)
+  throw Error('Perfil fuera de dimensiones admitidas: ancho 0,5–'+maxWidth+' mm y alto 2–'+maxHeight+' mm');
  if(Math.abs(signedArea(points))<.05)
   throw Error('Perfil sin área útil (contorno abierto o degenerado)');
  for(let i=0;i<points.length;i++)for(let j=i+2;j<points.length;j++){
@@ -183,7 +185,7 @@ export function validateContour(raw){
  }
  return {points,width,height};
 }
-export function parseToolDxf(text){
+export function parseToolDxf(text,options={}){
  const pairs=parsePairs(text);
  let units=null;
  for(let i=0;i<pairs.length;i++)if(pairs[i].code===9&&pairs[i].value==='$INSUNITS'){
@@ -218,13 +220,13 @@ export function parseToolDxf(text){
    throw Error('Entidad DXF '+type+' no admitida. Usa LINE o LWPOLYLINE cerrada');
   }
  }
- const contour=validateContour(poly||assembleLines(edges));
+ const contour=validateContour(poly||assembleLines(edges),options);
  const x0=Math.min(...contour.points.map(p=>p[0])),
        y0=Math.min(...contour.points.map(p=>p[1]));
  const normalized=contour.points.map(([x,y])=>[
   Number((x-x0-contour.width/2).toFixed(6)),Number((y-y0).toFixed(6))
  ]);
- return {...validateContour(normalized),unitsAssumed:units===null||units===0,
+ return {...validateContour(normalized,options),unitsAssumed:units===null||units===0,
   coordinateSystem:'mm; X centrada; base del útil Y=0'};
 }
 function getNumber(value,label,min,max){

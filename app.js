@@ -28,6 +28,9 @@ import {readProjectLibrary,saveLibraryPiece,getLibraryPiece,deleteLibraryPiece,s
 import {measurementKey,calibrationSuggestion,readMeasurements,createMeasurement,persistMeasurement,deleteMeasurement} from './workshop-measurements.js';
 import {loadImportedTools,registerImportedTools,persistImportedTool} from './tool-dxf.js';
 import {setupToolDxfImporter} from './tool-import-ui.js';
+import {loadMachineCad} from './machine-cad.js';
+import {loadAxisMotion} from './machine-axis-motion.js';
+import {loadAxisMapping} from './machine-axis-geometry.js';
 registerCatalogue(DIES,PUNCHES);
 registerImportedTools(DIES,PUNCHES,loadImportedTools(
  typeof localStorage==='undefined'?null:localStorage));
@@ -399,10 +402,16 @@ function configure(){
     tools:readStoredToolsForBackup(localStorage),
     measurements:readMeasurements(localStorage),
     library:readProjectLibrary(localStorage),
-    activeLibraryId:getActiveLibraryId(localStorage)});
+    activeLibraryId:getActiveLibraryId(localStorage),
+    machineCad:loadMachineCad(localStorage),
+    axisMotion:loadAxisMotion(localStorage),
+    axisMapping:loadAxisMapping(localStorage)});
    downloadProjectJson(backup,projectSafeName()+'-BACKUP-COMPLETO.json');
    status.textContent='Copia descargada: pieza, V85, '+backup.importedTools.length+
-    ' herramientas DXF, '+backup.measurements.length+' mediciones y '+
+    ' herramientas DXF, '+Object.keys(backup.machineCad).length+
+    ' CAD de máquina, '+(backup.axisMotion?'1 recorrido de ejes, ':'sin recorrido de ejes, ')+
+    (backup.axisMapping?'1 referencia de ejes, ':'sin referencia de ejes, ')+
+    backup.measurements.length+' mediciones y '+
     backup.library.length+' piezas de biblioteca con revisiones.';
    status.dataset.state='success';
   }catch(err){status.textContent='Backup no generado: '+err.message;status.dataset.state='error';}
@@ -433,7 +442,11 @@ function configure(){
    changePiece(restored.piece,true);
    renderProjectLibrary();renderMeasurementHistory();
    status.textContent='Recuperado: pieza, V85, '+restored.importedTools.length+
-    ' herramientas DXF, '+restored.measurements.length+' mediciones'+
+    ' herramientas DXF, '+(restored.machineCad?
+     Object.keys(restored.machineCad).length+' CAD de máquina, ':'')+
+    (restored.axisMotion?'recorrido de ejes incluido, ':'')+
+    (restored.axisMapping?'datum de ejes incluido, ':'')+
+    restored.measurements.length+' mediciones'+
     (restored.library===null?' (copia antigua: biblioteca local conservada).':
     ' y '+restored.library.length+' piezas de biblioteca. Los proyectos locales se han conservado.');
    status.dataset.state='success';
@@ -666,7 +679,14 @@ function scheduleIntegratedAdvisor(){
     ' · penetraciones posibles de útil: '+plan.toolPenetrations+
     ' · envolventes 3D trancha/mesa/topes: '+
     (plan.volumeChecked?plan.volumeMachineWarnings+' avisos':'SIN COMPROBAR')+
-    ' · barridos pendientes: '+plan.volumeSweptSuspects;
+    ' · barridos pendientes: '+plan.volumeSweptSuspects+
+    ' · ejes físicos: '+plan.axisStatus+
+    (plan.axisViolations?' ('+plan.axisViolations+' infracciones)':'')+
+    ' · CAD + ejes: '+plan.axisGeometryStatus+
+    (plan.axisModeledCollisions?' ('+plan.axisModeledCollisions+' cruces modelados)':'')+
+    (plan.axisGeometryUnresolved?' ('+plan.axisGeometryUnresolved+' intervalos pendientes)':'')+
+    ' · CAD máquina utilizado: '+(plan.cadProfilesUsed?.join(', ')||'ninguno')+
+    ' · CAD pendiente: '+(plan.cadMissing?.join(', ')||'sin inventario confirmado');
    status.dataset.state=best.possibleInterference?'warning':'suggested';
    status.textContent='Cotejadas '+report.candidatePairs+' parejas preseleccionadas; '+
     report.pairsScreened+' parejas y '+report.planVariantsChecked+

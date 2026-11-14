@@ -7,7 +7,7 @@
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="./icon-180.png">
 <link rel="manifest" href="./manifest.webmanifest">
-<meta name="plegadox-build" content="PLEGADOX-20261114-R35">
+<meta name="plegadox-build" content="PLEGADOX-20261114-R36">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="PlegadoX">
 </head><body>
@@ -17,7 +17,7 @@
 </div>
 <div id="app">
 <header class="topbar">
-<div class="header-logo"><span class="logo-title">PLEGADO<span>DO</span><em>X</em></span><small>PRECISIÓN EN CADA ÁNGULO</small><small id="buildMark" class="px-build-mark" aria-label="Versión instalada de PlegadoX">PLEGADOX-20261114-R35</small></div>
+<div class="header-logo"><span class="logo-title">PLEGADO<span>DO</span><em>X</em></span><small>PRECISIÓN EN CADA ÁNGULO</small><small id="buildMark" class="px-build-mark" aria-label="Versión instalada de PlegadoX">PLEGADOX-20261114-R36</small></div>
 <div class="header-project"><span class="h-icon" aria-hidden="true"><svg class="px-icon"><use href="./icons.svg#project"/></svg></span><div class="h-content"><small>PROYECTO ACTUAL</small><strong id="topProject">Omega · ejemplo geométrico</strong></div></div>
 <div class="header-stats"><div><small>Material</small><strong id="topMaterial">Acero S235</strong></div><div><small>Espesor</small><strong id="topThickness">2,00 mm</strong></div><div><small>Ángulo</small><strong id="topAngle">+90°</strong></div><div><small>Apertura V</small><strong id="topV">16 mm</strong></div><div><small>Punzón</small><strong id="topPunch">Recto 88°</strong></div><div><small>Matriz</small><strong id="topDie">V16</strong></div></div>
 <div class="header-right"><div class="header-status"><button id="topPlayBtn" class="led" type="button" aria-label="Reproducir simulación" aria-pressed="false" title="Reproducir / pausar simulación">▶</button><span id="topState">Simulación lista</span></div><span id="clock" aria-label="Hora"></span><button id="forceUpdateBtn" class="header-icon-button px-refresh-button" title="Actualizar PlegadoX sin borrar piezas" aria-label="Actualizar PlegadoX sin borrar piezas"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#refresh"/></svg></button><button id="saveBtn" class="header-icon-button" title="Guardar pieza" aria-label="Guardar pieza"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#save"/></svg></button></div>
@@ -29,7 +29,7 @@
 <button class="nav" data-tab="herramientas"><span class="nav-picto" aria-hidden="true"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#tools"/></svg></span><span>HERRAMIENTAS</span></button>
 <button class="nav" data-tab="desarrollo"><span class="nav-picto" aria-hidden="true"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#ruler"/></svg></span><span>DESARROLLO</span></button>
 <button class="nav" data-tab="maquina"><span class="nav-picto" aria-hidden="true"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#settings"/></svg></span><span>MÁQUINA</span></button>
-<div class="nav-spacer"></div><button class="side-action" id="sideSave" title="Guardar pieza" aria-label="Guardar pieza"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#save"/></svg><span>GUARDAR</span></button><button class="side-action" id="sideImport" title="Importar pieza JSON" aria-label="Importar pieza JSON"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#upload"/></svg><span>IMPORTAR</span></button><div class="nav-version">AMS · PLEGADOX v0.9.11</div>
+<div class="nav-spacer"></div><button class="side-action" id="sideSave" title="Guardar pieza" aria-label="Guardar pieza"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#save"/></svg><span>GUARDAR</span></button><button class="side-action" id="sideImport" title="Importar pieza JSON" aria-label="Importar pieza JSON"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#upload"/></svg><span>IMPORTAR</span></button><div class="nav-version">AMS · PLEGADOX v0.9.12</div>
 </nav>
 <main>
 <section class="panel" id="tab-programacion">
@@ -229,6 +229,32 @@
  <div id="machineSupportFields" class="machine-field-grid"></div>
  <div class="machine-profile-preview"><canvas id="machineSupportProfile" aria-label="Esquema acotado del tope Support"></canvas></div></article>
 </div>
+<article class="card" id="machineCadPanel">
+<div class="cardhead"><h2>Geometría CAD 2D de la V85 · trancha, mesa y dedos</h2><span class="smalllabel">DXF ASCII MILIMÉTRICO · SIN CERTIFICACIÓN</span></div>
+<p class="hint">Importa el contorno cerrado de cada componente, con origen X/Y de montaje y límites Z de ocupación reales. Ram/trancha: referencia relativa a la punta del punzón. Mesa: origen respecto al plano superior de la matriz. Stop/Support: origen del dedo. El archivo define geometría; no demuestra que esté montado en esa posición. Los perfiles guardados sustituyen las envolventes ilustrativas del cálculo 2,5D.</p>
+<div class="formgrid">
+<label>Componente<select id="machineCadKind"><option value="ram">Trancha/portapunzón</option><option value="bed">Mesa/portamatriz</option><option value="stop">Dedo tope Stop 1</option><option value="support">Dedo tope Support 2</option></select></label>
+<label>Perfil DXF cerrado en mm<input type="file" id="machineCadFile" accept=".dxf" aria-label="Archivo DXF ASCII de contorno de máquina"></label>
+<label>Desplazamiento X (mm)<input id="machineCadOffsetX" type="number" step=".001" placeholder="Origen documentado"></label>
+<label>Desplazamiento Y (mm)<input id="machineCadOffsetY" type="number" step=".001" placeholder="Origen documentado"></label>
+<label>Z inicial (mm)<input id="machineCadZMin" type="number" step=".001" placeholder="Valor medido"></label>
+<label>Z final (mm)<input id="machineCadZMax" type="number" step=".001" placeholder="Valor medido"></label>
+<label>Fuente, plano, referencia<input id="machineCadSource" maxlength="160" placeholder="Fabricante, ficha y revisión"></label>
+</div>
+<div class="inline-actions"><button id="machineCadSave" type="button">Incorporar perfil CAD</button><button id="machineCadDelete" type="button">Retirar perfil seleccionado</button></div>
+<p class="hint" id="machineCadStatus" role="status" aria-live="polite">Comprobando perfiles CAD de máquina guardados.</p>
+</article>
+<article class="card" id="machineAxisPanel">
+<div class="cardhead"><h2>Recorridos físicos de ejes · Y1/Y2/X/R/Z1/Z2</h2><span class="smalllabel">LÍMITES Y TRAYECTORIAS DOCUMENTADAS</span></div>
+<p class="hint">Importa posiciones reales o programadas en milímetros y segundos, junto con límites y velocidades medidos para ESTA V85. Cada traza queda vinculada a la pieza y orden actuales; si los cambias deja de ser aplicable. Sin datos de los ejes no se declara un recorrido físico. La evaluación identifica excesos de carrera o velocidad, pero aún no sustituye una simulación CNC continua de todos los sólidos.</p>
+<div class="inline-actions"><button id="machineAxisTemplate" type="button">Descargar plantilla de ejes sin valores inventados</button><label>Importar trayectoria JSON<input id="machineAxisImport" type="file" accept=".json,application/json"></label><button id="machineAxisCheck" type="button">Comprobar límites de ejes</button></div>
+<details class="px-tech-details" id="machineAxisMappingPanel">
+<summary>Calibrar origen y sentido de los ejes frente al CAD (sin inventar ceros)</summary>
+<p class="hint">Para desplazar realmente los sólidos de la V85 en la simulación, facilita un JSON con los signos Y, X, R, Z1 y Z2 (+1 o −1), el dedo modelado, una referencia temporal de chapa inmóvil y la tolerancia documentada entre Y1/Y2. La primera pose de la traza debe llevar el mismo sceneTime que la referencia. El programa sólo compara barridos de intervalos de chapa inmóvil; giro, plegado, Z en movimiento y el segundo dedo siguen sin resolver.</p>
+<div class="inline-actions"><button id="machineAxisMappingTemplate" type="button">Plantilla de calibración CAD/ejes</button><label>Importar calibración JSON<input id="machineAxisMappingImport" type="file" accept=".json,application/json"></label></div>
+</details>
+<p class="hint" id="machineAxisStatus" role="status" aria-live="polite">No hay recorrido físico documentado.</p>
+</article>
 <p id="machineSaveState" role="status" class="hint">Configuración cargada.</p>
 <details class="px-tech-details"><summary>Origen y límites de las cotas de máquina</summary><p>Los valores proceden de las fotografías del control. Los dibujos son esquemas parametrizados de cotas, NO perfiles CAD completos ni comprobación de colisiones. Verifica el amarre y la máquina real antes de usar las medidas para fabricar.</p></details>
 </section>
@@ -242,7 +268,7 @@
  * PlegadoX anteriores y cargar luego todos los módulos secuencialmente.
  * Nunca se elimina localStorage, IndexedDB ni los proyectos del usuario.
  */
-const BUILD="PLEGADOX-20261114-R35";
+const BUILD="PLEGADOX-20261114-R36";
 const STATUS=document.getElementById('buildMark');
 const KEY='plegadox:verified-loader-build';
 const BASE=new URL('./',document.baseURI);
@@ -290,7 +316,7 @@ const clearOldCode=async()=>{
 };
 const loadModules=async()=>{
  const scripts=['pwa.js','app.js','cockpit.js','boceto2.js',
-  'responsive.js','studio.js','machine-editor.js'];
+  'responsive.js','studio.js','machine-editor.js','machine-cad-ui.js'];
  for(const [index,path] of scripts.entries()){
   splashStep(18+Math.round(72*(index+1)/scripts.length),'Cargando '+path.replace('.js','')+'…');
   await import('./'+path+'?build='+encodeURIComponent(BUILD));
