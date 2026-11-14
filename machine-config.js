@@ -116,19 +116,24 @@ export function gaugeOutline(values,stopNumber=1){
  * y TODO el cuerpo del dedo queda a su DERECHA. Ni el contorno ni
  * sus escalones se espejan. Geometría esquemática, NO CAD OEM.
  */
-export function gaugeContactFeature(values,stopNumber=1){
+export function gaugeContactFeature(values,stopNumber=1,mode='front'){
  const outline=gaugeOutline(values,stopNumber);
  const height=-Math.min(...outline.map(p=>p.y));
  const outer=Math.max(...outline.map(p=>p.x));
  const ledge=outline[4].x,stepDepth=-outline[4].y;
  const support=Number(stopNumber)===2;
- const from={...outline[0]},to={...outline[5]};
- const point={x:0,y:(from.y+to.y)/2};
+ const onShelf=mode==='shelf';
+ const from={...outline[onShelf?5:0]},to={...outline[onShelf?4:5]};
+ const point=onShelf?{...outline[4]}:{x:0,y:(outline[0].y+outline[5].y)/2};
  const usable=height>stepDepth&&stepDepth>0&&ledge>0&&ledge<outer;
- return {kind:support?'support-step':'stop-face',
-  surface:'vertical-front',
-  frontFace:{from:{...from},to:{...to}},
-  label:support?'TOPE 2 · CARA FRONTAL DEL DEDO (NO REPISA)':
+ return {kind:onShelf?'support-step':support?'support-step':'stop-face',
+  mode:onShelf?'shelf':'front',
+  surface:onShelf?'horizontal-top':'vertical-front',
+  frontFace:onShelf?
+   {from:{...outline[4]},to:{...outline[3]}}:
+   {from:{...from},to:{...to}},
+  label:onShelf?'APOYO SUPERIOR MANUAL · LAY ON FINGER':
+   support?'TOPE 2 · CARA FRONTAL DEL DEDO (NO REPISA)':
    'TOPE 1 · CARA FRONTAL INFERIOR',
   from,to,point,usable,verified:false};
 }
