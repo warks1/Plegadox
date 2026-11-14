@@ -61,7 +61,7 @@ Para avanzar a certificación de colisiones operativas se necesitan, sin inventa
 Referencia sobre comportamiento industrial esperado: Metalix documenta que MBend muestra movimientos físicos de los dedos entre golpes y también los volteos y rotaciones de la pieza, no únicamente su posición final: https://www.metalix.net/products/mbend/simulating-bends/
 
 - `swept-volume.js` detecta penetraciones EN EL INTERVALO que no aparecen en sus extremos: para un prisma de sección constante trasladado sin giro y con Z constante, su volumen barrido es el perímetro extruido por el desplazamiento más la sección inicial. Contrasta esas superficies usando intersección de polígonos; no confundirlo con CNC continuo.
-- `volume-trajectory-review.js`: usa ese cálculo si dos cuerpos mantienen EXACTAMENTE su sección y Z en las poses adyacentes. Si la chapa se dobla, gira, cambia su sección o se desplaza en Z, el intervalo queda pendiente y se muestra aviso AABB conservador.
+- `volume-trajectory-review.js`: usa ese cálculo si dos cuerpos mantienen EXACTAMENTE su sección y Z en las poses adyacentes. Si la chapa se dobla, gira o cambia su sección, el intervalo queda pendiente y se muestra aviso AABB conservador.
 - `machine-axis-geometry.js`: acepta `signs` (+1 o -1) para Y, X, R, Z1 y Z2, `activeFinger`, `referenceSceneTime`, `ramTiltTolerance` y `machineConfigKey` de la V85. No se fabrican ceros CNC. Las poses de la traza pueden indicar `sceneTime` (tiempo en el visor), que es DISTINTO de `time` (segundos del CNC). Únicamente cuando dos poses consecutivas declaran el mismo `sceneTime` referenciado se considera chapa inmóvil para ese intervalo.
 - En esos intervalos se desplazan la trancha y el punzón con el desplazamiento medio Y1/Y2, condicionado a no variar su desnivel más que la tolerancia indicada; el dedo seleccionado se desplaza con X, R y Z1 o Z2. Se comparan ram/chapa, gauge/chapa, gauge/mesa, ram/mesa, ram/gauge, etc. El segundo dedo se documenta expresamente como pendiente.
 - La auditoría de taller y el planificador distinguen choques del visor, choques del recorrido calibrado y límites de ejes superados, sin proponer como solución automática un candidato con colisión modelada detectada.
@@ -77,3 +77,8 @@ Si no se conoce la relación de coordenadas, **no puede ponerse +1 arbitrariamen
 ### Límites que siguen abiertos
 
 No se garantiza la detección de contacto tangente (penetración de volumen cero), radios/deformación de chapa bajo esfuerzo, movimientos no lineales entre poses CNC, agarre/manipulación, inclinación Y1/Y2 a lo largo de la trancha, segundo dedo, interferencia con bastidor y sujeciones, ni utillajes segmentados no registrados. Un barrido condicionado del visor o de ejes no equivale a una certificación de colisiones ni puede ejecutarse como programa de seguridad de máquina.
+
+
+## 7. Mejora adicional: barrido X/Y/Z sincronizado
+
+La última versión de `swept-volume.js` calcula la ventana de tiempo en que las ocupaciones en Z de dos prismas en traslación lineal pueden solaparse. Únicamente durante esa ventana contrasta el volumen barrido de las secciones X/Y. Así se detecta el cruce de un dedo al avanzar Z1 o Z2 incluso si sus extremos están libres, y se evitan falsos positivos cuando los recorridos X y Z cruzan el mismo espacio en tiempos diferentes. El segundo dedo simultáneo y los recorridos curvos o deformables requieren un modelo adicional; la certificación sigue pendiente. Pruebas unitarias: cruce entre poses, separación transversal, desincronización X/Z y movimiento relativo entre sólidos.
