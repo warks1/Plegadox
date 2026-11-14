@@ -1,6 +1,6 @@
 /**
  * PlegadoX · importación acotada de CONTORNOS DXF ASCII 2D.
- * Se importan LINE o una LWPOLYLINE cerrada (también admite bulge 42).
+ * Se importan LINE/ARC encadenados o una LWPOLYLINE cerrada (bulge 42).
  * No se ejecutan datos del archivo ni se deduce automáticamente el amarre.
  * Contorno aportado ≠ verificación de compatibilidad o seguridad CNC.
  */
@@ -30,6 +30,18 @@ function parsePairs(text){
 function property(entity,code,defaultValue){
  return entity.find(p=>p.code===code)?.value??defaultValue;
 }
+/** Discretizar un arco con flecha máxima 0,02 mm, máximo 7,5°/segmento.
+ * No convierte el DXF en geometría OEM certificada.
+ */
+function arcSteps(radius,sweep){
+ if(!(radius>0)||!Number.isFinite(radius)||!Number.isFinite(sweep))
+  throw Error('Radio o barrido de arco DXF inválido');
+ const sagitta=.02;
+ const step=Math.min(Math.PI/24,2*Math.acos(Math.max(-1,1-sagitta/radius)));
+ const count=Math.max(2,Math.ceil(Math.abs(sweep)/Math.max(step,1e-9)));
+ if(count>MAX_POINTS)throw Error('Arco DXF demasiado detallado (máx. 800 puntos); simplifica la geometría');
+ return count;
+}
 function arcBulge(a,b,bulge){
  if(Math.abs(bulge)<1e-10)return [b];
  const dx=b[0]-a[0],dy=b[1]-a[1],chord=Math.hypot(dx,dy);
@@ -40,7 +52,7 @@ function arcBulge(a,b,bulge){
  const cx=mx-dy/chord*offset,cy=my+dx/chord*offset;
  const radius=Math.hypot(a[0]-cx,a[1]-cy);
  const start=Math.atan2(a[1]-cy,a[0]-cx);
- const count=Math.max(2,Math.ceil(Math.abs(turn)/(Math.PI/24)));
+ const count=arcSteps(radius,turn);
  return Array.from({length:count},(_,k)=>{
   if(k===count-1)return b;
   const angle=start+turn*(k+1)/count;
@@ -98,25 +110,57 @@ function line(entity){
   throw Error('DXF no plano: las líneas tienen Z distinto de cero');
  return [[value(10,'X1'),value(20,'Y1')],[value(11,'X2'),value(21,'Y2')]];
 }
+/** Un único contorno construido con LINE y ARC en cualquier orden y
+ * sentido; no deducir conexiones inexistentes ni aceptar bifurcaciones.
+ */
+/** DXF ARC: ángulos en grados CCW en plano XY. No proyectar OCS
+ * distinto a +Z ni radios con grosor, porque falsearía la sección.
+ */
+function arcEntity(entity){
+ const value=(code,label)=>numeric(property(entity,code,'NaN'),label);
+ const z=numeric(property(entity,30,'0'),'Centro Z de ARC');
+ const thickness=numeric(property(entity,39,'0'),'Grosor ARC');
+ const nx=numeric(property(entity,210,'0'),'Normal X de ARC');
+ const ny=numeric(property(entity,220,'0'),'Normal Y de ARC');
+ const nz=numeric(property(entity,230,'1'),'Normal Z de ARC');
+ if(Math.abs(z)>EPS||Math.abs(thickness)>EPS||
+  Math.abs(nx)>1e-8||Math.abs(ny)>1e-8||Math.abs(nz-1)>1e-8)
+  throw Error('ARC DXF fuera del plano XY o con extrusión OCS; exporta perfil 2D');
+ const cx=value(10,'Centro X de ARC'),cy=value(20,'Centro Y de ARC');
+ const radius=value(40,'Radio ARC');
+ if(radius<EPS||radius>1000000)throw Error('Radio ARC DXF fuera de rango');
+ const start=value(50,'Ángulo inicial ARC'),end=value(51,'Ángulo final ARC');
+ const startRad=start*Math.PI/180;
+ const sweepDeg=((end-start)%360+360)%360;
+ if(sweepDeg<=1e-8)throw Error('ARC DXF de barrido nulo o vuelta completa; exporta arcos parciales');
+ const sweep=sweepDeg*Math.PI/180;
+ const count=arcSteps(radius,sweep);
+ return Array.from({length:count+1},(_,i)=>{
+  const angle=startRad+sweep*i/count;
+  return [cx+radius*Math.cos(angle),cy+radius*Math.sin(angle)];
+ });
+}
 function assembleLines(edges){
- if(edges.length<3)throw Error('Se necesitan al menos tres líneas para cerrar el perfil');
- if(edges.length>MAX_POINTS)throw Error('Demasiadas líneas DXF');
- const used=new Set([0]),points=[edges[0][0],edges[0][1]];
+ if(edges.length<2)throw Error('Se requieren al menos dos segmentos LINE/ARC para cerrar el perfil');
+ if(edges.length>MAX_POINTS)throw Error('Demasiadas entidades LINE/ARC en DXF');
+ const used=new Set([0]),points=[...edges[0]];
  while(used.size<edges.length){
   const tip=points.at(-1);
-  let next=-1,point=null;
+  let next=-1,chain=null;
   for(let i=0;i<edges.length;i++)if(!used.has(i)){
-   const [a,b]=edges[i];
-   if(near(tip,a)){next=i;point=b;break;}
-   if(near(tip,b)){next=i;point=a;break;}
+   const seg=edges[i];
+   if(near(tip,seg[0])){next=i;chain=seg;break;}
+   if(near(tip,seg.at(-1))){next=i;chain=[...seg].reverse();break;}
   }
-  if(next<0)throw Error('Las líneas no forman un contorno cerrado único');
-  if(near(point,points[0])&&used.size!==edges.length-1)
-   throw Error('Hay varias cadenas o geometría sobrante en el DXF');
-  used.add(next);points.push(point);
+  if(next<0)throw Error('Los segmentos LINE/ARC no forman un contorno cerrado único');
+  if(near(chain.at(-1),points[0])&&used.size!==edges.length-1)
+   throw Error('Hay cadenas sobrantes o geometría duplicada en DXF');
+  used.add(next);
+  points.push(...chain.slice(1));
+  if(points.length>MAX_POINTS+1)throw Error('Perfil demasiado detallado (máx. 800 puntos)');
  }
  if(!near(points[0],points.at(-1)))
-  throw Error('Falta cerrar el contorno DXF (LINE)');
+  throw Error('Falta cerrar el contorno DXF (LINE/ARC)');
  points.pop();
  return points;
 }
@@ -213,11 +257,11 @@ export function parseToolDxf(text,options={}){
   if(type==='LWPOLYLINE'){
    if(poly||edges.length)throw Error('Elige un único contorno DXF, sin geometría adicional');
    poly=polyline(body);
-  }else if(type==='LINE'){
-   if(poly)throw Error('Hay líneas adicionales fuera de la polilínea cerrada');
-   edges.push(line(body));
+  }else if(type==='LINE'||type==='ARC'){
+   if(poly)throw Error('Hay entidades fuera de la polilínea cerrada');
+   edges.push(type==='LINE'?line(body):arcEntity(body));
   }else if(!['TEXT','MTEXT','POINT'].includes(type)){
-   throw Error('Entidad DXF '+type+' no admitida. Usa LINE o LWPOLYLINE cerrada');
+   throw Error('Entidad DXF '+type+' no admitida. Usa LINE, ARC o LWPOLYLINE cerrada');
   }
  }
  const contour=validateContour(poly||assembleLines(edges),options);
