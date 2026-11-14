@@ -36,6 +36,13 @@ const weight=plan=>
   plan.sheetScore+
   plan.pairScore;
 const compare=(a,b)=>weight(a)-weight(b)||keyOf(a).localeCompare(keyOf(b));
+const toolProfileEvidence=tool=>{
+ if(!tool)return 'SIN_REFERENCIA_CAD';
+ if(tool.importedDxf===true)return 'DXF_USUARIO_AMARRE_NO_VERIFICADO';
+ if(tool.profileAccuracy==='verified'&&tool.verifiedSpecs===true)
+  return 'FICHA_ACOTADA_MONTAJE_NO_VERIFICADO';
+ return 'CONTORNO_PARAMETRICO_PROVISIONAL';
+};
 const stopProblems=scan=>{
  const operations=Array.isArray(scan?.operations)?scan.operations:[];
  let severe=0;
@@ -106,10 +113,15 @@ export function optimizeBendPlan(input,options={}){
    order:orderData.order,punchOrientation:orientation};
   const checked=scoreToolOrder(candidate,candidate.order,samples,
    toolEvaluator||undefined);
+  const profilePunch=toolProfileEvidence(punches.find(x=>x.id===pair.punchId));
+  const profileDie=toolProfileEvidence(dies.find(x=>x.id===pair.dieId));
   const counts=orderData.sheet.counts||{};
   return {
    dieId:pair.dieId,punchId:pair.punchId,orientation,order:[...orderData.order],
    dieName:pair.dieName,punchName:pair.punchName,source,
+   toolProfileEvidence:{punch:profilePunch,die:profileDie},
+   toolingMountVerified:false,
+   toolGeometryVerified:false,
    sheetScore:Number(orderData.sheet.score)||0,
    sheetCross:counts.cross||0,sheetOverlap:counts.overlap||0,
    sheetWarnings:Object.values(counts).reduce((sum,n)=>sum+(Number(n)||0),0),
