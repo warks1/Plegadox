@@ -16,7 +16,7 @@ try{
   assert.match(await page.locator('#activeGaugeReference').textContent(),/50,0 mm/);
   assert.match(await page.locator('#activeGaugeReference').textContent(),/cara frontal inferior STOP 1/);
   await page.locator('#chooseGauge2').click();
-  assert.match(await page.locator('#activeGaugeReference').textContent(),/primer escalón SUPPORT 2/);
+  assert.match(await page.locator('#activeGaugeReference').textContent(),/cara frontal SUPPORT 2/);
   const second=await page.locator('#machineCanvas').evaluate(canvas=>canvas.toDataURL());
   assert.notEqual(first,second,'Seleccionar escalón debe cambiar la geometría visible del dedo');
   const measure=await page.evaluate(async()=>{
@@ -33,10 +33,10 @@ try{
   assert.equal(measure.stop.contact.kind,'stop-face');
   assert.equal(measure.chosen.contact.point.x,measure.stop.contact.point.x);
   assert.equal(measure.chosen.contact.mirrorX,false);
-  assert.equal(measure.chosen.contact.surface,'horizontal-top');
+  assert.equal(measure.chosen.contact.surface,'vertical-front');
   assert.equal(measure.stop.contact.surface,'vertical-front');
-  assert.equal(measure.chosen.contact.from.y,measure.chosen.contact.to.y);
-  assert.equal(measure.chosen.contact.point.y,measure.chosen.point.y-1);
+  assert.equal(measure.chosen.contact.from.x,measure.chosen.contact.to.x);
+  assert.equal(measure.chosen.contact.point.y,measure.chosen.point.y);
   assert.equal(measure.chosen.nominalDistance,50);
   assert.deepEqual(measure.order,[0,1,3,2]);
   assert.deepEqual(measure.angles,[90,-90,-90,90]);
