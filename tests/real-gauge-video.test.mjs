@@ -5,11 +5,11 @@ import {technicalScene} from '../technical-section.js';
 import {gaugePlacement,gaugeContourAtContact,gaugeSeatAssessment} from '../backgauge-placement.js';
 import {EXAMPLE} from '../engine.js';
 
-/**
- * IMG_9033.mp4, 01/11/2026: contrahuella del dedo real ARRIBA
- * (apoyo inferior y canto detenido), no bajando después de la repisa.
+/** IMG_9033.mp4: el perfil completo conserva los escalones mirando
+ * a la izquierda; elegir Stop/Support NO invierte el dedo completo.
+ * R37: el contacto de parada se realiza DELANTE, no encima de la repisa.
  */
-test('el dedo COMPLETO presenta saliente BAJO a la izquierda y pared que SUBE a la derecha',()=>{
+test('el dedo COMPLETO conserva labio bajo izquierdo y contrahuella que sube',()=>{
  for(const values of [V85_FACTORY.stop,V85_FACTORY.support]){
   const stop=gaugeOutline(values,1),support=gaugeOutline(values,2);
   assert.deepEqual(stop,support,'No invertir el dedo al cambiar de función');
@@ -17,59 +17,44 @@ test('el dedo COMPLETO presenta saliente BAJO a la izquierda y pared que SUBE a 
   const extent=Math.max(values[0],values[1]);
   const nose=extent-Math.min(extent,values[0]);
   assert.deepEqual([a,b,c,d,e,f],[
-   {x:0,y:-values[3]}, {x:extent,y:-values[3]},
-   {x:extent,y:0}, {x:nose,y:0},
-   {x:nose,y:-values[2]}, {x:0,y:-values[2]}
+   {x:0,y:-values[3]},{x:extent,y:-values[3]},
+   {x:extent,y:0},{x:nose,y:0},
+   {x:nose,y:-values[2]},{x:0,y:-values[2]}
   ]);
-  assert.equal(f.y,e.y,'la pestaña delantera BAJA es horizontal');
-  assert.equal(e.x,d.x,'la pared trasera es vertical');
-  assert.ok(d.y>e.y,'la pared SUBE, no baja');
+  assert.equal(f.y,e.y);
+  assert.equal(e.x,d.x);
+  assert.ok(d.y>e.y,'contrahuella ascendente');
   const face=gaugeContactFeature(values,2);
-  assert.deepEqual(face.from,f,'apoyo sobre la punta anterior');
-  assert.deepEqual(face.to,e,'el canto llega al fondo de la repisa');
-  assert.deepEqual(face.frontFace.from,e,'la pared comienza en el fondo del apoyo');
-  assert.deepEqual(face.frontFace.to,d,'la pared termina arriba');
+  assert.deepEqual(face.from,a,'parada sobre cara frontal exterior');
+  assert.deepEqual(face.to,f,'cara frontal de la pestaña inferior');
+  assert.equal(face.surface,'vertical-front');
+ });
+});
+test('la sección coloca la pieza DELANTE del dedo Support y Stop, sin atravesarlos',()=>{
+ const scene=technicalScene(EXAMPLE,.6);
+ for(const [kind,values] of [[1,V85_FACTORY.stop],[2,V85_FACTORY.support]]){
+  const placed=gaugePlacement(scene,kind);
+  const world=gaugeContourAtContact(placed,values);
+  assert.equal(placed.sheetInFront,true);
+  assert.equal(placed.seat.required,false);
+  assert.equal(placed.seat.seated,true);
+  assert.equal(placed.contactEngaged,true);
+  assert.equal(placed.contact.surface,'vertical-front');
+  assert.deepEqual(world[0],placed.contact.from);
+  assert.deepEqual(world[5],placed.contact.to);
+  assert.equal(placed.contact.point.x,placed.point.x);
+  assert.ok(world.every(pt=>pt.x>=placed.point.x),
+   'ninguna parte del cuerpo del tope pasa delante de la chapa');
+  assert.equal(placed.gaugeInterference?.warning,false);
  }
 });
-test('la sección coloca chapa encima del saliente y la detiene contra la pared, SIN atravesar el tope',()=>{
- const scene=technicalScene(EXAMPLE,.6),sup=gaugePlacement(scene,2);
- const stop=gaugePlacement(scene,1);
- assert.equal(sup.sheetInFront,true,'la chapa entra desde el frente (izquierda)');
- assert.equal(sup.seat.required,true);
- assert.equal(sup.seat.seated,true);
- assert.equal(sup.contactEngaged,true);
- assert.equal(stop.contact.surface,'vertical-front');
- assert.equal(stop.contactEngaged,true);
- const wall=sup.contact.frontFace;
- const shelf=sup.contact;
- const thickness=scene.piece.thickness;
- assert.ok(shelf.from.x<shelf.to.x,'el labio bajo sobresale debajo de la chapa');
- assert.ok(Math.abs(shelf.point.y-(sup.point.y-thickness/2))<1e-8,
-  'cara inferior de la chapa tocando el nivel de la repisa');
- assert.equal(shelf.to.x,sup.point.x,'el canto acaba en la pared');
- assert.equal(wall.from.x,sup.point.x);
- assert.equal(wall.to.x,sup.point.x);
- assert.equal(wall.from.y,shelf.to.y);
- assert.ok(wall.to.y>sup.point.y,
-  'la pared sobresale por ENCIMA del canto, como en la máquina real');
- const world=gaugeContourAtContact(sup,V85_FACTORY.support);
- assert.deepEqual(world[5],shelf.from);
- assert.deepEqual(world[4],shelf.to);
- assert.deepEqual(world[3],wall.to);
- assert.equal(sup.gaugeInterference?.warning,false,
-  'el contacto permitido no debe contarse como penetración');
-});
-test('el motor rechaza una repisa sin pared ASCENDENTE aunque parezca horizontal',()=>{
+test('se rechaza la cara frontal horizontal, ausente o desplazada del datum',()=>{
  const good=gaugeContactFeature(V85_FACTORY.support,2);
- const reference={sheet:[{x:0,y:1},{x:50,y:1}]},point={x:50,y:1};
- const a=gaugeSeatAssessment(reference,1,reference.point,2,good);
- assert.equal(a.seated,true);
- const down={...good,frontFace:{
-  from:{...good.to},to:{x:good.to.x,y:good.to.y-6}
- }};
- const b=gaugeSeatAssessment(reference,1,reference.point,2,down);
- assert.equal(b.seated,false);
- assert.match(b.reason,/pared vertical ascendente/);
- const missing={...good,frontFace:null};
- assert.equal(gaugeSeatAssessment(reference,1,reference.point,2,missing).seated,false);
+ const reference={sheet:[{x:0,y:1},{x:50,y:1}]};
+ const point={x:50,y:1};
+ assert.equal(gaugeSeatAssessment(reference,1,point,2,good).seated,true);
+ const wrong={...good,from:{...good.from,x:good.from.x+2},
+  to:{...good.to,x:good.to.x+2}};
+ assert.equal(gaugeSeatAssessment(reference,1,point,2,wrong).seated,false);
+ assert.equal(gaugeSeatAssessment(reference,1,point,2,{...good,from:null}).seated,false);
 });
