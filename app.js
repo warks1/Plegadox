@@ -50,7 +50,7 @@ let integratedPlannerEpoch=0;
 let measurementInputKey=measurementKey(piece),lastSavedMeasurement=null;
 const geometryCache={key:null,result:null};
 function geometryReport(){
- const key=JSON.stringify([piece.flanges,piece.angles,piece.order,piece.thickness,piece.width,piece.material,piece.rmMPa,piece.punch,piece.die,piece.punchOrientation,piece.gaugeSideByBend,getV85().ramWidth,getV85().holderWidth]);
+ const key=JSON.stringify([piece.flanges,piece.angles,piece.order,piece.thickness,piece.width,piece.material,piece.rmMPa,piece.punch,piece.die,piece.punchOrientation,piece.springback,piece.gaugeSideByBend,getV85().ramWidth,getV85().holderWidth]);
  if(key!==geometryCache.key){
   const report=analyzeSequence(piece),tools=inspectSequenceTools(piece,6),
    sheetScan=scanSheetSequence(piece,15);
@@ -226,6 +226,7 @@ function configure(){
   if(key==='material'&&v!==piece.material)updated.rmMPa=null;
   changePiece(updated,true);
  });
+ $('springback').addEventListener('change',e=>changePiece({...piece,springback:e.target.value!=='off'}));
  $('kFactor').addEventListener('change',e=>changePiece({...piece,kFactor:e.target.value===''?null:finite(e.target.value,.36)}));
  $('insideRadius').addEventListener('change',e=>changePiece({...piece,radius:e.target.value===''?null:finite(e.target.value,2)}));
  $('rmMPa').addEventListener('change',e=>{
@@ -928,6 +929,7 @@ function syncMeasurementPiece(){
 function renderSetup(){
  for(const id of ['pieceName','material','thickness','width','die','punch','punchOrientation'])$(id).value=piece[{pieceName:'name'}[id]||id];
  $('datum').value=piece.datum;
+ $('springback').value=piece.springback===false?'off':'on';
  $('kFactor').value=piece.kFactor??getTooling(piece).material.k;
  $('insideRadius').value=piece.radius??numbers(development(piece).radius,2).replace(',','.');
  $('rmMPa').value=piece.rmMPa??'';

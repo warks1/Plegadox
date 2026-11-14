@@ -129,6 +129,11 @@ export function technicalScene(piece,instant=0){
    from:gaugeAnchor,to:target,raw,progress:middle,
    withdrawn:raw>=.22&&raw<=.78,nextBend};
  }
+// Recuperación elástica: grados de sobredoblado según el material,
+ // proporcional al giro programado (máx. a 90°). Desactivable por pieza.
+ const programmed=Math.abs(p.angles[st.activeBend]||0);
+ const overbend=p.springback===false?0:
+  (Number(tooling.material?.springback)||0)*Math.min(1,programmed/90);
  const kinematics=contactKinematics({
   points:presentation.points,activeBend:st.activeBend,
   angle:p.angles[st.activeBend]*st.fractions[st.activeBend],
@@ -137,7 +142,7 @@ export function technicalScene(piece,instant=0){
   insideRadius:development(p).radius,
   feedMirrored:feedMirror,
   repositionProgress:presentation.repositioning?presentation.progress:1,
-  presentationLift:presentation.clearanceLift??0
+  presentationLift:presentation.clearanceLift??0,overbend
  });
  const sheet=kinematics.sheet;
  // Mantener los radios visibles de TODOS los golpes ejecutados, en vez de

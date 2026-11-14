@@ -15,7 +15,7 @@ const lerp=(a,b,t)=>a+(b-a)*t;
 export function contactKinematics({
  points,activeBend,angle=0,opening=16,dieDepth=8,thickness=2,
  phase='Posicionamiento',press=0,approachGap=null,presentationLift=0,
- insideRadius=null,feedMirrored=false,repositionProgress=1
+ insideRadius=null,feedMirrored=false,repositionProgress=1,overbend=0
 }){
  const input=Array.isArray(points)?points:[];
  if(input.length<2)return {sheet:[],rounded:[],tipHeight:0,
@@ -24,7 +24,14 @@ export function contactKinematics({
   activeBend+1:1;
  const bend=input[valid],isTransition=phase==='Reposicionamiento'||phase==='Pieza terminada';
  // El motor admite giros hasta ±179°.
- const angleRad=Math.min(179,Math.max(0,Math.abs(angle)))*deg;
+// Sobredoblado por recuperación elástica (grados): la punta lleva la chapa
+ // un poco MÁS allá del ángulo programado al final del golpe y la chapa
+ // recupera hasta el ángulo programado durante el retorno. No aplica en
+ // aproximación, recolocación ni pieza terminada. Estimación, no ensayo.
+ const springW=phase==='Plegado'?clamp((press-.45)/.55,0,1):
+  phase==='Retorno'?clamp(press,0,1):0;
+ const extra=Math.abs(angle)>0?Math.max(0,Number(overbend)||0)*springW:0;
+ const angleRad=Math.min(179,Math.max(0,Math.abs(angle)+extra))*deg;
  const halfOpening=Math.max(.2,opening/2);
  const limit=Math.max(0,dieDepth-Math.max(.15,thickness*.3));
  // Depth that a sharp-corner V would require to put BOTH sides on the shoulders.
@@ -84,7 +91,8 @@ export function contactKinematics({
  const rounded=roundedCorner(sheet,valid,requestedCenterlineRadius);
  return {sheet,rounded,tipHeight,centerHeight,sag,sagTarget,
   limitedByDie:dieLimit,contact:phase==='Plegado',
-  requestedCenterlineRadius,repositionLift,roundedApproximation:true};
+  requestedCenterlineRadius,repositionLift,roundedApproximation:true,
+  overbendApplied:extra};
 }
 /**
  * Fillet de sección: verdadero arco circular tangente a ambas fibras rectas,
