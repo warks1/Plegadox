@@ -1335,7 +1335,8 @@ function renderFlatBendRows(){
  const root=$('flatBendRows'),warning=$('flatLayoutWarning');
  if(!root||!warning)return;
  const key=JSON.stringify([piece.flanges,piece.angles,piece.order,piece.thickness,
-  piece.kFactor,piece.radius,piece.die,piece.material,piece.datum,piece.width]);
+  piece.kFactor,piece.radius,piece.die,piece.material,piece.datum,piece.width,
+  piece.bendDeductionByBend]);
  if(root.dataset.key===key)return;
  root.dataset.key=key;
  try{
@@ -1359,7 +1360,56 @@ function renderFlatBendRows(){
   $('exportDxfFlat').disabled=true;
  }
 }
+/** Deducciones BD de probeta: se asocian al pliegue GEOMÉTRICO,
+ * nunca a su posición en el orden de golpes. */
+function renderBendDeductionCalibration(){
+ const root=$('bendDeductionInputs'),status=$('bendDeductionStatus');
+ if(!root||!status)return;
+ const key=JSON.stringify([piece.angles,piece.bendDeductionByBend,
+  piece.thickness,piece.radius,piece.kFactor,piece.die,piece.material,piece.datum]);
+ if(root.dataset.key!==key){
+  root.dataset.key=key;
+  const d=development(piece);
+  const controls=piece.angles.map((angle,index)=>{
+   const label=document.createElement('label');
+   label.textContent='P'+(index+1)+' · '+(angle>=0?'+':'')+angle+'° · BD real (mm)';
+   const input=document.createElement('input');
+   input.type='number';input.min='0';input.max='1000';input.step='0.001';
+   input.inputMode='decimal';
+   input.setAttribute('aria-label','Deducción BD medida, pliegue '+(index+1));
+   input.placeholder='Estimada: '+numbers(d.perBend[index].modelBD,3);
+   input.value=piece.bendDeductionByBend[index]??'';
+   input.disabled=piece.datum!=='outside';
+   input.addEventListener('change',()=>{
+    const raw=input.value.trim();
+    const value=raw===''?null:Number(raw);
+    if(value!==null&&(!Number.isFinite(value)||value<0||value>1000)){
+     input.setCustomValidity('Introducir BD medida de 0 a 1000 mm');
+     input.reportValidity();return;
+    }
+    input.setCustomValidity('');
+    const bendDeductionByBend=[...piece.bendDeductionByBend];
+    bendDeductionByBend[index]=value;
+    changePiece({...piece,bendDeductionByBend},true);
+   });
+   label.append(input);return label;
+  });
+  root.replaceChildren(...controls);
+ }
+ const count=piece.bendDeductionByBend.filter(v=>v!=null).length;
+ status.textContent=piece.datum!=='outside'?
+  'BD individuales guardadas, pero desactivadas en cotas neutras. Para ese criterio se emplea BA del modelo.':
+  count+' de '+piece.angles.length+' pliegues con BD introducida desde taller. '+
+  'Las restantes BD se estiman usando radio y K; verificar antes de cortar.';
+ const clear=$('clearBendDeductions');
+ if(clear&&!clear.dataset.bound){
+  clear.dataset.bound='yes';
+  clear.onclick=()=>changePiece({...piece,
+   bendDeductionByBend:piece.angles.map(()=>null)},true);
+ }
+}
 function renderDevelopment(){
+ renderBendDeductionCalibration();
  const c=compareCybelecOmega(piece),comparison=$('cybelecDevelopmentCompare');
  if(comparison){
   const orderText=c.executionOrder.map(op=>'G'+op.operation+'→P'+op.bend).join(' · ');
@@ -1383,7 +1433,8 @@ function renderDevelopment(){
  }
  const d=development(piece),check=geometryReport(),force=estimateAirBendForce(piece);
  const items=[['Nominal',d.nominal,'mm'],['Desarrollo',d.length,'mm'],
-  ['Deducción total',d.totalBD,'mm'],['Radio interior',d.radius,'mm'],
+  ['Deducción total',d.totalBD,'mm'],['BD de taller',d.calibratedCount,'pliegues'],
+  ['Radio interior',d.radius,'mm'],
   ['Fuerza aire aprox.',force.tonneForce,'t'],
   ['Carga lineal aprox.',force.kNPerMetre,'kN/m']];
  $('devSummary').replaceChildren(...items.map(([name,val,unit])=>{
@@ -1404,7 +1455,7 @@ function renderDevelopment(){
  renderVComparison();
  renderFlatBendRows();
 
- $('devRows').replaceChildren(...d.perBend.map(b=>{const tr=document.createElement('tr');for(const val of [b.index+1,(b.angle>0?'+':'')+b.angle+'°',numbers(b.ba,2),numbers(b.bd,2)]){const td=document.createElement('td');td.textContent=val;tr.append(td);}return tr;}));
+ $('devRows').replaceChildren(...d.perBend.map(b=>{const tr=document.createElement('tr');for(const val of [b.index+1,(b.angle>0?'+':'')+b.angle+'°',numbers(b.ba,2),numbers(b.bd,2)+(b.calibrated?' (taller)':' (estim.)')]){const td=document.createElement('td');td.textContent=val;tr.append(td);}return tr;}));
  const out=[['Alas',piece.flanges.length],['Pliegues',piece.angles.length],['L. nominal',numbers(d.nominal,1)+' mm']];
  $('geometrySummary').replaceChildren(...out.map(([name,val])=>{const e=document.createElement('div');e.className='stat';const b=document.createElement('b');b.textContent=String(val);const s=document.createElement('span');s.textContent=name;e.append(b,s);return e;}));
  $('validity').textContent=check.hasGeometryWarning?'Revisar geometría y configuración':'Perfil calculado · sin validación física';
