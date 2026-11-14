@@ -645,7 +645,7 @@ function scheduleIntegratedAdvisor(){
    if(!report.best){
     status.dataset.state='none';
     status.textContent=report.candidatePairs>0?
-     'Se han cotejado '+report.planVariantsChecked+' variantes de '+report.pairsScreened+
+     'Cotejadas '+report.planVariantsChecked+' variantes de '+report.pairsScreened+
      ' parejas de útiles, pero ninguna supera todos los filtros de penetración modelada '+
      '(chapa, punzón, matriz, tope, trancha o mesa). No se recomienda aplicar '+
      'automáticamente un orden potencialmente conflictivo. El orden manual sigue disponible.':
