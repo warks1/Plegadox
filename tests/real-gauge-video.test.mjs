@@ -28,7 +28,7 @@ test('el dedo COMPLETO conserva labio bajo izquierdo y contrahuella que sube',()
   assert.deepEqual(face.from,a,'parada sobre cara frontal exterior');
   assert.deepEqual(face.to,f,'cara frontal de la pestaña inferior');
   assert.equal(face.surface,'vertical-front');
- });
+ }
 });
 test('la sección coloca la pieza DELANTE del dedo Support y Stop, sin atravesarlos',()=>{
  const scene=technicalScene(EXAMPLE,.6);
