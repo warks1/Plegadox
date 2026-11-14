@@ -245,13 +245,21 @@ function configure(){
   detachLibraryPiece();
   changePiece(cybelecReferencePreset(),true);
  };
- $('addFlange').onclick=()=>{if(piece.flanges.length>=20)return;changePiece({...piece,flanges:[...piece.flanges,50],angles:[...piece.angles,90],order:[...piece.order,piece.angles.length],stopByBend:[...piece.stopByBend,1],gaugeSideByBend:[...piece.gaugeSideByBend,'auto']},true);};
+ $('addFlange').onclick=()=>{if(piece.flanges.length>=20)return;changePiece({...piece,flanges:[...piece.flanges,50],angles:[...piece.angles,90],order:[...piece.order,piece.angles.length],stopByBend:[...piece.stopByBend,1],gaugeContactByBend:[...piece.gaugeContactByBend,'front'],gaugeSideByBend:[...piece.gaugeSideByBend,'auto']},true);};
  $('resetOrder').onclick=()=>changePiece({...piece,order:piece.angles.map((_,i)=>i)},true);
  for(const value of [1,2])$('chooseGauge'+value).onclick=()=>{
   const current=stopAtStage(piece,sim.time),modes=[...piece.stopByBend];
   modes[current.bend]=value;
   changePiece({...piece,stopByBend:modes},false);
  };
+ for(const mode of ['front','shelf']){
+  const id=mode==='front'?'chooseContactFront':'chooseContactShelf';
+  $(id).onclick=()=>{
+   const current=stopAtStage(piece,sim.time),modes=[...piece.gaugeContactByBend];
+   modes[current.bend]=mode;
+   changePiece({...piece,gaugeContactByBend:modes},false);
+  };
+ }
  for(const mode of ['auto','before','after']){
   const suffix=mode==='auto'?'Auto':mode==='before'?'Before':'After';
   $('chooseSide'+suffix).onclick=()=>{
@@ -1553,7 +1561,9 @@ function renderSimulationText(){
  const freeEnd=ref.sourceIndex===0||ref.sourceIndex===piece.flanges.length;
  const chosenGauge=gaugePlacement(technicalScene(piece,sim.time),gauge.value);
  $('activeGaugeReference').textContent=ref.label+' · '+numbers(ref.distance,1)+
-  ' mm nominales desde el pliegue · '+(gauge.value===2?'chapa sobre primer escalón SUPPORT 2':'chapa contra cara frontal inferior STOP 1')+
+  ' mm nominales desde el pliegue · '+(chosenGauge.contactMode==='shelf'?
+   'apoyo SUPERIOR solicitado manualmente (LAY ON FINGER)':
+   'CARA FRONTAL · chapa delante y tope detrás')+
    ' · '+(ref.side==='before'?'presentación invertida':'presentación directa')+
   (freeEnd?' · borde libre':' · ⚠ vértice interior: verificar apoyo')+
   (freeEnd&&!chosenGauge.sheetInFront?
@@ -1575,6 +1585,11 @@ function renderSimulationText(){
  }
  for(const n of [1,2]){
   const btn=$('chooseGauge'+n),active=gauge.value===n;
+  btn.classList.toggle('selected',active);btn.setAttribute('aria-pressed',String(active));
+ }
+ for(const mode of ['front','shelf']){
+  const btn=$(mode==='front'?'chooseContactFront':'chooseContactShelf');
+  const active=chosenGauge.contactMode===mode;
   btn.classList.toggle('selected',active);btn.setAttribute('aria-pressed',String(active));
  }
 
