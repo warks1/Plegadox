@@ -49,6 +49,19 @@ try{
  assert.ok(stored.ram.points.length>20);
  assert.ok(Math.abs(stored.ram.dimensionHeight-100)<.001);
  assert.equal(stored.ram.industrialVerified,false);
+ // R37: un segundo fichero sin unidades NO reemplaza el perfil bueno.
+ const withoutUnits=cadDXF.replace('9\\n$INSUNITS\\n70\\n4\\n','');
+ await page.locator('#machineCadFile').setInputFiles({
+  name:'ram-units-unknown.dxf',mimeType:'application/dxf',
+  buffer:Buffer.from(withoutUnits)});
+ await page.locator('#machineCadSave').click();
+ await page.waitForFunction(()=>document.querySelector('#machineCadStatus')
+  ?.dataset.error==='true');
+ assert.match(await page.locator('#machineCadStatus').textContent(),
+  /debe declarar milímetros/);
+ const retained=await page.evaluate(()=>JSON.parse(
+  localStorage.getItem('plegadox:machine-cad:v1')));
+ assert.deepEqual(retained.ram,stored.ram);
  assert.ok(await page.locator('#machineRamProfile').isVisible());
  await page.screenshot({path:'test-results/r36-cad-arc-maquina.png',fullPage:false});
  const downloadCad=page.waitForEvent('download');
