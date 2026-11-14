@@ -41,6 +41,8 @@ export function machineCadDatum(kind){
 }
 export function machineCadFromDXF(dxf,options){
  const parsed=parseToolDxf(dxf,{maxWidth:MAX_WIDTH,maxHeight:MAX_HEIGHT});
+ if(parsed.unitsAssumed)
+  throw Error('El CAD de máquina debe declarar milímetros en DXF ($INSUNITS=4). Exporta de nuevo el perfil con unidades explícitas; no se permite suponer escala física.');
  return normalizeMachineCad({
   ...options,points:parsed.points,
   unitsAssumed:parsed.unitsAssumed,sourceFormat:'DXF_ASCII_MM'
