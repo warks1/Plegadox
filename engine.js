@@ -40,6 +40,10 @@ export function normalized(input){
  const n=a.length,requested=Array.isArray(input?.order)?input.order:[];
  // Elección de apoyo trasero por pliegue: 1 Stop o 2 Support.
  const stopByBend=Array.from({length:n},(_,i)=>String(input?.stopByBend?.[i])==='2'?2:1);
+ // Independiente del número del dedo. TRUMPF distingue STOP frontal
+ // de LAY ON FINGER; el segundo requiere una orden expresa POR PLIEGUE.
+ const gaugeContactByBend=Array.from({length:n},(_,i)=>
+  input?.gaugeContactByBend?.[i]==='shelf'?'shelf':'front');
  const gaugeSideByBend=Array.from({length:n},(_,i)=>['before','after'].includes(input?.gaugeSideByBend?.[i])?input.gaugeSideByBend[i]:'auto');
  const order=[...new Set(requested.filter(i=>Number.isInteger(i)&&i>=0&&i<n))];
  for(let i=0;i<n;i++)if(!order.includes(i))order.push(i);
@@ -52,7 +56,7 @@ export function normalized(input){
   const v=Number(raw);
   return Number.isFinite(v)&&v>=0&&v<=1000?v:null;
  });
- return {name:String(input?.name||'Nueva pieza').slice(0,80),material:id,thickness:clamp(finite(input?.thickness,2),0.2,30),width:clamp(finite(input?.width,500),1,10000),die:DIES.some(d=>d.id===input?.die)?input.die:'v16',punch:PUNCHES.some(p=>p.id===input?.punch)?input.punch:'straight88',punchOrientation:input?.punchOrientation==='reversed'?'reversed':'normal',flanges:f,angles:a,order,stopByBend,gaugeSideByBend,bendDeductionByBend,kFactor:input?.kFactor==null?null:clamp(finite(input.kFactor,.36),.15,.6),radius:input?.radius==null?null:clamp(finite(input.radius,2),.1,100),rmMPa:input?.rmMPa==null||input.rmMPa===''?null:clamp(finite(input.rmMPa,450),50,1800),datum:input?.datum==='neutral'?'neutral':'outside'};
+ return {name:String(input?.name||'Nueva pieza').slice(0,80),material:id,thickness:clamp(finite(input?.thickness,2),0.2,30),width:clamp(finite(input?.width,500),1,10000),die:DIES.some(d=>d.id===input?.die)?input.die:'v16',punch:PUNCHES.some(p=>p.id===input?.punch)?input.punch:'straight88',punchOrientation:input?.punchOrientation==='reversed'?'reversed':'normal',flanges:f,angles:a,order,stopByBend,gaugeContactByBend,gaugeSideByBend,bendDeductionByBend,kFactor:input?.kFactor==null?null:clamp(finite(input.kFactor,.36),.15,.6),radius:input?.radius==null?null:clamp(finite(input.radius,2),.1,100),rmMPa:input?.rmMPa==null||input.rmMPa===''?null:clamp(finite(input.rmMPa,450),50,1800),datum:input?.datum==='neutral'?'neutral':'outside'};
 }
 /** Todos los pliegues parten de una chapa recta. +90 y -90 giran en sentidos contrarios. */
 export function profile(piece,fractions=[]){
