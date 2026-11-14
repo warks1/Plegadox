@@ -35,13 +35,37 @@ test('barrido relativo: dos cuerpos que avanzan juntos no colisionan',()=>{
  assert.equal(hit.intersects,false);
  assert.equal(hit.unknown,false);
 });
-test('barrido: cambio de forma, giro o traslado Z es INDETERMINADO, no libre',()=>{
+test('barrido: cambio de forma o giro sigue SIN RESOLVER',()=>{
  const a=prism('pieza',0,0,2,2);
  const shape=prism('pieza',0,0,3,2);
  assert.equal(prismTranslation(a,shape).ok,false);
  assert.equal(sweptPrismAgainstStatic(a,shape,prism('obstaculo',6,0,7,2)).unknown,true);
- const zMoved=translatePrism(a,6,0,1);
- assert.equal(sweptPrismAgainstStatic(a,zMoved,prism('obstaculo',4,0,5,2)).unknown,true);
+});
+test('barrido: Z cruza el obstáculo ENTRE posiciones sin tocar extremos',()=>{
+ const a=prism('dedo',0,0,2,2,-5,-3);
+ const end=translatePrism(a,0,0,8);
+ const body=prism('chapa',0,0,2,2,-1,1);
+ const result=sweptPrismAgainstStatic(a,end,body);
+ assert.equal(prismTranslation(a,end).ok,true);
+ assert.equal(result.intersects,true);
+ assert.equal(result.unknown,false);
+ assert.ok(result.zWindow[0]>0&&result.zWindow[1]<1);
+});
+test('barrido: X/Z simultáneos sin coincidencia TEMPORAL no se clasifican como colisión',()=>{
+ const a=prism('dedo',-7,0,-5,2,-10,-8);
+ const end=translatePrism(a,12,0,10);
+ const body=prism('chapa',-4,0,-3,2,-1,1);
+ const result=sweptPrismAgainstStatic(a,end,body);
+ assert.equal(result.intersects,false);
+ assert.equal(result.unknown,false);
+});
+test('barrido: dos cuerpos que se acercan en Z se encuentran en el tramo',()=>{
+ const a=prism('dedo',0,0,2,2,-6,-4);
+ const b=prism('chapa',0,0,2,2,4,6);
+ const check=sweptPrismPair(a,translatePrism(a,0,0,6),
+  b,translatePrism(b,0,0,-6));
+ assert.equal(check.intersects,true);
+ assert.equal(check.unknown,false);
 });
 test('trayectoria: el escáner presenta penetración intermedia y no certifica CNC',()=>{
  const sheet=prism('sheet',-.5,0,.5,1);
