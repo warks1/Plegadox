@@ -106,8 +106,13 @@ function line(entity){
  const value=(code,label)=>numeric(property(entity,code,'NaN'),label);
  const z0=numeric(property(entity,30,'0'),'Z inicial'),
        z1=numeric(property(entity,31,'0'),'Z final');
- if(Math.abs(z0)>EPS||Math.abs(z1)>EPS)
-  throw Error('DXF no plano: las líneas tienen Z distinto de cero');
+ const thickness=numeric(property(entity,39,'0'),'Grosor de línea DXF');
+ const nx=numeric(property(entity,210,'0'),'Normal X de línea');
+ const ny=numeric(property(entity,220,'0'),'Normal Y de línea');
+ const nz=numeric(property(entity,230,'1'),'Normal Z de línea');
+ if(Math.abs(z0)>EPS||Math.abs(z1)>EPS||Math.abs(thickness)>EPS||
+  Math.abs(nx)>1e-8||Math.abs(ny)>1e-8||Math.abs(nz-1)>1e-8)
+  throw Error('Línea DXF fuera del plano XY, con grosor o extrusion OCS: exporta sólo el contorno 2D');
  return [[value(10,'X1'),value(20,'Y1')],[value(11,'X2'),value(21,'Y2')]];
 }
 /** Un único contorno construido con LINE y ARC en cualquier orden y
