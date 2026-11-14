@@ -96,7 +96,10 @@ export function gaugePlacement(scene,stopNumber=1){
  const thickness=Math.max(.2,Number(scene?.piece?.thickness)||2);
  const selected=stopNumber===2?2:1;
  const dimensions=selected===2?getV85().support:getV85().stop;
- const feature=gaugeContactFeature(dimensions,selected);
+ const activeBend=scene?.stage?.activeBend??0;
+ const contactMode=scene?.piece?.gaugeContactByBend?.[activeBend]==='shelf'?
+  'shelf':'front';
+ const feature=gaugeContactFeature(dimensions,selected,contactMode);
  // Revisar el sólido del dedo, no sólo la posición de su cara nominal.
  // La foto/vídeo mostró la chapa atravesando el perfil del tope aunque
  // el marcador verde siguiera anunciando contacto.
@@ -116,8 +119,8 @@ export function gaugePlacement(scene,stopNumber=1){
  const contactAt=edge=>{
   // Mantener X del borde de chapa. Stop toca la cara frontal vertical;
   // Support apoya SOBRE el escalón, a e/2 bajo la fibra media de chapa.
-  const support=selected===2;
-  const surface={x:edge.x,y:edge.y-(support?thickness/2:0)};
+  const onShelf=feature.surface==='horizontal-top';
+  const surface={x:edge.x,y:edge.y-(onShelf?thickness/2:0)};
   const origin={x:surface.x-feature.point.x,y:surface.y-feature.point.y};
   const toWorld=pt=>({x:origin.x+pt.x,y:origin.y+pt.y});
   return {kind:feature.kind,surface:feature.surface,
@@ -146,7 +149,8 @@ export function gaugePlacement(scene,stopNumber=1){
     feature.usable&&a.x>0&&approaching&&
     gap<=Math.max(.4,thickness*.28);
   return review({stopNumber:selected,profile:selected===2?'support':'stop',
-   point:{x:a.x,y:a.y},contact:contactAt(a),nominalDistance:reference.distance,
+   point:{x:a.x,y:a.y},contact:contactAt(a),contactMode,
+   nominalDistance:reference.distance,
    referenceSide:reference.side,referenceLabel:reference.label,
    feedMirrored:!!scene.feedMirrored,sourceIndex:index,sheetInFront,
    moving:!!scene.gaugeTransition,gaugeTransition:scene.gaugeTransition,
@@ -157,7 +161,9 @@ export function gaugePlacement(scene,stopNumber=1){
     !valid?'sin cota válida':!feature.usable?'sin cara física de apoyo definida':
     !freeEdge?'apoyo sobre vértice interior: revisar':
     !sheetInFront?'⚠ La chapa llega por DETRÁS del tope; invertir la presentación':
-    !seat.seated?'⚠ La chapa NO asienta sobre la repisa del primer escalón':
+    !seat.seated?(contactMode==='shelf'?
+     '⚠ La chapa NO asienta sobre la repisa pedida':
+     '⚠ El canto NO contacta con la cara delantera del tope') :
     contactEngaged?'borde presentado contra la cara seleccionada':
     'referencia nominal fijada antes del golpe (sin contacto actual)',
    verified:false});
@@ -177,7 +183,7 @@ export function gaugePlacement(scene,stopNumber=1){
  const sheetInFront=!!neighbour&&neighbour.x<edge.x-Math.max(.12,thickness*.12);
  const seat=gaugeSeatAssessment({sheet:points},index,edge,thickness,feature);
  return review({stopNumber:selected,profile:selected===2?'support':'stop',
-  point:{...edge},contact:contactAt(edge),sheetInFront,seat,
+  point:{...edge},contact:contactAt(edge),contactMode,sheetInFront,seat,
   sheetEdgeFound:!!rear,alignedToSheet:validEdge&&sheetInFront&&
    seat.seated&&feature.usable,
   state:!sheetInFront&&rear?'⚠ Chapa por detrás del dedo; revisar orientación':
