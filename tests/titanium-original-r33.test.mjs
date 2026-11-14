@@ -33,8 +33,8 @@ test('R34 incluye fotografía original y fallback R33 en PWA y no borra piezas',
  const info=JSON.parse(read('build-info.json'));
  for(const p of ['./titanium-loading-original.html','./splash-foto-premium.html',
   './plegadox-premium-selected.png'])assert.ok(sw.includes('"'+p+'"'));
- assert.equal(info.version,'0.9.10');
- assert.match(info.build,/R34$/);
+ assert.equal(info.version,JSON.parse(read('package.json')).version);
+ assert.match(info.build,/^PLEGADOX-[0-9]{8}-R[0-9]+$/);
  assert.ok(html.includes('const BUILD="'+info.build+'"'));
  assert.ok(sw.includes("const CACHE='"+info.cache+"'"));
  assert.match(css,/\.px-titanium-original #pxSplashReference/);

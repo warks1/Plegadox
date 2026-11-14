@@ -54,6 +54,8 @@ try{
   await page.locator('#completeProjectInput').setInputFiles({
    name:'corrupto.json',mimeType:'application/json',
    buffer:Buffer.from(JSON.stringify({...backup,format:'OTRA'}))});
+  await page.waitForFunction(()=>
+   document.querySelector('#completeProjectStatus')?.dataset.state==='error');
   assert.match(await page.locator('#completeProjectStatus').textContent(),/Restauración rechazada/);
   assert.equal(await page.locator('#pieceName').inputValue(),'Omega · ejemplo geométrico');
   await page.screenshot({path:'test-results/backup-auditoria-'+dev.name+'.png',fullPage:false});

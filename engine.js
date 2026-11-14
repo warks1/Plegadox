@@ -44,7 +44,15 @@ export function normalized(input){
  const order=[...new Set(requested.filter(i=>Number.isInteger(i)&&i>=0&&i<n))];
  for(let i=0;i<n;i++)if(!order.includes(i))order.push(i);
  const id= MATERIALS.some(m=>m.id===input?.material)?input.material:'s235';
- return {name:String(input?.name||'Nueva pieza').slice(0,80),material:id,thickness:clamp(finite(input?.thickness,2),0.2,30),width:clamp(finite(input?.width,500),1,10000),die:DIES.some(d=>d.id===input?.die)?input.die:'v16',punch:PUNCHES.some(p=>p.id===input?.punch)?input.punch:'straight88',punchOrientation:input?.punchOrientation==='reversed'?'reversed':'normal',flanges:f,angles:a,order,stopByBend,gaugeSideByBend,kFactor:input?.kFactor==null?null:clamp(finite(input.kFactor,.36),.15,.6),radius:input?.radius==null?null:clamp(finite(input.radius,2),.1,100),rmMPa:input?.rmMPa==null||input.rmMPa===''?null:clamp(finite(input.rmMPa,450),50,1800),datum:input?.datum==='neutral'?'neutral':'outside'};
+ // BD medidas por pliegue (mm): opcionales y sólo para cotas exteriores.
+ // Nunca se sustituye un dato no introducido por un número inventado.
+ const bendDeductionByBend=Array.from({length:n},(_,i)=>{
+  const raw=input?.bendDeductionByBend?.[i];
+  if(raw==null||raw==='')return null;
+  const v=Number(raw);
+  return Number.isFinite(v)&&v>=0&&v<=1000?v:null;
+ });
+ return {name:String(input?.name||'Nueva pieza').slice(0,80),material:id,thickness:clamp(finite(input?.thickness,2),0.2,30),width:clamp(finite(input?.width,500),1,10000),die:DIES.some(d=>d.id===input?.die)?input.die:'v16',punch:PUNCHES.some(p=>p.id===input?.punch)?input.punch:'straight88',punchOrientation:input?.punchOrientation==='reversed'?'reversed':'normal',flanges:f,angles:a,order,stopByBend,gaugeSideByBend,bendDeductionByBend,kFactor:input?.kFactor==null?null:clamp(finite(input.kFactor,.36),.15,.6),radius:input?.radius==null?null:clamp(finite(input.radius,2),.1,100),rmMPa:input?.rmMPa==null||input.rmMPa===''?null:clamp(finite(input.rmMPa,450),50,1800),datum:input?.datum==='neutral'?'neutral':'outside'};
 }
 /** Todos los pliegues parten de una chapa recta. +90 y -90 giran en sentidos contrarios. */
 export function profile(piece,fractions=[]){
@@ -124,12 +132,27 @@ export function development(piece){
  const r=p.radius??Math.max(t*.6,die.opening*(material.id.startsWith('alu')?.18:.16));
  const k=p.kFactor??material.k;
  const perBend=p.angles.map((a,i)=>{
-   const magnitude=Math.abs(a),rad=angleToRadians(magnitude),ba=rad*(r+k*t);
-   const setback=(r+t)*Math.tan(rad/2),bd=2*setback-ba;
-   return {index:i,angle:a,ba,bd};
+   const magnitude=Math.abs(a),rad=angleToRadians(magnitude),modelBA=rad*(r+k*t);
+   const setback=(r+t)*Math.tan(rad/2),modelBD=2*setback-modelBA;
+   // Sólo aplicar BD tomada del taller si las alas se han acotado hasta
+   // vértices exteriores teóricos. Para cotas neutras se usa BA.
+   const measured=p.datum==='outside'?p.bendDeductionByBend[i]:null;
+   const calibrated=measured!=null;
+   const bd=calibrated?measured:modelBD;
+   const ba=calibrated?2*setback-bd:modelBA;
+   return {index:i,angle:a,ba,bd,modelBA,modelBD,setback,
+    calibrated,source:calibrated?'BD_MEDIDA_POR_PLIEGUE':'MODELO_K_RADIO'};
  });
- const nominal=p.flanges.reduce((a,b)=>a+b,0),totalBA=perBend.reduce((a,b)=>a+b.ba,0),totalBD=perBend.reduce((a,b)=>a+b.bd,0);
- return {radius:r,k,nominal,totalBA,totalBD,length:p.datum==='neutral'?nominal+totalBA:nominal-totalBD,perBend,estimated:true};
+ const nominal=p.flanges.reduce((a,b)=>a+b,0);
+ const totalBA=perBend.reduce((a,b)=>a+b.ba,0);
+ const totalBD=perBend.reduce((a,b)=>a+b.bd,0);
+ const length=p.datum==='neutral'?nominal+totalBA:nominal-totalBD;
+ const calibratedCount=perBend.filter(b=>b.calibrated).length;
+ return {radius:r,k,nominal,totalBA,totalBD,length,perBend,
+  calibratedCount,uncalibratedCount:perBend.length-calibratedCount,
+  kSource:p.kFactor==null?'MATERIAL_ESTIMADO':'INTRODUCIDO',
+  radiusSource:p.radius==null?'V_ESTIMADO':'INTRODUCIDO',
+  estimated:true,verified:false};
 }
 /** Referencia de apoyo por pliegue: el lado de chapa NO es el tipo Stop/Support. */
 export function gaugeReference(piece,bend){
