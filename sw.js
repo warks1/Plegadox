@@ -62,6 +62,7 @@ const APP_FILES=[
  "./project-backup.js",
  "./project-library.js",
  "./workshop-measurements.js",
+ "./tool-cad-audit.js",
  "./tool-dxf.js",
  "./tool-import-ui.js",
  "./validation.js",
