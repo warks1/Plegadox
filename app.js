@@ -637,14 +637,19 @@ function scheduleIntegratedAdvisor(){
   try{
    const complex=piece.angles.length>6;
    const report=optimizeBendPlan(piece,{
-    machine:getV85(),maxPairs:complex?3:6,maxOrders:complex?2:3,
-    maxFinalists:complex?3:6,toolSamples:complex?2:3,gaugeSamples:8,
-    maxVolumeCandidates:complex?2:4,volumeSamples:4
+    machine:getV85(),maxPairs:complex?4:8,maxOrders:complex?3:8,
+    maxFinalists:complex?5:12,toolSamples:complex?2:3,gaugeSamples:8,
+    maxVolumeCandidates:complex?3:8,volumeSamples:4
    });
    if(epoch!==integratedPlannerEpoch)return;
    if(!report.best){
     status.dataset.state='none';
-    status.textContent='No se encontró ninguna pareja preseleccionada válida. '+
+    status.textContent=report.candidatePairs>0?
+     'Se han cotejado '+report.planVariantsChecked+' variantes de '+report.pairsScreened+
+     ' parejas de útiles, pero ninguna supera todos los filtros de penetración modelada '+
+     '(chapa, punzón, matriz, tope, trancha o mesa). No se recomienda aplicar '+
+     'automáticamente un orden potencialmente conflictivo. El orden manual sigue disponible.':
+     'No se encontró ninguna pareja preseleccionada compatible. '+
      report.reasons.join(' ')+' Mantén o cambia tus herramientas manualmente; revisa sus límites.';
     return;
    }
