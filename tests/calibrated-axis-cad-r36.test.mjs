@@ -81,12 +81,15 @@ test('CAD+ejes: inclinación desconocida Y1/Y2 se deja SIN RESOLVER',()=>{
  assert.equal(result.tiltUnresolved,1);
  assert.equal(result.events.length,0);
 });
-test('CAD+ejes: tramo con movimiento Z1 se considera indeterminado aunque X/Y estén fijos',()=>{
+test('CAD+ejes: el movimiento lineal del dedo Z1 se revisa volumétricamente',()=>{
  const tr=motion();tr.poses[1].axes.Z1=100;
  const result=scanAxisCADMovement(EXAMPLE,{machine,machineCAD:fixture(),
   mapping:mapping(),axisMotion:tr});
- assert.ok(result.unresolved>0);
+ assert.equal(result.axisFingerModeled,'Z1');
+ assert.equal(result.intervalsChecked,1);
+ assert.equal(result.checked,true);
  assert.equal(result.canApproveForMachine,false);
+ assert.equal(result.verified,false);
 });
 test('PWA R36 ofrece vínculo CAD/ejes, importación de mapa y cachea módulos nuevos',()=>{
  const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
