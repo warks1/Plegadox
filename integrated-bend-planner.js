@@ -92,9 +92,8 @@ export function optimizeBendPlan(input,options={}){
   if(selectedOrders.length>=maxOrders)break;
   addOrder(item);
  }
- // El orden manual se inspecciona aparte, aunque esté fuera de la muestra.
- const original=rankedOrders.find(item=>same(item.order,p.order));
- if(original)addOrder(original);
+ // El orden manual se inspecciona aparte, aunque esté fuera del cupo
+ // automático. No ampliar maxOrders silenciosamente.
  const machineWidth=Math.min(
   Number(options.machine?.ramWidth)||MACHINE.workingWidth,
   Number(options.machine?.holderWidth)||MACHINE.workingWidth
