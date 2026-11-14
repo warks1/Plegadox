@@ -11,6 +11,8 @@ import {sectionPunch,sectionDie,sectionBounds} from './tool-profiles.js';
 import {contactKinematics,roundedCorner} from './bend-contact.js';
 import {gaugePlacement,gaugeContourAtContact} from './backgauge-placement.js';
 import {getV85} from './machine-config.js';
+import {predictGaugeRetract,previewGaugeRetractState,
+ adjustStageForPinch} from './gauge-retract-planner.js';
 
 const mm=v=>Number.isFinite(+v)?+v:0;
 const mPoint=(x,y)=>({x:mm(x),y:mm(y)});
@@ -54,8 +56,20 @@ export function technicalWorldBounds(scene){
   maxY:Math.max(...valid.map(pt=>pt.y))};
 }
 
-export function technicalScene(piece,instant=0){
- const p=normalized(piece),st=typeof instant==='number'?stage(p,instant):instant;
+export function technicalScene(piece,instant=0,options={}){
+ const p=normalized(piece);
+ let st=typeof instant==='number'?stage(p,instant):instant;
+ // PREVISIÓN por golpe: escanea futuras poses sin retirada y únicamente
+ // cuando detecta interferencia 2D pinza la chapa, retira X, luego pliega.
+ // Esta secuencia es SIMULACIÓN, NO código de movimiento para la V85.
+ const retractPlan=!options.disableGaugeRetraction&&typeof instant==='number'?
+  predictGaugeRetract(p,st.activeOperation,time=>
+   technicalScene(p,time,{disableGaugeRetraction:true})):null;
+ st=adjustStageForPinch(st,retractPlan);
+ const sub=st.completed?1:((st.time%5)/5);
+ const gaugeRetraction=retractPlan?.required&&(sub<.84||
+  st.activeOperation===p.order.length-1)?
+  previewGaugeRetractState(retractPlan,sub):null;
  const tooling=getTooling(p),die=sectionDie(tooling.die),punch=sectionPunch(tooling.punch);
  const t=p.thickness;
  // One real-world coordinate system (millimetres, matrix top at y=0).
@@ -119,14 +133,18 @@ export function technicalScene(piece,instant=0){
    y:nextPoint.y+p.thickness/2};
   const sub=(st.time/5)%1,raw=Math.max(0,Math.min(1,(sub-.84)/.16));
   const smooth=t=>t*t*(3-2*t);
-  const withdraw=Math.max(gaugeAnchor.x,target.x)+Math.max(12,die.opening||16);
+  // Al iniciar reposicionamiento X debe partir de la posición RETIRADA
+  // si hubo riesgo durante el golpe: nada de volver al contacto antiguo.
+  const fromX=gaugeAnchor.x+(retractPlan?.required?retractPlan.distanceMm:0);
+  const fromAnchor={x:fromX,y:gaugeAnchor.y};
+  const withdraw=Math.max(fromX,target.x)+Math.max(12,die.opening||16);
   const x=raw<.22?
-    gaugeAnchor.x+(withdraw-gaugeAnchor.x)*smooth(raw/.22):
+    fromX+(withdraw-fromX)*smooth(raw/.22):
     raw<.78?withdraw:
     withdraw+(target.x-withdraw)*smooth((raw-.78)/.22);
   const middle=smooth(Math.max(0,Math.min(1,(raw-.22)/.56)));
   gaugeTransition={point:{x,y:gaugeAnchor.y+(target.y-gaugeAnchor.y)*middle},
-   from:gaugeAnchor,to:target,raw,progress:middle,
+   from:fromAnchor,to:target,raw,progress:middle,
    withdrawn:raw>=.22&&raw<=.78,nextBend};
  }
  const kinematics=contactKinematics({
@@ -161,7 +179,8 @@ export function technicalScene(piece,instant=0){
   gaugeReference:reference,gaugeAnchor,gaugeTransition,feedMirrored:feedMirror
  });
  return {piece:p,stage:st,presentation,sheet,sheetDisplay,kinematics,diePolygon,punchPolygon,die,punch,
-         gaugeReference:reference,gaugeAnchor,gaugeTransition,feedMirrored:feedMirror,
+         gaugeReference:reference,gaugeAnchor,gaugeTransition,gaugeRetraction,
+         gaugeRetractPlan:retractPlan,feedMirrored:feedMirror,
          dimensions:{opening:die.opening,dieAngle:die.angle,depth:die.depth,
            punchAngle:punch.angle,punchHeight:punch.height,
            punchTipDiameter:tooling.punch.tip,thickness:t,engagement},
