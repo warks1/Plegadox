@@ -41,9 +41,21 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#060c16;col
 #animatedSheet{stroke:#a9e8ff;stroke-width:7;stroke-linecap:round;stroke-linejoin:round;fill:none;filter:drop-shadow(0 0 5px #34cfff)}
 #animatedPunch{fill:url(#titaniumPunch);stroke:#e7f9ff;stroke-width:1.5}
 @media(orientation:portrait) and (max-aspect-ratio:4/5){
+ /* La fotografía elegida YA lleva una barra dibujada. La anterior CSS
+    movía la barra REAL al pie y dejaba visible el porcentaje fijo: dos
+    barras contradictorias en el iPhone. La barra funcional debe TAPAR
+    la ilustrada, dentro de la foto y en la MISMA posición. */
  #foldLive{display:block}
  #frame{margin-top:0!important;transform:translateY(-18vh)}
- #message{bottom:calc(88px + env(safe-area-inset-bottom))}
+ #progress{position:absolute;left:10.76%;right:auto;top:81.4%;bottom:auto;
+  width:78.12%;height:7.2%;padding:0 .3%;gap:2%;border:0;
+  box-shadow:0 0 4px #050c16;background:linear-gradient(180deg,#07111b,#050d17 12%,#0b1928 52%,#050b14)}
+ #rail{height:67%;border-width:1px}
+ #percent{min-width:7.5%;font-size:clamp(9px,2.5vw,14px)}
+ #message{position:absolute;left:11.3%;right:auto;top:77.75%;bottom:auto;
+  max-width:75%;text-align:left;font-size:clamp(8px,2.5vw,13px);
+  text-shadow:0 0 5px #000;overflow:hidden;white-space:nowrap}
+ #screen::before{filter:blur(14px) brightness(.48) saturate(1.15)}
 }
 @media(orientation:portrait) and (max-height:620px){
  #foldLive{height:80px;bottom:calc(130px + env(safe-area-inset-bottom))}
