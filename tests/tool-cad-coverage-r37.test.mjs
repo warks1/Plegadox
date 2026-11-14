@@ -3,11 +3,21 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {auditToolCAD} from '../tool-cad-audit.js';
 import {CATALOG_PUNCHES,CATALOG_DIES} from '../catalog.js';
+import {MECOS_ED22_REFERENCES} from '../catalog-mecos-ed22-index.js';
 import {EXAMPLE,normalized} from '../engine.js';
 import {motionPieceKey} from '../machine-axis-motion.js';
 import {buildProjectBackup,parseProjectBackup} from '../project-backup.js';
 import {V85_FACTORY} from '../machine-config.js';
 
+test('MECOS ED22: ampliación documental con referencias originales, sin geometría ni falsa disponibilidad',()=>{
+ assert.ok(MECOS_ED22_REFERENCES.length>=160);
+ const ids=new Set(MECOS_ED22_REFERENCES.map(x=>x.kind+'|'+x.reference));
+ assert.equal(ids.size,MECOS_ED22_REFERENCES.length,'No duplicar códigos de punzón/matriz');
+ assert.ok(MECOS_ED22_REFERENCES.some(x=>x.reference==='11.820'&&x.angle===85));
+ assert.ok(MECOS_ED22_REFERENCES.some(x=>x.reference==='15.330'&&x.style==='TRUMPF'));
+ assert.ok(MECOS_ED22_REFERENCES.some(x=>x.reference==='25.100'&&x.kind==='die'));
+ assert.ok(MECOS_ED22_REFERENCES.every(x=>x.profilePoints===null&&x.selectable===false&&x.verifiedCollision===false));
+});
 test('inventario CAD: detalla TODAS las referencias de catálogo, no confunde silueta paramétrica con DXF OEM',()=>{
  const report=auditToolCAD({punches:CATALOG_PUNCHES,dies:CATALOG_DIES});
  assert.equal(report.catalogTotal,CATALOG_DIES.length+CATALOG_PUNCHES.length);
