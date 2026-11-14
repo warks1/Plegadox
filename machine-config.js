@@ -106,31 +106,36 @@ export function gaugeOutline(values,stopNumber=1){
  ];
 }
 /**
- * Caras de contacto diferenciadas en el croquis del control:
- * Stop 1: chapa frontal contra la cara inferior vertical del dedo.
- * Support 2: chapa ENCIMA del primer escalón horizontal.
- * El perfil físico NO se invierte al cambiar entre estas dos funciones.
- * Sin garantía de accesibilidad ni cinemática CNC.
+ * La serie TrumaBend V permite contacto FRONTAL o apoyo SUPERIOR del dedo;
+ * LAY ON FINGER es una elección específica, no la colocación por defecto.
+ *
+ * STOP 1 y SUPPORT 2 conservan su forma completa y se presentan con el
+ * canto delante, contra la cara vertical x=0, cuando mode='front'.
+ * 'shelf' sólo cuando el operario solicita expresamente la repisa.
+ * Geometría orientativa según cotas Cybelec: NO perfil OEM.
  */
-export function gaugeContactFeature(values,stopNumber=1){
+export function gaugeContactFeature(values,stopNumber=1,mode='front'){
  const outline=gaugeOutline(values,stopNumber);
  const height=-Math.min(...outline.map(p=>p.y));
  const outer=Math.max(...outline.map(p=>p.x));
  const ledge=outline[4].x,stepDepth=-outline[4].y;
- const support=Number(stopNumber)===2;
- // STOP 1: borde o ala doblada contra frente izquierdo BAJO 0→5.
- // SUPPORT 2: chapa ENCIMA del saliente bajo 5→4, con el canto
- // detenido en el resalte VERTICAL 4→3 que sube por DETRÁS.
- // Un único perfil en ambos modos, sin espejar una parte.
- const from={...outline[support?5:0]};
- const to={...outline[support?4:5]};
- const point=support?{...to}:{x:0,y:-(height+stepDepth)/2};
- const usable=height>stepDepth&&stepDepth>0&&ledge>0&&ledge<outer;
- const frontFace=support?{from:{...outline[4]},to:{...outline[3]}}:
+ const requestedShelf=mode==='shelf';
+ // El frente vertical MÁS CERCANO a la chapa es el segmento 0→5.
+ // La repisa 5→4 NO se usa para colocar una chapa salvo opción LAY ON.
+ const from={...outline[requestedShelf?5:0]};
+ const to={...outline[requestedShelf?4:5]};
+ const frontFace=requestedShelf?
+  {from:{...outline[4]},to:{...outline[3]}}:
   {from:{...outline[0]},to:{...outline[5]}};
- return {kind:support?'support-step':'stop-face',
-  surface:support?'horizontal-top':'vertical-front',frontFace,
-  label:support?'TOPE 2 · APOYO SOBRE PRIMER ESCALÓN':'TOPE 1 · CARA FRONTAL INFERIOR',
+ const point=requestedShelf?
+  {...outline[4]}:{x:0,y:-(height+stepDepth)/2};
+ const usable=height>stepDepth&&stepDepth>0&&ledge>0&&ledge<outer;
+ return {kind:requestedShelf?'support-step':'stop-face',
+  mode:requestedShelf?'shelf':'front',
+  surface:requestedShelf?'horizontal-top':'vertical-front',
+  frontFace,
+  label:requestedShelf?'APOYO SUPERIOR · LAY ON FINGER':
+   'CARA DELANTERA · TOPE DETRÁS DE CHAPA',
   from,to,point,usable,verified:false};
 }
 /** Envolvente del perfil esquemático, sin interpretar una cota L como CAD. */
