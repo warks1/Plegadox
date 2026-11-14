@@ -1,5 +1,5 @@
 // PlegadoX · caché offline estática. Se versiona para no arrastrar JS obsoleto.
-const CACHE='plegadox-static-0.9.12-axis-geometry-r36-b';
+const CACHE='plegadox-static-0.9.14-eurostamp-cad-r38';
 const APP_FILES=[
  "./",
  "./app.js",
@@ -62,6 +62,9 @@ const APP_FILES=[
  "./project-library.js",
  "./workshop-measurements.js",
  "./tool-dxf.js",
+ "./eurostamp-catalog.js",
+ "./eurostamp-cad.js",
+ "./eurostamp-cad-ui.js",
  "./tool-import-ui.js",
  "./validation.js",
  "./viewer-profile.js"

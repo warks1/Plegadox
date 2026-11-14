@@ -1,6 +1,6 @@
 {
-  "build": "PLEGADOX-20261114-R36",
-  "version": "0.9.12",
-  "gauge": "cad-axis-geometry-sweep-r36",
-  "cache": "plegadox-static-0.9.12-axis-geometry-r36-b"
+  "build": "PLEGADOX-20261115-R38",
+  "version": "0.9.14",
+  "gauge": "eurostamp-cad-sku-import-r38",
+  "cache": "plegadox-static-0.9.14-eurostamp-cad-r38"
 }

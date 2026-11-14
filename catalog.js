@@ -1,7 +1,10 @@
+import {EUROSTAMP_PUNCHES,EUROSTAMP_DIES} from './eurostamp-catalog.js';
 // Catálogo de trabajo v0.2: separar valores publicados de geometría provisional.
 // IMPORTANTE: que un artículo exista en un catálogo no implica que su amarre
 // sea compatible con la Trumpf V85 concreta. Validar mordazas reales.
 export const CATALOG_SOURCES = {
+  eurostampOfficial:{title:'Eurostamp · fichas oficiales de útiles y descarga DXF',url:'https://eurostampsrl.it/en/punches-30',scope:'Ángulos, alturas y referencias; contorno CAD sólo tras importar DXF del fabricante'},
+  eurostampCatalogue2017:{title:'Eurostamp · catálogo técnico histórico de 2017 (90°)',url:'https://www.bendis-eng.com/kataloglar/Eurostamp_Catalogue_2017.pdf',scope:'Referencias históricas 90° y cotas; DXF vigente no comprobado'},
   mecosGeneral2025: {title:"MECOS — Catálogo general 2025/26, página 3", url:"", scope:"familias de utillaje; sin referencias ni perfiles acotados"},
   mecosTooling2022: {title:"MECOS — Catálogo técnico de utillaje 2022",url:"https://www.mecos.es/files/productos/utillaje-plegadora/MECOS-Catalogo-General-de-Utillaje-2022.pdf",scope:"familias Bystronic / Beyeler, Amada / Promecam y Trumpf / Wila"},
   trumpfES2025: {title:"TRUMPF — Catálogo útiles plegado 2025 ES",url:"https://www.trumpf.com/filestorage/TRUMPF_ES/user_upload/2025_Catalogo_Utiles_plegado_ES.pdf",scope:"EV001 V6, EV001/H V6"},
@@ -58,6 +61,8 @@ export const CATALOG_DIES = [
  {id:"bystronic-r-v24-demo",manufacturer:"Bystronic",reference:"Beyeler R V24 (ejemplo)",name:"Beyeler R · V24 PROVISIONAL",opening:24,angle:88,height:85,length:550,mount:"Bystronic R",verifiedSpecs:false,source:"mecosTooling2022",profileAccuracy:"provisional"}
 ];
 export function registerCatalogue(dies,punches){
+ for(const item of EUROSTAMP_DIES)if(!dies.some(d=>d.id===item.id))dies.push({...item});
+ for(const item of EUROSTAMP_PUNCHES)if(!punches.some(p=>p.id===item.id))punches.push({...item});
  for(const item of CATALOG_DIES)if(!dies.some(d=>d.id===item.id))dies.push({...item});
  for(const item of CATALOG_PUNCHES)if(!punches.some(p=>p.id===item.id))punches.push({...item});
 }
