@@ -685,6 +685,9 @@ function scheduleIntegratedAdvisor(){
     ' · CAD + ejes: '+plan.axisGeometryStatus+
     (plan.axisModeledCollisions?' ('+plan.axisModeledCollisions+' cruces modelados)':'')+
     (plan.axisGeometryUnresolved?' ('+plan.axisGeometryUnresolved+' intervalos pendientes)':'')+
+    ' · perfiles de útiles: P='+plan.toolProfileEvidence.punch+
+    ', V='+plan.toolProfileEvidence.die+
+    ' (ningún montaje certificado)'+
     ' · CAD máquina utilizado: '+(plan.cadProfilesUsed?.join(', ')||'ninguno')+
     ' · CAD pendiente: '+(plan.cadMissing?.join(', ')||'sin inventario confirmado');
    status.dataset.state=best.possibleInterference?'warning':'suggested';
