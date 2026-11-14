@@ -14,7 +14,7 @@ const check=(ok,msg)=>{if(!ok)throw Error(msg);};
 export function measurementKey(input){
  const p=normalized(input);
  return JSON.stringify([p.material,p.thickness,p.width,p.die,p.punch,p.datum,
-  p.flanges,p.angles]);
+  p.flanges,p.angles,p.bendDeductionByBend]);
 }
 export function calibrationSuggestion(piece,{measuredFlat,measuredRadius,anglesChecked=false}){
  const p=normalized(piece);
