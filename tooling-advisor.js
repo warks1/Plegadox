@@ -18,11 +18,13 @@ export function targetVRatio(thickness){
  return t>=12?12:t>=9?10:8;
 }
 function pairData(p,die,punch,minimumInterior,minimumFlange,requiresClearance){
- // R38: el catálogo Eurostamp sin contorno original es sólo referencia.
- // No usar patas de cabra ni matrices con CAD desconocido en recomendaciones
- // automáticas de seguridad. Quedan seleccionables manualmente.
- if((die.manufacturer==='Eurostamp'&&!die.importedDxf)||
-    (punch.manufacturer==='Eurostamp'&&!punch.importedDxf))return null;
+ // R38: el catálogo Eurostamp es solo referencia hasta obtener el
+ // contorno OEM Y la verificación del amarre real en esta V85.
+ // Un DXF lateral no prueba que un útil Amada/Wila pueda montarse.
+ // La elección manual sigue disponible con avisos de montaje pendientes.
+ const euroReady=tool=>tool.manufacturer!=='Eurostamp'||
+  (tool.importedDxf===true&&tool.mountVerified===true);
+ if(!euroReady(die)||!euroReady(punch))return null;
  const opening=Number(die.opening),included=Number(die.angle),punchAngle=Number(punch.angle);
  // No proponer una pareja más corta que el ancho programado. Un
  // montaje de varios segmentos exige plano de distribución y comprobación
