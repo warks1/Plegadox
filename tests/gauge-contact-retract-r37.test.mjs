@@ -62,11 +62,13 @@ test('R37: riesgo geométrico desencadena DX sin saltos; primero sujetar, despu�
  assert.equal(previewGaugeRetractState(plan,GAUGE_OUT_FRACTION).dxMm,plan.distanceMm);
  const before=adjustStageForPinch(stage(p,operation*5+PINCH_FRACTION*5),plan);
  assert.equal(before.fractions[bend],0);
- assert.equal(before.phase,'Sujeción · retirada X simulada');
+ assert.equal(before.phase,'Plegado');
+ assert.equal(before.gaugePhase,'Sujeción · retirada X simulada');
  const after=adjustStageForPinch(stage(p,operation*5+.58*5),plan);
  assert.ok(after.fractions[bend]>0);
  assert.ok(after.fractions[bend]<1);
- assert.equal(after.phase,'Plegado tras retirada X');
+ assert.equal(after.phase,'Plegado');
+ assert.equal(after.gaugePhase,'Plegado tras retirada X');
  assert.equal(plan.canApproveForMachine,false);
 });
 test('R37: Omega de muestra mantiene el orden 1,2,4,3 y permite comprobar cada golpe',()=>{
