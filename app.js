@@ -28,6 +28,7 @@ import {readProjectLibrary,saveLibraryPiece,getLibraryPiece,deleteLibraryPiece,s
 import {measurementKey,calibrationSuggestion,readMeasurements,createMeasurement,persistMeasurement,deleteMeasurement} from './workshop-measurements.js';
 import {loadImportedTools,registerImportedTools,persistImportedTool} from './tool-dxf.js';
 import {setupToolDxfImporter} from './tool-import-ui.js';
+import {setupToolCADAudit} from './tool-cad-audit.js';
 import {loadMachineCad} from './machine-cad.js';
 import {loadAxisMotion} from './machine-axis-motion.js';
 import {loadAxisMapping} from './machine-axis-geometry.js';
@@ -1722,7 +1723,9 @@ setupToolDxfImporter({add:(tool,kind)=>{
  option.value=tool.id;option.textContent=tool.name;
  $(field).append(option);
  changePiece({...piece,[field]:tool.id},true);
+ window.dispatchEvent(new Event('plegadox:toolCADChanged'));
 }});
+setupToolCADAudit();
 window.PLEGADOX_STATE=()=>({piece,sim});
 window.PLEGADOX_MACHINE_VIEW=machineView;
 window.PLEGADOX_REDRAW=()=>paintAll();
