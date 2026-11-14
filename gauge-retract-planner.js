@@ -88,13 +88,15 @@ export function adjustStageForPinch(st,plan){
  if(sub<GAUGE_OUT_FRACTION){
   next.fractions[st.activeBend]=0;
   next.press=.45;
-  next.phase='Sujeción · retirada X simulada';
+  next.phase='Plegado';
+  next.gaugePhase='Sujeción · retirada X simulada';
  }else{
   const bending=smooth((sub-GAUGE_OUT_FRACTION)/
    (FORM_END_FRACTION-GAUGE_OUT_FRACTION));
   next.fractions[st.activeBend]=bending;
   next.press=.45+.55*bending;
-  next.phase='Plegado tras retirada X';
+  next.phase='Plegado';
+  next.gaugePhase='Plegado tras retirada X';
  }
  return next;
 }
