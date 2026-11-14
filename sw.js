@@ -48,6 +48,7 @@ const APP_FILES=[
  "./technical-section.js",
  "./tool-collision.js",
  "./tool-profiles.js",
+ "./tool-realism.js",
  "./tool-height-audit.js",
  "./tooling-advisor.js",
  "./touch-programmer.js",

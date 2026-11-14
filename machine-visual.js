@@ -8,6 +8,7 @@ import {currentToolContact} from './tool-collision.js';
 import {getV85} from './machine-config.js';
 import {gaugePlacement,gaugeContourAtContact} from './backgauge-placement.js';
 import {sceneAtmosphere,dieDepth,ramDepth,sheetDepth,surfaceDetail,sectionOverlay} from './render-enhancements.js';
+import {enhancePunch,enhanceDie} from './tool-realism.js';
 
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 /**
@@ -185,6 +186,9 @@ function drawDie(ctx,scene,cx,cy,scale){
  ctx.closePath();ctx.clip();
  surfaceDetail(ctx,{cx,cy,s:scale},{opening:die.opening});
  ctx.restore();
+ // Biseles, rectificado y oclusión de la V sobre la MISMA poligonal.
+ enhanceDie(ctx,pts.map(pt=>[pt[0],pt[1]]),{scale,cx,cy,
+  opening:die.opening,depth:die.depth});
  const half=die.opening/2*scale,depth=die.depth*scale;
  ctx.save();ctx.beginPath();
  ctx.moveTo(cx-half,cy);ctx.lineTo(cx,cy+depth);ctx.lineTo(cx+half,cy);
@@ -247,6 +251,7 @@ export function drawPunchForeground(ctx,scene,cx,cy,scale,transparent=false){
  ctx.strokeStyle='#194765';ctx.lineWidth=Math.max(.9,1.1*scale);
  ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(...p):ctx.moveTo(...p));
  ctx.closePath();ctx.stroke();
+ enhancePunch(ctx,pts,{scale,transparent});
  const tip=pts.reduce((a,b)=>b[1]>a[1]?b:a,pts[0]);
  ctx.beginPath();ctx.arc(tip[0],tip[1],Math.max(2,2.6*scale),0,Math.PI*2);
  ctx.fillStyle='#eeffff';ctx.shadowColor='#55d8ff';ctx.shadowBlur=11*scale;ctx.fill();
@@ -283,7 +288,8 @@ function stageScene(ctx,w,h,piece,sim,machineView){
  // Durante el golpe, punta y fibra central descienden conjuntamente hacia V.
  const tipY=baseY-scene.kinematics.tipHeight*scale;
  // Preserve the real profile; perspective adds an illustrative side face.
- ramDepth(ctx,{cx,cy:baseY,s:scale},tipY,punch,Boolean(machineView?.perspective));
+ ramDepth(ctx,{cx,cy:baseY,s:scale},tipY,punch,Boolean(machineView?.perspective),
+  piece.punchOrientation==='reversed');
  ctx.save();
  if(machineView?.transparent)ctx.globalAlpha=.3;
  drawRam(ctx,cx,baseY,scale,tipY,punch,scene);
@@ -306,7 +312,8 @@ function stageScene(ctx,w,h,piece,sim,machineView){
   ctx.fillStyle='#b5ffe2';ctx.shadowColor='#4bffb0';ctx.shadowBlur=10*scale;
   ctx.fill();ctx.strokeStyle='#174e3b';ctx.lineWidth=1.2;ctx.stroke();ctx.restore();
  }
- sectionOverlay(ctx,{cx,cy:baseY,s:scale},opening,punch.tip||0,Boolean(machineView?.section));
+ // punch.tip es el DIÁMETRO de la punta (ver catálogo); la cota es el radio.
+ sectionOverlay(ctx,{cx,cy:baseY,s:scale},opening,(Number(punch.tip)||0)/2,Boolean(machineView?.section));
  // Workpiece shadow and hot contact glow along the working tool tip
  if(st.press>.36){
   ctx.save();ctx.globalAlpha=(st.press-.35)*.7;

@@ -127,13 +127,15 @@ export function buildVolumeScene(scene,{machine=getV85()}={}){
   registered.punch?.profileAccuracy==='verified'?'perfil-acotado':'perfil-provisional');
  const diePrism=makePrism('matriz',scene.diePolygon,-dSpan/2,dSpan/2,
   registered.die?.profileAccuracy==='verified'?'perfil-acotado':'perfil-provisional');
- const top=scene.kinematics.tipHeight-scene.punch.height;
+ // Eje Y hacia ARRIBA (como punchPolygon): el plano de amarre del punzón
+ // está en tipHeight + H y la trancha queda ENCIMA, no bajo la matriz.
+ const top=scene.kinematics.tipHeight+scene.punch.height;
  // ALZADO PROVISIONAL: alturas relativas proceden del dibujo actual del
  // portaherramientas, NO se deducen de L1=1340 mm como si fuese carrera.
  // Una L* sin referencia de caras no define por sí sola un sólido CAD.
  const ramHalf=(Number(machine.ram?.[6])||125)/2;
- const ram=makePrism('trancha-envolvente',rect(-ramHalf,top-65,
-  ramHalf,top+10),-(machine.ramWidth||2040)/2,(machine.ramWidth||2040)/2,
+ const ram=makePrism('trancha-envolvente',rect(-ramHalf,top-10,
+  ramHalf,top+65),-(machine.ramWidth||2040)/2,(machine.ramWidth||2040)/2,
   'envolvente-ilustrativa-sin-CAD');
  const bedHalf=(Number(machine.bed?.[1])||80)/2;
  const bottom=-scene.die.height;

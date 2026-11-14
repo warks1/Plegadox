@@ -83,7 +83,7 @@ export function dieDepth(ctx,location,opening,enabled,profile=null){
  }
  ctx.restore();
 }
-export function ramDepth(ctx,location,tipY,punch,enabled){
+export function ramDepth(ctx,location,tipY,punch,enabled,reversed=false){
  if(!enabled)return;
  const {cx,s}=location;
  const section=sectionPunch(punch);
@@ -91,7 +91,10 @@ export function ramDepth(ctx,location,tipY,punch,enabled){
  // triangular side that incorrectly turns a gooseneck into a straight punch.
  const factor=s;
  const offsetX=25*s,offsetY=-15*s;
- const pts=section.points.map(([x,y])=>[cx+x*factor,tipY-y*factor]);
+ // Un útil montado a 180° está espejado en X en la poligonal técnica
+ // (technicalScene); la extrusión 3D debe seguir ese mismo contorno.
+ const mirror=reversed?-1:1;
+ const pts=section.points.map(([x,y])=>[cx+mirror*x*factor,tipY-y*factor]);
  ctx.save();ctx.shadowBlur=13*s;ctx.shadowColor='#000c';
  for(let i=0;i<pts.length;i++){
   const j=(i+1)%pts.length,a=pts[i],b=pts[j];
@@ -139,11 +142,8 @@ export function surfaceDetail(ctx,location,tooling){
   ctx.fillRect(center-8*s,y,16*s,43*s);
   for(let i=0;i<3;i++)screw(ctx,center,cy+(49+i*15)*s,2.1*s);
  }
- ctx.strokeStyle='#e9f7ff6d';ctx.lineWidth=.65*s;
- for(let i=0;i<33;i++){
-  const x=cx-half+i*(half*2/32);
-  ctx.beginPath();ctx.moveTo(x,cy+6*s);ctx.lineTo(x+1*s,cy+36*s);ctx.stroke();
- }
+ // Las 33 estrías verticales decorativas se retiraron: parecían un
+ // moleteado inexistente. El acabado lo aporta ahora tool-realism.js.
  // Technical callout remains honest about nominal V and tool.
  if(tooling && s>.5){
   ctx.fillStyle='#96c9e4';ctx.font='700 '+Math.max(8,10*s)+'px system-ui';
