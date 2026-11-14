@@ -27,7 +27,7 @@ const kindList=()=>{
 };
 function allMatches(){
  return kindList().filter(t=>toolMatchesBrand(t,state.brand)&&
- (!state.search||[t.name,t.reference,t.id,t.mount,t.angle,t.opening,t.height].join(' ').toLowerCase().includes(state.search)));
+ (!state.search||[t.name,t.reference,t.manufacturer,t.id,t.mount,t.angle,t.opening,t.height].join(' ').toLowerCase().includes(state.search)));
 }
 /**
  * Vista inicial representativa: los modelos de 30°, patas de cabra y
@@ -38,7 +38,9 @@ function allMatches(){
 export const CATALOG_SHOWCASE_IDS=[
  'straight30','goose','ref-goose-50-100-r1',
  'conic-act-12-3006','conic-gn9-12-8806','conic-gn6-12-8806',
- 'v16','v16-30','conic-v006-30-s','rolleri-tmr100-16-30'
+ 'v16','v16-30','conic-v006-30-s','rolleri-tmr100-16-30',
+ 'eurostamp-p1193','eurostamp-p1014','eurostamp-p1291',
+ 'eurostamp-d3262','eurostamp-d3111','eurostamp-d3163'
 ];
 export function initialToolSelection(items,selectedPunch,selectedDie){
  const featured=new Set([...CATALOG_SHOWCASE_IDS,selectedPunch,selectedDie]);
@@ -114,8 +116,30 @@ function renderCatalogue(){
    const name=document.createElement('b');name.textContent=shown.name;info.append(name);
    const detail=document.createElement('div');detail.textContent=[shown.manufacturer||'Genérico',shown.mount||'Amarre por verificar',shown.length?'Longitud nominal: '+shown.length+' mm':'Longitud no registrada',shown.verifiedSpecs?'Datos parciales publicados':'Dimensiones no verificadas'].join(' · ');info.append(detail);
    const note=document.createElement('div');note.textContent=shown.importedDxf?
-    'Contorno original importado desde DXF ASCII 2D. El visor 3D sólo extruye este contorno; ninguna colisión física o compatibilidad CNC está validada.':
-    'Perfil 2D/3D: PARAMÉTRICO, pendiente de cotas completas para comprobación de colisiones.';info.append(note);
+    'DXF original aportado: contorno 2D empleado en sección y 3D extrusionado. Amarre, orientación y colisiones CNC sin validar.':
+    shown.manufacturer==='Eurostamp'?
+     'EUROSTAMP: ficha catalogada, CAD ORIGINAL AÚN NO IMPORTADO. La figura de muestra es paramétrica y NO representa el escote real.':
+     'Perfil 2D/3D: PARAMÉTRICO, pendiente de cotas completas para comprobación de colisiones.';info.append(note);
+   if(shown.manufacturer==='Eurostamp'){
+    const cadState=document.createElement('div');
+    cadState.textContent=shown.importedDxf?
+     'CAD 2D: IMPORTADO · fabricante sin validación de montaje':
+     'CAD 2D: PENDIENTE · no utilizar para descartar colisiones';
+    info.append(cadState);
+    const link=document.createElement('a');
+    link.href=shown.productUrl||CATALOG_SOURCES.eurostampCatalogue2017.url;
+    link.target='_blank';link.rel='noopener noreferrer';
+    link.textContent=shown.productUrl?
+     'Ficha Eurostamp · descargar DXF original':
+     'Catálogo histórico Eurostamp 2017';
+    link.style.cssText='display:inline-block;color:#41c4ff;text-decoration:underline;margin:6px 12px 6px 0';
+    info.append(link);
+    const load=document.createElement('button');load.type='button';
+    load.textContent='Vincular CAD a '+shown.reference;
+    load.addEventListener('click',()=>window.dispatchEvent(
+     new CustomEvent('plegadox:selectEurostampCad',{detail:{id:shown.id}})));
+    info.append(load);
+   }
    if(shown.profileStyle==='user-photo'){
     const section=sectionPunch(shown);
     const explanation=document.createElement('div');
