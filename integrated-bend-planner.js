@@ -46,13 +46,13 @@ const stopProblems=scan=>{
 export function optimizeBendPlan(input,options={}){
  const p=normalized(input);
  const dies=options.dies||DIES,punches=options.punches||PUNCHES;
- const maxPairs=integer(options.maxPairs,6,1,20);
- const maxOrders=integer(options.maxOrders,3,1,12);
- const maxFinalists=integer(options.maxFinalists,6,1,20);
+ const maxPairs=integer(options.maxPairs,8,1,20);
+ const maxOrders=integer(options.maxOrders,8,1,24);
+ const maxFinalists=integer(options.maxFinalists,12,1,30);
  const samples=integer(options.toolSamples,3,1,7);
  const gaugeSamples=integer(options.gaugeSamples,8,8,50);
  const volumeSamples=integer(options.volumeSamples,4,4,24);
- const maxVolumeCandidates=integer(options.maxVolumeCandidates,4,1,12);
+ const maxVolumeCandidates=integer(options.maxVolumeCandidates,8,1,20);
  const volumeEvaluator=options.volumeEvaluator===undefined?
   part=>scanVolumeTrajectory(part,{machine:options.machine,samplesPerOperation:volumeSamples}):
   options.volumeEvaluator;
@@ -72,11 +72,29 @@ export function optimizeBendPlan(input,options={}){
  }
  rankedOrders.sort((a,b)=>a.sheet.score-b.sheet.score||
   a.order.join(',').localeCompare(b.order.join(',')));
- const selectedOrders=rankedOrders.slice(0,maxOrders);
- if(!selectedOrders.some(item=>same(item.order,p.order))){
-  const original=rankedOrders.find(item=>same(item.order,p.order));
-  if(original)selectedOrders.push(original);
+ // No buscar sólo las mejores secuencias de chapa: pueden compartir la
+ // misma cara de entrada y descartar una alternativa viable físicamente.
+ // Reservar variedad de PRIMER y ÚLTIMO pliegue antes del resto.
+ const selectedOrders=[],orderKeys=new Set();
+ const addOrder=item=>{
+  if(!item||orderKeys.has(item.order.join(',')))return;
+  orderKeys.add(item.order.join(','));selectedOrders.push(item);
+ };
+ for(const item of rankedOrders){
+  if(selectedOrders.length>=maxOrders)break;
+  if(!selectedOrders.some(o=>o.order[0]===item.order[0]))addOrder(item);
  }
+ for(const item of rankedOrders){
+  if(selectedOrders.length>=maxOrders)break;
+  if(!selectedOrders.some(o=>o.order.at(-1)===item.order.at(-1)))addOrder(item);
+ }
+ for(const item of rankedOrders){
+  if(selectedOrders.length>=maxOrders)break;
+  addOrder(item);
+ }
+ // El orden manual se inspecciona aparte, aunque esté fuera de la muestra.
+ const original=rankedOrders.find(item=>same(item.order,p.order));
+ if(original)addOrder(original);
  const machineWidth=Math.min(
   Number(options.machine?.ramWidth)||MACHINE.workingWidth,
   Number(options.machine?.holderWidth)||MACHINE.workingWidth
@@ -136,6 +154,15 @@ export function optimizeBendPlan(input,options={}){
   if(coveredPairs.has(pairKey))continue;
   coveredPairs.add(pairKey);selectedPlans.add(keyOf(plan));finalists.push(plan);
   if(finalists.length>=maxFinalists)break;
+ }
+ // En vez de llenar la lista con casi el mismo orden y la misma V,
+ // incorporar órdenes de trabajo distintos (y los sentidos de la pata de cabra).
+ const representedOrders=new Set(finalists.map(p=>p.order.join(',')));
+ for(const plan of plans){
+  if(finalists.length>=maxFinalists)break;
+  if(selectedPlans.has(keyOf(plan))||representedOrders.has(plan.order.join(',')))continue;
+  selectedPlans.add(keyOf(plan));representedOrders.add(plan.order.join(','));
+  finalists.push(plan);
  }
  for(const plan of plans){
   if(finalists.length>=maxFinalists)break;
@@ -197,9 +224,16 @@ export function optimizeBendPlan(input,options={}){
   if(a.gaugeChecked!==b.gaugeChecked)return a.gaugeChecked?-1:1;
   return compare(a,b);
  });
+ // Una intrusión conocida no puede ganar sólo por una puntuación baja o
+ // porque otras candidatas aún no fueron examinadas en 3D.
+ // Los avisos de proximidad siguen visibles: NO hay autorización CNC.
+ const modeledBlockingRisk=plan=>plan.machineWidthExceeded||
+  plan.sheetCross>0||plan.sheetOverlap>0||
+  plan.toolPenetrations>0||plan.gaugePenetrations>0||
+  !plan.gaugeChecked||
+  (volumeEvaluator&&(!plan.volumeChecked||plan.volumeMachineWarnings>0));
  const best=finalists.find(plan=>plan.source==='automatico'&&
-  (volumeEvaluator?plan.volumeChecked:true))||
-  finalists.find(plan=>plan.source==='automatico')||null;
+  !modeledBlockingRisk(plan))||null;
  return {
   best,manual,
   alternatives:finalists.filter(plan=>plan.source==='automatico'&&plan!==best&&
@@ -213,8 +247,8 @@ export function optimizeBendPlan(input,options={}){
   finalistsVolumeChecked:finalists.filter(plan=>plan.volumeChecked).length,
   volumeSamplesPerOperation:volumeSamples,
   machineWidthExceeded:widthExceeded,
-  status:!best?'SIN_PAREJA_PRESELECCIONADA':
-   !best.volumeChecked&&volumeEvaluator?'VOLUMEN_SIN_ANALIZAR':
+  status:!candidates.length?'SIN_PAREJA_PRESELECCIONADA':
+   !best?'SIN_PLAN_SIN_PENETRACIONES_MODELADAS':
    best.possibleInterference?'RIESGOS_2D_3D_PROVISIONALES':
    'SIN_AVISOS_EN_MUESTRAS_NO_CERTIFICA_SEGURIDAD',
   reasons:tooling.reasons||[],
