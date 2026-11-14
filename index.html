@@ -148,7 +148,7 @@
 </article>
 <aside class="card cp-library">
 <div class="cardhead"><h2>BIBLIOTECA DE HERRAMIENTAS</h2><button id="showTool3D" class="cp-view-tool-button" type="button" aria-expanded="false" title="Girar herramienta seleccionada en 3D">◈ VER EN 3D</button><span id="cpCatalogCount" class="smalllabel">—</span></div>
-<div id="cpBrandTabs" class="cp-brand-tabs" role="group" aria-label="Fabricante"><button data-brand="Todos" class="selected" type="button">Todas</button><button data-brand="Trumpf" type="button">Trumpf</button><button data-brand="Amada" type="button">Amada</button><button data-brand="Bystronic" type="button">Bystronic</button><button data-brand="Genéricos" type="button">Genéricos</button></div>
+<div id="cpBrandTabs" class="cp-brand-tabs" role="group" aria-label="Fabricante"><button data-brand="Todos" class="selected" type="button">Todas</button><button data-brand="Trumpf" type="button">Trumpf</button><button data-brand="Amada" type="button">Amada</button><button data-brand="Bystronic" type="button">Bystronic</button><button data-brand="Eurostamp" type="button">Eurostamp</button><button data-brand="Genéricos" type="button">Genéricos</button></div>
 <div class="cp-search-row"><input id="cpToolSearch" placeholder="⌕ Buscar herramienta..." aria-label="Buscar herramientas"></div>
 <div class="cp-kind-tabs"><button class="selected" data-kind="all" type="button">Todas</button><button data-kind="punch" type="button">Punzones</button><button data-kind="die" type="button">Matrices</button></div>
 <div id="cockpitTools" class="cp-tool-grid"></div><button id="cpShowAllTools" class="cp-expand-tools" type="button" aria-expanded="false">Ver catálogo completo</button>
@@ -183,6 +183,19 @@
  <canvas id="toolDxfCanvas" class="px-dxf-preview" aria-label="Vista previa del contorno DXF" hidden></canvas>
  <div class="inline-actions"><button id="toolDxfCommit" type="button" disabled>Añadir DXF a biblioteca</button></div>
  <p class="hint" id="toolDxfStatus" role="status" aria-live="polite">Selecciona un DXF en milímetros. Los perfiles se guardan sólo en este navegador; conserva también el archivo original.</p>
+</details>
+<details class="card px-dxf-import" id="eurostampCadPanel">
+ <summary>EUROSTAMP · Vincular CAD DXF ORIGINAL a una referencia</summary>
+ <p class="hint">29 referencias Eurostamp de 30°, 85°, 88° y 90°. Las fichas incluyen dimensiones de catálogo, pero la forma dibujada seguirá provisional hasta importar el DXF oficial de cada referencia. El sistema NO descarga el CAD automáticamente ni inventa las siluetas de las patas de cabra.</p>
+ <div class="px-dxf-grid">
+  <label>Referencia Eurostamp<select id="eurostampCadRef" aria-label="Referencia Eurostamp para vincular CAD"></select></label>
+  <label>Contorno del fabricante (DXF ASCII 2D, mm)<input type="file" id="eurostampCadFile" accept=".dxf,application/dxf" aria-label="DXF Eurostamp original"></label>
+ </div>
+ <p class="hint"><a id="eurostampCadSource" href="https://eurostampsrl.it/en/punches-30" target="_blank" rel="noopener noreferrer">Abrir ficha oficial Eurostamp</a></p>
+ <canvas id="eurostampCadCanvas" class="px-dxf-preview" aria-label="Vista previa de CAD Eurostamp" hidden></canvas>
+ <div class="inline-actions"><button id="eurostampCadCommit" type="button" disabled>Vincular contorno DXF a la referencia</button></div>
+ <p class="hint" id="eurostampCadStatus" role="status" aria-live="polite">Selecciona una herramienta Eurostamp y descarga el DXF del fabricante.</p>
+ <p class="hint">Sólo se aceptan contornos cerrados simples, en plano y milímetros. No equivale a CAD de montaje ni a una aprobación de colisiones con la V85.</p>
 </details>
 <div class="twocol"><article class="card"><h2>Matrices</h2><div id="dieCards" class="toolcards"></div></article><article class="card"><h2>Punzones</h2><div id="punchCards" class="toolcards"></div></article></div><article class="card"><h2>Perfil de herramientas seleccionadas</h2><canvas id="toolCanvas" class="canvas tools"></canvas><p class="hint">Representación genérica de geometría nominal. No equivale a un perfil acotado de fabricante ni permite certificar colisiones todavía.</p></article></section>
 <section class="panel" id="tab-desarrollo"><div class="page-title"><div><h1>Desarrollo de chapa</h1><p>Estimación de fibra neutra, radios y deducciones según material y herramienta.</p></div></div><div class="formgrid"><label>Factor K (editable)<input type="number" id="kFactor" min=".15" max=".6" step=".01"></label><label>Radio interior (mm)<input type="number" id="insideRadius" min=".1" max="100" step=".1"></label><label>Rm tracción (MPa; vacío = referencia)<input type="number" id="rmMPa" min="50" max="1800" step="1" inputmode="decimal"></label><label>Criterio de cota<select id="datum"><option value="outside">Cotas exteriores teóricas</option><option value="neutral">Longitud sobre fibra neutra</option></select></label></div><article class="card" id="bendDeductionCalibration">
@@ -316,7 +329,8 @@ const clearOldCode=async()=>{
 };
 const loadModules=async()=>{
  const scripts=['pwa.js','app.js','cockpit.js','boceto2.js',
-  'responsive.js','studio.js','machine-editor.js','machine-cad-ui.js'];
+  'responsive.js','studio.js','machine-editor.js','machine-cad-ui.js',
+  'eurostamp-cad-ui.js'];
  for(const [index,path] of scripts.entries()){
   splashStep(18+Math.round(72*(index+1)/scripts.length),'Cargando '+path.replace('.js','')+'…');
   await import('./'+path+'?build='+encodeURIComponent(BUILD));
