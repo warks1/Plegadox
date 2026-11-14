@@ -13,8 +13,12 @@ const round=n=>Math.round(n*1e5)/1e5;
 const check=(ok,msg)=>{if(!ok)throw Error(msg);};
 export function measurementKey(input){
  const p=normalized(input);
- return JSON.stringify([p.material,p.thickness,p.width,p.die,p.punch,p.datum,
-  p.flanges,p.angles,p.bendDeductionByBend]);
+ const key=[p.material,p.thickness,p.width,p.die,p.punch,p.datum,
+  p.flanges,p.angles];
+ // Compatibilidad con mediciones antiguas: no cambiar la clave histórica
+ // cuando todas las BD son estimadas. Sólo añadir datos si existen BD reales.
+ if(p.bendDeductionByBend.some(v=>v!=null))key.push(p.bendDeductionByBend);
+ return JSON.stringify(key);
 }
 export function calibrationSuggestion(piece,{measuredFlat,measuredRadius,anglesChecked=false}){
  const p=normalized(piece);
