@@ -50,7 +50,8 @@ try{
  assert.ok(Math.abs(stored.ram.dimensionHeight-100)<.001);
  assert.equal(stored.ram.industrialVerified,false);
  // R37: un segundo fichero sin unidades NO reemplaza el perfil bueno.
- const withoutUnits=cadDXF.replace('9\\n$INSUNITS\\n70\\n4\\n','');
+ const withoutUnits=cadDXF.replace(['9','$INSUNITS','70','4',''].join(String.fromCharCode(10)),'');
+ assert.notEqual(withoutUnits,cadDXF,'La prueba debe eliminar realmente la cabecera de unidades');
  await page.locator('#machineCadFile').setInputFiles({
   name:'ram-units-unknown.dxf',mimeType:'application/dxf',
   buffer:Buffer.from(withoutUnits)});
