@@ -22,7 +22,8 @@ function refreshCAD(){
  say('machineCadStatus',
   MACHINE_CAD_KINDS.map(kind=>kind+': '+(rows[kind]?
    rows[kind].points.length+' vértices · Z '+rows[kind].zMin+'…'+rows[kind].zMax+
-    ' mm · '+rows[kind].source:'sin CAD')).join(' | ')+
+    ' mm · '+rows[kind].source+
+    (rows[kind].unitsAssumed?' · UNIDADES NO DECLARADAS: EXCLUIDO DE COLISIONES':''):'sin CAD')).join(' | ')+
   '. Las geometrías importadas NO están certificadas para fabricación.');
 }
 function part(){

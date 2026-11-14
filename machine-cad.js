@@ -41,6 +41,8 @@ export function machineCadDatum(kind){
 }
 export function machineCadFromDXF(dxf,options){
  const parsed=parseToolDxf(dxf,{maxWidth:MAX_WIDTH,maxHeight:MAX_HEIGHT});
+ if(parsed.unitsAssumed)
+  throw Error('El CAD de máquina debe declarar milímetros en DXF ($INSUNITS=4). Exporta de nuevo el perfil con unidades explícitas; no se permite suponer escala física.');
  return normalizeMachineCad({
   ...options,points:parsed.points,
   unitsAssumed:parsed.unitsAssumed,sourceFormat:'DXF_ASCII_MM'
@@ -105,6 +107,8 @@ export function removeMachineCad(storage,kind){
  */
 export function positionMachineCad(record,origin,options={}){
  const p=normalizeMachineCad(record);
+ if(p.unitsAssumed)
+  throw Error('Perfil CAD conservado pero excluido de colisiones: el DXF original no declaró milímetros ($INSUNITS=4). Reimporta el perfil con escala explícita.');
  if(p.machineConfigKey&&options.machine&&
   p.machineConfigKey!==machineConfigurationKey(options.machine))
   throw Error('CAD de '+p.kind+' no coincide con la revisión actual de cotas de máquina');

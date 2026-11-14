@@ -165,13 +165,14 @@ function draw(canvas,key){
  let record=null,stale=false;
  try{
   record=loadMachineCad(localStorage)[key]||null;
-  stale=!!record?.machineConfigKey&&record.machineConfigKey!==machineConfigurationKey(cfg);
+  stale=record?.unitsAssumed===true||
+   (!!record?.machineConfigKey&&record.machineConfigKey!==machineConfigurationKey(cfg));
  }catch{stale=true;}
  if(record&&!stale)cadCanvas(ctx,w,h,record);
  else{
   if(key==='ram'||key==='bed')barCanvas(ctx,w,h,cfg,key);
   else gaugeCanvas(ctx,w,h,cfg,key);
-  if(stale)label(ctx,'⚠ CAD fuera de configuración actual',w/2,h-12,11,'#ffbd88','center');
+  if(stale)label(ctx,'⚠ CAD sin escala o configuración distinta',w/2,h-12,11,'#ffbd88','center');
  }
 }
 function render(refreshFields=true){
