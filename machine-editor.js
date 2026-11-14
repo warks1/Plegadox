@@ -165,7 +165,8 @@ function draw(canvas,key){
  let record=null,stale=false;
  try{
   record=loadMachineCad(localStorage)[key]||null;
-  stale=!!record?.machineConfigKey&&record.machineConfigKey!==machineConfigurationKey(cfg);
+  stale=record?.unitsAssumed===true||
+   (!!record?.machineConfigKey&&record.machineConfigKey!==machineConfigurationKey(cfg));
  }catch{stale=true;}
  if(record&&!stale)cadCanvas(ctx,w,h,record);
  else{
