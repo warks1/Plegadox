@@ -52,7 +52,10 @@ test('CAD+ejes: traslación calibrada de la trancha detecta choque con mesa entr
   mapping:mapping(),axisMotion:motion()});
  assert.equal(result.checked,true);
  assert.ok(result.intervalsChecked>0);
- assert.ok(result.events.some(x=>x.moving==='ram'&&x.against==='bed'));
+ const ramVsBed=result.events.find(x=>x.moving==='ram'&&x.against==='bed');
+ assert.ok(ramVsBed);
+ assert.match(ramVsBed.sourceMoving,/CAD importado/);
+ assert.match(ramVsBed.sourceAgainst,/CAD importado/);
  assert.equal(result.status,'COLISIONES_EN_BARRIDO_CAD_DECLARADO');
  assert.equal(result.verified,false);
  assert.equal(result.canApproveForMachine,false);
