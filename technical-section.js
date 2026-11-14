@@ -38,10 +38,10 @@ export function technicalWorldBounds(scene){
  if(transition){
   // Reserva fija durante TODA la retirada: origen, destino y posición
   // posterior extrema. El perfil se TRASLADA rígido, nunca se espeja.
-  const withdraw=Math.max(transition.from.x,transition.to.x)+
-   Math.max(12,scene.die.opening||16);
+  const withdraw=Math.max(transition.from.x,transition.actualFrom?.x??-Infinity,
+   transition.to.x)+Math.max(12,scene.die.opening||16);
   for(const reference of [
-   transition.from,transition.to,
+   transition.from,transition.actualFrom||transition.from,transition.to,
    {x:withdraw,y:transition.from.y},{x:withdraw,y:transition.to.y}
   ]){
    const dx=reference.x-place.point.x,dy=reference.y-place.point.y;
@@ -156,7 +156,7 @@ export function technicalScene(piece,instant=0,options={}){
     withdraw+(target.x-withdraw)*smooth((raw-.78)/.22);
   const middle=smooth(Math.max(0,Math.min(1,(raw-.22)/.56)));
   gaugeTransition={point:{x,y:gaugeAnchor.y+(target.y-gaugeAnchor.y)*middle},
-   from:fromAnchor,to:target,raw,progress:middle,
+   from:gaugeAnchor,actualFrom:fromAnchor,to:target,raw,progress:middle,
    withdrawn:raw>=.22&&raw<=.78,nextBend};
  }
  const kinematics=contactKinematics({
