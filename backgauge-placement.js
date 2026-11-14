@@ -139,7 +139,10 @@ export function gaugePlacement(scene,stopNumber=1){
  const thickness=Math.max(.2,Number(scene?.piece?.thickness)||2);
  const selected=stopNumber===2?2:1;
  const dimensions=selected===2?getV85().support:getV85().stop;
- const feature=gaugeContactFeature(dimensions,selected);
+ const activeBend=scene?.stage?.activeBend??0;
+ const contactMode=scene?.piece?.gaugeContactByBend?.[activeBend]==='shelf'?
+  'shelf':'front';
+ const feature=gaugeContactFeature(dimensions,selected,contactMode);
  // Revisar el sólido del dedo, no sólo la posición de su cara nominal.
  // La foto/vídeo mostró la chapa atravesando el perfil del tope aunque
  // el marcador verde siguiera anunciando contacto.
@@ -159,7 +162,8 @@ export function gaugePlacement(scene,stopNumber=1){
  const contactAt=edge=>{
   // En ambos dedos la cara de parada queda DELANTE del cuerpo.
   // Si toca un ala doblada edge.x ya es su cara EXTERIOR (fibra + e/2).
-  const surface={x:edge.x,y:edge.y};
+  const surface={x:edge.x,
+   y:edge.y-(feature.surface==='horizontal-top'?thickness/2:0)};
   const origin={x:surface.x-feature.point.x,y:surface.y-feature.point.y};
   const toWorld=pt=>({x:origin.x+pt.x,y:origin.y+pt.y});
   return {kind:feature.kind,surface:feature.surface,
@@ -174,8 +178,11 @@ export function gaugePlacement(scene,stopNumber=1){
  // de dedo Stop/Support. La referencia es la chapa ANTES de deformarla:
  // la distancia nominal (p.ej. 50 mm) no salta a los 200 del otro extremo.
  if(scene?.gaugeReference&&scene?.gaugeAnchor){
-  const reference=scene.gaugeReference,
-   a=scene.gaugeTransition?.point||scene.gaugeAnchor;
+  const reference=scene.gaugeReference;
+  const original=scene.gaugeTransition?.point||scene.gaugeAnchor;
+  const retreat=scene.gaugeTransition?0:Math.max(0,
+   Number(scene.gaugeRetraction?.dxMm)||0);
+  const a={x:original.x+retreat,y:original.y};
   const index=reference.sourceIndex;
   const freeEdge=index===0||index===(scene.sheet?.length||0)-1;
   const frontFlange=!freeEdge?gaugeFoldedFlangeFace(
@@ -192,19 +199,25 @@ export function gaugePlacement(scene,stopNumber=1){
    frontFlange?{...scene,sheet:scene.gaugeSetupSheet||scene.sheet}:scene,
    index,a,thickness,feature);
   const accessibleFace=freeEdge||!!frontFlange;
-  const contactEngaged=!scene.gaugeTransition&&valid&&accessibleFace&&sheetInFront&&seat.seated&&
+  const contactEngaged=!scene.gaugeTransition&&retreat<=.001&&
+    valid&&accessibleFace&&sheetInFront&&seat.seated&&
     feature.usable&&a.x>0&&approaching&&
     gap<=Math.max(.4,thickness*.28);
   return review({stopNumber:selected,profile:selected===2?'support':'stop',
-   point:{x:a.x,y:a.y},contact:contactAt(a),nominalDistance:reference.distance,
+   point:{x:a.x,y:a.y},contact:contactAt(a),contactMode,
+   nominalDistance:reference.distance,
    referenceSide:reference.side,referenceLabel:reference.label,
    feedMirrored:!!scene.feedMirrored,sourceIndex:index,sheetInFront,
-   moving:!!scene.gaugeTransition,gaugeTransition:scene.gaugeTransition,
+   moving:!!scene.gaugeTransition||retreat>.001,
+   retracting:retreat>.001,retractDx:retreat,
+   gaugeTransition:scene.gaugeTransition,
    seat,frontFlange,sheetEdgeFound:valid&&accessibleFace,alignedToSheet:contactEngaged,
    contactEngaged,contactGap:gap,
    freeEdge,referenceKind:freeEdge?'extremo libre':
     frontFlange?'cara frontal del ala plegada':'vértice interior sin apoyo',
    state:scene.gaugeTransition?'tope retirado y en traslación X/R al siguiente golpe':
+    retreat>.001?'OPENING DX · retirada visual X '+retreat.toFixed(1)+
+     ' mm. CNC real no verificado':
     !valid?'sin cota válida':!feature.usable?'sin cara física de apoyo definida':
     !accessibleFace?'apoyo sobre vértice interior: revisar':
     !sheetInFront?'⚠ La chapa llega por DETRÁS del tope; invertir la presentación':
@@ -229,7 +242,7 @@ export function gaugePlacement(scene,stopNumber=1){
  const sheetInFront=!!neighbour&&neighbour.x<edge.x-Math.max(.12,thickness*.12);
  const seat=gaugeSeatAssessment({sheet:points},index,edge,thickness,feature);
  return review({stopNumber:selected,profile:selected===2?'support':'stop',
-  point:{...edge},contact:contactAt(edge),sheetInFront,seat,
+  point:{...edge},contact:contactAt(edge),contactMode,sheetInFront,seat,
   sheetEdgeFound:!!rear,alignedToSheet:validEdge&&sheetInFront&&
    seat.seated&&feature.usable,
   state:!sheetInFront&&rear?'⚠ Chapa por detrás del dedo; revisar orientación':
