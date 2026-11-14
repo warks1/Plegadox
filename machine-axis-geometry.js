@@ -113,14 +113,17 @@ export function scanAxisCADMovement(input,options={}){
   'CAD de máquina facilitado';
  const pairs=[
   ['ram','bed'],['ram','die'],['ram','gauge'],
-  ['punch','bed'],['punch','gauge'],
+  ['punch','bed'],['punch','die'],['punch','gauge'],
   ['gauge','die'],['gauge','bed']
  ];
  const recordEvent=(sweep,kind,object,from,to)=>{
   if(events.length>=120)return;
   events.push({kind:'contacto-cad-trayectoria',moving:kind,against:object,
    startTime:from.time,endTime:to.time,
-   modeledReason:sweep.reason,verified:false});
+   modeledReason:sweep.reason,
+   sourceMoving:base.objects[kind]?.provenance||'chapa de modelo',
+   sourceAgainst:base.objects[object]?.provenance||'chapa de modelo',
+   verified:false});
  };
  const refTilt=ref.Y1-ref.Y2;
  for(let i=1;i<program.poses.length;i++){
