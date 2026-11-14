@@ -37,7 +37,10 @@ try{
  await page.locator('#machineCadFile').setInputFiles({
   name:'tram-cad-arc.dxf',mimeType:'application/dxf',buffer:Buffer.from(cadDXF)});
  await page.locator('#machineCadSave').click();
- await page.waitForFunction(()=>document.querySelector('#machineCadStatus')?.textContent.includes('ram:'));
+ await page.waitForFunction(()=>{
+  const raw=localStorage.getItem('plegadox:machine-cad:v1');
+  return raw&&JSON.parse(raw).ram?.points.length>20;
+ });
  const stored=await page.evaluate(()=>JSON.parse(
   localStorage.getItem('plegadox:machine-cad:v1')));
  assert.equal(stored.ram.kind,'ram');
