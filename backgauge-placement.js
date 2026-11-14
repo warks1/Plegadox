@@ -62,7 +62,8 @@ export function gaugeStopOverlap(feature,thickness=2){
  const sheetLow=center-t/2,sheetHigh=center+t/2;
  const overlap=Math.max(0,Math.min(right,sheetHigh)-Math.max(left,sheetLow));
  const minimum=Math.max(.25,t*.25);
- return {valid:Math.abs(face.from.x-face.to.x)<1e-5&&overlap+1e-8>=minimum,
+ return {valid:Math.abs(face.from.x-face.to.x)<1e-5&&
+  Math.abs(face.from.x-feature.point.x)<1e-5&&overlap+1e-8>=minimum,
   overlap,minimum,reason:overlap>=minimum?'solape vertical nominal':
    'cara de parada demasiado baja para el espesor',
   faceLow:left,faceHigh:right,sheetLow,sheetHigh};
