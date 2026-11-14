@@ -1553,15 +1553,15 @@ function renderSimulationText(){
  const freeEnd=ref.sourceIndex===0||ref.sourceIndex===piece.flanges.length;
  const chosenGauge=gaugePlacement(technicalScene(piece,sim.time),gauge.value);
  $('activeGaugeReference').textContent=ref.label+' · '+numbers(ref.distance,1)+
-  ' mm nominales desde el pliegue · '+(gauge.value===2?'chapa sobre primer escalón SUPPORT 2':'chapa contra cara frontal inferior STOP 1')+
+  ' mm nominales desde el pliegue · '+(gauge.value===2?'chapa contra cara frontal SUPPORT 2':'chapa contra cara frontal inferior STOP 1')+
    ' · '+(ref.side==='before'?'presentación invertida':'presentación directa')+
-  (freeEnd?' · borde libre':' · ⚠ vértice interior: verificar apoyo')+
-  (freeEnd&&!chosenGauge.sheetInFront?
+  (freeEnd?' · borde libre':chosenGauge.frontFlange?' · cara exterior de ala plegada':' · ⚠ vértice interior: verificar apoyo')+
+  ((freeEnd||chosenGauge.frontFlange)&&!chosenGauge.sheetInFront?
    ' · ⚠ CHAPA POR DETRÁS DEL TOPE: revisar presentación':'')+
   (chosenGauge.seat&&!chosenGauge.seat.seated?
    (chosenGauge.seat.required?
-    ' · ⚠ CHAPA SIN APOYO O SIN CONTRAHUELLA ÚTIL EN EL ESCALÓN':
-    ' · ⚠ CARA FRONTAL DEL TOPE SIN SOLAPE DE ESPESOR'):'')+
+    ' · ⚠ CHAPA SIN CARA DE PARADA ACCESIBLE':
+    ' · ⚠ CARA FRONTAL DEL TOPE SIN SOLAPE FÍSICO SUFICIENTE'):'')+
   (chosenGauge.gaugeInterference?.warning?
    ' · ⚠ POSIBLE INTERFERENCIA 2D DEL TOPE CON LA CHAPA: revisar apoyo y retirada':
    !chosenGauge.contactEngaged?' · sin contacto confirmado en esta fase':' · contacto nominal 2D')+

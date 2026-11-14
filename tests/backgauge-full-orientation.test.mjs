@@ -29,28 +29,33 @@ test('Stop 1: apoyo vertical en la parte frontal inferior, sin mover el borde de
  assert.equal(place.contact.to.x,place.point.x);
  assert.ok(place.contact.from.y<place.contact.to.y);
 });
-test('Support 2: chapa apoyada ENCIMA del primer escalón horizontal a e/2',()=>{
+test('Support 2: la chapa toca la cara FRONTAL, nunca sobre la repisa',()=>{
  const scene=technicalScene(EXAMPLE,.6),stop=gaugePlacement(scene,1),
   support=gaugePlacement(scene,2);
  const pts=gaugeContourAtContact(support,V85_FACTORY.support);
- assert.deepEqual(stop.point,support.point,'no cambiar X programada');
- assert.equal(support.contact.surface,'horizontal-top');
- assert.deepEqual(support.contact.from,pts[5]);
- assert.deepEqual(support.contact.to,pts[4]);
- assert.ok(support.contact.from.x<support.point.x,'labio del escalón debajo del tramo de chapa');
+ assert.deepEqual(stop.point,support.point,'X de referencia sin saltos');
+ assert.equal(support.contact.surface,'vertical-front');
+ assert.deepEqual(support.contact.from,pts[0]);
+ assert.deepEqual(support.contact.to,pts[5]);
+ assert.equal(support.contact.from.x,support.point.x);
  assert.equal(support.contact.to.x,support.point.x);
- assert.equal(support.contact.from.y,support.contact.to.y,'apoyo horizontal');
- assert.equal(support.contact.to.y,support.point.y-scene.piece.thickness/2);
+ assert.ok(support.contact.from.y<support.contact.to.y);
+ assert.equal(support.gaugeInterference.warning,false);
+ assert.equal(support.verified,false);
 });
-test('la secuencia omega 1-2-4-3 conserva los dos apoyos sin invertir el tope',()=>{
+test('omega 1-2-4-3 conserva X y cara frontal en ambos tipos de tope',()=>{
  const original=structuredClone(EXAMPLE);
  for(const time of [.6,5.2,10.3,15.2]){
   const scene=technicalScene(original,time);
   const stop=gaugePlacement(scene,1),support=gaugePlacement(scene,2);
   assert.equal(stop.contact.surface,'vertical-front');
-  assert.equal(support.contact.surface,'horizontal-top');
+  assert.equal(support.contact.surface,'vertical-front');
   assert.deepEqual(stop.point,support.point);
-  assert.equal(support.contact.from.y,support.contact.to.y);
+  for(const p of [stop,support]){
+   assert.equal(p.contact.from.x,p.point.x);
+   assert.equal(p.contact.to.x,p.point.x);
+   assert.equal(p.gaugeInterference.warning,false,'no penetración en preparación '+time);
+  }
  }
  assert.deepEqual(original.angles,[90,-90,-90,90]);
 });

@@ -73,13 +73,17 @@ test('al reordenar golpes se mantiene el lado seleccionado por pliegue físico',
  assert.deepEqual(alt.angles,p.angles);
 });
 
-test('no anuncia contacto verificado al apoyar en un vértice interior',()=>{
- const p=normalized(EXAMPLE);
- const scene=technicalScene(p,5.2);
- const placement=gaugePlacement(scene,1);
+test('segundo golpe: la cara exterior de ala doblada sí permite parada frontal',()=>{
+ const p=normalized(EXAMPLE),placement=gaugePlacement(technicalScene(p,5.2),1);
  assert.equal(placement.sourceIndex,1);
  assert.equal(placement.freeEdge,false);
- assert.equal(placement.alignedToSheet,false);
- assert.match(placement.state,/vértice interior/);
- assert.equal(placement.verified,false);
+ assert.equal(placement.referenceKind,'cara frontal del ala plegada');
+ assert.equal(placement.frontFlange?.fiberX,50);
+ assert.equal(placement.frontFlange?.faceX,51);
+ assert.equal(placement.point.x,51);
+ assert.equal(placement.sheetInFront,true);
+ assert.equal(placement.seat.seated,true);
+ assert.equal(placement.contactEngaged,true);
+ assert.equal(placement.gaugeInterference.warning,false);
+ assert.equal(placement.verified,false,'frente geométrico sin certificar CNC');
 });

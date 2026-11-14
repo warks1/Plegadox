@@ -33,24 +33,16 @@ try{
    assert.equal(check.inFront,true,'chapa delante de todo el dedo '+n);
    assert.equal(check.supported,true,'contacto físico nominal '+n);
    assert.ok(!check.text.includes('CHAPA POR DETRÁS'));
-   if(n===2){
-    assert.equal(check.seat.required,true);
-    assert.equal(check.seat.seated,true,'la chapa debe descansar sobre la repisa, no tocar solamente una esquina');
-    assert.equal(check.contact.surface,'horizontal-top');
-    assert.equal(check.contact.to.x,check.contact.frontFace.from.x);
-    assert.ok(check.contact.from.x<check.contact.to.x);
-    assert.ok(check.contact.frontFace.to.y>check.contact.frontFace.from.y,
-     'EL VIDEO EXIGE una pared vertical que SUBA detrás de la chapa');
-    assert.equal(check.outline[5].x,check.contact.from.x);
-    assert.equal(check.outline[4].x,check.contact.to.x);
-    assert.equal(check.outline[3].x,check.contact.to.x);
-    assert.equal(check.outline[5].y,check.contact.to.y,
-     'la pestaña delantera es inferior y sirve de apoyo');
-   }else{
-    assert.equal(check.seat.required,false);
-    assert.equal(check.contact.surface,'vertical-front');
-    assert.equal(check.contact.to.x,check.contact.from.x);
-   }
+   assert.equal(check.seat.required,false,
+    'la parada es frontal y no obliga a apoyar encima de la repisa');
+   assert.equal(check.seat.seated,true);
+   assert.equal(check.contact.surface,'vertical-front');
+   assert.equal(check.contact.to.x,check.contact.from.x);
+   assert.equal(check.contact.to.x,check.point.x);
+   assert.equal(check.outline[0].x,check.contact.from.x);
+   assert.equal(check.outline[5].x,check.contact.to.x);
+   assert.ok(check.outline.every(pt=>pt.x>=check.point.x),
+    'cuerpo del dedo completo por detrás del canto');
    await page.screenshot({path:'test-results/tope-contacto-completo-'+device.name+'-'+n+'.png'});
   }
   assert.deepEqual(errors,[],'Errores de navegación en '+device.name);

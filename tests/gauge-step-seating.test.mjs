@@ -18,71 +18,61 @@ test('todo el cuerpo del tope se orienta a la derecha y AMBOS escalones miran a 
   assert.ok(a[3].y>a[4].y,'el escalón debe subir, no bajar');
  }
 });
-test('en la presentación la chapa apoya frontalmente en STOP o sobre la repisa y contra el escalón SUPPORT',()=>{
+test('ambos dedos presentan su cara FRONTAL, incluso si el cuerpo tiene escalones',()=>{
  const scene=technicalScene(normalized(EXAMPLE),.5);
  const stop=gaugePlacement(scene,1),sup=gaugePlacement(scene,2);
- assert.equal(stop.sheetInFront,true);
- assert.equal(sup.sheetInFront,true);
- assert.equal(stop.contactEngaged,true);
- assert.equal(sup.contactEngaged,true);
- assert.equal(stop.seat.required,false);
- assert.equal(sup.seat.required,true);
- assert.equal(sup.seat.seated,true);
- const A=gaugeContourAtContact(stop,V85_FACTORY.stop);
- const B=gaugeContourAtContact(sup,V85_FACTORY.support);
- approx(stop.contact.from.x,stop.point.x);
- approx(stop.contact.to.x,stop.point.x);
- approx(sup.contact.to.x,sup.point.x);
- approx(sup.contact.frontFace.from.x,sup.point.x);
- approx(sup.contact.from.y,sup.point.y-scene.piece.thickness/2);
- assert.ok(sup.contact.from.x<sup.point.x,'la repisa queda delante, a la izquierda');
- assert.deepEqual(B[5],sup.contact.from);
- assert.deepEqual(B[4],sup.contact.to);
- assert.deepEqual(B[3],sup.contact.frontFace.to);
- assert.deepEqual(A[0],stop.contact.from);
- assert.deepEqual(A[5],stop.contact.to);
+ for(const [place,cfg] of [[stop,V85_FACTORY.stop],[sup,V85_FACTORY.support]]){
+  assert.equal(place.sheetInFront,true);
+  assert.equal(place.contactEngaged,true);
+  assert.equal(place.contact.surface,'vertical-front');
+  assert.equal(place.seat.required,false);
+  assert.equal(place.seat.seated,true);
+  const contour=gaugeContourAtContact(place,cfg);
+  assert.deepEqual(contour[0],place.contact.from);
+  assert.deepEqual(contour[5],place.contact.to);
+  approx(place.contact.from.x,place.point.x);
+  approx(place.contact.to.x,place.point.x);
+  assert.ok(contour.every(pt=>pt.x>=place.point.x),
+   'el volumen completo del tope empieza tras la cara de parada');
+ }
 });
-test('si el ala llega inclinada, no anunciar apoyo válido sobre la repisa por tocar solamente un vértice',()=>{
+test('un ala vertical no se detiene sobre su FIBRA, sino sobre su superficie exterior',()=>{
+ const scene=technicalScene(normalized(EXAMPLE),5.5);
  const feature=gaugeContactFeature(V85_FACTORY.support,2);
- const flat={sheet:[{x:15,y:1},{x:50,y:1}]};
- const slope={sheet:[{x:15,y:12},{x:50,y:1}]};
- const point={x:50,y:1};
- assert.equal(gaugeSeatAssessment(flat,1,point,2,feature).seated,true);
- const assessed=gaugeSeatAssessment(slope,1,point,2,feature);
- assert.equal(assessed.required,true);
- assert.equal(assessed.seated,false);
- assert.match(assessed.reason,/inclinada/);
- const common={sheetDisplay:slope.sheet,gaugeReference:{sourceIndex:1,distance:35,
-  label:'ala siguiente',side:'after'},gaugeAnchor:point,
-  stage:{phase:'Posicionamiento'},piece:{thickness:2},die:{opening:16}};
- const p=gaugePlacement({...slope,...common},2);
- assert.equal(p.sheetInFront,true);
- assert.equal(p.seat.seated,false);
- assert.equal(p.contactEngaged,false);
- assert.equal(p.alignedToSheet,false);
- assert.match(p.state,/NO asienta/);
- // Elegir cara inferior Stop no exige un asiento plano en la repisa.
- const stop=gaugePlacement({...slope,...common},1);
- assert.equal(stop.seat.required,false);
+ const right={x:scene.gaugeAnchor.x,y:scene.gaugeAnchor.y};
+ const good=gaugeSeatAssessment({sheet:scene.gaugeSetupSheet},
+  1,right,scene.piece.thickness,feature);
+ assert.equal(good.seated,true);
+ assert.equal(good.required,false);
+ assert.equal(good.xError,0);
+ const wrong=gaugeSeatAssessment({sheet:scene.gaugeSetupSheet},
+  1,{x:right.x-scene.piece.thickness/2,y:right.y},
+  scene.piece.thickness,feature);
+ assert.equal(wrong.seated,false);
+ assert.match(wrong.reason,/sin cara frontal accesible/);
 });
-test('el contorno completo conserva su sentido y los dos contactos durante todos los golpes de omega',()=>{
+test('en la omega el cuerpo queda a la derecha en los cuatro golpes; 2 y 4 sobre cara plegada',()=>{
  const piece=normalized(EXAMPLE),before=structuredClone(piece);
- for(const time of [.5,5.5,10.5,15.5]){
+ for(const [operation,time] of [[1,.5],[2,5.5],[3,10.5],[4,15.5]]){
   const scene=technicalScene(piece,time);
   for(const n of [1,2]){
    const place=gaugePlacement(scene,n);
-   const vertices=gaugeContourAtContact(place,n===1?V85_FACTORY.stop:V85_FACTORY.support);
-   assert.ok(vertices.every(p=>p.x>=place.point.x-(n===2?30:0)-1e-6),
-    'El cuerpo del tope no debe saltar delante de la chapa, t='+time+' dedo='+n);
-   assert.ok(vertices.some(p=>p.x>place.point.x),
-    'El cuerpo del tope debe quedar por detrás, t='+time+' dedo='+n);
-   assert.equal(place.contact.surface,n===1?'vertical-front':'horizontal-top');
-   if(n===2){
-    approx(place.contact.to.x,place.point.x);
-    approx(place.contact.to.y,place.point.y-piece.thickness/2);
-    approx(place.contact.frontFace.from.x,place.point.x);
-   }else approx(place.contact.to.x,place.point.x);
+   const values=n===1?V85_FACTORY.stop:V85_FACTORY.support;
+   const vertices=gaugeContourAtContact(place,values);
+   assert.ok(vertices.every(pt=>pt.x>=place.point.x-1e-8),
+    'El dedo no debe entrar por delante, G'+operation+' dedo '+n);
+   assert.ok(vertices.some(pt=>pt.x>place.point.x));
+   assert.equal(place.contact.surface,'vertical-front');
+   assert.equal(place.contact.to.x,place.point.x);
+   assert.equal(place.contact.from.x,place.point.x);
+   assert.equal(place.gaugeInterference.warning,false,
+    'No atravesar chapa, G'+operation+' dedo '+n);
+   if(operation===2||operation===4){
+    assert.equal(place.frontFlange?.faceX,place.point.x);
+    assert.equal(place.freeEdge,false);
+    assert.equal(place.contactEngaged,true);
+   }
   }
  }
- assert.deepEqual(piece,before,'Nunca modificar la pieza o las referencias');
+ assert.deepEqual(piece,before);
 });
