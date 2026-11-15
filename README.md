@@ -1236,3 +1236,18 @@ https://www.politesi.polimi.it/bitstream/10589/7642/4/Data%20Sheet_Beyeler%20PR1
 Evidencia adicional de existencia del modelo en el mismo año: anuncio usado «2006 Bystronic PR100-3100», https://activemachinery.com/equipment/7849674-bystronic-pr100-3100-brakes-press ; **el anuncio no demuestra que sea la misma unidad**.
 
 **Alcance de la atribución:** estos datos son válidos como referencia de la familia PR100/3100; no prueban que la unidad concreta del propietario sea una PR100 ni su equipamiento exacto. Mantener `tableHeight:null`, cotas CAD de trancha, fijación/agarres, portamatriz, mesa y geometría del dedo como no documentadas, para no validar falsamente una colisión o un recorrido CNC. Si la placa confirma EP II, cambiar a ese perfil (montantes 2550 mm, carrera 200 mm). Las piezas guardadas y las cotas de la Trumpf se conservan sin alteración.
+
+
+## R45 · Modelo revisado a partir de fotografía del usuario (15-11-2026)
+
+**Corrección de identificación importante:** la foto de la máquina del usuario presenta una carrocería blanca/gris con un gran cuadrado de logotipo Bystronic rojo a la izquierda, tapas de cilindros rojas laterales y bancada inferior azul oscuro. El frontal coincide visualmente con la familia **Bystronic AFM EP 31-100 / EP100-31**, y NO con los ejemplares fotografiados de la **Beyeler PR100** (carcasa con franja/cornisa roja superior y nombre PR100 grabado). La imagen de la máquina propia NO muestra placa con el modelo legible: identificación provisional, **no confirmada**.
+
+Fuentes para contraste:
+- Fotografía de ejemplar AFM EP 31-100 del 2008 y datos comerciales de capacidad 1000 kN, 3100 mm, carrera 200 mm, peso 9000 kg, Cybelec DNC 880S y cuatro ejes: https://www.sparxmachinetools.co.uk/products/bystronic-afm-ep-31-100-3m-x-100-ton-press-brake
+- Ficha de un ejemplar EP100-31 del 2006 con Y1, Y2, X, R y Cybelec 880 (son datos de otro equipo, no prueba del control del propietario): https://www.machinio.it/annunci/43398267-pressa-piegatrice-idraulica-bystronic-ep100-31-del-2006-in-bassano-del-grappa-italia
+- Presentación contemporánea de la gama AFM EP (2007) 31-100 y tope X/R: https://www.forumnarzedziowe.pl/archiwum2000-2009/pdf2007/nr04%2833%292007.pdf
+- Referencia visual PR100 diferente: https://assetexchangeinc.com/equipment/7777573-bystronic-beyeler-xpert-100-x-3100-press-brakes-hydraulic-power
+
+**Cambio de ingeniería:** el identificador de perfil guardado `bystronic-2006-100-3100` se conserva para no romper proyectos; su denominación pasa a «AFM EP 31-100 probable». Se eliminan del perfil de la máquina del usuario las cotas antes heredadas **sin justificación** de PR100/3100: entre montantes 2750, escote 400, altura libre 500, carrera 215, recorrido máximo tope 1040, X 590, R 250, medidas exteriores 4100×2050×2600 y potencia 7,5 kW. Se mantiene 100 t / 3100 mm / año 2006 confirmados; la carrera 200 mm y peso 9 t solo como **referencia de otros ejemplares** AFM EP, no como comprobación física de su unidad.
+
+La selección PR100 y EP II permanece separada para comparar modelos, pero ninguna de sus cotas se debe usar automáticamente en la unidad fotografiada. El perfil de dicha máquina continúa sin CAD acotado de trancha, amarres, mesa y dedos traseros; la comprobación 2D/3D no certifica colisiones. Para confirmar submodelo y cinemática de ejes, hace falta una imagen legible de la placa de características o de la etiqueta de identificación del control.
