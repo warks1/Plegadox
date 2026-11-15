@@ -1,9 +1,9 @@
 # Plegadox — control y simulador de plegado
 
-## Estado actual · R88 (v0.9.64) · 15 de noviembre de 2026
+## Estado actual · R93 (v0.9.67) · 15 de noviembre de 2026
 
 - **Simulación de punzón:** un solo descenso continuo por golpe; la punta permanece alta y fija durante el giro de la chapa. La altura se calcula con la misma presentación geométrica que muestra la sección técnica, incluyendo cambios de cara y de sentido de alimentación.
-- **Topes traseros:** apoyo frontal a la chapa, repisa del Support por debajo del canto y referencias X/R estables. La retirada antes del plegado solo se propone ante penetración detectada en la comprobación 2D; modificar manualmente lado, tramo, punto o dedo de tope invalida la altura de aparcamiento previamente calculada.
+- **Topes traseros (R93):** alineación de perspectiva del dedo con el plano visible de la chapa, sin alterar las coordenadas X/R ni los datos manuales. Al preverse una penetración FUTURA del ala, la vista puede mostrar la retirada del dedo durante sujeción, incluso si el apoyo inicial está sin validar; en ese caso se conserva el aviso **NO APTO PARA CNC**, ya que retirar no convierte un apoyo incorrecto en válido. La retirada no se activa por simple holgura nominal. Las geometrías reales de topes requieren todavía validación OEM.
 - **Windows USB:** flujo de GitHub Actions que genera `PlegadoX.exe` sin instalación, con funcionamiento local sin internet; incorpora guardado directo de copias completas en `MIS_PROYECTOS` y restauración manual en otro equipo. La app web alojada no puede guardar directamente en un pendrive.
 - **Verificación:** `npm test`, pruebas de navegador para inicio/simulación/topes/datos y compilación Windows con verificación del contenido portátil.
 - **Límites:** CAD de punzones, matrices, topes y máquina y cinemática de ejes siguen siendo provisionales donde faltan geometrías y calibraciones OEM. **No es un verificador de colisiones 3D ni un programa CNC certificado para producción.**
