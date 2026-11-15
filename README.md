@@ -1417,3 +1417,14 @@ Prueba: `tests/tooling-load-capacity-r55.test.mjs`, caso V32/88° de 3 mm no reg
 - **Distribución:** build `PLEGADOX-20261115-R57`, versión `0.9.33`, caché `plegadox-static-0.9.33-cad-status-icon-update-r57`. Al actualizar desde un acceso iOS instalado antes, puede ser necesario recrear ese acceso para que iOS cambie el icono de pantalla de inicio.
 
 **Límites reales:** el retroceso condicional, el contacto con el tope y la matriz/punzón en pantalla son evaluaciones geométricas y animaciones orientativas; faltan CAD físico contrastado de los útiles, amarre, regleta, trancha, mesa, topes y recorridos X/R/Z y pruebas CNC/industriales. Por seguridad, no se certifican colisiones ni trayectorias en máquina.
+
+
+## R58 · Diagnóstico explícito de apoyos y CI visual paralela (15-11-2026)
+
+**Apoyo del dedo/retroceso:** `gauge-sequence-review.js` añade el aviso `apoyo-invalido` cuando el motor de preparación rechaza la cara de apoyo, **aunque no exista una penetración 2D**. Registra `setupReason` para explicar al plegador por qué debe cambiar orientación, segmento o dedo. La advertencia queda en `workshop-audit.js` mediante su mapeo genérico `gauge-<kind>`. No se declara automáticamente que todo aviso rojo implique colisión volumétrica. Prueba de regresión `tests/gauge-sequence-review.test.mjs`.
+
+**Aviso en simulación:** `machine-visual.js` muestra de forma distinguible `CORREGIR CANTO DE APOYO`, `CHAPA INVADE EL DEDO` o `REVISAR HOLGURA / APOYO`. Las letras de esas advertencias son rojas; apoyo nominal 2D sin CAD acreditado se muestra ámbar. La elección manual y el orden de plegado permanecen inalterados.
+
+**Pruebas de navegador:** `.github/workflows/check.yml` distribuye los **42 tests de navegador** en cuatro grupos independientes `inicio`, `simulacion`, `topes`, `datos`; no cancela los demás al fallar uno, y sube capturas con el nombre de su grupo. Cada script tiene un tiempo máximo y registra su nombre en el log. Esto hace más fácil detectar una pantalla cortada en un iPhone sin confundirla con errores del cálculo de herramienta. La batería de pruebas unitarias sigue ejecutándose por separado.
+
+**Publicación:** build `PLEGADOX-20261115-R58`, versión `0.9.34`, caché `plegadox-static-0.9.34-gauge-diagnostics-browser-shards-r58`. Los colores no equivalen a una verificación industrial: se sigue necesitando la CAD real de los dedos y del conjunto máquina, más validación del recorrido CNC y pruebas físicas antes de plegar.
