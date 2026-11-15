@@ -117,8 +117,8 @@ export function gaugePlacement(scene,stopNumber=1){
  const contactAt=edge=>{
   // Mantener X del borde de chapa. Stop toca la cara frontal vertical;
   // Support apoya SOBRE el escalón, a e/2 bajo la fibra media de chapa.
-  const support=selected===2;
-  const surface={x:edge.x,y:edge.y-(support?thickness/2:0)};
+  const shelfContact=feature.surface==='horizontal-top';
+  const surface={x:edge.x,y:edge.y-(shelfContact?thickness/2:0)};
   const origin={x:surface.x-feature.point.x,y:surface.y-feature.point.y};
   const toWorld=pt=>({x:origin.x+pt.x,y:origin.y+pt.y});
   return {kind:feature.kind,surface:feature.surface,
@@ -162,7 +162,7 @@ export function gaugePlacement(scene,stopNumber=1){
     !valid?'sin cota válida':!feature.usable?'sin cara física de apoyo definida':
     !freeEdge?'⚠ punto de apoyo interior: comprobar cara física del tope y accesibilidad':
     !sheetInFront?'⚠ La chapa llega por DETRÁS del tope; invertir la presentación':
-    !seat.seated?'⚠ La chapa NO asienta sobre la repisa del primer escalón':
+    !seat.seated?'⚠ La chapa NO CONTACTA la cara frontal del tope':
     contactEngaged?'borde presentado contra la cara seleccionada':
     'referencia nominal fijada antes del golpe (sin contacto actual)',
    verified:false});
