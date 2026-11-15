@@ -6,7 +6,7 @@ import {selectMachine} from '../machine-selection.js';
 import {resolveGaugeSetup,foldedStopFaceCandidate} from '../gauge-contact-solver.js';
 import {technicalScene} from '../technical-section.js';
 import {gaugePlacement,gaugeContourAtContact} from '../backgauge-placement.js';
-import {machineSheetProjection,gaugePerspectiveContours} from '../machine-visual.js';
+import {machineSheetProjection,gaugePerspectiveContours,gaugeFrontNosePolygon} from '../machine-visual.js';
 import {gaugeRiskStatus} from '../gauge-risk-status.js';
 import {scanGaugeSequence} from '../gauge-sequence-review.js';
 
@@ -115,6 +115,12 @@ test('R94 video G2: en perspectiva el Stop está tras la cara de chapa; al plega
  const g0=gaugePlacement(beginning,1);
  const world=gaugeContourAtContact(g0,getActiveMachineConfig().stop);
  const wallX=g0.contact.from.x;
+ const nose=gaugeFrontNosePolygon(g0,getActiveMachineConfig().stop);
+ assert.equal(nose.length,4);
+ assert.ok(nose.every(q=>q.x>=wallX-1e-6));
+ assert.equal(nose[0].x,wallX);
+ assert.equal(nose[3].x,wallX,
+  'La guía del labio oculto tiene su extremo en la misma cara de apoyo');
  // Mismo datum geométrico para la chapa, la cara STOP y la proyección.
  assert.equal(g0.contactEngaged,true);
  assert.ok(world.every(q=>q.x>=wallX-1e-6),
