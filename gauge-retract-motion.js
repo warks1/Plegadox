@@ -11,7 +11,17 @@ const clamp01=n=>Math.max(0,Math.min(1,Number(n)||0));
 const smooth=n=>{const t=clamp01(n);return t*t*(3-2*t);};
 const lerp=(a,b,t)=>a+(b-a)*t;
 export function gaugeRetractionPath({anchor,target=null,maxSheetX,fingerReach=0,opening=16,sub,enabled=true}){
- if(!enabled)return null;
+ if(!enabled){
+  if(!target||!Number.isFinite(target.x)||!Number.isFinite(target.y))return null;
+  const t=clamp01(sub);
+  if(t<GAUGE_REPOSITION_START)return null;
+  const k=smooth((t-GAUGE_REPOSITION_START)/
+   (GAUGE_REPOSITION_FINISH-GAUGE_REPOSITION_START));
+  return {phase:'reubicacion-siguiente-golpe',
+   point:{x:lerp(anchor.x,target.x,k),y:lerp(anchor.y,target.y,k)},
+   from:anchor,to:target,parkPoint:null,progress:k,moving:k>0&&k<1,
+   withdrawn:false,plannedRetraction:0,verified:false};
+ }
  if(!anchor||!Number.isFinite(anchor.x)||!Number.isFinite(anchor.y))
   throw new Error('Falta origen del dedo de tope');
  const radius=Math.max(10,Number(opening)||16);
