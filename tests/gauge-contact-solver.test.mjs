@@ -57,3 +57,28 @@ test('mismo punto de dibujo de dedo y punto de contacto inicial',()=>{
    reference.sourceIndex===p.flanges.length||!setup.valid);
  }
 });
+
+test('vídeo 15/11: apoyo manual a 20 mm dentro de ala de 50 mm no se corrige retirando tope',()=>{
+ // La parada física necesita un canto libre delante de la cara frontal.
+ // Tocar un punto interior puede ser una cota manual legítima de edición,
+ // pero no valida ese contacto como apoyo real en la simulación.
+ const piece=normalized({...EXAMPLE,
+  gaugeSideByBend:['before','auto','auto','auto'],
+  gaugeSegmentByBend:[0,null,null,null],
+  gaugePointByBend:[20,null,null,null]});
+ const ref=gaugeReference(piece,0);
+ assert.equal(ref.distance,20);
+ assert.equal(ref.freeEdge,false);
+ const setup=technicalScene(piece,.30);
+ assert.equal(setup.gaugeSetup.manual,true);
+ assert.equal(setup.gaugeSetup.valid,false);
+ assert.equal(setup.gaugePlan.needsSetupCorrection,true);
+ const during=technicalScene(piece,.60*5);
+ assert.equal(during.gaugePlan.setupValid,false);
+ assert.equal(during.gaugePlan.enabled,false,
+  'No desplazar el dedo para ocultar un apoyo físicamente inválido');
+ assert.equal(during.gaugeTransition?.plannedRetraction??0,0);
+ // La misma ala, llevada a su extremo físico, deja de ser referencia interior.
+ const edge=gaugeReference({...piece,gaugePointByBend:[50,null,null,null]},0);
+ assert.equal(edge.freeEdge,true);
+});
