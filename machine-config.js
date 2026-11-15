@@ -106,11 +106,13 @@ export function gaugeOutline(values,stopNumber=1){
  ];
 }
 /**
- * Caras de contacto diferenciadas en el croquis del control:
- * Stop 1: chapa frontal contra la cara inferior vertical del dedo.
- * Support 2: chapa ENCIMA del primer escalón horizontal.
- * El perfil físico NO se invierte al cambiar entre estas dos funciones.
- * Sin garantía de accesibilidad ni cinemática CNC.
+ * R40: Tanto Stop 1 como Support 2 detienen la chapa EN LA CARA
+ * FRONTAL VERTICAL del dedo. No confundir TOPE con apoyo de peso.
+ *
+ * Los dedos pueden tener escalones de geometría distinta; pero el canto
+ * elegido no se sitúa encima de ellos para simular una parada. Usar la
+ * repisa como apoyo requerirá modelar otra operación física separada.
+ * TODO: cotejar el perfil completo con CAD/cotas oficiales y montaje.
  */
 export function gaugeContactFeature(values,stopNumber=1){
  const outline=gaugeOutline(values,stopNumber);
@@ -118,19 +120,17 @@ export function gaugeContactFeature(values,stopNumber=1){
  const outer=Math.max(...outline.map(p=>p.x));
  const ledge=outline[4].x,stepDepth=-outline[4].y;
  const support=Number(stopNumber)===2;
- // STOP 1: borde o ala doblada contra frente izquierdo BAJO 0→5.
- // SUPPORT 2: chapa ENCIMA del saliente bajo 5→4, con el canto
- // detenido en el resalte VERTICAL 4→3 que sube por DETRÁS.
- // Un único perfil en ambos modos, sin espejar una parte.
- const from={...outline[support?5:0]};
- const to={...outline[support?4:5]};
- const point=support?{...to}:{x:0,y:-(height+stepDepth)/2};
- const usable=height>stepDepth&&stepDepth>0&&ledge>0&&ledge<outer;
- const frontFace=support?{from:{...outline[4]},to:{...outline[3]}}:
-  {from:{...outline[0]},to:{...outline[5]}};
- return {kind:support?'support-step':'stop-face',
-  surface:support?'horizontal-top':'vertical-front',frontFace,
-  label:support?'TOPE 2 · APOYO SOBRE PRIMER ESCALÓN':'TOPE 1 · CARA FRONTAL INFERIOR',
+ // Cara MÁS DELANTERA del contorno íntegro del dedo, sin espejado.
+ // El resto de la chapa permanece delante (X menor) y nunca encima
+ // del escalón. La referencia es el centro de espesor del canto.
+ const from={...outline[0]},to={...outline[5]};
+ const point={x:from.x,y:(from.y+to.y)/2};
+ const usable=height>stepDepth&&stepDepth>=0&&ledge>=0&&ledge<outer;
+ const frontFace={from:{...from},to:{...to}};
+ return {kind:support?'support-front-face':'stop-front-face',
+  surface:'vertical-front',frontFace,
+  label:support?'TOPE 2 · CARA FRONTAL · NO SOBRE REPISA':
+   'TOPE 1 · CARA FRONTAL',
   from,to,point,usable,verified:false};
 }
 /** Envolvente del perfil esquemático, sin interpretar una cota L como CAD. */
