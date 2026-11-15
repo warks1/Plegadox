@@ -27,25 +27,24 @@ test('códigos desconocidos no sustituyen configuración guardada',()=>{
  assert.throws(()=>selectMachine('bystronic-otro'),/no conocido/);
 });
 
-test('Bystronic 2006 incorpora las cotas documentadas PR100/3100 como referencia',()=>{
+test('la máquina de la foto de 2006 usa referencia AFM EP provisional, no cotas PR100',()=>{
  selectMachine('bystronic-2006-100-3100');
  const cfg=getActiveMachineConfig();
  const profile=getActiveMachineProfile();
  assert.equal(profile.year,2006);
- assert.equal(cfg.tonnage,100);
+ assert.equal(profile.tonnage,100);
  assert.equal(cfg.bendingLength,3100);
- assert.equal(cfg.betweenUprights,2750);
- assert.equal(cfg.throat,400);
- assert.equal(cfg.openHeight,500);
- assert.equal(cfg.stroke,215);
- assert.equal(cfg.xRange,1040);
- assert.equal(cfg.xTravel,590);
- assert.equal(cfg.rTravel,250);
- assert.deepEqual(cfg.outer,{length:4100,depth:2050,height:2600});
+ assert.equal(cfg.stroke,200);
  assert.equal(cfg.nominalWeightTonnes,9);
+ assert.equal(cfg.betweenUprights,null,'no adjudicar los 2750 mm de la PR100');
+ assert.equal(cfg.throat,null,'sin dato confirmado en la unidad');
+ assert.equal(cfg.openHeight,null,'no usar los 500 mm de PR100');
+ assert.equal(cfg.xTravel,null,'no copiar recorrido X de PR100');
+ assert.equal(cfg.rTravel,null,'no copiar recorrido R de PR100');
  assert.equal(cfg.tableHeight,null);
+ assert.equal(cfg.outer,null,'no copiar dimensiones exteriores PR100');
  assert.equal(cfg.gaugeGeometryDocumented,false);
- assert.ok(cfg.dimensionsSource.includes('politesi'));
- assert.equal(cfg.dimensionsVerified,'cotas-fabricante-pr100-3100-atribuidas-como-referencia');
+ assert.equal(profile.identificationConfidence,'probable-por-imagen-sin-placa');
+ assert.equal(cfg.dimensionsVerified,'familia-afm-ep-referencia-no-validada-en-unidad');
  selectMachine('trumpf-v85');
 });
