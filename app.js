@@ -54,7 +54,7 @@ let integratedPlannerEpoch=0;
 let measurementInputKey=measurementKey(piece),lastSavedMeasurement=null;
 const geometryCache={key:null,result:null};
 function geometryReport(){
- const key=JSON.stringify([piece.flanges,piece.angles,piece.order,piece.thickness,piece.width,piece.material,piece.rmMPa,piece.punch,piece.die,piece.punchOrientation,piece.gaugeSideByBend,piece.gaugeSegmentByBend,piece.gaugePointByBend,getActiveMachineConfig().ramWidth,getActiveMachineConfig().holderWidth]);
+ const key=JSON.stringify([piece.flanges,piece.angles,piece.order,piece.thickness,piece.width,piece.material,piece.rmMPa,piece.punch,piece.die,piece.punchOrientation,piece.gaugeSideByBend,piece.gaugeSegmentByBend,piece.gaugePointByBend,getActiveMachineConfig().profileId||'trumpf-v85',getActiveMachineConfig().tonnage,getActiveMachineConfig().ramWidth,getActiveMachineConfig().holderWidth]);
  if(key!==geometryCache.key){
   const report=analyzeSequence(piece),tools=inspectSequenceTools(piece,6),
    sheetScan=scanSheetSequence(piece,15);
@@ -326,7 +326,10 @@ function configure(){
    '. Cero avisos en las muestras NO garantiza ausencia de colisiones físicas.';
  };
  $('applyIntegratedPlan').onclick=()=>applyIntegratedRecommendation(pendingIntegratedPlan?.plan);
- window.addEventListener('plegadox:machineChanged',()=>scheduleIntegratedAdvisor());
+ window.addEventListener('plegadox:machineChanged',()=>{
+  geometryCache.key=null;pendingIntegratedPlan=null;
+  scheduleIntegratedAdvisor();renderWorkshopAudit();paintAll();
+ });
  $('evaluateOrder').onclick=()=>{
   const message=$('sequenceAdvice'),apply=$('applySuggestedOrder');
   apply.disabled=true;pendingSequenceAdvice=null;
