@@ -1815,11 +1815,13 @@ function renderSimulationText(){
  // La retirada previa es una decisión por golpe basada en secciones 2D;
  // NO equivale al traslado X/R del dedo al siguiente pliegue.
  const plan=currentGaugeScene.gaugePlan;
- const retractState=plan?.setupValid===false?'corregir-apoyo':
+ const retractState=plan?.setupValid===false?
+  (plan.enabled?'retirada-no-validada':'corregir-apoyo'):
   plan?.known!==true?'sin-datos':
   plan.enabled?'retirar':'mantener';
  const retractionNote={
-  'corregir-apoyo':' · ⚠ RETIRADA NO AUTORIZADA: corregir apoyo inicial',
+  'corregir-apoyo':' · ⚠ RETIRADA NO PREVISTA: corregir apoyo inicial',
+  'retirada-no-validada':' · ⚠ RETIRADA 2D REPRESENTADA POR PENETRACIÓN FUTURA; APOYO INICIAL SIN VALIDACIÓN. NO APTO PARA CNC',
   'sin-datos':' · ⚠ RETIRADA SIN EVALUAR: faltan secciones 2D',
   'retirar':' · retirada previa: SÍ, recomendación por interferencia 2D',
   'mantener':' · retirada previa: NO prevista según sección 2D'
@@ -1830,9 +1832,13 @@ function renderSimulationText(){
     'chapa contra cara frontal inferior STOP 1')+
    ' · '+(shownRef.side==='before'?'presentación invertida':'presentación directa')+
   (plan?.autoSelected?' · apoyo alternativo automático del motor':'')+
-  (freeEnd?' · borde libre':shownRef.manual&&!shownRef.atEnd?
-    ' · ⚠ punto interior: requiere un contacto físico accesible':
-    ' · ⚠ vértice interior: verificar apoyo')+
+  (freeEnd?' · borde libre':
+    currentGaugeScene.gaugeSetup?.valid===true&&
+    currentGaugeScene.gaugeSetup?.foldedWingContact===true?
+     ' · apoyo lateral de pestaña YA plegada · sección 2D provisional (CAD pendiente)':
+    shownRef.manual&&!shownRef.atEnd?
+     ' · ⚠ punto interior: requiere un contacto físico accesible':
+     ' · ⚠ vértice interior: verificar apoyo')+
   (freeEnd&&!chosenGauge.sheetInFront?
    ' · ⚠ CHAPA POR DETRÁS DEL TOPE: revisar presentación':'')+
   (chosenGauge.seat&&!chosenGauge.seat.seated?

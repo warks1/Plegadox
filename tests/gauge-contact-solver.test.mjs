@@ -32,20 +32,32 @@ test('elección manual no se reemplaza automáticamente aunque haya interferenci
  assert.equal(selected.manual,true);
  assert.equal(selected.ref.segmentIndex,segment);
  assert.equal(selected.candidates.length,1);
- if(!selected.ref.freeEdge)assert.equal(selected.valid,false);
+ if(!selected.ref.freeEdge)
+  assert.equal(selected.valid,
+   selected.foldedWingContact===true&&selected.interference.warning===false,
+   'Solo una pestaña ya plegada y sin invasión puede sustituir el canto libre');
 });
-test('si el apoyo inicial está mal NO se pide retirada para esconder choque',()=>{
+test('apoyo inicial inválido NO se valida porque la vista prevé retroceso',()=>{
  const p=normalized(EXAMPLE),st=stage(p,5.4),bend=st.activeBend;
  const draft={...p,gaugeSegmentByBend:[...p.gaugeSegmentByBend],
-  gaugeSideByBend:[...p.gaugeSideByBend]};
+  gaugeSideByBend:[...p.gaugeSideByBend],
+  gaugePointByBend:[...p.gaugePointByBend]};
  const interior=Math.max(1,Math.min(p.flanges.length-2,bend));
  draft.gaugeSegmentByBend[bend]=interior;
  draft.gaugeSideByBend[bend]='before';
+ draft.gaugePointByBend[bend]=p.flanges[interior]/2;
+ // Un punto a mitad de ala NO equivale a cara vertical ya plegada.
  const scene=technicalScene(draft,5.4);
  assert.equal(scene.gaugeSetup.valid,false);
  assert.equal(scene.gaugePlan.setupValid,false);
- assert.equal(scene.gaugePlan.enabled,false);
- assert.equal(scene.gaugeTransition?.plannedRetraction??0,0);
+ assert.equal(scene.gaugePlan.needsSetupCorrection,true);
+ // Si aparece una penetración FUTURA, el simulador puede representar
+ // la retirada después de sujeción, pero JAMÁS validar el apoyo manual.
+ // Si ya hay penetración en preparación, una retirada tardía NO la arregla.
+ const risk=scene.gaugePlan.penetrationCount>0&&
+  scene.gaugeSetup.interference?.kind!=='penetracion';
+ assert.equal(scene.gaugePlan.enabled,risk);
+ assert.equal(scene.gaugePlan.withdrawalUnverified,risk);
 });
 test('mismo punto de dibujo de dedo y punto de contacto inicial',()=>{
  const p=normalized(EXAMPLE),st=stage(p,.3);

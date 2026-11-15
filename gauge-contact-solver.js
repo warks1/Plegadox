@@ -10,6 +10,37 @@ import {normalized,gaugeReference,gaugePointOnProfile,presentedForMachine} from 
 import {gaugeOutline,gaugeContactFeature} from './machine-config.js';
 import {inspectGaugeProfile} from './gauge-interference.js';
 const validNumber=x=>Number.isFinite(x);
+/**
+ * ESTUDIO R94 · Sólo referencias MANUALES contra la cara externa de una
+ * pestaña que YA ESTABA PLEGADA antes de este golpe. No modifica el
+ * seleccionador automático ni convierte cualquier vértice en apoyo.
+ * Esta detección es 2D provisional, sin ejes X/R/Z ni CAD de máquina.
+ */
+export function foldedStopFaceCandidate(positions,ref,st,feature,thickness,manual){
+ if(!manual||ref?.freeEdge||ref?.atEnd!==true||
+   feature?.surface!=='vertical-front'||!Number.isInteger(ref?.sourceIndex)||
+   ref.sourceIndex<=0||ref.sourceIndex>=positions.length-1)return null;
+ const idx=ref.sourceIndex,nominal=positions[idx],pivot=positions[ref.pivotIndex];
+ if(!nominal||!pivot||pivot.x>=nominal.x-Math.max(.12,thickness*.12))return null;
+ const allowance=Math.max(.1,thickness/2),tol=Math.max(.08,thickness*.10);
+ for(const ni of [idx-1,idx+1]){
+  if(ni===ref.pivotIndex||!positions[ni])continue;
+  const bend=Math.min(idx,ni);
+  if(!Number.isFinite(st?.fractions?.[bend])||st.fractions[bend]<.999)return null;
+  const other=positions[ni];
+  if(Math.abs(other.x-nominal.x)>tol||
+     Math.abs(other.y-nominal.y)<Math.max(2,thickness*2))continue;
+  const lo=nominal.y+Math.min(feature.from.y,feature.to.y)-feature.point.y;
+  const hi=nominal.y+Math.max(feature.from.y,feature.to.y)-feature.point.y;
+  const overlap=Math.max(0,Math.min(hi,Math.max(other.y,nominal.y))-
+    Math.max(lo,Math.min(other.y,nominal.y)));
+  if(overlap<Math.max(.5,thickness*.25))continue;
+  return {point:{x:nominal.x+allowance,y:nominal.y},
+   legSegment:bend,overlap,verified:false,
+   reason:'cara exterior de pestaña preplegada contra pared STOP · cálculo 2D'};
+ }
+ return null;
+}
 export function evaluateGaugeSetup(piece,st,ref,config,stopNumber=1){
  const p=normalized(piece);
  const finger=stopNumber===2?config.support:config.stop;
@@ -18,7 +49,12 @@ export function evaluateGaugeSetup(piece,st,ref,config,stopNumber=1){
  const setup=presentedForMachine(p,base,st.activeBend);
  const mirror=ref.side==='before'?-1:1;
  const positions=setup.points.map(q=>({x:q.x*mirror,y:q.y+p.thickness/2}));
- const point=gaugePointOnProfile(positions,ref);
+ const nominalPoint=gaugePointOnProfile(positions,ref);
+ const bend=st.activeBend;
+ const manual=p.gaugeSideByBend[bend]!=='auto'||
+  p.gaugeSegmentByBend[bend]!==null||p.gaugePointByBend[bend]!==null;
+ const foldedFace=foldedStopFaceCandidate(positions,ref,st,feature,p.thickness,manual);
+ const point=foldedFace?.point||nominalPoint;
  const clearInvalid={valid:false,verified:false,reason:'sin cara frontal accesible',
   warning:true,polygon:[],point:null,ref,geometryVerified:false};
  if(!point||!validNumber(point.x)||!validNumber(point.y))
@@ -31,8 +67,9 @@ export function evaluateGaugeSetup(piece,st,ref,config,stopNumber=1){
   ref.sourceIndex===positions.length-1?positions.length-2:null;
  const neighbour=neighbourIndex==null?null:positions[neighbourIndex];
  const margin=Math.max(.12,Math.min(.5,p.thickness*.12));
- const fullContact=!!(ref.freeEdge&&neighbour&&
-  neighbour.x<=point.x-margin&&point.x>0);
+ const fullContact=!!((ref.freeEdge&&neighbour&&
+  neighbour.x<=point.x-margin&&point.x>0)||
+  (foldedFace&&point.x>0));
  const wall=feature.surface==='horizontal-top'?feature.frontFace:feature;
  const surface=!!wall?.from&&!!wall?.to&&feature.usable&&
   Math.abs(wall.from.x-wall.to.x)<1e-6;
@@ -50,13 +87,17 @@ export function evaluateGaugeSetup(piece,st,ref,config,stopNumber=1){
  });
  const valid=fullContact&&surface&&shelfSeat&&!collision.warning;
  return {valid,ref,stopNumber,point,polygon:poly,warning:collision.warning,
-  interference:collision,freeEdge:ref.freeEdge,faceAccessible:fullContact,
+  interference:collision,freeEdge:ref.freeEdge,
+  foldedWingContact:!!foldedFace,foldedWingCandidate:foldedFace,
+  faceAccessible:fullContact,
   geometryVerified:config.gaugeGeometryDocumented===true,
-  verified:false,reason:!ref.freeEdge?'Referencia sobre vértice interior sin canto libre':
+  verified:false,reason:!ref.freeEdge&&!foldedFace?
+   'Referencia sobre vértice interior sin canto libre':
    !fullContact?'El borde no llega por delante de la cara frontal del tope':
    !surface?'La cara del dedo no puede detener el canto':
    !shelfSeat?'Support 2: la chapa inclinada no se apoya correctamente sobre la repisa inferior':
    collision.warning?'La chapa invade o roza el sólido del dedo ANTES del plegado':
+   foldedFace?'Cara lateral de pestaña preplegada · 2D provisional':
    'Canto libre contra cara frontal sin interferencia 2D en preparación'};
 }
 export function resolveGaugeSetup(piece,st,config){

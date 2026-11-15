@@ -13,7 +13,10 @@ export function gaugeRiskStatus(placement){
  // El asiento frontal se exige durante la preparación, no cuando la chapa
  // ya ha sido retirada de la V después de sujetar.
  const preparing=['Posicionamiento','Aproximación'].includes(placement?.phase);
- const invalidReference=placement?.freeEdge===false||
+ // El apoyo manual puede ser una cara de pestaña ya plegada, pero
+ // solo cuando el solver ha verificado el asiento 2D de esa cara.
+ const invalidReference=(placement?.freeEdge===false&&
+    placement?.foldedWingContact!==true)||
   placement?.sheetEdgeFound===false||
   placement?.contact?.usable===false||
   placement?.setupValid===false||
@@ -21,7 +24,9 @@ export function gaugeRiskStatus(placement){
  const invalidSeat=preparing&&
   (placement?.sheetInFront===false||placement?.seat?.seated===false);
  if(invalidReference||invalidSeat)
-  return {level:'amber',message:'APOYO NO VÁLIDO · REVISAR PRESENTACIÓN 2D',verified:false};
+  return {level:'amber',message:plan?.withdrawalUnverified?
+   'APOYO NO VÁLIDO · RETIRADA 2D SIN VALIDACIÓN FÍSICA':
+   'APOYO NO VÁLIDO · REVISAR PRESENTACIÓN 2D',verified:false};
  // warning:false significa también "no pude evaluar", según el detector.
  // Sólo se concede verde con kind explícito de ausencia de interferencia.
  if(!hit||hit.kind==='sin-geometria'||hit.kind!=='sin-interferencia-detectada'&&hit.warning===false)

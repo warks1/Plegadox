@@ -159,13 +159,23 @@ export function gaugePlacement(scene,stopNumber=1){
   const approaching=['Posicionamiento','Aproximación'].includes(scene.stage?.phase);
   // Un punto interior no equivale a una cara libre: mostrar su posición,
   // pero NO conceder contacto validado ni tapar una penetración geométrica.
-  const sheetInFront=freeEdge&&sheetInFrontOfGauge(scene,index,a,thickness);
-  const seat=freeEdge?gaugeSeatAssessment(scene,index,a,thickness,feature):
+  const foldedWingContact=scene?.gaugeSetup?.valid===true&&
+   scene?.gaugeSetup?.foldedWingContact===true&&
+   selected===(scene?.piece?.stopByBend?.[scene.stage?.activeBend]===2?2:1);
+  const sheetInFront=foldedWingContact||
+   (freeEdge&&sheetInFrontOfGauge(scene,index,a,thickness));
+  const seat=foldedWingContact?
+   {required:true,seated:true,reason:'cara exterior de pestaña preplegada · apoyo 2D provisional'}:
+   freeEdge?gaugeSeatAssessment(scene,index,a,thickness,feature):
    {required:true,seated:false,reason:'punto interior sin cara de apoyo físico verificada'};
   const setupValid=scene?.gaugeSetup?.valid!==false;
-  const contactEngaged=setupValid&&!scene.gaugeTransition&&valid&&freeEdge&&sheetInFront&&seat.seated&&
-    feature.usable&&a.x>0&&approaching&&
-    gap<=Math.max(.4,thickness*.28);
+  // Con pestaña vertical, la fibra está a e/2 de la cara exterior.
+  // No aceptar un contacto ficticio si el extremo está más alejado.
+  const contactTolerance=foldedWingContact?
+   thickness/2+Math.max(.10,thickness*.10):Math.max(.4,thickness*.28);
+  const contactEngaged=setupValid&&!scene.gaugeTransition&&valid&&
+    (freeEdge||foldedWingContact)&&sheetInFront&&seat.seated&&
+    feature.usable&&a.x>0&&approaching&&gap<=contactTolerance;
   return review({phase:scene.stage?.phase,stopNumber:selected,profile:selected===2?'support':'stop',
    point:{x:a.x,y:a.y},contact:contactAt(a),nominalDistance:reference.distance,
    referenceSide:reference.side,referenceLabel:reference.label,
@@ -173,10 +183,12 @@ export function gaugePlacement(scene,stopNumber=1){
    moving:scene.gaugeTransition?.moving===true,
    gaugeTransition:scene.gaugeTransition,
    seat,setupValid,setupReason:scene?.gaugeSetup?.reason??null,
-   gaugeDecision:scene?.gaugePlan??null,
-   sheetEdgeFound:valid&&freeEdge,alignedToSheet:contactEngaged,
+   foldedWingContact,gaugeDecision:scene?.gaugePlan??null,
+   sheetEdgeFound:valid&&(freeEdge||foldedWingContact),
+   alignedToSheet:contactEngaged,
    contactEngaged,contactGap:gap,
    freeEdge,referenceKind:freeEdge?'extremo libre':
+    foldedWingContact?'cara exterior de pestaña preplegada':
     reference.manual&&!reference.atEnd?'punto interior del tramo':'vértice interior plegado',
    state:scene.gaugeTransition?
     (scene.gaugeTransition.phase==='reubicacion-siguiente-golpe'?'TOPE POSICIONANDO REFERENCIA DEL SIGUIENTE GOLPE':
@@ -186,12 +198,15 @@ export function gaugePlacement(scene,stopNumber=1){
     !setupValid?'⚠ APOYO INCORRECTO ANTES DEL PLEGADO: '+(scene?.gaugeSetup?.reason||'revisar cara frontal')+
      ' · cambiar ala/posición; NO retirar tope para ocultar interferencia':
     !valid?'sin cota válida':!feature.usable?'sin cara física de apoyo definida':
-    !freeEdge?'⚠ punto de apoyo interior: comprobar cara física del tope y accesibilidad':
+    !freeEdge&&!foldedWingContact?
+     '⚠ punto de apoyo interior: comprobar cara física del tope y accesibilidad':
     !sheetInFront?'⚠ La chapa llega por DETRÁS del tope; invertir la presentación':
     !seat.seated?(feature.surface==='horizontal-top'?
       '⚠ La chapa NO asienta sobre la repisa baja ni detiene su canto contra la pared del tope Support':
       '⚠ La chapa NO CONTACTA la cara frontal del tope'):
-    contactEngaged?'borde presentado contra la cara seleccionada':
+    contactEngaged?(foldedWingContact?
+      'pestaña preplegada contra cara frontal · sección 2D provisional':
+      'borde presentado contra la cara seleccionada'):
     'referencia nominal fijada antes del golpe (sin contacto actual)',
    verified:false});
  }

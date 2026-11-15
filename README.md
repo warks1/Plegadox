@@ -1,9 +1,12 @@
 # Plegadox — control y simulador de plegado
 
-## Estado actual · R88 (v0.9.64) · 15 de noviembre de 2026
+## Estado actual · R94 (v0.9.68) · 15 de noviembre de 2026
+
+- **Topes R94:** la referencia manual sobre el ala ya plegada permite contacto en la cara exterior del Stop 1 cuando existe solape geométrico 2D y el ala fue plegada antes. El dedo retrocede en sujeción cuando se prevé penetración futura y se mantiene retirado durante el doblado; el modo 3D (perspectiva 2.5D) marca el labio frontal cuando lo tapa el relieve de la matriz. La selección manual no se sustituye y no se declara validación OEM/CNC. Pruebas del caso G2 y cuatro golpes Omega; conservar comprobación física con las medidas reales.
+
 
 - **Simulación de punzón:** un solo descenso continuo por golpe; la punta permanece alta y fija durante el giro de la chapa. La altura se calcula con la misma presentación geométrica que muestra la sección técnica, incluyendo cambios de cara y de sentido de alimentación.
-- **Topes traseros:** apoyo frontal a la chapa, repisa del Support por debajo del canto y referencias X/R estables. La retirada antes del plegado solo se propone ante penetración detectada en la comprobación 2D; modificar manualmente lado, tramo, punto o dedo de tope invalida la altura de aparcamiento previamente calculada.
+- **Topes traseros (R93):** alineación de perspectiva del dedo con el plano visible de la chapa, sin alterar las coordenadas X/R ni los datos manuales. Al preverse una penetración FUTURA del ala, la vista puede mostrar la retirada del dedo durante sujeción, incluso si el apoyo inicial está sin validar; en ese caso se conserva el aviso **NO APTO PARA CNC**, ya que retirar no convierte un apoyo incorrecto en válido. La retirada no se activa por simple holgura nominal. Las geometrías reales de topes requieren todavía validación OEM.
 - **Windows USB:** flujo de GitHub Actions que genera `PlegadoX.exe` sin instalación, con funcionamiento local sin internet; incorpora guardado directo de copias completas en `MIS_PROYECTOS` y restauración manual en otro equipo. La app web alojada no puede guardar directamente en un pendrive.
 - **Verificación:** `npm test`, pruebas de navegador para inicio/simulación/topes/datos y compilación Windows con verificación del contenido portátil.
 - **Límites:** CAD de punzones, matrices, topes y máquina y cinemática de ejes siguen siendo provisionales donde faltan geometrías y calibraciones OEM. **No es un verificador de colisiones 3D ni un programa CNC certificado para producción.**
