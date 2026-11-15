@@ -99,6 +99,8 @@
 <strong>Revisión de topes por golpe · 2D</strong>
 <p class="hint">Comprueba contacto, cara frontal y posibles penetraciones durante el posicionamiento, plegado y retirada. Cada botón lleva al instante muestreado. Sin comprobación de ejes reales X/R/Z.</p>
 <div id="gaugeReviewRows" class="px-gauge-review-rows" role="region" aria-label="Incidencias muestreadas de tope por operación"></div>
+<div class="inline-actions"><button id="exportGaugeMotionBtn" type="button">Descargar diagnóstico de movimientos del tope (JSON)</button></div>
+<p id="gaugeMotionExportStatus" class="hint" role="status" aria-live="polite">Incluye los cuatro golpes, la referencia elegida, el contacto con la chapa y posiciones antes, durante y después de retirar el dedo. No modifica la pieza.</p>
 </div>
 <div class="inline-actions"><button id="exportAuditBtn" type="button">Descargar informe técnico (JSON)</button></div>
 <p class="hint">No es un permiso para fabricar. Aunque no haya avisos 2D, faltan CAD de máquina y herramientas y comprobación de colisiones físicas. Revisar medidas, material y montaje en la plegadora.</p>
