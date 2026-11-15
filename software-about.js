@@ -105,6 +105,11 @@ async function checkAndUpdate(){
   busy=false;active(false);
  }
 }
+window.addEventListener('plegadox:cacheControllerChanged',()=>{
+ // No se pierden ajustes ni se reinicia la simulación por una instalación
+ // silenciosa del worker. El operador decide CUÁNDO actualizar.
+ show('Archivos de PlegadoX renovados en caché. Pulsa «Buscar e instalar actualizaciones» para comprobar la versión y aplicarla sin perder tus piezas.');
+});
 if(action)action.addEventListener('click',checkAndUpdate);
 if(topAction)topAction.addEventListener('click',checkAndUpdate);
 
