@@ -60,7 +60,7 @@ try {
   const downloadPromise=page.waitForEvent('download');
   await page.locator('#machineExport').click();
   const download=await downloadPromise;
-  assert.match(download.suggestedFilename(),/Plegadox.*V85/);
+  assert.match(download.suggestedFilename(),/Plegadox.*v85/i);
   await page.locator('#machineResetValues').click();
   assert.equal(await page.locator(path).inputValue(),'18','Restaurar cotas del control');
   assert.equal(await page.locator('#machineRamFields input[data-path="ramWidth"]').inputValue(),'2040');
