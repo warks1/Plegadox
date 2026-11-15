@@ -16,7 +16,7 @@ const make=(kind,time,scene,place)=>({
  reason:kind==='penetracion'?'Posible penetración 2D chapa/tope':
   kind==='holgura'?'Posible holgura 2D menor que el espesor':
   kind==='chapa-detras'?'Chapa por detrás de la cara frontal del tope':
-  kind==='sin-asiento'?'Chapa sin asiento válido en el escalón':
+  kind==='sin-asiento'?'Chapa sin contacto frontal fiable con el dedo':
   'La referencia recae en un vértice interior, no en un borde libre'
 });
 /**
