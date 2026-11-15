@@ -2,7 +2,7 @@
  * Posición VISUAL del tope respecto al borde trasero de la chapa.
  * Sección 2D ilustrativa, no programa CNC X/R ni garantía de apoyo.
  */
-import {getV85,gaugeContactFeature,gaugeOutline} from './machine-config.js';
+import {getActiveMachineConfig,gaugeContactFeature,gaugeOutline} from './machine-config.js';
 import {inspectGaugeProfile} from './gauge-interference.js';
 import {gaugePointOnProfile} from './engine.js';
 
@@ -96,7 +96,7 @@ export function gaugePlacement(scene,stopNumber=1){
  const opening=Math.max(0,Number(scene?.die?.opening)||16);
  const thickness=Math.max(.2,Number(scene?.piece?.thickness)||2);
  const selected=stopNumber===2?2:1;
- const dimensions=selected===2?getV85().support:getV85().stop;
+ const dimensions=selected===2?getActiveMachineConfig().support:getActiveMachineConfig().stop;
  const feature=gaugeContactFeature(dimensions,selected);
  // Revisar el sólido del dedo, no sólo la posición de su cara nominal.
  // La foto/vídeo mostró la chapa atravesando el perfil del tope aunque
@@ -158,7 +158,10 @@ export function gaugePlacement(scene,stopNumber=1){
    contactEngaged,contactGap:gap,
    freeEdge,referenceKind:freeEdge?'extremo libre':
     reference.manual&&!reference.atEnd?'punto interior del tramo':'vértice interior plegado',
-   state:scene.gaugeTransition?'tope retirado y en traslación X/R al siguiente golpe':
+   state:scene.gaugeTransition?
+    (scene.gaugeTransition.phase==='retroceso-antes-plegado'?'TOPE EN RETROCESO · SUJECIÓN':
+     scene.gaugeTransition.phase==='retirado-durante-plegado'?'TOPE APARCADO · PLEGADO':
+     'TOPE VOLVIENDO A LA REFERENCIA DEL SIGUIENTE GOLPE'):
     !valid?'sin cota válida':!feature.usable?'sin cara física de apoyo definida':
     !freeEdge?'⚠ punto de apoyo interior: comprobar cara física del tope y accesibilidad':
     !sheetInFront?'⚠ La chapa llega por DETRÁS del tope; invertir la presentación':
