@@ -1,194 +1,71 @@
 <!doctype html>
 <html lang="es"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#08121d"><title>PlegadoX · Boceto 1 premium seleccionado</title>
+<meta name="theme-color" content="#04111e"><title>PlegadoX · Splash premium original</title>
 <style>
 *{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#060c16;color:#fff;font-family:Inter,system-ui,sans-serif}
-#screen{position:fixed;inset:0;width:100%;height:100%;height:100dvh;display:grid;place-items:center;isolation:isolate;overflow:hidden;background:#060c16}
-#screen::before{content:"";position:absolute;inset:-32px;z-index:-1;background:url("./plegadox-premium-selected.png") center/cover no-repeat;filter:blur(22px) brightness(.27) saturate(1.2);transform:scale(1.05)}
-/* La fotografía aprobada se conserva íntegra: no estirar ni recortar sus píxeles.
-   Las franjas de otras relaciones de aspecto se llenan con el fondo derivado de la misma foto. */
-#frame{position:relative;width:min(100vw,177.6833vh);width:min(100vw,177.6833dvh);aspect-ratio:1672/941;max-height:100dvh;box-shadow:0 0 38px #0009;min-width:0;flex:none}
-#photo{display:block;width:100%;height:100%;object-fit:contain;-webkit-user-drag:none;user-select:none}
-#progress{position:absolute;left:10.76%;top:81.4%;width:78.12%;height:7.2%;display:flex;gap:2%;align-items:center;padding:0 .3%;border-radius:80px;background:linear-gradient(180deg,#07111b 0%,#050d17 12%,#0b1928 52%,#050b14 94%);box-shadow:0 0 3px #060d16}
-#rail{position:relative;flex:1;height:67%;border:2px solid #9eb9c6;border-radius:80px;background:linear-gradient(180deg,#2c455a,#041224 42%,#0b2739 85%,#425566);box-shadow:inset 0 1px 4px #9ac9e355;overflow:hidden}
-#fill{height:100%;width:0;transition:width .23s ease-out;border-radius:80px;background:linear-gradient(180deg,#8af8ff,#04e2fc 30%,#0099ef 72%,#0950b7);box-shadow:0 0 13px #06b7fc}
-#fill::before{content:"";display:block;height:100%;background:repeating-linear-gradient(120deg,transparent 0 22px,#e2faff33 23px 25px,transparent 27px 44px)}
-#percent{min-width:7.5%;font-weight:900;font-size:clamp(10px,2.2vw,34px);font-variant-numeric:tabular-nums;text-align:center;text-shadow:0 3px 5px #000}
-#message{position:absolute;left:11.3%;top:77.75%;font-weight:750;font-style:italic;font-size:clamp(11px,2.12vw,34px);letter-spacing:.02em;text-shadow:0 2px 7px #000e;max-width:75%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#retry{display:none;position:fixed;top:auto;right:max(16px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));padding:10px 16px;background:#092e4f;color:#fff;border:1px solid #63c4ff;border-radius:7px;cursor:pointer;z-index:10}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#04101f;color:#edfcff;font-family:Inter,system-ui,sans-serif}
+#screen{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#184666,#071a2d 56%,#030914 95%)}
+#screen::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.26;background:repeating-linear-gradient(90deg,transparent 0 31px,#7acafe14 32px 33px),repeating-linear-gradient(0deg,transparent 0 31px,#7acafe12 32px 33px)}
+#artZone{position:relative;z-index:1;flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:clamp(5px,2vmin,20px)}
+/* Show the selected original art INTACT across its visible upper 76%.
+   The painted-in 78% progress bar at the original image bottom is
+   removed by cropping only the last 24% of the image, not by zooming. */
+#artFrame{position:relative;width:min(96vw,calc(74dvh * 1672 / 715));max-height:100%;aspect-ratio:1672/715;overflow:hidden;box-shadow:0 20px 38px #0007}
+#photo{position:absolute;left:0;top:0;display:block;width:100%;height:auto;max-width:none;-webkit-user-drag:none;user-select:none}
+#artFrame::after{content:"";position:absolute;inset:0;border:1px solid #3e94c052;pointer-events:none}
+#fallback{display:none;place-items:center;position:absolute;inset:0;font-weight:900;font-size:clamp(35px,7vw,94px);color:#d5efff}
+.px-photo-missing #photo{display:none}
+.px-photo-missing #artFrame{background:#081a30}
+.px-photo-missing #fallback{display:grid}
+#dock{position:relative;z-index:2;flex:0 0 auto;width:min(920px,calc(100% - 30px));margin:auto auto 0;padding:10px 0 max(18px,env(safe-area-inset-bottom,0px));display:grid;gap:9px}
+#message{text-align:center;color:#e4f7ff;font-size:clamp(13px,2.1vw,20px);font-style:italic;font-weight:800;line-height:1.45;overflow-wrap:anywhere}
+#progress{display:flex;align-items:center;gap:11px;min-height:51px;border:1px solid #358ec2;border-radius:16px;padding:7px 12px;background:#071d32;box-shadow:0 0 20px #008ce85a}
+#rail{flex:1;min-width:0;overflow:hidden;height:27px;border:2px solid #4bbbe9;border-radius:50px;background:#04101e}
+#fill{height:100%;width:0;border-radius:50px;background:linear-gradient(180deg,#bbfbff,#27dffd 35%,#0579d9);transition:width .16s linear;box-shadow:0 0 12px #22dbff99}
+#fill::before{content:"";display:block;height:100%;background:repeating-linear-gradient(120deg,transparent 0 22px,#e4fbff33 23px 26px,transparent 27px 43px)}
+#percent{min-width:57px;text-align:right;font-size:clamp(17px,3vmin,25px);font-weight:900;font-variant-numeric:tabular-nums}
+#legal{color:#8bb0c9;font-size:clamp(9px,1.3vw,12px);text-align:center;line-height:1.45}
+#retry{display:none;position:fixed;bottom:18px;right:18px;background:#075a90;border:1px solid #55ceff;padding:10px;color:white;border-radius:8px;z-index:10}
 .is-error #retry{display:block}
-@media(max-width:560px){#rail{border-width:1px}#message{font-size:clamp(9px,2.1vw,12px)}#percent{font-size:clamp(10px,2.2vw,15px)}}
-@media(orientation:portrait) and (max-aspect-ratio:4/5){
- #frame{width:100vw;max-width:100vw;box-shadow:none;margin-top:-14vh}
- #progress{position:fixed;left:max(5vw,env(safe-area-inset-left));right:max(5vw,env(safe-area-inset-right));top:auto;bottom:calc(20px + env(safe-area-inset-bottom));width:auto;height:54px;padding:0 12px;gap:10px;border:1px solid #367fa7;box-shadow:0 0 28px #04bffe2b}
- #message{position:fixed;left:6vw;right:6vw;max-width:none;top:auto;bottom:calc(83px + env(safe-area-inset-bottom));text-align:center;font-size:clamp(14px,4vw,21px)}
- #percent{font-size:clamp(14px,4vw,19px);min-width:50px}
- #rail{height:25px}
- #retry{bottom:calc(144px + env(safe-area-inset-bottom))}
-}
-@media(orientation:landscape) and (max-height:460px){
- #message{font-size:clamp(9px,2.5vh,17px)}
- #percent{font-size:clamp(10px,3vh,18px)}
-}
+@media(orientation:portrait){#artZone{padding:10px}
+ #artFrame{width:min(96vw,calc(68dvh * 1672 / 715))}
+ #dock{width:calc(100% - 28px);gap:12px;padding-bottom:max(23px,env(safe-area-inset-bottom,0px))}
+ #message{font-size:clamp(14px,4vw,20px)}#progress{min-height:59px}}
+@media(orientation:landscape) and (max-height:500px){
+ #artZone{padding:2px 9px}#artFrame{width:min(76vw,calc(61dvh * 1672 / 715))}
+ #dock{gap:4px;padding:3px 0 5px;width:min(88vw,920px)}
+ #message{font-size:11px;line-height:1.1}
+ #progress{min-height:31px;padding:3px 8px;border-radius:8px}
+ #rail{height:14px}#percent{font-size:12px;min-width:38px}
+ #legal{font-size:8px;line-height:1.1}}
 @media(prefers-reduced-motion:reduce){#fill{transition:none}}
-/* La imagen seleccionada queda de fondo; la chapa del primer plano se
-   pliega de verdad en SVG (no un GIF ni un temporizador de progreso falso). */
-#pressMotion{position:absolute;left:23%;top:28%;width:54%;height:34%;pointer-events:none;overflow:visible;
- filter:drop-shadow(0 0 9px #20c7ff88);opacity:.85;mix-blend-mode:screen}
-#pressMotion svg{width:100%;height:100%;display:block}
-#brandFallback{display:none;position:absolute;top:9%;left:8%;right:8%;text-align:center;
- font-size:clamp(18px,4vw,56px);font-weight:900;letter-spacing:.1em;color:#b5eaff;text-shadow:0 2px 18px #009be8}
-.px-photo-missing #photo{opacity:0}
-.px-photo-missing #frame{background:radial-gradient(ellipse at center,#1d405a 0%,#0a1c30 55%,#060c16 95%)}
-.px-photo-missing #brandFallback{display:block}
-.px-photo-missing #pressMotion{opacity:1;left:8%;width:84%;top:25%;height:48%;mix-blend-mode:normal}
-@media (prefers-reduced-motion:reduce){#pressMotion{display:none}}
-
-
-/* El fondo NO repite la foto original: en móviles esa segunda copia
-   se percibía como una imagen encima de otra. */
-#screen::before{background:radial-gradient(ellipse at center,#15344a 0%,#06111f 62%,#040b14 100%);
- filter:none;transform:none;inset:0}
-/* R48: ONE image only, fullscreen and adaptive to orientation.
- * The photo is the selected artwork, without a blurred duplicate.
- * An overlay MASK removes the progress bar painted into the static
- * artwork, then a single real loading progress bar is shown.
- */
-#screen{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;
- overflow:hidden;background:linear-gradient(120deg,#06121e,#0d2436 50%,#030811)}
-#screen::before{display:none!important;content:none!important}
-#frame{position:relative!important;width:100vw!important;height:100vh!important;
- height:100dvh!important;max-width:none!important;max-height:none!important;
- aspect-ratio:auto!important;margin:0!important;box-shadow:none!important;
- overflow:hidden}
-#photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
- object-position:center center;display:block}
-#pressMotion{display:none!important}
-.px-photo-missing #pressMotion{display:block!important;left:8%;width:84%;
- top:25%;height:48%;mix-blend-mode:normal}
-#progressMask{position:absolute;z-index:4;left:0;top:77%;width:100%;height:18%;
- pointer-events:none;background:linear-gradient(180deg,#06131fee,#081b2a 65%,#06121ef3)}
-#message{position:absolute!important;z-index:5;max-width:none;white-space:nowrap;
- font-size:clamp(10px,1.5vw,26px);line-height:1.3;text-align:center;
- padding:0 4px;text-shadow:0 1px 5px #000}
-#progress{position:absolute!important;z-index:5;display:flex;
- gap:1.5%;align-items:center;background:#06121eff;
- border-radius:18px;border:1px solid #4b819e;padding:0 .8%;
- box-shadow:0 0 14px #0b547c9c;min-height:0}
-#rail{height:63%;flex:1;min-width:0}
-#percent{min-width:9%;font-size:clamp(12px,2.5vmin,28px)}
-#retry{z-index:10}
-@media (orientation:portrait){
- #photo{object-position:62% center}
- #message{position:fixed!important;top:auto!important;left:5vw!important;
-  right:5vw!important;bottom:calc(94px + env(safe-area-inset-bottom))!important;
-  width:auto!important;height:auto!important;
-  font-size:clamp(15px,4vw,22px)!important;text-align:center!important;
-  background:#061523c9;white-space:normal;border-radius:6px;padding:7px}
- #progress{position:fixed!important;top:auto!important;left:5vw!important;
-  right:5vw!important;bottom:calc(28px + env(safe-area-inset-bottom))!important;
-  width:auto!important;height:55px!important;padding:0 12px!important}
- #progressMask{background:linear-gradient(180deg,#061321f4,#09243a 70%,#05111deb)}
- #percent{font-size:clamp(15px,4vw,20px)!important;min-width:48px}
- #rail{height:27px}
-}
-@media (orientation:landscape) and (max-height:480px){
- #message{font-size:clamp(9px,3.8vh,17px)}
- #progress{height:clamp(24px,9vh,44px)}
-}
-</style>
-</head><body>
-<main id="screen" role="status" aria-label="PlegadoX Premium, pantalla original elegida">
-<div id="frame">
-<img id="photo" src="./plegadox-premium-selected.png" width="1672" height="941"
- alt="Boceto 1 PlegadoX: prensa plegadora cromada plegando chapa azul plata" draggable="false">
-<div id="brandFallback">PLEGADO<span style="color:#14c7fa">X</span></div>
-<div id="pressMotion" aria-hidden="true">
-<svg viewBox="0 0 800 270" xmlns="http://www.w3.org/2000/svg">
-<defs>
- <linearGradient id="smetal" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ffffff" stop-opacity=".94"/><stop offset=".42" stop-color="#7edfff" stop-opacity=".9"/><stop offset="1" stop-color="#006fad" stop-opacity=".9"/></linearGradient>
- <linearGradient id="ptool" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#31556e" stop-opacity=".3"/><stop offset=".5" stop-color="#e3f6ff" stop-opacity=".95"/><stop offset="1" stop-color="#25475f" stop-opacity=".3"/></linearGradient>
-</defs>
-<!-- Sección V inferior: base inmóvil; la pieza toca los dos hombros. -->
-<path d="M 95 187 H 252 L 400 255 L 548 187 H 705" stroke="#84bedb" stroke-width="13" opacity=".33" fill="none" stroke-linejoin="round"/>
-<path d="M 250 184 L 400 245 L 550 184" stroke="#def8ff" stroke-width="3" opacity=".75" fill="none"/>
-<!-- El punzón desciende, conforma la chapa y retorna. -->
-<g>
- <animateTransform attributeName="transform" type="translate" dur="3.2s" repeatCount="indefinite" values="0,-77;0,-77;0,-8;0,-8;0,-77" keyTimes="0;.2;.52;.68;1" calcMode="spline" keySplines=".2 0 .2 1;.2 0 .2 1;.2 0 .2 1;.2 0 .2 1"/>
- <path d="M 329 7 H 471 L 471 47 L 414 158 Q 400 178 386 158 L 329 47 Z" fill="url(#ptool)" stroke="#b4eaff" stroke-width="2.5" opacity=".78"/>
-</g>
-<!-- La sección de la chapa pasa de plana a dos alas y vuelve a abrirse. -->
-<path fill="url(#smetal)" fill-opacity=".8" stroke="#d7fbff" stroke-width="2"
- d="M 150 185 L 400 185 L 650 185 L 650 193 L 400 193 L 150 193 Z">
- <animate attributeName="d" dur="3.2s" repeatCount="indefinite"
- values="M 150 185 L 400 185 L 650 185 L 650 193 L 400 193 L 150 193 Z;
- M 150 185 L 400 185 L 650 185 L 650 193 L 400 193 L 150 193 Z;
- M 150 185 L 400 238 L 650 185 L 650 193 L 400 247 L 150 193 Z;
- M 150 185 L 400 238 L 650 185 L 650 193 L 400 247 L 150 193 Z;
- M 150 185 L 400 185 L 650 185 L 650 193 L 400 193 L 150 193 Z"
- keyTimes="0;.2;.52;.68;1"/>
-</path>
-<path d="M 150 182 L 400 182 L 650 182" stroke="#e2faff" stroke-width="3" opacity=".65">
- <animate attributeName="d" dur="3.2s" repeatCount="indefinite"
- values="M 150 182 L 400 182 L 650 182;M 150 182 L 400 182 L 650 182;M 150 182 L 400 235 L 650 182;M 150 182 L 400 235 L 650 182;M 150 182 L 400 182 L 650 182"
- keyTimes="0;.2;.52;.68;1"/>
-</path>
-</svg></div>
-
-<div id="progressMask" aria-hidden="true"></div>
-<div id="message" aria-live="polite">Cargando...</div>
-<div id="progress" role="progressbar" aria-label="Carga real de PlegadoX" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="rail"><div id="fill"></div></div><output id="percent">0%</output></div>
-</div>
-<button id="retry" type="button" onclick="window.parent.location.reload()">Reintentar inicio</button>
+</style></head><body>
+<main id="screen" role="status" aria-label="Pantalla de carga PlegadoX premium">
+ <div id="artZone"><div id="artFrame">
+  <img id="photo" src="./plegadox-premium-selected.png" width="1672" height="941"
+    alt="Pantalla original PlegadoX elegida: plegadora industrial cromada">
+  <div id="fallback">PLEGADO<span style="color:#14ceff">X</span></div>
+ </div></div>
+ <section id="dock"><div id="message" aria-live="polite">Iniciando PlegadoX…</div>
+  <div id="progress" role="progressbar" aria-label="Carga real de PlegadoX" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+    <div id="rail"><div id="fill"></div></div><output id="percent">0 %</output></div>
+  <div id="legal">© 2026 AMS Tecnologics Services · Todos los derechos reservados.</div>
+ </section>
+ <button id="retry" type="button" onclick="window.parent.location.reload()">Reintentar</button>
 </main>
 <script>
 (()=>{
-'use strict';
-const photo=document.getElementById('photo');
-const frame=document.getElementById('frame');
-const originalWidth=1672,originalHeight=941;
-const mask=document.getElementById('progressMask');
-// Compute actual cover crop. Mask the static painted bar to avoid two bars.
-function alignToOriginal(){
- const w=frame.clientWidth,h=frame.clientHeight;
- const scale=Math.max(w/originalWidth,h/originalHeight);
- const shownW=originalWidth*scale,shownH=originalHeight*scale;
- const left=(w-shownW)/2,top=(h-shownH)/2;
- const topMask=top+shownH*.75,botMask=top+shownH*.93;
- mask.style.left='0px';
- mask.style.top=Math.max(0,topMask)+'px';
- mask.style.width=w+'px';
- mask.style.height=Math.max(0,Math.min(h,botMask)-Math.max(0,topMask))+'px';
- if(window.matchMedia('(orientation:portrait)').matches)return;
- const put=(el,x,y,rw,rh)=>{
-  el.style.left=Math.max(5,left+x*shownW)+'px';
-  el.style.top=Math.max(5,top+y*shownH)+'px';
-  el.style.width=Math.min(w-10,rw*shownW)+'px';
-  el.style.height=Math.min(h,Math.max(25,rh*shownH))+'px';
+ const photo=document.getElementById('photo');
+ photo.onerror=()=>document.documentElement.classList.add('px-photo-missing');
+ const progress=document.getElementById('progress'),fill=document.getElementById('fill'),
+  percent=document.getElementById('percent'),message=document.getElementById('message');
+ window.PlegadoXLoading={
+  setProgress(v){const n=Math.max(0,Math.min(100,Number(v)||0));
+   progress.setAttribute('aria-valuenow',String(Math.round(n)));fill.style.width=n+'%';percent.textContent=Math.round(n)+' %';},
+  setStatus(v){message.textContent=String(v??'Iniciando PlegadoX…');},
+  finish(){this.setProgress(100);this.setStatus('PlegadoX listo');},
+  error(v){document.body.classList.add('is-error');this.setStatus(v||'Error al iniciar');}
  };
- put(document.getElementById('progress'),.1076,.814,.7812,.072);
- put(document.getElementById('message'),.113,.7775,.75,.05);
-}
-window.addEventListener('resize',alignToOriginal,{passive:true});
-window.addEventListener('orientationchange',alignToOriginal,{passive:true});
-if(window.visualViewport)window.visualViewport.addEventListener('resize',alignToOriginal,{passive:true});
-if('ResizeObserver' in window)new ResizeObserver(alignToOriginal).observe(frame);
-alignToOriginal();
-// Nunca sustituir el boceto elegido por la pantalla TITANIUM antigua:
-// si falta su fotografía, permanecer en este mismo diseño con chapa SVG.
-photo.onerror=()=>{document.documentElement.classList.add('px-photo-missing');};
-const progress=document.getElementById('progress');
-const fill=document.getElementById('fill'),percent=document.getElementById('percent'),message=document.getElementById('message');
-window.PlegadoXLoading={
- setProgress(value){const v=Number(value);if(!Number.isFinite(v))return;
- const n=Math.max(0,Math.min(100,v));progress.setAttribute('aria-valuenow',String(Math.round(n)));
- fill.style.width=n+'%';percent.textContent=Math.round(n)+'%';},
- setStatus(value){message.textContent=String(value??'Cargando...');},
- finish(){this.setProgress(100);this.setStatus('PlegadoX listo');},
- error(msg){document.body.classList.add('is-error');this.setStatus(msg||'Error de arranque');}
-};
 })();
-</script>
-</body></html>
+</script></body></html>
