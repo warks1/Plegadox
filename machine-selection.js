@@ -42,6 +42,25 @@ export const MACHINE_PROFILES=Object.freeze({
   dimensionsVerified:'familia-afm-ep-referencia-no-validada-en-unidad',
   clamping:'Parte superior: cabezales WILA CONFIRMADOS; parte inferior: mesa con bombeo hidráulico y regleta adaptadora para matrices tipo PROMECAM CONFIRMADAS por propietario. Alturas de cabezal, proyección de punzón, base adaptadora y matrices sin medir; pendientes perfiles CAD/recorrido X/R.'
  }),
+ 'bystronic-xpert-pro-100-3100':Object.freeze({
+  id:'bystronic-xpert-pro-100-3100',manufacturer:'Bystronic',
+  model:'Xpert Pro 100/3100 · estándar (2018+)',
+  title:'Bystronic Xpert Pro 100 · 100 t / 3100 mm · estándar',
+  year:null,firstPresented:2018,tonnage:100,bendingLength:3100,
+  betweenUprights:2750,throat:400,openHeight:640,stroke:250,
+  tableWidth:74,tableHeight:null,outer:{length:4180,depth:2000,height:2820},
+  xRange:1050,xTravel:600,rTravel:250,zTravel:1900,
+  xSpeed:650,rSpeed:200,zSpeed:1500,
+  nominalMotorPower:null,nominalWeightTonnes:12.2,hydraulicOilLitres:300,
+  frontSupportArmLength:null,hydraulicCrowning:null,
+  control:'ByVision Bending (gama Xpert Pro); comprobar configuración exacta',
+  identificationConfidence:'modelo-nombrado-por-usuario-no-conciliado-con-2006',
+  provenience:'Ficha OFICIAL Bystronic Xpert Pro 100/3100 estándar. La familia Xpert Pro fue presentada en diciembre de 2018: estas cotas NO se pueden adjudicar a la máquina del propietario indicada como año 2006 sin verificar la placa de identificación. El modelo Extended utiliza cotas distintas. Equipamiento de cabezales WILA/adaptador Promecam a confirmar si esta ficha corresponde a su unidad real.',
+  source:'https://www.bystronic.com/sites/default/files/2026-03/tp007-BE-Techdaten-Xpert%20Pro_es.pdf',
+  additionalSource:'https://www.bystronic.com/che/en/news/xpert-pro-bending-technology-highest-demands',
+  dimensionsVerified:'ficha-fabricante-modelo-xpert-pro-estandar',
+  clamping:'Ficha del modelo: amarre, mesa bombeada y adaptadores concretos variables según configuración; pendiente acreditar que corresponde a la máquina fotografiada'
+ }),
  'bystronic-pr100-3100':Object.freeze({
   id:'bystronic-pr100-3100',manufacturer:'Bystronic / Beyeler',
   model:'PR100/3100 · ficha histórica',
