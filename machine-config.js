@@ -39,6 +39,11 @@ export function normalizeV85(input={}){
  const d=V85_FACTORY;
  const result={
   name:d.name,tonnage:d.tonnage,
+  // L1..L10 de fotos Cybelec no constituyen un sólido CAD verificado;
+  // NO equiparar apoyo nominal 2D a ausencia certificada de colisiones.
+  profileId:'trumpf-v85',gaugeGeometryDocumented:false,
+  holderGeometryDocumented:false,geometrySource:'Cotas de control Cybelec; perfil de dedo esquemático sin CAD contrastado',
+  verified:false,
   ramOrigin:numeric(input.ramOrigin,d.ramOrigin,-2000,2000),
   holderOrigin:numeric(input.holderOrigin,d.holderOrigin,-2000,2000),
   ramWidth:numeric(input.ramWidth,d.ramWidth,100,10000),
