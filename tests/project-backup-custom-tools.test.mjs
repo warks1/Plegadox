@@ -61,13 +61,13 @@ test('si faltan las cotas de un útil personalizado, rechaza sin tocar el proyec
  assert.equal(previous.calls.length,0);
 });
 test('permite hasta cincuenta útiles guardados en una sola copia',()=>{
- const many=Array.from({length:50},(_,i)=>({
+ const many=Array.from({length:49},(_,i)=>({
   ...punch,id:'user-custom-punch-h'+i,
   name:'Punzón '+i
  }));
  const backup=buildProjectBackup({piece:{...piece,punch:many[0].id},
-  machine:V85_FACTORY,tools:many});
+  machine:V85_FACTORY,tools:[...many,die]});
  assert.equal(backup.importedTools.length,50);
  assert.throws(()=>buildProjectBackup({piece:{...piece,punch:many[0].id},
-  machine:V85_FACTORY,tools:[...many,{...die,id:'user-custom-die-exceso'}]}),/Máximo 50/);
+  machine:V85_FACTORY,tools:[...many,die,{...die,id:'user-custom-die-exceso'}]}),/Máximo 50/);
 });
