@@ -125,13 +125,18 @@ function rearMachine(ctx,w,h,cx,cy,scale,placement){
  const rodEnd=rodStart+Math.max(35,gauge[0]*.45)*scale;
  steelRect(ctx,rodStart,cy-placement.point.y*scale+4*scale,
   Math.max(8,rodEnd-rodStart),6*scale,false);
- const conflict=!!placement.gaugeInterference?.warning;
- const valid=placement.alignedToSheet;
+ const conflict=!!placement.gaugeInterference?.warning||placement.setupValid===false;
+ const nominal=placement.alignedToSheet&&!conflict;
+ const cadPending=!!placement.geometryUnavailable;
+ const validated=nominal&&!cadPending;
  poly(ctx,gg,
-  gradient(ctx,ox,oy,rodEnd,oy,valid?
+  gradient(ctx,ox,oy,rodEnd,oy,validated?
    [[0,'#9ff6b7'],[.28,'#44b975'],[.76,'#235a48'],[1,'#112f31']]:
+   nominal?
+   [[0,'#ffedbe'],[.28,'#b7914a'],[.76,'#66562a'],[1,'#2e2b25']]:
    [[0,'#c5d1dc'],[.28,'#7890a4'],[.76,'#475b6c'],[1,'#1e3447']]),
-  conflict?'#ff906f':valid?'#c8ffe0':'#9ab5c8',Math.max(1.2,1.9*scale));
+  conflict?'#ff906f':validated?'#c8ffe0':nominal?'#ffe3a0':'#9ab5c8',
+  Math.max(1.2,1.9*scale));
  // Resaltar la cara real del dedo: STOP frontal o escalón SUPPORT.
  // Un vértice interior de la chapa no constituye un apoyo fiable.
  const contact=placement.contact;
@@ -139,28 +144,28 @@ function rearMachine(ctx,w,h,cx,cy,scale,placement){
  if(contact){
   const a=screen(contact.from),b=screen(contact.to);
   ctx.save();ctx.lineWidth=Math.max(3,3.6*scale);
-  ctx.strokeStyle=conflict?'#ff856e':valid?'#c1ffe2':'#ffd18d';
-  ctx.shadowBlur=11*scale;ctx.shadowColor=conflict?'#ff4b37':valid?'#4fffb6':'#ffad56';
+  ctx.strokeStyle=conflict?'#ff856e':validated?'#c1ffe2':'#ffd18d';
+  ctx.shadowBlur=11*scale;ctx.shadowColor=conflict?'#ff4b37':validated?'#4fffb6':'#ffad56';
   ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();
   // Support: cara INFERIOR de la chapa apoyada sobre la pestaña BAJA
   // frontal y canto detenido contra la contrahuella ALTA posterior.
   // Esta cara debe subir, no bajar tras el punto de contacto.
   if(contact.surface==='horizontal-top'&&contact.frontFace){
    const u=screen(contact.frontFace.from),v=screen(contact.frontFace.to);
-   ctx.strokeStyle=conflict?'#ff856e':valid?'#7ddaff':'#adc0ce';
+   ctx.strokeStyle=conflict?'#ff856e':validated?'#7ddaff':'#adc0ce';
    ctx.beginPath();ctx.moveTo(...u);ctx.lineTo(...v);ctx.stroke();
   }
   const cp=screen(contact.point);
   ctx.beginPath();ctx.arc(...cp,Math.max(2.5,3*scale),0,Math.PI*2);
-  ctx.fillStyle=conflict?'#ff7769':valid?'#e1fff1':'#ffd18d';ctx.fill();ctx.restore();
+  ctx.fillStyle=conflict?'#ff7769':validated?'#e1fff1':'#ffd18d';ctx.fill();ctx.restore();
  }
  for(const frac of [.24,.58])bolt(ctx,rodStart+(rodEnd-rodStart)*frac,
   cy-placement.point.y*scale-10*scale,2.4*scale);
  ctx.font='800 '+Math.max(8,11*scale)+'px system-ui';
  ctx.fillStyle='#a5ffcc';ctx.textAlign='left';
- const label=conflict?'⚠ TOPE '+placement.stopNumber+' · REVISAR INTERFERENCIA':
+ const label=conflict?'⚠ TOPE '+placement.stopNumber+' · APOYO INCORRECTO / COLISIÓN':
   placement.moving?'TOPE '+placement.stopNumber+' · RETIRADO / EN MOVIMIENTO':
-  placement.alignedToSheet?'TOPE '+placement.stopNumber+' · CONTACTO NOMINAL 2D':
+  nominal?'TOPE '+placement.stopNumber+(cadPending?' · APOYO 2D PROVISIONAL · CAD PENDIENTE':' · CONTACTO NOMINAL 2D'):
   'TOPE '+placement.stopNumber+' · SIN CONTACTO CONFIRMADO';
  ctx.fillText(label,Math.min(Math.max(8,ox+3*scale),w-145*scale),
   Math.max(20,cy-placement.point.y*scale-24*scale));
@@ -303,7 +308,7 @@ function stageScene(ctx,w,h,piece,sim,machineView){
  if(placement.alignedToSheet){
   const x=cx+placement.point.x*scale,y=baseY-placement.point.y*scale;
   ctx.save();ctx.beginPath();ctx.arc(x,y,Math.max(3,3.5*scale),0,Math.PI*2);
-  ctx.fillStyle='#b5ffe2';ctx.shadowColor='#4bffb0';ctx.shadowBlur=10*scale;
+  ctx.fillStyle=placement.geometryUnavailable?'#ffe3a0':'#b5ffe2';ctx.shadowColor=placement.geometryUnavailable?'#f0b356':'#4bffb0';ctx.shadowBlur=10*scale;
   ctx.fill();ctx.strokeStyle='#174e3b';ctx.lineWidth=1.2;ctx.stroke();ctx.restore();
  }
  sectionOverlay(ctx,{cx,cy:baseY,s:scale},opening,punch.tip||0,Boolean(machineView?.section));
