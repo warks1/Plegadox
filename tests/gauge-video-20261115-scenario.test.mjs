@@ -49,3 +49,38 @@ test('aproximación a selección manual del vídeo: el error de apoyo no se ocul
  console.log('VIDEO_15NOV_APPROX_REPORT='+JSON.stringify(report));
  assert.ok(report.some(x=>x.manual),'El escenario conserva selección del operario');
 });
+
+test('mismo golpe G2 aproximado: comparar alternativa automática sin tocar referencia manual original',()=>{
+ selectMachine('trumpf-v85');
+ const manual=normalized({...EXAMPLE,flanges:[50,30,50,30,20],
+  punch:'goose',die:'v16',stopByBend:[1,1,1,1],
+  gaugeSideByBend:['before','before','before','auto'],
+  gaugeSegmentByBend:[0,1,2,null],
+  gaugePointByBend:[20,30,50,null]});
+ const snapshot=JSON.stringify(manual);
+ const automatic=normalized({...manual,
+  gaugeSideByBend:['before','auto','before','auto'],
+  gaugeSegmentByBend:[0,null,2,null],
+  gaugePointByBend:[20,null,50,null]});
+ const start=technicalScene(automatic,5*(1+.25));
+ const during=technicalScene(automatic,5*(1+.60));
+ const info={valid:start.gaugeSetup.valid,
+  reason:start.gaugeSetup.reason,
+  autoSelected:start.gaugeSetup.autoSelected,
+  reference:start.gaugeReference,
+  penetrations:during.gaugePlan.penetrationCount,
+  enabled:during.gaugePlan.enabled,
+  phase:during.gaugeTransition?.phase??'quieto'};
+ console.log('VIDEO_15NOV_G2_AUTO_ALTERNATIVE='+JSON.stringify(info));
+ assert.equal(start.gaugeSetup.manual,false);
+ assert.equal(JSON.stringify(manual),snapshot,'Nunca sustituir la elección manual');
+ assert.equal(start.gaugePlan.setupValid,start.gaugeSetup.valid);
+ if(start.gaugeSetup.valid){
+  assert.equal(start.gaugeReference.freeEdge,true);
+  assert.equal(during.gaugePlan.enabled,during.gaugePlan.penetrationCount>0,
+   'Sólo retirar cuando hay penetración y apoyo válido, según R76');
+ }else{
+  assert.equal(during.gaugePlan.enabled,false,
+   'No declarar segura una alternativa automática sin apoyo válido');
+ }
+});
