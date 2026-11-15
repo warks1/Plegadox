@@ -233,11 +233,22 @@ export function technicalScene(piece,instant=0){
  // Primero corregir el apoyo/volteo; la retirada sólo libera un
  // obstáculo que aparece DESPUÉS de sujetar una chapa bien apoyada.
  const gaugeSetup=resolvedGauge;
+ // Una referencia inicial no validada sigue siendo un ERROR de apoyo.
+ // Sin embargo, no inmovilizar el dedo cuando el barrido ya demuestra
+ // PENETRACIÓN FUTURA del ala. R50 impedía retirarlo precisamente en
+ // este caso (vídeo G2), aunque el tope todavía no estuviera penetrado
+ // al inicio. La retirada es sólo PREVISUALIZACIÓN 2D; el apoyo continúa
+ // NO VALIDADO y no autoriza fabricación ni movimientos CNC.
+ // Si ya hay penetración de fibra en la preparación, el dedo no puede
+ // retirarse "a posteriori" y se mantiene bloqueada la simulación segura.
+ const initialPenetration=resolvedGauge.interference?.kind==='penetracion';
  const gaugeDecision={...gaugePlan,
-  enabled:resolvedGauge.valid&&gaugePlan.enabled,
+  enabled:gaugePlan.enabled&&!initialPenetration,
   setupValid:resolvedGauge.valid,
   setupReason:resolvedGauge.reason,
   needsSetupCorrection:!resolvedGauge.valid,
+  withdrawalUnverified:!resolvedGauge.valid&&gaugePlan.enabled&&!initialPenetration,
+  initialPenetration,
   autoSelected:resolvedGauge.autoSelected,
   referenceSegment:reference.segmentIndex};
  let target=null;
