@@ -26,3 +26,16 @@ test('la ficha seleccionada sustituye capacidad y ancho sin copiar cotas Cybelec
 test('códigos desconocidos no sustituyen configuración guardada',()=>{
  assert.throws(()=>selectMachine('bystronic-otro'),/no conocido/);
 });
+
+test('la Bystronic real declarada 2006 no hereda medidas de modelos candidatos',()=>{
+ selectMachine('bystronic-2006-100-3100');
+ const cfg=getActiveMachineConfig();
+ assert.equal(getActiveMachineProfile().year,2006);
+ assert.equal(cfg.tonnage,100);
+ assert.equal(cfg.bendingLength,3100);
+ assert.equal(cfg.betweenUprights,null);
+ assert.equal(cfg.stroke,null);
+ assert.equal(cfg.tableHeight,null);
+ assert.equal(cfg.gaugeGeometryDocumented,false);
+ selectMachine('trumpf-v85');
+});
