@@ -33,14 +33,20 @@ test('Omega 1-2-4-3: en cada golpe ambos tramos adyacentes quedan hacia los homb
  }
  assert.deepEqual(p,original,'El cálculo no puede reescribir el programa');
 });
-test('Referencia del tope sigue fija 50 mm mientras chapa hace el primer pliegue',()=>{
- const p=normalized(EXAMPLE),start=gaugePlacement(technicalScene(p,.5),1);
+test('el contacto del tope se mide a 50 mm sin desplazar el anclaje CNC durante el plegado',()=>{
+ const p=normalized(EXAMPLE),start=technicalScene(p,.5),
+  initialPlace=gaugePlacement(start,1);
+ assert.equal(initialPlace.nominalDistance,50);
  for(const t of [1.9,2.4,2.9,3.2]){
-  const s=technicalScene(p,t),stop=gaugePlacement(s,1);
+  const scene=technicalScene(p,t),stop=gaugePlacement(scene,1);
   assert.equal(stop.nominalDistance,50);
   assert.equal(stop.referenceSide,'before');
-  assert.deepEqual(stop.point,start.point);
-  assert.equal(s.feedMirrored,true);
+  assert.deepEqual(scene.gaugeAnchor,start.gaugeAnchor,
+   'Referencia nominal 50 mm inmutable aunque un choque active retirada');
+  if(scene.gaugePlan.enabled&&scene.gaugeTransition)
+   assert.ok(stop.point.x>=start.gaugeAnchor.x);
+  else assert.deepEqual(stop.point,initialPlace.point);
+  assert.equal(scene.feedMirrored,true);
  }
 });
 test('La alimentación por lado contrario conserva secuencia, signos y tipo Stop/Support',()=>{
