@@ -22,10 +22,17 @@ test('auditar retirada física por golpe y no confundir con el cambio de referen
  });
  console.log('OMEGA_GAUGE_ACTUAL_REPORT='+JSON.stringify(report));
  assert.equal(report.length,4);
- // Un golpe final sin siguiente referencia no puede simular
- // un aparcamiento salvo que haya intrusión real durante el plegado.
- // La colisión de un ala ya plegada en el posicionamiento no es razón
- // para mandar retirar el dedo durante este nuevo golpe.
- assert.equal(report[3].retreatDistance,0,
-  'G4: no retirar un dedo sin interferencia del ala activa');
+ assert.deepEqual(report.map(x=>x.enabled),[false,false,false,false],
+  'Omega: holgura junto al apoyo NO equivale a penetración del dedo');
+ assert.deepEqual(report.map(x=>x.retreatDistance),[0,0,0,0],
+  'Omega: prohibido aparcar por una advertencia de holgura');
+ for(const item of report){
+  assert.equal(item.duringPhase,'quieto','G'+item.operation+' no retrocede durante plegado');
+  assert.equal(item.transitionAtClamping,'quieto',
+   'G'+item.operation+' no se retira durante la sujeción');
+ }
+ assert.equal(report[3].returnPhase,'quieto',
+  'G4: al finalizar la pieza no debe recolocar el tope');
+ assert.ok(report[0].issues.some(issue=>issue.kind==='holgura'),
+  'Conservar alertas 2D aunque no provoquen retiradas');
 });

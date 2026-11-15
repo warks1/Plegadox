@@ -47,3 +47,33 @@ test('fase de reposicionamiento no equivale a retroceso de chapa',()=>{
  assert.equal(motion.phase,'reubicacion-siguiente-golpe');
  assert.equal(motion.point.x,anchor.x);
 });
+
+test('holgura sin penetración no ordena retirada aunque sí conserva el aviso',()=>{
+ const plan=planGaugeRetraction({
+  sheetSamples:[sample(.48,[{x:0,y:1},{x:40,y:1}])],
+  polygon:finger,thickness:2,contact:anchor,
+  inspect:()=>({warning:true,kind:'holgura',point:{x:40,y:2.6}})
+ });
+ assert.equal(plan.known,true);
+ assert.equal(plan.enabled,false);
+ assert.equal(plan.penetrationCount,0);
+ assert.equal(plan.clearanceWarnings,1);
+ assert.equal(plan.issues[0].kind,'holgura');
+ assert.match(plan.reason,/SIN penetración/);
+ assert.equal(gaugeRetractionPath({anchor,target,maxSheetX:47,
+  fingerReach:10,sub:.6,enabled:plan.enabled}),null);
+});
+test('siguiente referencia X/R idéntica no crea una carrera ficticia',()=>{
+ const same={x:anchor.x,y:anchor.y};
+ for(const sub of [.2,.36,.4,.6,.84,.92,.99,1])
+  assert.equal(gaugeRetractionPath({anchor,target:same,sub,enabled:false}),null);
+});
+test('penetración real sí provoca la retirada preventiva, no por defecto',()=>{
+ const plan=planGaugeRetraction({sheetSamples:[sample(.55,[{x:0,y:-2},{x:45,y:-2}])],
+  polygon:finger,thickness:2,contact:anchor,
+  inspect:()=>({warning:true,kind:'penetracion',point:{x:45,y:-2}})});
+ assert.equal(plan.enabled,true);
+ assert.equal(plan.penetrationCount,1);
+ assert.ok(gaugeRetractionPath({anchor,target,maxSheetX:47,
+  fingerReach:10,sub:.60,enabled:plan.enabled}).plannedRetraction>0);
+});

@@ -13,7 +13,12 @@ const smooth=n=>{const t=clamp01(n);return t*t*(3-2*t);};
 const lerp=(a,b,t)=>a+(b-a)*t;
 export function gaugeRetractionPath({anchor,target=null,maxSheetX,fingerReach=0,opening=16,sub,enabled=true}){
  if(!enabled){
-  if(!target||!Number.isFinite(target.x)||!Number.isFinite(target.y))return null;
+  if(!anchor||![anchor.x,anchor.y].every(Number.isFinite))
+   throw new Error('Falta origen del dedo de tope');
+  if(!target||![target.x,target.y].every(Number.isFinite))return null;
+  // La referencia siguiente puede coincidir con la actual:
+  // no dibujar una falsa carrera y tampoco marcar un retroceso.
+  if(Math.hypot(target.x-anchor.x,target.y-anchor.y)<1e-7)return null;
   const t=clamp01(sub);
   if(t<GAUGE_REPOSITION_START)return null;
   const k=smooth((t-GAUGE_REPOSITION_START)/
@@ -83,8 +88,14 @@ export function planGaugeRetraction({sheetSamples,polygon,thickness=2,contact,
    issues.push({at:sample.at??null,kind:assessment.kind,point:assessment.point??null});
   }
  }
- const enabled=issues.length>0;
+ // La holgura nominal próxima al canto NO es prueba de colisión con
+ // el cuerpo del dedo. Sin penetración geométrica prevista, no ordenamos
+ // apartar el tope ni convertimos una alerta en un movimiento CNC.
+ const penetrations=issues.filter(item=>item.kind==='penetracion');
+ const enabled=penetrations.length>0;
  return {enabled,known:true,geometryDocumented,verified:false,issues,
-  reason:enabled?'Retroceso sugerido: interferencia 2D prevista con el tope inmóvil':
-   'No se detecta interferencia 2D: mantener tope en posición durante este golpe'};
+  penetrationCount:penetrations.length,clearanceWarnings:issues.length-penetrations.length,
+  reason:enabled?'Retroceso sugerido: penetración 2D prevista contra el dedo inmóvil':
+   issues.length?'Holgura 2D advertida, pero SIN penetración: mantener el tope en el golpe':
+   'No se detecta penetración ni holgura 2D: mantener el tope durante este golpe'};
 }

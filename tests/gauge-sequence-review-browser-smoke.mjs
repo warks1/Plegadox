@@ -31,6 +31,23 @@ try{
   assert.ok(Math.abs(check.sim.time-time)<.01,'Saltar al instante del golpe G3');
   assert.deepEqual(check.piece.order,[0,1,3,2]);
   assert.deepEqual(check.piece.angles,[90,-90,-90,90]);
+  // Comprobar EL MOVIMIENTO QUE VE EL OPERARIO en los cuatro golpes,
+  // no sólo el texto del diagnóstico: ninguna holgura nominal debe
+  // sacar el dedo de su posición durante sujeción y plegado.
+  for(let operation=0;operation<4;operation++)for(const sub of [.4,.6]){
+   const time=operation*5+sub*5;
+   const displayed=await page.evaluate(async time=>{
+    const {technicalScene}=await import('/technical-section.js');
+    const scene=technicalScene(window.PLEGADOX_STATE().piece,time);
+    return {planned:scene.gaugePlan.enabled,transition:scene.gaugeTransition,
+     anchor:scene.gaugeAnchor,operation:scene.stage.activeOperation};
+   },time);
+   assert.equal(displayed.operation,operation);
+   assert.equal(displayed.planned,false,
+    'G'+(operation+1)+' no debe retroceder por la simple holgura 2D');
+   assert.equal(displayed.transition,null,
+    'G'+(operation+1)+' no debe retirar el dedo durante el golpe');
+  }
   await page.locator('[data-tab="programacion"]').click();
   await page.locator('.bend-stop-select[data-bend="3"]').selectOption('2');
   const updated=await page.evaluate(async()=>{
