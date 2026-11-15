@@ -104,7 +104,11 @@ export function gaugePlacement(scene,stopNumber=1){
  const review=placement=>{
   const contour=gaugeContourAtContact(placement,dimensions);
   const result=inspectGaugeProfile(scene?.sheetDisplay||scene?.sheet,contour,
-   thickness,placement.point);
+   thickness,placement.point,{
+    supportShelf:placement.contact?.surface==='horizontal-top'?
+      {seated:placement.seat?.seated===true,
+       from:placement.contact.from,to:placement.contact.to}:null
+   });
   // Sin CAD no es igual a colisión. Antes se marcaba TODO el tope
   // Bystronic como incorrecto aunque la sección 2D mostrase apoyo
   // frontal. Separar el estado geométrico del nivel de verificación.
