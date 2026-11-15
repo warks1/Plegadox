@@ -15,14 +15,14 @@ test('el punzón está FÍSICAMENTE unido en el dibujo al conjunto superior WILA
 });
 test('eje del punzón y vértice de la V son comunes y no intercambian funciones',()=>{
  assert.match(svg,/L459 449/,'La punta del punzón debe estar en el eje X459');
- assert.match(svg,/L459 507/,'El fondo de la matriz debe centrarse en X459');
- assert.match(svg,/M407 427L459 507L511 427/,'La V está abierta hacia arriba');
+ assert.match(svg,/L459 483/,'El fondo de la matriz debe centrarse en X459');
+ assert.match(svg,/L407 427L459 483L511 427/,'La V está abierta hacia arriba');
  assert.ok(svg.indexOf('V16')<svg.indexOf('<g id="upperMachine"'),'V16 es parte de la bancada');
 });
 test('la chapa se anima entre los útiles, pero no mueve la matriz',()=>{
  assert.ok(svg.includes('id="workpiece"'));
  assert.ok(svg.includes('attributeName="d"'));
- assert.ok(svg.includes('values="0,-64;0,-64;0,0;0,0;0,-64"'));
+ assert.ok(svg.includes('values="0,-64;0,-64;0,24;0,24;0,-64"'));
  assert.ok(svg.includes('repeatCount="indefinite"'));
 });
 test('la carga no usa una imagen con 78 % fijo ni dos barras',()=>{
