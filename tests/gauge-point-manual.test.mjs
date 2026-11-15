@@ -61,3 +61,22 @@ test('puede elegirse un ala no contigua y su extremo libre como referencia',()=>
  assert.equal(gaugePointOnProfile(profile(p).points,a).x,300);
  assert.equal(gaugePointOnProfile(profile(p).points,b).x,0);
 });
+
+test('asesor de topes compara alternativas sin alterar la selección manual',async()=>{
+ const {suggestGaugeContact}=await import('../gauge-contact-advisor.js');
+ const input=normalized({flanges:[50,80,60],angles:[90,-90],
+  order:[1,0],gaugeSegmentByBend:[null,null]});
+ const previous=JSON.stringify(input);
+ const result=suggestGaugeContact(input,0,{
+  gaugeCheck:part=>({
+   contactObserved:part.gaugeSegmentByBend[1]===0&&part.stopByBend[1]===1,
+   possibleInterference:false,warnings:0,findings:[]
+  }),
+  toolCheck:()=>[{hasPenetration:false}]
+ });
+ assert.equal(result.bend,1);
+ assert.equal(result.best.segment,0);
+ assert.equal(result.best.stop,1);
+ assert.equal(result.options.length,4);
+ assert.equal(JSON.stringify(input),previous);
+});
