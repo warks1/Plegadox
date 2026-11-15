@@ -28,7 +28,12 @@ test('punzón, chapa y matriz quedan centrados en el mismo eje de plegado',()=>{
  const sheetCentre=477;
  const dieBottomY=483;
  const sheetThickness=10;
- assert.equal(459,459); // origen X compartido por las tres poligonales
+ const punchX=Number(svg.match(/L(459) 449L436 394/)?.[1]);
+ const sheetX=Number(svg.match(/Q(459) 477 496/)?.[1]);
+ const dieX=Number(svg.match(/L(459) 483L511 427/)?.[1]);
+ assert.ok([punchX,sheetX,dieX].every(Number.isFinite));
+ assert.equal(punchX,sheetX);
+ assert.equal(sheetX,dieX);
  assert.ok(Math.abs(upperTipY-(sheetCentre-sheetThickness/2))<=2);
  assert.ok(Math.abs((sheetCentre+sheetThickness/2)-dieBottomY)<=2);
  assert.match(svg,/EJE DEL PUNZÓN = EJE DE LA V/);
