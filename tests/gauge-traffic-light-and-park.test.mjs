@@ -35,12 +35,19 @@ test('R83: vistas de máquina y sección comparten el mismo semáforo',()=>{
   assert.match(s,/GAUGE_COLORS/);
  }
 });
-test('R83: G2 Omega libre verde, no confundir CAD con colisión',()=>{
+test('R91: G2 Omega avisa de holgura futura, sin penetración ni retirada',()=>{
  const scene=technicalScene(EXAMPLE,5+5*.30),pl=gaugePlacement(scene,1);
  assert.equal(pl.setupValid,true);
  assert.equal(pl.gaugeInterference.warning,false);
- assert.equal(scene.gaugePlan.enabled,false);
- assert.equal(gaugeRiskStatus({...pl,geometryUnavailable:true}).level,'green');
+ assert.equal(scene.gaugePlan.enabled,false,
+  'La holgura no debe revertir la corrección R76');
+ assert.equal(scene.gaugePlan.penetrationCount,0);
+ assert.ok(scene.gaugePlan.clearanceWarnings>0,
+  'La muestra intermedia del barrido muestra proximidad');
+ assert.ok(scene.gaugePlan.issues.some(x=>x.kind==='holgura'&&Math.abs(x.at-.46)<1e-8));
+ assert.equal(scene.gaugeTransition,null,
+  'El aviso ámbar nunca provoca retirada automática');
+ assert.equal(gaugeRiskStatus({...pl,geometryUnavailable:true}).level,'amber');
 });
 test('R83: punzón alto inmóvil durante todos los volteos y cambios de golpe',()=>{
  for(let op=0;op<EXAMPLE.order.length-1;op++){
