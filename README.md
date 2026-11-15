@@ -1337,3 +1337,9 @@ Tests de política: `tests/software-update-policy.test.mjs`. Build `PLEGADOX-202
 - Se mantienen diferenciadas las comprobaciones nominales 2D y la validación física 3D. **Sin CAD real de topes/amarres, origen X/R/Z, movimientos y geometrías de chapa, no se declara colisión certificada ni se controla CNC.**
 
 Pruebas añadidas en `tests/gauge-contact-solver.test.mjs`. Build `PLEGADOX-20261115-R50`, versión `0.9.26`, caché PWA `plegadox-static-0.9.26-gauge-contact-icon-splash-r50`. Revisar el vídeo original y las pruebas de interfaz tras instalar la versión y actualizar el acceso directo del iPhone.
+
+### R50b · Reparación de referencias de muestras ya guardadas
+
+La inspección de ejecución de `EXAMPLE` detectó que sus `gaugeSideByBend` originales estaban fijadas a `['before','before','before','after']`: en los golpes 2 y 4 de Omega 1-2-4-3 referían vértices **interiores**, no un borde libre. Esto impedía corregir el apoyo pese a disponer de nuevo solucionador automático. Se cambia la Omega de ejemplo y la referencia Cybelec a `['auto','auto','auto','auto']`. Prueba lógica ejecutada con las funciones del proyecto: en los cuatro golpes se obtuvo `valid:true`, `freeEdge:true`, y sin interferencia 2D en la presentación inicial para Trumpf V85; **esto no demuestra una solución certificada en la máquina real**.
+
+El módulo `sample-gauge-migration.js` sólo migra referencias almacenadas que coincidan EXACTAMENTE con la antigua muestra Omega (nombre, alas, signos, orden, cuatro banderas antiguas y ningún segmento/punto manual personalizado). No modifica piezas del cliente ni muestras editadas. La selección manual sigue prevaleciendo. Nuevos tests `tests/sample-gauge-migration.test.mjs`.
