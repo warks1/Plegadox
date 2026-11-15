@@ -212,7 +212,7 @@
 <section class="panel" id="tab-maquina">
 <div class="page-title"><div><h1 id="machinePanelTitle">Trumpf V85 · dimensiones reales de configuración</h1>
 <p id="machinePanelDescription">Valores de las fotografías Cybelec: trancha, mesa y topes Stop/Support. Editables en milímetros y guardados en este dispositivo.</p></div>
-<div class="actions"><button id="machineExport" type="button">Exportar configuración JSON</button>
+<div class="actions"><label class="px-machine-select-settings">Máquina<select id="machineSelectorInSettings" aria-label="Modelo activo en panel Máquina"><option value="trumpf-v85">Trumpf V85</option><option value="bystronic-pr100-3100">Bystronic PR100/3100</option><option value="bystronic-ep2-31-100">Bystronic EP II 31-100</option></select></label><button id="machineExport" type="button">Exportar configuración JSON</button>
 <button id="machineResetValues" type="button">Restaurar valores de las fotos</button></div></div>
 <div id="bystronicMachineDetails" class="card px-bystronic-details" hidden aria-live="polite"></div><div class="machine-parameter-summary" id="machineSummary" aria-live="polite"></div>
 <div class="machine-editor-grid" id="trumpfMachineFields">
