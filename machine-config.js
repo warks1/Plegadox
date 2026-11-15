@@ -9,6 +9,7 @@
  * amarre ni topes; no usar estos perfiles para validar una colisión.
  */
 import {MACHINE} from './engine.js';
+import {getActiveMachineProfile} from './machine-selection.js';
 import {notifyStorageFailure} from './storage-notice.js';
 
 export const V85_FACTORY=Object.freeze({
@@ -71,6 +72,38 @@ export function updateV85(input){
  return cached;
 }
 export function resetV85(){return updateV85(V85_FACTORY);}
+
+/**
+ * Perfil efectivo, específico para cada plegadora.
+ * La longitud de plegado Bystronic es comprobable; NO tenemos aún
+ * contornos CAD de sus travesaños, fijaciones, mesa ni dedos.
+ * Las seis cotas esquemáticas del dibujo de dedo (no fichas de fabricante)
+ * solo permiten mostrar una posición en pantalla, nunca certificar contacto.
+ */
+export function getActiveMachineConfig(){
+ const profile=getActiveMachineProfile();
+ if(profile.id==='trumpf-v85')return getV85();
+ const preview=[40,65,8,18,0,0]; // CROQUIS NO ACOTADO, NO dato Bystronic.
+ return {
+  name:profile.manufacturer+' '+profile.model,
+  profileId:profile.id,tonnage:profile.tonnage,
+  bendingLength:profile.bendingLength,
+  ramWidth:profile.bendingLength,holderWidth:profile.bendingLength,
+  ramOrigin:0,holderOrigin:0,
+  ram:Array(10).fill(null),bed:Array(7).fill(null),
+  stop:[...preview],support:[...preview],
+  stopL6Max:0,stopL6Min:0,supportL6Max:0,supportL6Min:0,
+  stopOx:0,stopOz:0,supportOx:0,supportOz:0,
+  preferredDistance:80,toolWorkingDistance:0,
+  betweenUprights:profile.betweenUprights,throat:profile.throat,
+  openHeight:profile.openHeight,stroke:profile.stroke,tableHeight:profile.tableHeight,
+  outer:profile.outer,clamping:profile.clamping,
+  gaugeGeometryDocumented:false,holderGeometryDocumented:false,
+  geometrySource:'Croquis visual sin cotas CAD verificadas de Bystronic',
+  sources:[profile.source].filter(Boolean),verified:false
+ };
+}
+
 /**
  * Coordinate contour for a schematic backgauge stop/support.
  * Top edge (Y=0) and L1/L2 lengths are measured along X. L3/L4 determine
