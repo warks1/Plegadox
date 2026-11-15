@@ -3,16 +3,22 @@ import assert from 'node:assert/strict';
 import {V85_FACTORY,gaugeContactFeature,gaugeOutline} from '../machine-config.js';
 import {gaugeStopOverlap} from '../backgauge-placement.js';
 
-test('ambos dedos detienen el canto por la cara frontal y no encima de la repisa',()=>{
- for(const [number,values] of [[1,V85_FACTORY.stop],[2,V85_FACTORY.support]]){
-  const f=gaugeContactFeature(values,number);
-  assert.equal(f.surface,'vertical-front');
-  assert.ok(f.usable);
-  assert.equal(f.from.x,f.to.x);
-  assert.equal(f.point.x,Math.min(...gaugeOutline(values,number).map(p=>p.x)));
-  assert.ok(gaugeStopOverlap(f,2).valid);
-  assert.ok(!f.label.includes('SOBRE PRIMER ESCALÓN'));
- }
+test('Stop detiene el canto frontal y Support lo apoya en repisa BAJA contra contrahuella',()=>{
+ const stop=gaugeContactFeature(V85_FACTORY.stop,1);
+ const support=gaugeContactFeature(V85_FACTORY.support,2);
+ assert.equal(stop.surface,'vertical-front');
+ assert.equal(support.surface,'horizontal-top');
+ assert.ok(stop.usable&&support.usable);
+ assert.equal(stop.from.x,stop.to.x);
+ assert.equal(stop.point.x,0);
+ assert.equal(support.from.y,support.to.y);
+ assert.ok(support.frontFace.from.y<support.frontFace.to.y);
+ assert.equal(support.frontFace.from.x,support.frontFace.to.x);
+ assert.equal(support.to.x,support.frontFace.from.x);
+ assert.ok(support.from.x<support.to.x);
+ assert.ok(gaugeStopOverlap(stop,2).valid);
+ assert.ok(gaugeStopOverlap(support,2).valid);
+ assert.ok(support.point.x>0,'el canto se detiene delante de la pared de la repisa baja');
 });
 
 test('cambiar Stop y Support no invierte el contorno completo',()=>{
