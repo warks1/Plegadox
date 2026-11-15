@@ -21,7 +21,9 @@ export function gaugeRiskStatus(placement){
  const invalidSeat=preparing&&
   (placement?.sheetInFront===false||placement?.seat?.seated===false);
  if(invalidReference||invalidSeat)
-  return {level:'amber',message:'APOYO NO VÁLIDO · REVISAR PRESENTACIÓN 2D',verified:false};
+  return {level:'amber',message:plan?.withdrawalUnverified?
+   'APOYO NO VÁLIDO · RETIRADA 2D SIN VALIDACIÓN FÍSICA':
+   'APOYO NO VÁLIDO · REVISAR PRESENTACIÓN 2D',verified:false};
  // warning:false significa también "no pude evaluar", según el detector.
  // Sólo se concede verde con kind explícito de ausencia de interferencia.
  if(!hit||hit.kind==='sin-geometria'||hit.kind!=='sin-interferencia-detectada'&&hit.warning===false)
