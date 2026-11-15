@@ -14,6 +14,17 @@ export const MACHINE_PROFILES=Object.freeze({
   source:null,dimensionsVerified:'fotografias-configuracion',
   clamping:'Datos de fijación CAD no aportados'
  }),
+ 'bystronic-2006-100-3100':Object.freeze({
+  id:'bystronic-2006-100-3100',manufacturer:'Bystronic',
+  model:'100 T × 3100 mm · modelo sin identificar',
+  title:'Bystronic 2006 · 100 t / 3100 mm · modelo pendiente',
+  year:2006,tonnage:100,bendingLength:3100,
+  betweenUprights:null,throat:null,openHeight:null,stroke:null,
+  tableHeight:null,outer:null,
+  provenience:'Año 2006, capacidad 100 t y longitud 3100 mm indicados por el propietario. No se ha confirmado la serie/modelo.',
+  source:null,dimensionsVerified:'datos-del-propietario-sin-identificacion-de-modelo',
+  clamping:'Fijaciones y agarres sin identificar; NO atribuirle las cotas PR100 ni EP II'
+ }),
  'bystronic-pr100-3100':Object.freeze({
   id:'bystronic-pr100-3100',manufacturer:'Bystronic / Beyeler',
   model:'PR100/3100 · ficha histórica',
