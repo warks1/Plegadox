@@ -51,8 +51,9 @@ try{
   // "Actualizar" ahora comprueba el release, y NO fuerza recarga ni
   // elimina datos si el servidor publica la MISMA versión.
   await page.locator('#forceUpdateBtn').click();
-  await page.locator('#softwareUpdateStatus')
-   .getByText(/ya está actualizado/i).waitFor({state:'visible',timeout:15000});
+  await page.waitForFunction(()=>
+   document.getElementById('softwareUpdateStatus')?.textContent.includes('ya está actualizado'),
+   null,{timeout:15000});
   assert.equal(await page.evaluate(()=>window.PLEGADOX_STATE().piece.name),
    'OMEGA PRESERVADA','Comprobar actualización no borra piezas');
   assert.match(await page.locator('#buildMark').textContent(),new RegExp(BUILD));
