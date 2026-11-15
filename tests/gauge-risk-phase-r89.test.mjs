@@ -51,7 +51,8 @@ test('R89: el estado de fase real del visor llega al evaluador',()=>{
  assert.equal(place.phase,'Aproximación');
  assert.equal(place.setupValid,true);
  assert.equal(place.freeEdge,true);
- assert.equal(gaugeRiskStatus(place).level,'green');
+ assert.equal(gaugeRiskStatus(place).level,'amber',
+  'La retirada preventiva prevista debe avisarse incluso antes de empezar');
  assert.equal(gaugeRiskStatus({...place,freeEdge:false}).level,'amber');
 });
 
