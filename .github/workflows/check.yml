@@ -98,6 +98,7 @@ jobs:
               tests/project-library-browser-smoke.mjs
               tests/workshop-calibration-browser-smoke.mjs
               tests/tool-dxf-browser-smoke.mjs
+              tests/custom-tool-export-browser-smoke.mjs
               tests/r36-cad-ui-browser-smoke.mjs
             " ;;
             *) echo "Grupo de pruebas desconocido"; exit 2 ;;
