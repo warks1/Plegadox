@@ -32,20 +32,22 @@ test('R93: G2 del vídeo retira el dedo con penetración futura aunque el apoyo 
  const saved=JSON.stringify(p);
  const at=sub=>technicalScene(p,5+5*sub);
  const before=at(.25),clamp=at(.40),bend=at(.60);
- assert.equal(before.gaugeSetup.valid,false);
- assert.equal(before.gaugeSetup.interference.kind,'holgura');
+ assert.equal(before.gaugeSetup.valid,true);
+ assert.equal(before.gaugeSetup.foldedWingContact,true);
+ assert.equal(before.gaugeSetup.interference.warning,false);
+ assert.ok(before.gaugeSetup.foldedWingCandidate.overlap>=2);
  assert.equal(before.gaugePlan.penetrationCount>0,true);
- assert.equal(before.gaugePlan.setupValid,false);
- assert.equal(before.gaugePlan.needsSetupCorrection,true);
+ assert.equal(before.gaugePlan.setupValid,true);
+ assert.equal(before.gaugePlan.needsSetupCorrection,false);
  assert.equal(before.gaugePlan.enabled,true);
- assert.equal(before.gaugePlan.withdrawalUnverified,true);
+ assert.equal(before.gaugePlan.withdrawalUnverified,false);
  assert.equal(before.gaugeTransition,null,
   'No retirar durante presentación, antes de sujetar');
  assert.equal(clamp.gaugeTransition.phase,'retroceso-antes-plegado');
  assert.equal(bend.gaugeTransition.phase,'retirado-durante-plegado');
  assert.ok(bend.gaugeTransition.plannedRetraction>0);
  assert.equal(gaugeRiskStatus(gaugePlacement(before,1)).level,'amber',
-  'El retroceso no valida un apoyo inicialmente incorrecto');
+  'La penetración FUTURA exige aviso ámbar aunque el apoyo inicial sea válido');
  assert.equal(JSON.stringify(p),saved,'No modificar la referencia manual');
 });
 
