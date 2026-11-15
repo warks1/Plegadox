@@ -125,17 +125,25 @@ export function estimateAirBendForce(piece,options={}){
  const p=normalized(piece),{die}=getTooling(p);
  const override=options.rmMPa??p.rmMPa;
  const rm=override==null?REFERENCE_RM_MPA[p.material]:Number(override);
- if(!Number.isFinite(rm)||rm<=0||die.opening<=0)
-  return {estimated:false,verified:false,reason:'Rm/V no válidos'};
- const kN=1.42*rm*p.width*p.thickness**2/(1000*die.opening);
+ // Al valorar una matriz CAD/personalizada ANTES de seleccionarla, el
+ // asesor debe usar la apertura y el ángulo de ESA candidata, no los de
+ // la matriz que quedó seleccionada anteriormente en la pieza.
+ // Las propiedades alternativas sólo se aplican si las proporciona
+ // explícitamente el motor que está comparando alternativas.
+ const opening=Number(options.opening??die.opening);
+ const dieAngle=Number(options.dieAngle??die.angle);
+ if(!Number.isFinite(rm)||rm<=0||!Number.isFinite(opening)||opening<=0||
+    !Number.isFinite(dieAngle)||dieAngle<=0||dieAngle>=180)
+  return {estimated:false,verified:false,reason:'Rm/V/ángulo no válidos'};
+ const kN=1.42*rm*p.width*p.thickness**2/(1000*opening);
  const tonneForce=kN/9.80665;
  const nominalCapacity=Number(options.tonnage??getActiveMachineProfile().tonnage);
- const ratio=die.opening/p.thickness;
+ const ratio=opening/p.thickness;
  const conventional=p.angles.every(a=>Math.abs(Math.abs(a)-90)<=5)&&
-  die.angle>=80&&die.angle<=100&&ratio>=5&&ratio<=14;
+  dieAngle>=80&&dieAngle<=100&&ratio>=5&&ratio<=14;
  return {estimated:true,kN,tonneForce,kNPerMetre:kN*1000/p.width,
   rmMPa:rm,materialReference:override==null,width:p.width,
-  thickness:p.thickness,opening:die.opening,
+  thickness:p.thickness,opening,dieAngle,
   nominalCapacity,loadPercent:100*tonneForce/nominalCapacity,
   exceedsNominal:tonneForce>nominalCapacity,
   conventionalAirBend90:conventional,verified:false};
