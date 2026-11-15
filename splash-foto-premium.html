@@ -11,7 +11,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#04101f;col
 /* Show the selected original art INTACT across its visible upper 76%.
    The painted-in 78% progress bar at the original image bottom is
    removed by cropping only the last 24% of the image, not by zooming. */
-#artFrame{position:relative;width:min(96vw,calc(74dvh * 1672 / 715));max-height:100%;aspect-ratio:1672/715;overflow:hidden;box-shadow:0 20px 38px #0007}
+#artFrame{position:relative;width:min(96vw,173dvh);max-height:100%;aspect-ratio:1672/715;overflow:hidden;box-shadow:0 20px 38px #0007}
 #photo{position:absolute;left:0;top:0;display:block;width:100%;height:auto;max-width:none;-webkit-user-drag:none;user-select:none}
 #artFrame::after{content:"";position:absolute;inset:0;border:1px solid #3e94c052;pointer-events:none}
 #fallback{display:none;place-items:center;position:absolute;inset:0;font-weight:900;font-size:clamp(35px,7vw,94px);color:#d5efff}
@@ -29,11 +29,11 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#04101f;col
 #retry{display:none;position:fixed;bottom:18px;right:18px;background:#075a90;border:1px solid #55ceff;padding:10px;color:white;border-radius:8px;z-index:10}
 .is-error #retry{display:block}
 @media(orientation:portrait){#artZone{padding:10px}
- #artFrame{width:min(96vw,calc(68dvh * 1672 / 715))}
+ #artFrame{width:min(96vw,159dvh)}
  #dock{width:calc(100% - 28px);gap:12px;padding-bottom:max(23px,env(safe-area-inset-bottom,0px))}
  #message{font-size:clamp(14px,4vw,20px)}#progress{min-height:59px}}
 @media(orientation:landscape) and (max-height:500px){
- #artZone{padding:2px 9px}#artFrame{width:min(76vw,calc(61dvh * 1672 / 715))}
+ #artZone{padding:2px 9px}#artFrame{width:min(76vw,142dvh)}
  #dock{gap:4px;padding:3px 0 5px;width:min(88vw,920px)}
  #message{font-size:11px;line-height:1.1}
  #progress{min-height:31px;padding:3px 8px;border-radius:8px}
