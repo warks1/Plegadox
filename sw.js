@@ -20,6 +20,7 @@ const APP_FILES=[
  "./icon-512.png",
  "./flat-layout.js",
  "./gauge-side-review.js",
+ "./gauge-contact-advisor.js",
  "./gauge-interference.js",
  "./gauge-sequence-review.js",
  "./icons.svg",
