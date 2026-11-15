@@ -1,7 +1,10 @@
 /**
  * Asesor orientativo de punzón/matriz para plegado al aire.
- * No es selección CNC ni validación de colisiones, montaje o carga admisible
- * de cada referencia. Usa las herramientas realmente registradas en PlegadoX.
+ * No es selección CNC ni validación física de colisiones o montaje.
+ * Si el catálogo documenta una carga máxima t/m de punzón o matriz,
+ * rechaza superar ese límite con la fuerza lineal ESTIMADA. La ausencia
+ * de rating jamás se interpreta como capacidad conocida.
+ * Usa las herramientas realmente registradas en PlegadoX.
  */
 import {DIES,PUNCHES,MACHINE,normalized,estimateAirBendForce} from './engine.js';
 import {selectionCompatibility} from './catalog.js';
