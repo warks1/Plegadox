@@ -1,5 +1,5 @@
 // PlegadoX · caché offline estática. Se versiona para no arrastrar JS obsoleto.
-const CACHE='plegadox-static-0.9.60-safe-sw-r84';
+const CACHE='plegadox-static-0.9.61-safe-sw-r85';
 const APP_FILES=[
  "./",
  "./app.js",
@@ -101,6 +101,8 @@ self.addEventListener('activate',event=>{
 });
 self.addEventListener('fetch',event=>{
  const request=event.request;
+ // Nunca almacenar en caché el token privado ni la respuesta de copias USB.
+ if(new URL(request.url).pathname.startsWith('/__plegadox_usb__/'))return;
  if(request.method!=='GET'||new URL(request.url).origin!==self.location.origin)return;
  if(request.mode==='navigate'){
   event.respondWith((async()=>{

@@ -507,17 +507,20 @@ function configure(){
  };
  $('exportAuditBtn').onclick=()=>downloadProjectJson(
   auditForWorkshop(piece),projectSafeName()+'-INFORME-NO-VALIDADO.json');
+ const makeCompleteBackup=()=>buildProjectBackup({
+  piece,machine:getActiveMachineConfig(),
+  tools:readStoredToolsForBackup(localStorage),
+  measurements:readMeasurements(localStorage),
+  library:readProjectLibrary(localStorage),
+  activeLibraryId:getActiveLibraryId(localStorage),
+  machineCad:loadMachineCad(localStorage),
+  axisMotion:loadAxisMotion(localStorage),
+  axisMapping:loadAxisMapping(localStorage)
+ });
  $('exportCompleteProject').onclick=()=>{
   const status=$('completeProjectStatus');
   try{
-   const backup=buildProjectBackup({piece,machine:getActiveMachineConfig(),
-    tools:readStoredToolsForBackup(localStorage),
-    measurements:readMeasurements(localStorage),
-    library:readProjectLibrary(localStorage),
-    activeLibraryId:getActiveLibraryId(localStorage),
-    machineCad:loadMachineCad(localStorage),
-    axisMotion:loadAxisMotion(localStorage),
-    axisMapping:loadAxisMapping(localStorage)});
+   const backup=makeCompleteBackup();
    downloadProjectJson(backup,projectSafeName()+'-BACKUP-COMPLETO.json');
    status.textContent='Copia descargada: pieza, V85, '+backup.importedTools.length+
     ' herramientas DXF/por cotas, '+Object.keys(backup.machineCad).length+
@@ -528,6 +531,46 @@ function configure(){
    status.dataset.state='success';
   }catch(err){status.textContent='Backup no generado: '+err.message;status.dataset.state='error';}
  };
+ // Exclusivo del ejecutable USB. La web de GitHub Pages nunca ofrece
+ // acceso a los discos del usuario ni muestra este botón.
+ let usbToken=null,usbMaxBytes=0;
+ const usbBtn=$('saveUsbBackupBtn');
+ if(usbBtn&&(location.hostname==='127.0.0.1')){
+  fetch('./__plegadox_usb__/status',{cache:'no-store'}).then(async response=>{
+   if(!response.ok)return;
+   const info=await response.json();
+   if(info?.mode!=='usb'||info.available!==true||
+     typeof info.token!=='string'||!info.token.length)return;
+   usbToken=info.token;usbMaxBytes=info.maxBytes||4*1024*1024;
+   usbBtn.hidden=false;
+   if($('usbBackupHint'))$('usbBackupHint').hidden=false;
+  }).catch(()=>{});
+ }
+ if(usbBtn)usbBtn.onclick=async()=>{
+  const status=$('completeProjectStatus');
+  if(!usbToken){status.textContent='Esta opción sólo está disponible desde PlegadoX.exe en el USB.';return;}
+  usbBtn.disabled=true;status.textContent='Preparando y guardando copia en el pendrive…';
+  status.dataset.state='pending';
+  try{
+   const data=JSON.stringify(makeCompleteBackup());
+   if(new Blob([data]).size>usbMaxBytes)
+    throw Error('Copia demasiado grande para el guardado USB (máximo 4 MB). Usa Descargar proyecto completo.');
+   const response=await fetch('./__plegadox_usb__/backup',{
+    method:'POST',headers:{'Content-Type':'application/json',
+     'X-PlegadoX-USB-Token':usbToken},
+    body:data,cache:'no-store'
+   });
+   const result=await response.json();
+   if(!response.ok||result.saved!==true)
+    throw Error(result.error||'No se pudo guardar la copia');
+   status.textContent='✓ Copia guardada en el pendrive: MIS_PROYECTOS/'+result.file+
+    '. Para abrirla en otro PC, utiliza Restaurar proyecto completo.';
+   status.dataset.state='success';
+  }catch(err){
+   status.textContent='No se ha guardado en el USB: '+err.message;
+   status.dataset.state='error';
+  }finally{usbBtn.disabled=false;}
+ };
  $('importCompleteProject').onclick=()=>$('completeProjectInput').click();
  $('completeProjectInput').onchange=async e=>{
   const file=e.target.files?.[0],status=$('completeProjectStatus');
@@ -535,7 +578,7 @@ function configure(){
   status.textContent='Validando copia seleccionada…';
   status.dataset.state='pending';
   try{
-   if(file.size>2*1024*1024)throw Error('La copia supera 2 MB');
+   if(file.size>4*1024*1024)throw Error('La copia supera 4 MB');
    const restored=restoreProjectBackup(localStorage,await file.text());
    registerImportedTools(DIES,PUNCHES,restored.importedTools);
    for(const tool of restored.importedTools){

@@ -55,5 +55,64 @@ class BundleIntegrityTests(unittest.TestCase):
             with self.assertRaises(FileNotFoundError):
                 verify(folder)
 
+
+    def test_usb_backup_persists_in_sibling_folder(self):
+        import urllib.request
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            app = root / "app"
+            app.mkdir()
+            (app / "index.html").write_text("<h1>PlegadoX</h1>", encoding="utf-8")
+            (app / "build-info.json").write_text('{"version":"x"}', encoding="utf-8")
+            server = serve(app, 0)
+            threading.Thread(target=server.serve_forever, daemon=True).start()
+            try:
+                origin = f"http://127.0.0.1:{server.server_port}"
+                with urlopen(origin + "/__plegadox_usb__/status", timeout=4) as response:
+                    status = json.load(response)
+                self.assertEqual(status["folder"], "MIS_PROYECTOS")
+                self.assertEqual(status["mode"], "usb")
+                payload = {
+                    "format":"plegadox-complete-project-v1","schemaVersion":1,
+                    "piece":{"name":"Omega"},
+                    "machine":{"ram":[],"bed":[]},
+                    "importedTools":[],"library":[]
+                }
+                def request(token, origin_header, content_type="application/json", data=payload):
+                    return urllib.request.Request(
+                        origin + "/__plegadox_usb__/backup",
+                        data=json.dumps(data).encode("utf-8"),
+                        headers={
+                            "Origin": origin_header,
+                            "X-PlegadoX-USB-Token": token,
+                            "Content-Type": content_type
+                        },
+                        method="POST"
+                    )
+                from urllib.error import HTTPError
+                with self.assertRaises(HTTPError) as denied:
+                    urlopen(request(status["token"], "https://malicious.example"), timeout=4)
+                self.assertEqual(denied.exception.code, 403)
+                with self.assertRaises(HTTPError) as denied:
+                    urlopen(request("token-invalido", origin), timeout=4)
+                self.assertEqual(denied.exception.code, 403)
+                with self.assertRaises(HTTPError) as denied:
+                    urlopen(request(status["token"], origin, "text/plain"), timeout=4)
+                self.assertEqual(denied.exception.code, 415)
+                with self.assertRaises(HTTPError) as denied:
+                    urlopen(request(status["token"], origin, data={"format":"otro"}), timeout=4)
+                self.assertEqual(denied.exception.code, 422)
+                self.assertFalse((root / "MIS_PROYECTOS").exists(), "un rechazo nunca crea copias")
+                with urlopen(request(status["token"], origin), timeout=4) as response:
+                    result = json.load(response)
+                    self.assertEqual(response.status, 201)
+                saved = root / "MIS_PROYECTOS" / result["file"]
+                self.assertTrue(saved.is_file())
+                self.assertEqual(json.loads(saved.read_text(encoding="utf-8"))["piece"]["name"], "Omega")
+                self.assertEqual(len(list(saved.parent.glob("*.json"))), 1)
+            finally:
+                server.shutdown()
+                server.server_close()
+
 if __name__ == "__main__":
     unittest.main()

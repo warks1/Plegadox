@@ -6,6 +6,11 @@ import pathlib
 import sys
 import threading
 import webbrowser
+import secrets
+import json
+import os
+import tempfile
+from datetime import datetime
 
 HOST = "127.0.0.1"
 PORT = 8765
@@ -18,7 +23,11 @@ def program_directory() -> pathlib.Path:
     return pathlib.Path(__file__).resolve().parents[1]
 
 
-def handler_for(directory: pathlib.Path):
+USB_API = "/__plegadox_usb__/"
+MAX_BACKUP_BYTES = 4 * 1024 * 1024
+
+
+def handler_for(directory: pathlib.Path, token: str, backup_dir: pathlib.Path):
     class AppHandler(http.server.SimpleHTTPRequestHandler):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, directory=str(directory), **kwargs)
@@ -31,13 +40,94 @@ def handler_for(directory: pathlib.Path):
             self.send_header("X-Content-Type-Options", "nosniff")
             super().end_headers()
 
+        def _json(self, code: int, content: dict):
+            body = json.dumps(content, ensure_ascii=False).encode("utf-8")
+            self.send_response(code)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def _expected_origin(self):
+            return f"http://{HOST}:{self.server.server_port}"
+
+        def _valid_host(self):
+            return self.headers.get("Host") == f"{HOST}:{self.server.server_port}"
+
+        def do_GET(self):
+            if self.path.split("?", 1)[0] == USB_API + "status":
+                if not self._valid_host():
+                    return self._json(403, {"error": "Host no autorizado"})
+                return self._json(200, {
+                    "mode": "usb", "available": True, "token": token,
+                    "folder": "MIS_PROYECTOS", "maxBytes": MAX_BACKUP_BYTES
+                })
+            return super().do_GET()
+
+        def do_POST(self):
+            if self.path.split("?", 1)[0] != USB_API + "backup":
+                return self._json(404, {"error": "Ruta desconocida"})
+            # Defensa contra solicitudes desde otras webs (CSRF) y
+            # reenrutamiento de dominios a 127.0.0.1 (DNS rebinding).
+            if (not self._valid_host() or
+                self.headers.get("Origin") != self._expected_origin() or
+                not secrets.compare_digest(
+                    self.headers.get("X-PlegadoX-USB-Token", ""), token)):
+                return self._json(403, {"error": "Origen o sesión no autorizados"})
+            if self.headers.get("Content-Type", "").split(";", 1)[0].strip().lower() != "application/json":
+                return self._json(415, {"error": "Se requiere application/json"})
+            try:
+                length = int(self.headers.get("Content-Length", "-1"))
+            except ValueError:
+                length = -1
+            if length < 1 or length > MAX_BACKUP_BYTES:
+                return self._json(413, {"error": "Copia demasiado grande o vacía"})
+            try:
+                payload = json.loads(self.rfile.read(length))
+            except (ValueError, UnicodeError):
+                return self._json(400, {"error": "JSON de copia no válido"})
+            if (not isinstance(payload, dict) or
+                payload.get("format") != "plegadox-complete-project-v1" or
+                payload.get("schemaVersion") != 1 or
+                not isinstance(payload.get("piece"), dict) or
+                not isinstance(payload.get("machine"), dict) or
+                not isinstance(payload.get("importedTools"), list) or
+                not isinstance(payload.get("library"), list)):
+                return self._json(422, {"error": "Formato de copia completa no reconocido"})
+            filename = ("PlegadoX-BACKUP-" + datetime.now().strftime("%Y%m%d-%H%M%S") +
+                        "-" + secrets.token_hex(4) + ".json")
+            temporary = None
+            try:
+                backup_dir.mkdir(parents=True, exist_ok=True)
+                # Escribir primero un temporal para que apagar o quitar el USB
+                # no deje una copia truncada con el nombre definitivo.
+                with tempfile.NamedTemporaryFile(
+                    "w", encoding="utf-8", dir=backup_dir,
+                    prefix=".plegadox-", suffix=".tmp", delete=False
+                ) as handle:
+                    temporary = pathlib.Path(handle.name)
+                    json.dump(payload, handle, ensure_ascii=False, indent=2)
+                    handle.write("\n")
+                    handle.flush()
+                    os.fsync(handle.fileno())
+                os.replace(temporary, backup_dir / filename)
+            except OSError:
+                return self._json(507, {"error": "No se pudo escribir el USB. Comprueba que tiene espacio y permisos"})
+            finally:
+                if temporary and temporary.exists():
+                    temporary.unlink(missing_ok=True)
+            return self._json(201, {"saved": True, "file": filename, "folder": "MIS_PROYECTOS"})
+
     return AppHandler
 
 
 def serve(directory: pathlib.Path, port: int = PORT):
     if not (directory / "index.html").is_file() or not (directory / "build-info.json").is_file():
         raise FileNotFoundError("Falta la carpeta app con PlegadoX completo junto al ejecutable.")
-    return http.server.ThreadingHTTPServer((HOST, port), handler_for(directory))
+    token = secrets.token_urlsafe(24)
+    return http.server.ThreadingHTTPServer(
+        (HOST, port), handler_for(directory, token, directory.parent / "MIS_PROYECTOS")
+    )
 
 
 def main():

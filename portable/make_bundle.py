@@ -33,8 +33,9 @@ def build():
     backups.mkdir()
     (backups / "LEEME.txt").write_text(
         "Guarda aquí las copias integrales exportadas de PlegadoX.\n"
-        "ATENCIÓN: las piezas del navegador del PC NO se copian automáticamente al USB.\n"
-        "Exporta tus piezas desde el programa y vuelve a importarlas en otro PC.\n",
+        "Las piezas del navegador del PC NO se copian automáticamente al USB.\n"
+        "En PlegadoX USB pulsa GUARDAR COPIA EN USB para crear aquí un backup completo.\n"
+        "Para llevar las piezas a otro PC, restaura la copia desde el programa.\n",
         encoding="utf-8-sig")
     (FOLDER / "INSTRUCCIONES.txt").write_text(
         f"PLEGADOX USB · {info['build']} · versión {info['version']}\n\n"
@@ -47,7 +48,7 @@ def build():
         "El ejecutable todavía no está firmado digitalmente. Windows podría avisar.\n"
         "El puerto 8765 debe estar libre; sólo escucha en 127.0.0.1 (tu propio PC).\n"
         "No se ejecuta automáticamente al conectar el USB.\n"
-        "Los datos del navegador quedan en ese PC: exporta una copia integral para llevarlos en el USB.\n"
+        "Los datos del navegador quedan en ese PC: usa Guardar copia en USB y restaura en otro PC.\n"
         "La validación 2D/3D sigue siendo provisional; no autoriza trabajo CNC real.\n",
         encoding="utf-8-sig")
     archive = DIST / "PlegadoX-USB-Windows.zip"
