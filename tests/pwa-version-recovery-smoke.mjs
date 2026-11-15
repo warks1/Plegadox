@@ -48,12 +48,16 @@ try{
   assert.ok(read.front.to.y>read.front.from.y,
    'La pared trasera del escalón SUBE, como en el vídeo real');
   assert.equal(read.piece,'OMEGA PRESERVADA','La recuperación no borra la pieza');
+  // "Actualizar" ahora comprueba el release, y NO fuerza recarga ni
+  // elimina datos si el servidor publica la MISMA versión.
   await page.locator('#forceUpdateBtn').click();
-  await page.waitForURL(/refresh=/,{timeout:30000});
-  await page.waitForFunction(()=>!!window.PLEGADOX_STATE);
+  await page.locator('#softwareUpdateStatus')
+   .getByText(/ya está actualizado/i).waitFor({state:'visible',timeout:15000});
   assert.equal(await page.evaluate(()=>window.PLEGADOX_STATE().piece.name),
-   'OMEGA PRESERVADA','El botón Actualizar no borra piezas');
+   'OMEGA PRESERVADA','Comprobar actualización no borra piezas');
   assert.match(await page.locator('#buildMark').textContent(),new RegExp(BUILD));
+  assert.equal(await page.locator('#softwarePublishedVersion').textContent(),
+   'v'+JSON.parse(readFileSync(new URL('../build-info.json',import.meta.url),'utf8')).version);
   assert.deepEqual(errors,[],'Errores de navegador '+device.name);
   await context.close();
  }
