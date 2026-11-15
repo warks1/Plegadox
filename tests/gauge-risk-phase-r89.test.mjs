@@ -51,7 +51,12 @@ test('R89: el estado de fase real del visor llega al evaluador',()=>{
  assert.equal(place.phase,'Aproximación');
  assert.equal(place.setupValid,true);
  assert.equal(place.freeEdge,true);
- assert.equal(gaugeRiskStatus(place).level,'green');
+ // El barrido denso detecta holgura en una fase futura del golpe.
+ // Es un aviso ámbar, no penetración ni autorización para retirar el dedo.
+ assert.ok(place.gaugeDecision.clearanceWarnings>0);
+ assert.equal(place.gaugeDecision.penetrationCount,0);
+ assert.equal(place.gaugeDecision.enabled,false);
+ assert.equal(gaugeRiskStatus(place).level,'amber');
  assert.equal(gaugeRiskStatus({...place,freeEdge:false}).level,'amber');
 });
 
