@@ -262,7 +262,26 @@ function configure(){
    const points=[...piece.gaugePointByBend];
    const proposed={...piece,gaugeSideByBend:sides,gaugeSegmentByBend:segments};
    if(points[current.bend]>gaugeReference(proposed,current.bend).totalLength)points[current.bend]=null;
-   changePiece({...proposed,gaugePointByBend:points},false);
+   const draft={...proposed,gaugePointByBend:points};
+   if(mode==='auto'){
+    // La opción Automático debe buscar una cara de parada sin penetración;
+    // si no existe, mantener el aviso rojo y NO fingir un apoyo seguro.
+    const advice=suggestGaugeContact(draft,sim.time);
+    if(advice.best){
+     const stops=[...draft.stopByBend];
+     const candidates=[...draft.gaugeSegmentByBend];
+     stops[current.bend]=advice.best.stop;
+     candidates[current.bend]=advice.best.segment;
+     changePiece({...draft,stopByBend:stops,gaugeSegmentByBend:candidates},false);
+     $('gaugeSideReview').textContent='Apoyo automático orientativo P'+(current.bend+1)+
+      ': ala '+(advice.best.segment+1)+' / tope '+advice.best.stop+
+      '. No garantiza ausencia de colisiones sin CAD real.';
+    }else{
+     changePiece(draft,false);
+     $('gaugeSideReview').textContent='⚠ Sin cara frontal viable en el muestreo 2D. '+
+      'Se mantiene el aviso de interferencia; revisar manualmente topes y presentación.';
+    }
+   }else changePiece(draft,false);
   };
  }
  $('activeGaugeSegment').addEventListener('change',()=>{
