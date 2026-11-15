@@ -12,3 +12,5 @@ La ausencia de un choque en una comprobación parcial NO basta para mostrar verd
 **Alcance:** simulador geométrico 2D, no verificación de máquina ni autorización para ejecutar CNC. Los CAD OEM y recorridos físicos de V85/Bystronic siguen siendo necesarios.
 
 Los rótulos «TOPE» de la sección (móvil y escritorio) y el contorno del punto de contacto en cabina heredan también el semáforo; no permanecen verdes cuando el indicador principal es naranja o rojo.
+
+**Corrección adicional en CI:** `software-about.js` retenía R88 y v0.9.64, por lo que al pulsar actualizar interpretaba R89 como una mejora pendiente aunque ya estuviera instalada. Se sincronizan ambas constantes con R89 y se añade una prueba de metadatos para impedir reincidencias.
