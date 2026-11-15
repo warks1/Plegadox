@@ -1679,3 +1679,15 @@ html[data-orientation="landscape"] .px-about-card{overflow-wrap:anywhere}
 .px-cad-source-row a:hover,.px-cad-source-row a:focus-visible{color:#d3faff}
 .px-cad-source-row span,.px-cad-source-row small{font-size:11px;color:#a2c2d5;line-height:1.5}
 @media(max-width:780px){.px-cad-source-links{grid-template-columns:1fr}}
+
+/* R62 · reabrir cotas reales guardadas, creando una referencia nueva */
+.px-custom-tool-restore{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(120px,2fr) auto;
+ gap:8px 12px;align-items:center;padding:12px;margin:8px 0 15px;
+ border:1px solid #336f91;border-radius:10px;
+ background:linear-gradient(95deg,#0a273b,#09182b)}
+.px-custom-tool-restore label{font-size:12px;color:#c3eaff;font-weight:700}
+.px-custom-tool-restore select{min-width:0;width:100%;min-height:45px;font-size:14px}
+.px-custom-tool-restore button{min-height:45px;white-space:normal;font-size:12px}
+.px-custom-tool-restore small{grid-column:1/-1;color:#92b8d0;font-size:11px;line-height:1.5}
+@media(max-width:860px){.px-custom-tool-restore{grid-template-columns:1fr}
+ .px-custom-tool-restore small{grid-column:auto}}
