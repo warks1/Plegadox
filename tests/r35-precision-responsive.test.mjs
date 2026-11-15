@@ -70,15 +70,17 @@ test('no descarta el orden físicamente viable por empate de puntuación de chap
  assert.equal(r.best.order[0],2);
  assert.equal(r.best.toolPenetrations,0);
 });
-test('splash R52 reacomoda marca y máquina sin recortes ni imagen duplicada',()=>{
+test('R69: conservar la imagen aprobada íntegra y barra de progreso única',()=>{
  const html=readFileSync(new URL('../splash-foto-premium.html',import.meta.url),'utf8');
- assert.ok(html.includes('id="hero"'));
- assert.ok(html.includes('#screen{position:fixed;inset:0'));
- assert.ok(html.includes('#screen::before'));
+ assert.ok(html.includes('id="screen"'));
+ assert.ok(html.includes('src="./plegadox-premium-selected.png"'));
+ assert.ok(!html.includes('src="./splash-machine-assembly.svg"'),
+  'No reemplazar la pantalla aprobada con otra composición');
+ assert.ok(html.includes('aspect-ratio:1672/941'));
  assert.ok(html.includes('object-fit:contain'));
- assert.ok(html.includes('@media(orientation:portrait)'));
- assert.ok(html.includes('src="./splash-machine-assembly.svg"'));
- assert.ok(!html.includes('id="photo"'));
+ assert.ok(html.includes('PlegadoXLoading'));
+ assert.ok(!html.includes('location.replace('),
+  'No sustituir el boceto aprobado por otro en caso de error');
  assert.equal((html.match(/role="progressbar"/g)||[]).length,1);
  assert.ok(html.includes('id="progress"'));
 });

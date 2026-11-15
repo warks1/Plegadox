@@ -16,13 +16,15 @@ try{
   await splash.waitFor({state:'visible',timeout:30000});
   assert.equal(await splash.isVisible(),true,view.name+': el splash aparece al entrar');
   const selected=page.frameLocator('#pxSplashReference');
-  const art=selected.locator('#machineArt');
+  // La versión original elegida tiene un PNG aprobado, NO el SVG
+  // ilustrativo que se retiró. No volver a romper su identidad.
+  const art=selected.locator('#photo');
   await art.waitFor({state:'visible'});
   await page.waitForFunction(()=>{
-   const img=document.querySelector('#pxSplashReference')?.contentDocument?.getElementById('machineArt');
-   return img?.complete&&img.naturalWidth>0;
+   const img=document.querySelector('#pxSplashReference')?.contentDocument?.getElementById('photo');
+   return img?.complete&&img.naturalWidth===1672&&img.naturalHeight===941;
   },null,{timeout:20000});
-  assert.equal(await selected.locator('#machineArt').getAttribute('src'),'./splash-machine-assembly.svg');
+  assert.equal(await art.getAttribute('src'),'./plegadox-premium-selected.png');
   assert.equal(await selected.locator('#progress').getAttribute('role'),'progressbar');
   await splash.waitFor({state:'hidden',timeout:30000});
   await page.waitForFunction(()=>!!window.PLEGADOX_STATE,null,{timeout:30000});

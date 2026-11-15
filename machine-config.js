@@ -64,8 +64,12 @@ let cached=null;
 export function getV85(){
  if(cached)return cached;
  let stored;
- try{stored=JSON.parse(localStorage.getItem(V85_STORAGE_KEY)||'null');}
- catch(error){notifyStorageFailure('No se pudo leer la configuración Trumpf V85',error);}
+ // El mismo motor se ejecuta en el navegador y en pruebas Node.
+ // Un entorno sin almacenamiento NO es una avería del control.
+ if(typeof localStorage!=='undefined'){
+  try{stored=JSON.parse(localStorage.getItem(V85_STORAGE_KEY)||'null');}
+  catch(error){notifyStorageFailure('No se pudo leer la configuración Trumpf V85',error);}
+ }
  cached=normalizeV85(stored||V85_FACTORY);
  return cached;
 }
