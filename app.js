@@ -29,6 +29,7 @@ import {readProjectLibrary,saveLibraryPiece,getLibraryPiece,deleteLibraryPiece,s
 import {measurementKey,calibrationSuggestion,readMeasurements,createMeasurement,persistMeasurement,deleteMeasurement} from './workshop-measurements.js';
 import {loadImportedTools,registerImportedTools,persistImportedTool} from './tool-dxf.js';
 import {setupToolDxfImporter} from './tool-import-ui.js';
+import {setupCustomToolBuilder} from './custom-tool-builder.js';
 import {loadMachineCad} from './machine-cad.js';
 import {loadAxisMotion} from './machine-axis-motion.js';
 import {loadAxisMapping} from './machine-axis-geometry.js';
@@ -1831,7 +1832,7 @@ function tick(now){
 configure();
 touchProgrammer=installTouchProgrammer({root:$('touchProgramPanel'),getPiece:()=>piece,
  onChange:(modified,structural)=>changePiece(modified,structural)});
-setupToolDxfImporter({add:(tool,kind)=>{
+const addPersonalTool=(tool,kind)=>{
  // Persistir ANTES de alterar el catálogo: si falla la cuota, no se
  // añade una herramienta efímera que desaparezca al recargar.
  persistImportedTool(localStorage,tool);
@@ -1841,7 +1842,9 @@ setupToolDxfImporter({add:(tool,kind)=>{
  option.value=tool.id;option.textContent=tool.name;
  $(field).append(option);
  changePiece({...piece,[field]:tool.id},true);
-}});
+};
+setupToolDxfImporter({add:addPersonalTool});
+setupCustomToolBuilder({add:addPersonalTool});
 window.PLEGADOX_STATE=()=>({piece,sim});
 window.PLEGADOX_MACHINE_VIEW=machineView;
 window.PLEGADOX_REDRAW=()=>paintAll();
