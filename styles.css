@@ -1515,3 +1515,8 @@ html{background:#020913}
 .px-bystronic-spec-list strong{color:#e3f8ff;font-size:13px;overflow-wrap:anywhere}
 .px-bystronic-details a{color:#4ac7ff;text-decoration:underline}
 @media(max-width:560px){.px-machine-choice select{font-size:16px}.px-bystronic-spec-list{grid-template-columns:1fr}}
+
+/* Selector de modelo en el panel de máquina sin ocultar controles. */
+.px-machine-select-settings{display:grid;gap:4px;font-size:11px;font-weight:750;min-width:175px;color:#bbd7e6}
+.px-machine-select-settings select{width:100%;min-height:42px;color:#e9f8ff;background:#10364e;border:1px solid #4c99b6;border-radius:8px;padding:6px 10px}
+@media(max-width:560px){.px-machine-select-settings{width:100%;min-width:0}.px-machine-select-settings select{font-size:16px}}
