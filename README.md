@@ -1428,3 +1428,16 @@ Prueba: `tests/tooling-load-capacity-r55.test.mjs`, caso V32/88° de 3 mm no reg
 **Pruebas de navegador:** `.github/workflows/check.yml` distribuye los **42 tests de navegador** en cuatro grupos independientes `inicio`, `simulacion`, `topes`, `datos`; no cancela los demás al fallar uno, y sube capturas con el nombre de su grupo. Cada script tiene un tiempo máximo y registra su nombre en el log. Esto hace más fácil detectar una pantalla cortada en un iPhone sin confundirla con errores del cálculo de herramienta. La batería de pruebas unitarias sigue ejecutándose por separado.
 
 **Publicación:** build `PLEGADOX-20261115-R58`, versión `0.9.34`, caché `plegadox-static-0.9.34-gauge-diagnostics-browser-shards-r58`. Los colores no equivalen a una verificación industrial: se sigue necesitando la CAD real de los dedos y del conjunto máquina, más validación del recorrido CNC y pruebas físicas antes de plegar.
+
+
+## R59 · Más matrices Promecam con DXF del fabricante identificados (15-11-2026)
+
+Fuentes revisadas directamente en las fichas de SOCLAM:
+- Matrices en T invertida tipo **Amada/Promecam 2041–2047/88°**, V6, V8, V10, V12, V16, V20 y V25, cada una con dos alturas **H80/H120** y segmento inicial de 415 mm; son **14 nuevas referencias**. Fuente fabricante: https://www.soclam.com/produit/matrice-amada-en-te-renverse-a-88-ou-85/ . Cada ficha del programa enlaza el DXF publicado (2041_88H80.dxf hasta 2047_88H120.dxf).
+- Matrices reversibles **2013/88° V8/V12** y **2014/88° V12/V20**, H26 mm, con portamatriz **40.06 o 40.07**, 2 nuevas referencias. Fuente fabricante: https://www.soclam.com/produit/matrice-amada-a-2-ves-a-88/ .
+- Total **16 referencias** adicionales, todas con `cadDownloadUrl` y `cadSourceUrl` publicados y comprobados en la ficha oficial.
+- WILA BIU-021 y OZU-012 siguen disponibles como referencias de catálogo; los contornos DXF de WILA requieren facilitar correo o entrar en MyWILA. No se simula acceso a esos ficheros.
+
+**Limitación importante:** el sitio de SOCLAM permite descargar DXF, pero el entorno de búsqueda utilizado no admite leer su contenido de tipo `image/vnd.dxf`. Por tanto, `profileAccuracy:'provisional'` y `cadStatus:'descarga-DXF-publica-importacion-pendiente'` se mantienen hasta que cada archivo se importe mediante el editor y pase los controles del contorno. No se convierten fichas de referencia en sólidos 3D certificados. Los perfiles a 85° existen **bajo demanda** según SOCLAM, pero no se inventa una variante CAD 85° a partir del DXF de 88°.
+
+Las referencias se registran en `catalog.js` y pueden seleccionarse/consultarse desde «Herramientas» y el importador DXF. `tests/soclam-promecam-cad-r59.test.mjs` comprueba las 16 fichas, montajes WILA arriba/Promecam abajo sin asumir un segundo adaptador, y enlaces oficiales. Build `PLEGADOX-20261115-R59`, versión `0.9.35`, caché `plegadox-static-0.9.35-promecam-cad-links-r59`.
