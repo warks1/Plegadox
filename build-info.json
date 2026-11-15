@@ -1,7 +1,7 @@
 {
-  "build": "PLEGADOX-20261115-R50",
-  "version": "0.9.26",
+  "build": "PLEGADOX-20261115-R51",
+  "version": "0.9.27",
   "machine": "bystronic-2006-2009-wila-promecam-gauge-conditional",
-  "ui": "single-fitted-splash-premium-chrome-pwa-icon-smart-front-gauge-correction",
-  "cache": "plegadox-static-0.9.26-gauge-contact-icon-splash-r50"
+  "ui": "fixed-omega-samples-front-gauge-premium-splash-icon",
+  "cache": "plegadox-static-0.9.27-omega-contact-icon-r51"
 }
