@@ -338,20 +338,30 @@ function configure(){
   draft.gaugeSideByBend[bend]='auto';
   draft.gaugeSegmentByBend[bend]=null;
   draft.gaugePointByBend[bend]=null;
-  const plan=resolveGaugeSetup(draft,st,getActiveMachineConfig());
+  let plan=resolveGaugeSetup(draft,st,getActiveMachineConfig());
+  let proposedStop=draft.stopByBend[bend]===2?2:1;
+  // La opción explícita CORREGIR puede proponer el otro dedo físico,
+  // pero nunca alterar automáticamente una elección manual sin clic.
+  if(!plan.valid){
+   const other=proposedStop===1?2:1;
+   const alternative={...draft,stopByBend:[...draft.stopByBend]};
+   alternative.stopByBend[bend]=other;
+   const alternatePlan=resolveGaugeSetup(alternative,st,getActiveMachineConfig());
+   if(alternatePlan.valid){plan=alternatePlan;proposedStop=other;}
+  }
   if(!plan.valid){
    $('gaugeSideReview').textContent='⚠ No hay un apoyo frontal libre de interferencias 2D para el pliegue P'+
-    (bend+1)+'. '+(plan.reason||'Revisar orientación, herramientas y geometría del tope')+
-    '. El programa NO mueve el dedo para ocultar un apoyo incorrecto.';
+    (bend+1)+' con ninguno de los dos dedos. '+(plan.reason||'Revisar geometría')+
+    '. No se ha cambiado la pieza ni la posición del tope para ocultar una colisión.';
    return;
   }
+  draft.stopByBend[bend]=proposedStop;
   draft.gaugeSegmentByBend[bend]=plan.ref.segmentIndex;
   const result=normalized(draft);
   changePiece(result,false);
-  $('gaugeSideReview').textContent='✓ Apoyo corregido para P'+(bend+1)+
-   ': extremo libre del ala '+(plan.ref.segmentIndex+1)+', tope '+
-   (result.stopByBend[bend]===2?2:1)+
-   '. Sin penetración nominal 2D en preparación; pendiente verificación de CAD, X/R/Z y taller.';
+  $('gaugeSideReview').textContent='✓ Apoyo propuesto para P'+(bend+1)+
+   ': extremo libre del ala '+(plan.ref.segmentIndex+1)+', tope '+proposedStop+
+   '. Sin penetración nominal 2D en preparación; falta verificar CAD, X/R/Z y máquina real.';
  };
  $('findGaugeContact').onclick=()=>{
   const review=suggestGaugeContact(piece,sim.time);
