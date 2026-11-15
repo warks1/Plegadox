@@ -57,7 +57,15 @@ export function inspectGaugeOperation(piece,operation,{
   const approaching=['Posicionamiento','Aproximación'].includes(phase);
   const transitioning=!!scene.gaugeTransition;
   if(place.contactEngaged)contacted=true;
-  if(transitioning&&scene.gaugeTransition?.plannedRetraction>0)withdrawn=true;
+  // Un render antiguo puede aportar la fase "Retirada" sin el campo
+  // plannedRetraction. Reconocer esa retirada real representada;
+  // NO marcar una simple reubicación X/R como retroceso por colisión.
+  if(transitioning&&(
+    scene.gaugeTransition?.plannedRetraction>0||
+    scene.gaugeTransition?.withdrawn===true||
+    (/(Retirada|Retroceso)/i.test(phase)&&
+     scene.gaugeTransition?.phase!=='reubicacion-siguiente-golpe')
+  ))withdrawn=true;
   const issue=place.gaugeInterference;
   if(place.geometryUnavailable)cadPending=true;
   let kind=null;
