@@ -27,66 +27,91 @@ jobs:
 
   browser:
     runs-on: ubuntu-latest
+    # Los 42 tests visuales se reparten en cuatro máquinas en paralelo;
+    # un fallo de topes no impide guardar capturas de móvil ni de CAD.
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [inicio, simulacion, topes, datos]
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Generar iconos PWA para navegador
+      - name: Verificar iconos premium PWA para navegador
         run: python3 tools/generate-pwa-icons.py
       - name: Instalar navegador de prueba
         run: |
           npm install --no-save playwright
           npx playwright install --with-deps chromium
-      - name: Comprobar pantallas, selección y simulación
+      - name: Comprobar grupo de pantallas y simulación
+        shell: bash
         run: |
-          node tests/titanium-cybelec-browser-smoke.mjs
-          node tests/titanium-selected-splash-r32-smoke.mjs
-          node tests/splash-viewport-r35-smoke.mjs
-          node tests/browser-smoke.mjs
-          node tests/responsive-smoke.mjs
-          node tests/studio-smoke.mjs
-          node tests/touch-order-smoke.mjs
-          node tests/video-regression-smoke.mjs
-          node tests/gooseneck-browser-smoke.mjs
-          node tests/tool-height-browser-smoke.mjs
-          node tests/technical-section-smoke.mjs
-          node tests/tooling-advisor-smoke.mjs
-          node tests/integrated-bend-planner-smoke.mjs
-          node tests/volume-r31-browser-smoke.mjs
-          node tests/touch-programmer-browser-smoke.mjs
-          node tests/mouse-programmer-browser-smoke.mjs
-          node tests/playback-controls-r26-smoke.mjs
-          node tests/workshop-backup-browser-smoke.mjs
-          node tests/project-library-browser-smoke.mjs
-          node tests/workshop-calibration-browser-smoke.mjs
-          node tests/gauge-framing-smoke.mjs
-          node tests/catalog-contact-smoke.mjs
-          node tests/machine-editor-smoke.mjs
-          node tests/legacy-canvas-smoke.mjs
-          node tests/backgauge-smoke.mjs
-          node tests/gauge-side-smoke.mjs
-          node tests/punch-stop-visibility-smoke.mjs
-          node tests/stop-support-contact-smoke.mjs
-          node tests/support-orientation-smoke.mjs
-          node tests/gauge-interference-smoke.mjs
-          node tests/gauge-sequence-review-browser-smoke.mjs
-          node tests/front-gauge-contact-smoke.mjs
-          node tests/gauge-stop-overlap-smoke.mjs
-          node tests/pwa-version-recovery-smoke.mjs
-          node tests/punch-guard-smoke.mjs
-          node tests/reposition-continuity-smoke.mjs
-          node tests/play-header-reorientation-smoke.mjs
-          node tests/controls-regression-smoke.mjs
-          node tests/pwa-offline-smoke.mjs
-          node tests/tool-dxf-browser-smoke.mjs
-          node tests/r36-cad-ui-browser-smoke.mjs
-          node tests/punch-orientation-r27-smoke.mjs
+          set -euo pipefail
+          case "${{ matrix.group }}" in
+            inicio) scripts="
+              tests/titanium-cybelec-browser-smoke.mjs
+              tests/titanium-selected-splash-r32-smoke.mjs
+              tests/splash-viewport-r35-smoke.mjs
+              tests/browser-smoke.mjs
+              tests/responsive-smoke.mjs
+              tests/studio-smoke.mjs
+              tests/controls-regression-smoke.mjs
+              tests/pwa-version-recovery-smoke.mjs
+              tests/pwa-offline-smoke.mjs
+            " ;;
+            simulacion) scripts="
+              tests/touch-order-smoke.mjs
+              tests/video-regression-smoke.mjs
+              tests/gooseneck-browser-smoke.mjs
+              tests/tool-height-browser-smoke.mjs
+              tests/technical-section-smoke.mjs
+              tests/tooling-advisor-smoke.mjs
+              tests/integrated-bend-planner-smoke.mjs
+              tests/volume-r31-browser-smoke.mjs
+              tests/touch-programmer-browser-smoke.mjs
+              tests/mouse-programmer-browser-smoke.mjs
+              tests/playback-controls-r26-smoke.mjs
+              tests/punch-orientation-r27-smoke.mjs
+            " ;;
+            topes) scripts="
+              tests/gauge-framing-smoke.mjs
+              tests/catalog-contact-smoke.mjs
+              tests/machine-editor-smoke.mjs
+              tests/legacy-canvas-smoke.mjs
+              tests/backgauge-smoke.mjs
+              tests/gauge-side-smoke.mjs
+              tests/punch-stop-visibility-smoke.mjs
+              tests/stop-support-contact-smoke.mjs
+              tests/support-orientation-smoke.mjs
+              tests/gauge-interference-smoke.mjs
+              tests/gauge-sequence-review-browser-smoke.mjs
+              tests/front-gauge-contact-smoke.mjs
+              tests/gauge-stop-overlap-smoke.mjs
+              tests/punch-guard-smoke.mjs
+              tests/reposition-continuity-smoke.mjs
+              tests/play-header-reorientation-smoke.mjs
+            " ;;
+            datos) scripts="
+              tests/workshop-backup-browser-smoke.mjs
+              tests/project-library-browser-smoke.mjs
+              tests/workshop-calibration-browser-smoke.mjs
+              tests/tool-dxf-browser-smoke.mjs
+              tests/r36-cad-ui-browser-smoke.mjs
+            " ;;
+            *) echo "Grupo de pruebas desconocido"; exit 2 ;;
+          esac
+          for script in $scripts; do
+            echo "::group::$script"
+            # Cada prueba tiene su límite y comunica el archivo que falla.
+            timeout --signal=TERM --kill-after=10s 180s node "$script"
+            echo "::endgroup::"
+          done
       - name: Guardar capturas de escritorio y móvil
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: plegadox-capturas
+          name: plegadox-capturas-${{ matrix.group }}
           path: test-results/
           if-no-files-found: ignore
