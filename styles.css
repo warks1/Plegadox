@@ -1488,3 +1488,12 @@ html{background:#020913}
 @media(prefers-reduced-motion:reduce){
  .px-titanium-splash.is-complete{transition:none}
 }
+
+/* R37 · Referencia de contacto por pliegue accesible desde ratón o dedos. */
+.px-gauge-point-editor{display:grid;gap:6px;padding:10px;border:1px solid #478da4;border-radius:8px;background:#091e30ba}
+.px-gauge-point-editor label{font-size:12px;font-weight:800;color:#def9ff}
+.px-gauge-point-actions{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap}
+.px-gauge-point-actions input{flex:1 1 145px;min-width:0;min-height:44px;padding:8px 11px;background:#0b273a;border:1px solid #5abbd2;border-radius:7px;color:#fff;font-size:16px}
+.px-gauge-point-actions button{flex:0 1 auto;min-height:44px;padding:8px 13px;border-radius:7px;color:#e9fbff;background:#1e5267;border:1px solid #64aac4}
+.px-gauge-point-editor small{color:#a2d8e2;font-size:11px}
+.bend-gauge-contact{display:block;width:100%;max-width:175px;min-width:100px;margin-top:7px;padding:6px;font-size:13px;border:1px solid #6db5cd;border-radius:6px}
