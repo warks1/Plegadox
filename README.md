@@ -1183,3 +1183,11 @@ La pantalla inicial **TITANIUM** incluye animación SVG de chapa plegándose ent
 - Build `PLEGADOX-20261115-R38`, versión 0.9.14 y nueva caché offline para evitar mezclar módulos viejos y actuales.
 
 **Precaución:** posición visual y cribado geométrico, no preparación CNC. No usar como certificado de no colisión; aún faltan CAD íntegros, recorridos medidos y comprobación de medios físicos en la Trumpf V85.
+
+
+## R39 · Comparador de presentaciones coherente y revisión de caché
+
+- La opción de comparar ala anterior/siguiente ignora temporalmente la referencia específica previamente elegida, para comparar dos soluciones realmente distintas. No modifica la pieza.
+- Al cambiar el lado de apoyo desde el simulador o la tabla, se desactiva la selección manual de ala que pudiera contradecirlo; una distancia que supere la nueva longitud se reinicia en vez de mostrar una cota imposible.
+- Nueva revisión `PLEGADOX-20261115-R39` / v0.9.15, con nuevo nombre de caché PWA, conservando datos guardados en el navegador.
+- Verificación realizada: sintaxis de módulos y comprobaciones en memoria del cálculo de referencia. **Sin afirmación de prueba final de navegador, CI o validación CAD de máquina real.**
