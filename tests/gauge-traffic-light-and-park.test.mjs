@@ -35,12 +35,13 @@ test('R83: vistas de máquina y sección comparten el mismo semáforo',()=>{
   assert.match(s,/GAUGE_COLORS/);
  }
 });
-test('R83: G2 Omega libre verde, no confundir CAD con colisión',()=>{
+test('R91: G2 Omega sin penetración, pero con retirada preventiva por holgura',()=>{
  const scene=technicalScene(EXAMPLE,5+5*.30),pl=gaugePlacement(scene,1);
  assert.equal(pl.setupValid,true);
  assert.equal(pl.gaugeInterference.warning,false);
- assert.equal(scene.gaugePlan.enabled,false);
- assert.equal(gaugeRiskStatus({...pl,geometryUnavailable:true}).level,'green');
+ assert.equal(scene.gaugePlan.enabled,true);
+ assert.ok(scene.gaugePlan.clearanceWarnings>0);
+ assert.equal(gaugeRiskStatus({...pl,geometryUnavailable:true}).level,'amber');
 });
 test('R83: punzón alto inmóvil durante todos los volteos y cambios de golpe',()=>{
  for(let op=0;op<EXAMPLE.order.length-1;op++){
