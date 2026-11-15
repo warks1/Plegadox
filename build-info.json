@@ -1,7 +1,7 @@
 {
-  "build": "PLEGADOX-20261115-R56",
-  "version": "0.9.32",
+  "build": "PLEGADOX-20261115-R57",
+  "version": "0.9.33",
   "machine": "bystronic-2006-2009-wila-promecam-gauge-conditional",
-  "ui": "force-v-candidate-load-rated-tools-gauge-splash",
-  "cache": "plegadox-static-0.9.32-candidate-force-r56"
+  "ui": "consistent-2d-gauge-cad-warning-premium-pwa-icons-safe-update",
+  "cache": "plegadox-static-0.9.33-cad-status-icon-update-r57"
 }
