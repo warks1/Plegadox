@@ -277,11 +277,21 @@ function rearMachine(ctx,w,h,cx,cy,scale,placement,perspective=false){
  }
  for(const frac of [.24,.58])bolt(ctx,rodStart+(rodEnd-rodStart)*frac,
   cy-placement.point.y*scale-10*scale,2.4*scale);
- // La señalización no debe tapar el labio ni quedar por debajo de
- // controles de perspectiva. El diagnóstico completo sigue en el panel.
- const statusLayout=gaugeStatusCardLayout(w,h,faceX,
-  cy-placement.point.y*scale,placement.stopNumber,risk.level,scale);
- drawGaugeStatusCard(ctx,statusLayout,risk.level,colors);
+ // En sección 2D conservar íntegro el indicador anterior.
+ // Sólo la PERSPECTIVA utiliza la nueva tarjeta fuera del tope.
+ if(!perspective){
+  ctx.font='800 '+Math.max(8,11*scale)+'px system-ui';
+  ctx.fillStyle=colors.label;ctx.textAlign='left';
+  const label=risk.level==='red'?
+   '⛔ TOPE '+placement.stopNumber+' · PENETRACIÓN EN 2D':
+   risk.level==='amber'?
+    '⚠ TOPE '+placement.stopNumber+' · '+risk.message:
+    placement.gaugeTransition?gaugeMovementLabel(placement):
+    'TOPE '+placement.stopNumber+' · SIN INTERFERENCIA 2D'+
+    (cadPending?' · CAD PENDIENTE':'');
+  ctx.fillText(label,Math.min(Math.max(8,ox+3*scale),w-145*scale),
+   Math.max(20,cy-placement.point.y*scale-24*scale));
+ }
  ctx.restore();
 }
 function drawDie(ctx,scene,cx,cy,scale){
@@ -429,6 +439,14 @@ function stageScene(ctx,w,h,piece,sim,machineView){
   ctx.fill();ctx.strokeStyle=color.edge;ctx.lineWidth=1.2;ctx.stroke();ctx.restore();
  }
  sectionOverlay(ctx,{cx,cy:baseY,s:scale},opening,punch.tip||0,Boolean(machineView?.section));
+ if(perspective){
+  // HUD dibujado al FINAL de los sólidos. La tarjeta no puede quedar
+  // tapada por la matriz ni sobreescribir el canto frontal del dedo.
+  const level=gaugeRiskStatus(placement).level;
+  const layout=gaugeStatusCardLayout(w,h,cx+placement.point.x*scale,
+   baseY-placement.point.y*scale,placement.stopNumber,level,scale);
+  drawGaugeStatusCard(ctx,layout,level,GAUGE_COLORS[level]);
+ }
  // Workpiece shadow and hot contact glow along the working tool tip
  if(st.press>.36){
   ctx.save();ctx.globalAlpha=(st.press-.35)*.7;
