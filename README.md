@@ -1300,3 +1300,18 @@ Pendiente: placa de modelo/año para conciliar ambas identificaciones y CAD fís
 Se renueva SW a `plegadox-static-0.9.24-custom-tool-icon-fullscreen-r48` para que no arrastre la versión antigua. En iOS, los accesos ya añadidos a la pantalla de inicio pueden conservar el icono instalado: retirar ese acceso y volverlo a añadir después de actualizar suele ser necesario para verlo.
 
 **Seguridad:** las poligonales personalizadas son aproximaciones del perfil definido por el operador; no hay CAD completo verificado de fijaciones WILA/Promecam ni evaluación industrial de carga, trayectorias o colisiones CNC. Ningún resultado de simulación debe etiquetarse certificado.
+
+
+## R49 · Orientación automática, aviso de autoría y centro de actualizaciones (15-11-2026)
+
+**Orientación:** `responsive.js` calcula el modo móvil/tablet/escritorio según el viewport real, aplica `data-layout` y `data-orientation` y repinta la escena en `resize`, `orientationchange`, `screen.orientation.change`, `pageshow` y `visualViewport.resize`. Un segundo ciclo de repintado tras girar evita que iOS utilice dimensiones temporales anteriores al giro. CSS adapta los seis módulos y el apartado Acerca de en orientación vertical/horizontal. El navegador NO puede obligar a iOS/Android a girar cuando el usuario ha bloqueado la orientación; no se intenta hacer `screen.orientation.lock`.
+
+**Footer:** se retira `PLEGADOX · Software de plegado · © AMS · Motor geométrico de demostración, sin conexión a la máquina` y `Pantalla adaptada: Smartphone · horizontal`. Se presenta de forma uniforme el aviso **© 2026 AMS Tecnologics Services. Todos los derechos reservados.** y una advertencia de derechos de autor. `responsive.js` ya no escribe texto en el pie. El HTML de la pantalla TITANIUM histórica actualiza el mismo nombre de titular.
+
+**Acerca de PlegadoX:** nueva pestaña de navegación `tab-acerca` con ficha de producto, versión y compilación, plataforma, nombre del creador **AMS Tecnologics Services**, lista de funciones, aviso técnico y actualización en la propia aplicación. Icono `#info` añadido a `icons.svg`.
+
+**Actualizar software:** nuevo `software-about.js`. El botón «Buscar e instalar actualizaciones» y el icono de actualización de cabecera comparten un solo flujo (se elimina el manejador duplicado antiguo). Comprueban por red `build-info.json` de su propio origen (`cache:no-store`), validan build/version mediante `software-update-policy.js`, comparan fecha y revisión o versión semántica para **no instalar una versión antigua**, confirman la publicación del nuevo `index.html` y, sólo entonces, purgan caches de *código* `plegadox-static-*` y solicitan la nueva página. Nunca borran `localStorage` con piezas, herramientas, biblioteca, ajustes ni los datos de `IndexedDB`; únicamente invalidan la marca local de build. Mantener copia de seguridad igualmente por prevención frente a pérdida de datos del navegador. Sin conexión o sin nueva versión, el panel explica el estado sin prometer instalación.
+
+**Límites:** el botón instala las revisiones que se publiquen efectivamente en el mismo sitio web; no escribe nuevas funcionalidades por sí mismo ni controla una tienda de aplicaciones. El aviso técnico sobre las simulaciones sigue disponible dentro de Acerca de y en los controles de seguridad, aunque ya no aparezca en el pie común.
+
+Tests de política: `tests/software-update-policy.test.mjs`. Build `PLEGADOX-20261115-R49`, versión `0.9.25`, caché `plegadox-static-0.9.25-about-updater-responsive-r49`.
