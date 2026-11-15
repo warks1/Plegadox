@@ -349,14 +349,16 @@ function stageScene(ctx,w,h,piece,sim,machineView){
  backdrop(ctx,w,h);
  sceneAtmosphere(ctx,w,h,{cx,cy:baseY,s:scale});
  const stopNumber=piece.stopByBend?.[st.activeBend]===2?2:1;
-  const placement=gaugePlacement(scene,stopNumber);
+ const placement=gaugePlacement(scene,stopNumber);
+ const perspective=Boolean(machineView?.perspective);
  rearMachineBackdrop(ctx,w,h,cx,baseY,scale);
- dieDepth(ctx,{cx,cy:baseY,s:scale},opening,Boolean(machineView?.perspective),scene.die);
+ // En 2D conservar EXACTAMENTE el orden anterior que ya funcionaba.
+ if(!perspective)rearMachine(ctx,w,h,cx,baseY,scale,placement,false);
+ dieDepth(ctx,{cx,cy:baseY,s:scale},opening,perspective,scene.die);
  drawDie(ctx,scene,cx,baseY,scale);
- // La cara del Stop se presenta delante de la matriz en el render 2.5D
- // y detrás de la chapa. No mueve la posición del dedo ni el tope CNC.
- rearMachine(ctx,w,h,cx,baseY,scale,placement,
-  Boolean(machineView?.perspective));
+ // Sólo en PERSPECTIVA el tope se pinta después de la matriz y antes
+ // de la chapa; así el labio delantero no queda tapado por la V.
+ if(perspective)rearMachine(ctx,w,h,cx,baseY,scale,placement,true);
  // Los reflejos de la matriz se recortan a su contorno real en drawDie.
  // Ram advances to the sheet and descends while deforming it.
  // La formación no comienza antes de que la punta alcance la chapa.
