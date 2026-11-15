@@ -16,6 +16,7 @@ import {suggestBendOrder} from './sequence-advisor.js';
 import {CYBELEC_OMEGA,cybelecReferencePreset,compareCybelecOmega} from './cybelec-reference.js';
 import {compareGaugeSides} from './gauge-side-review.js';
 import {suggestGaugeContact} from './gauge-contact-advisor.js';
+import {resolveGaugeSetup} from './gauge-contact-solver.js';
 import {sectionPunch,sectionDie} from './tool-profiles.js';
 import {getActiveMachineConfig} from './machine-config.js';
 import {gaugePlacement} from './backgauge-placement.js';
@@ -325,6 +326,31 @@ function configure(){
   const node=$('gaugeSideReview');node.dataset.bend=String(result.bend);
   node.textContent='Golpe '+(result.operation+1)+' · '+rows.join(' · ')+'.'+recommendation+
    ' NO valida la joroba real de la pata de cabra, ni topes, mesa o volteos.';
+ };
+ $('correctGaugeSetup').onclick=()=>{
+  const st=stage(piece,sim.time),bend=st.activeBend;
+  // Solicitud explícita: no modificar la selección manual sin tocar este botón.
+  const draft={...piece,
+   gaugeSideByBend:[...piece.gaugeSideByBend],
+   gaugeSegmentByBend:[...piece.gaugeSegmentByBend],
+   gaugePointByBend:[...piece.gaugePointByBend]};
+  draft.gaugeSideByBend[bend]='auto';
+  draft.gaugeSegmentByBend[bend]=null;
+  draft.gaugePointByBend[bend]=null;
+  const plan=resolveGaugeSetup(draft,st,getActiveMachineConfig());
+  if(!plan.valid){
+   $('gaugeSideReview').textContent='⚠ No hay un apoyo frontal libre de interferencias 2D para el pliegue P'+
+    (bend+1)+'. '+(plan.reason||'Revisar orientación, herramientas y geometría del tope')+
+    '. El programa NO mueve el dedo para ocultar un apoyo incorrecto.';
+   return;
+  }
+  draft.gaugeSegmentByBend[bend]=plan.ref.segmentIndex;
+  const result=normalized(draft);
+  changePiece(result,false);
+  $('gaugeSideReview').textContent='✓ Apoyo corregido para P'+(bend+1)+
+   ': extremo libre del ala '+(plan.ref.segmentIndex+1)+', tope '+
+   (result.stopByBend[bend]===2?2:1)+
+   '. Sin penetración nominal 2D en preparación; pendiente verificación de CAD, X/R/Z y taller.';
  };
  $('findGaugeContact').onclick=()=>{
   const review=suggestGaugeContact(piece,sim.time);
