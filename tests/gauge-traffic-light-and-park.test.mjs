@@ -4,6 +4,7 @@ import {readFileSync} from 'node:fs';
 import {gaugeRiskStatus,GAUGE_COLORS} from '../gauge-risk-status.js';
 import {EXAMPLE} from '../engine.js';
 import {technicalScene} from '../technical-section.js';
+import {punchParkCacheKey} from '../punch-clearance.js';
 import {gaugePlacement} from '../backgauge-placement.js';
 const base={setupValid:true,geometryUnavailable:true,
  gaugeInterference:{warning:false,kind:'sin-interferencia-detectada'},
@@ -90,4 +91,19 @@ test('R87: punzón estacionado supera la chapa presentada en giros complejos',()
    }
   }
  }
+});
+
+test('R88: la caché de retirada se invalida al cambiar el tope manual',()=>{
+ const key=punchParkCacheKey(EXAMPLE,0,16,8);
+ const variants=[
+  {...EXAMPLE,gaugeSideByBend:['before','auto','auto','auto']},
+  {...EXAMPLE,gaugeSegmentByBend:[0,null,null,null]},
+  {...EXAMPLE,gaugePointByBend:[12,null,null,null]},
+  {...EXAMPLE,stopByBend:[2,1,1,1]}
+ ];
+ for(const variant of variants)
+  assert.notEqual(punchParkCacheKey(variant,0,16,8),key,
+   'Una referencia de tope editada reutilizaba el cálculo anterior');
+ assert.equal(punchParkCacheKey({...EXAMPLE},0,16,8),key);
+ assert.notEqual(punchParkCacheKey(EXAMPLE,1,16,8),key);
 });

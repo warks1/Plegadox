@@ -26,11 +26,21 @@ export function sectionPresentation(piece,st,from,feedMirrored=false,nextFeedMir
  }
  return presentation;
 }
+/**
+ * Identidad de la sección: cambiar lado, tramo, punto o dedo de tope
+ * invalida la altura de aparcamiento guardada para el golpe anterior.
+ */
+export function punchParkCacheKey(piece,operation,opening=16,dieDepth=8){
+ const p=normalized(piece);
+ const op=Math.max(-1,Math.min(p.order.length-1,Math.trunc(operation)));
+ return JSON.stringify([p.flanges,p.angles,p.order,p.thickness,
+  p.radius,p.kFactor,p.gaugeSideByBend,p.gaugeSegmentByBend,
+  p.gaugePointByBend,p.stopByBend,opening,dieDepth,op]);
+}
 const cache=new Map();
 export function punchParkHeight(piece,operation,opening=16,dieDepth=8){
  const p=normalized(piece),op=Math.max(-1,Math.min(p.order.length-1,Math.trunc(operation)));
- const key=JSON.stringify([p.flanges,p.angles,p.order,p.thickness,
-  p.radius,p.kFactor,p.gaugeSideByBend,opening,dieDepth,op]);
+ const key=punchParkCacheKey(p,op,opening,dieDepth);
  if(cache.has(key))return cache.get(key);
  const t=p.thickness,gap=Math.max(14,opening*1.7),margin=Math.max(5,t*2);
  let height=t+gap;
