@@ -1,5 +1,5 @@
 // PlegadoX · caché offline estática. Se versiona para no arrastrar JS obsoleto.
-const CACHE='plegadox-static-0.9.17-bystronic-retract-r41';
+const CACHE='plegadox-static-0.9.18-backgauge-bystronic-r42';
 const APP_FILES=[
  "./",
  "./app.js",
