@@ -182,18 +182,25 @@ export function gaugeContactFeature(values,stopNumber=1){
  const outer=Math.max(...outline.map(p=>p.x));
  const ledge=outline[4].x,stepDepth=-outline[4].y;
  const support=Number(stopNumber)===2;
- // Cara MÁS DELANTERA del contorno íntegro del dedo, sin espejado.
- // El resto de la chapa permanece delante (X menor) y nunca encima
- // del escalón. La referencia es el centro de espesor del canto.
+ const usable=height>stepDepth&&stepDepth>=0&&ledge>=0&&ledge<outer;
+ if(support){
+  // Support: la chapa descansa en la REPISA BAJA (x0..ledge) y
+  // su CANTO se detiene contra la pared VERTICAL que sube desde
+  // el extremo de la repisa. NO se coloca sobre el bloque trasero.
+  // feature.point marca la superficie de la repisa, NO fibra media.
+  const from={x:0,y:-stepDepth},to={x:ledge,y:-stepDepth};
+  const frontFace={from:{x:ledge,y:-stepDepth},to:{x:ledge,y:0}};
+  return {kind:'support-shelf-front-wall',surface:'horizontal-top',
+   label:'TOPE 2 · CANTO DELANTE DE PARED · REPISA INFERIOR',
+   from,to,frontFace,point:{x:ledge,y:-stepDepth},
+   usable:usable&&ledge>0&&stepDepth>0,verified:false};
+ }
  const from={...outline[0]},to={...outline[5]};
  const point={x:from.x,y:(from.y+to.y)/2};
- const usable=height>stepDepth&&stepDepth>=0&&ledge>=0&&ledge<outer;
- const frontFace={from:{...from},to:{...to}};
- return {kind:support?'support-front-face':'stop-front-face',
-  surface:'vertical-front',frontFace,
-  label:support?'TOPE 2 · CARA FRONTAL · NO SOBRE REPISA':
-   'TOPE 1 · CARA FRONTAL',
-  from,to,point,usable,verified:false};
+ return {kind:'stop-front-face',surface:'vertical-front',
+  label:'TOPE 1 · CANTO CONTRA CARA FRONTAL',
+  from,to,frontFace:{from:{...from},to:{...to}},point,
+  usable,verified:false};
 }
 /** Envolvente del perfil esquemático, sin interpretar una cota L como CAD. */
 export function gaugeBounds(values,stopNumber=1){
