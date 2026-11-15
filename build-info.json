@@ -1,7 +1,7 @@
 {
-  "build": "PLEGADOX-20261115-R55",
-  "version": "0.9.31",
+  "build": "PLEGADOX-20261115-R56",
+  "version": "0.9.32",
   "machine": "bystronic-2006-2009-wila-promecam-gauge-conditional",
-  "ui": "tooling-load-limit-gauge-collision-mounted-tool-splash-oem-cad",
-  "cache": "plegadox-static-0.9.31-tool-load-gauge-r55"
+  "ui": "force-v-candidate-load-rated-tools-gauge-splash",
+  "cache": "plegadox-static-0.9.32-candidate-force-r56"
 }
