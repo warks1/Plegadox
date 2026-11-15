@@ -98,7 +98,11 @@ export function inspectGaugeOperation(piece,operation,{
    kind='chapa-detras';
   else if(approaching&&!transitioning&&place.freeEdge&&place.seat?.seated===false)
    kind='sin-asiento';
-  else if(approaching&&!transitioning&&place.freeEdge===false)
+  // La referencia puede ser una pestaña ya plegada con cara de
+  // apoyo 2D comprobada. No informar "vértice interior inválido"
+  // cuando ese mismo contacto ya fue aceptado por el solver.
+  else if(approaching&&!transitioning&&place.freeEdge===false&&
+    place.foldedWingContact!==true)
    kind='referencia-interior';
   times.push(time);
   if(kind){
