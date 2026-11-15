@@ -90,7 +90,23 @@ export function technicalScene(piece,instant=0){
  // siguiente teletransporta la pieza en la representación.
  const nextBend=st.activeOperation<p.order.length-1?
   p.order[st.activeOperation+1]:st.activeBend;
- const nextFeedMirror=gaugeReference(p,nextBend).side==='before';
+ let nextResolved=resolvedGauge;
+ if(st.activeOperation<p.order.length-1){
+  const futureKey=setupKey+'::next:'+nextBend;
+  nextResolved=gaugeSetupCache.get(futureKey);
+  if(!nextResolved){
+   const nextFractions=[...st.fractions];
+   nextFractions[st.activeBend]=1;
+   nextFractions[nextBend]=0;
+   nextResolved=resolveGaugeSetup(p,{
+    ...st,activeBend:nextBend,activeOperation:st.activeOperation+1,
+    fractions:nextFractions
+   },machine);
+   gaugeSetupCache.set(futureKey,nextResolved);
+   if(gaugeSetupCache.size>24)gaugeSetupCache.delete(gaugeSetupCache.keys().next().value);
+  }
+ }
+ const nextFeedMirror=nextResolved.ref.side==='before';
  const changingSide=from.repositioning&&nextFeedMirror!==feedMirror;
  // Cambiar el signo de alimentación DESPUÉS del volteo de cara.
  // Ambos giros simultáneos hacían colapsar X e Y a cero en el mismo instante.
@@ -186,13 +202,11 @@ export function technicalScene(piece,instant=0){
   autoSelected:resolvedGauge.autoSelected,
   referenceSegment:reference.segmentIndex};
  let target=null;
- if(st.activeOperation<p.order.length-1){
-  const nextReference=gaugeReference(p,nextBend);
-  const nextFractions=[...st.fractions];nextFractions[nextBend]=0;
-  const nextSetup=presentedForMachine(p,nextFractions,nextBend);
-  const nextPoint=gaugePointOnProfile(nextSetup.points,nextReference);
-  target={x:(nextReference.side==='before'?-1:1)*nextPoint.x,
-   y:nextPoint.y+p.thickness/2};
+ if(st.activeOperation<p.order.length-1&&nextResolved.valid){
+  // El objetivo de reposicionamiento debe ser la MISMA cara de apoyo
+  // seleccionada por el motor en el golpe siguiente. No recalcularlo
+  // con un ala vieja que pertenece a otro pliegue.
+  target={x:nextResolved.point.x,y:nextResolved.point.y};
  }
  const sub=st.completed?1:(st.time/5)%1;
  const gaugeTransition=gaugeRetractionPath({
