@@ -182,7 +182,9 @@ export function technicalScene(piece,instant=0){
  ]);
  let prediction=gaugePlanCache.get(cacheKey);
  if(!prediction){
-  const fractionsForBend=[.44,.48,.52,.56,.60,.64,.68,.72,.76,.8,.83];
+  // Mayor resolución del barrido: no altera el criterio R76 (solo penetración).
+  // Incluye puntos intermedios para no omitir contactos breves del ala.
+  const fractionsForBend=[.44,.46,.48,.50,.52,.54,.56,.58,.60,.62,.64,.66,.68,.70,.72,.74,.76,.78,.80,.82,.83];
   const nominalRadius=development(p).radius;
   const sheetSamples=fractionsForBend.map(relative=>{
    const next=stage(p,st.activeOperation*5+5*relative);
