@@ -25,6 +25,14 @@ export const MACHINE_PROFILES=Object.freeze({
   xSpeed:null,rSpeed:null,zSpeed:null,ramApproachSpeed:100,ramReturnSpeed:95,
   nominalMotorPower:null,nominalWeightTonnes:9,hydraulicOilLitres:null,
   frontSupportArmLength:null,hydraulicCrowning:true,
+  crowningSystem:'Mesa con bombeo hidráulico · confirmado por propietario',
+  upperClampingSystem:'WILA',upperClampingConfirmed:true,
+  lowerDieSystem:'PROMECAM_CON_ADAPTADOR',
+  lowerAdapter:'Regleta/base adaptadora de matrices tipo Promecam, sobre mesa con bombeo',
+  lowerAdapterHeight:null,
+  daylightMeasured:null,
+  daylightReference:{min:400,max:515,
+   context:'Rango orientativo citado por propietario para otras Bystronic PR/Xpert de 2006; NO medida ni especificación confirmada de esta AFM EP'},
   control:'Cybelec DNC 880/880S (otros ejemplares AFM EP; comprobar control instalado)',
   axis:'Y1/Y2/X/R (configuración común en AFM EP; verificar la unidad)',
   identificationConfidence:'probable-por-imagen-sin-placa',
@@ -32,7 +40,7 @@ export const MACHINE_PROFILES=Object.freeze({
   source:'https://www.sparxmachinetools.co.uk/products/bystronic-afm-ep-31-100-3m-x-100-ton-press-brake',
   additionalSource:'https://www.machinio.it/annunci/43398267-pressa-piegatrice-idraulica-bystronic-ep100-31-del-2006-in-bassano-del-grappa-italia',
   dimensionsVerified:'familia-afm-ep-referencia-no-validada-en-unidad',
-  clamping:'Desconocido: revisar mordazas de la trancha y porta-matrices, perfil de mesa, geometría de dedos traseros y carrera X/R. Ningún CAD de estos componentes ha sido verificado para la unidad.'
+  clamping:'Parte superior: cabezales WILA CONFIRMADOS; parte inferior: mesa con bombeo hidráulico y regleta adaptadora para matrices tipo PROMECAM CONFIRMADAS por propietario. Alturas de cabezal, proyección de punzón, base adaptadora y matrices sin medir; pendientes perfiles CAD/recorrido X/R.'
  }),
  'bystronic-pr100-3100':Object.freeze({
   id:'bystronic-pr100-3100',manufacturer:'Bystronic / Beyeler',
