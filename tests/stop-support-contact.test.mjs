@@ -71,8 +71,21 @@ test('Golpe 3: elección de ala opuesta conserva 50 mm y Stop/Support respetan s
  assert.equal(s2.contact.kind,'support-step');
  assert.deepEqual(s1.point,s2.point);
 });
-test('Vértice interior: no inventar apoyo confirmado con ningún dedo',()=>{
- const p=normalized(EXAMPLE),scene=technicalScene(p,5.2);
+test('el modo automático descarta vértices interiores y el manual los señaliza como inválidos',()=>{
+ const auto=technicalScene(normalized(EXAMPLE),5.2);
+ assert.ok(auto.gaugeSetup.candidates.length>=1);
+ if(auto.gaugeSetup.valid){
+  assert.equal(auto.gaugeReference.freeEdge,true);
+  assert.equal(auto.gaugeSetup.ref.freeEdge,true);
+ }
+ // Si el operador fuerza el ala interior, conservar esa decisión en
+ // pantalla pero NO declarar contacto seguro ni moverlo a otra ala.
+ const manual=normalized({...EXAMPLE,
+  gaugeSideByBend:['auto','before','auto','auto'],
+  gaugeSegmentByBend:[null,1,null,null]});
+ const scene=technicalScene(manual,5.2);
+ assert.equal(scene.gaugeSetup.manual,true);
+ assert.equal(scene.gaugeSetup.valid,false);
  for(const n of [1,2]){
   const place=gaugePlacement(scene,n);
   assert.equal(place.freeEdge,false);
@@ -81,6 +94,7 @@ test('Vértice interior: no inventar apoyo confirmado con ningún dedo',()=>{
   assert.equal(place.contact.verified,false);
  }
 });
+
 test('L5/L6 no modifican silenciosamente la cara CAD al faltar cota inequívoca',()=>{
  const a=gaugeOutline([70,100,8,25,12,8],2);
  const b=gaugeOutline([70,100,8,25,16,14],2);
@@ -103,16 +117,27 @@ test('Automático P4 de omega toma borde libre posterior, nunca vértice interio
  assert.equal(gaugeReference(manual,3).side,'before','No anular elección manual');
 });
 
-test('Tope sólo se anuncia en contacto durante presentación: no perseguir ala en plegado',()=>{
+test('la referencia X/R no persigue la chapa: sólo se retira si hay choque previsto',()=>{
  const p=normalized(EXAMPLE);
- const early=gaugePlacement(technicalScene(p,.6),1);
- const late=gaugePlacement(technicalScene(p,2.9),1);
+ const earlyScene=technicalScene(p,.6),lateScene=technicalScene(p,2.9);
+ const early=gaugePlacement(earlyScene,1),late=gaugePlacement(lateScene,1);
  assert.equal(early.alignedToSheet,true);
  assert.equal(early.contactEngaged,true);
  assert.equal(late.alignedToSheet,false);
  assert.equal(late.contactEngaged,false);
- assert.deepEqual(early.point,late.point,'La referencia X/R del tope no debe perseguir el ala');
- assert.match(late.state,/sin contacto actual/);
+ assert.deepEqual(earlyScene.gaugeAnchor,lateScene.gaugeAnchor,
+  'La cota nominal debe permanecer fija al deformarse la chapa');
+ assert.equal(early.nominalDistance,late.nominalDistance);
+ if(lateScene.gaugePlan.enabled){
+  assert.ok(lateScene.gaugeTransition?.plannedRetraction>0,
+   'Sólo el barrido que detectó interferencia puede separar el dedo');
+  assert.ok(late.point.x>early.point.x,'Si retrocede va hacia X posterior');
+ }else{
+  assert.equal(lateScene.gaugeTransition,null,
+   'Sin interferencia, el tope espera al reposicionamiento final');
+  assert.deepEqual(late.point,early.point);
+ }
+ assert.match(late.state,/retirado|referencia nominal|interferencia|contacto actual|TOPE/i);
 });
 
 test('el mismo tope mira a la izquierda en ambas posiciones, sin inversión secundaria',()=>{
