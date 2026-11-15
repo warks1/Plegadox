@@ -1666,3 +1666,16 @@ html[data-orientation="landscape"] .px-about-card{overflow-wrap:anywhere}
  min-height:44px;margin:8px 0;white-space:normal;overflow-wrap:anywhere}
 .px-correct-gauge:hover{filter:brightness(1.12)}
 @media(max-width:699px){.px-correct-gauge{font-size:11px;padding:10px 7px}}
+
+/* R54 · trazabilidad de DXF para los útiles realmente seleccionados */
+.px-cad-source-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;
+ margin:13px 0;padding:0;max-width:100%}
+.px-cad-source-row{display:grid;align-content:start;gap:7px;min-width:0;
+ padding:12px 13px;border-radius:10px;border:1px solid #2f6d8d;
+ background:linear-gradient(155deg,#0e2d45,#051625);overflow-wrap:anywhere}
+.px-cad-source-row strong{font-size:12px;color:#d8f4ff;line-height:1.4}
+.px-cad-source-row a{font-size:12px;line-height:1.5;color:#75dbff;
+ text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
+.px-cad-source-row a:hover,.px-cad-source-row a:focus-visible{color:#d3faff}
+.px-cad-source-row span,.px-cad-source-row small{font-size:11px;color:#a2c2d5;line-height:1.5}
+@media(max-width:780px){.px-cad-source-links{grid-template-columns:1fr}}
