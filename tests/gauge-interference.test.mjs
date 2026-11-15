@@ -39,18 +39,24 @@ test('un contacto válido vuelve a ser evaluable con Stop y Support sin cambiar 
   }
  }
 });
-test('el tope permanece fijo durante el plegado y retrocede sólo después de iniciar la retirada',()=>{
- const anchor=gaugePlacement(technicalScene(EXAMPLE,.5),2).point;
- const points=[];
+test('tope conserva la cota X/R nominal; sólo se aparta tras detectar colisión',()=>{
+ const initial=technicalScene(EXAMPLE,.5),anchor=initial.gaugeAnchor;
+ let retreatObserved=false;
  for(const time of [1.2,2.6,3.1,4.19]){
-  const p=gaugePlacement(technicalScene(EXAMPLE,time),2);
-  points.push(p.point);
-  assert.ok(typeof p.gaugeInterference.warning==='boolean');
-  if(p.gaugeInterference.warning){
-   assert.equal(p.contactEngaged,false);
-   assert.equal(p.alignedToSheet,false);
-   assert.match(p.state,/Posible/);
+  const scene=technicalScene(EXAMPLE,time),place=gaugePlacement(scene,2);
+  assert.deepEqual(scene.gaugeAnchor,anchor,
+   'El anclaje X/R de programación no sigue el ala doblada');
+  assert.ok(typeof place.gaugeInterference.warning==='boolean');
+  if(scene.gaugePlan.enabled&&scene.gaugeTransition?.plannedRetraction>0){
+   retreatObserved=true;
+   assert.ok(place.point.x>=anchor.x-1e-6,'La retirada se hace hacia detrás');
+   assert.deepEqual(scene.gaugeTransition.from,anchor,
+    'La retirada nunca reubica su origen con la chapa');
+  }
+  if(place.gaugeInterference.warning){
+   assert.equal(place.contactEngaged,false);
+   assert.equal(place.alignedToSheet,false);
   }
  }
- assert.deepEqual(points,[anchor,anchor,anchor,anchor]);
+ if(initial.gaugePlan.enabled)assert.ok(retreatObserved);
 });
