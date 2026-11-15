@@ -192,12 +192,16 @@ function render(refreshFields=true){
  const cfg=getActiveMachineConfig();
  const text=$('machineSummary');
  if(text){
-  text.replaceChildren(...[
+  const rows=isTrumpf?[
    ['Trancha / portaútil',locale(cfg.ramWidth)+' / '+locale(cfg.holderWidth)+' mm'],
    ['Trabajo punzón',locale(cfg.toolWorkingDistance)+' mm'],
    ['Stop / Support',locale(cfg.stop[0])+' / '+locale(cfg.support[0])+' mm'],
-   ['Distancia preferida',locale(cfg.preferredDistance)+' %']
-  ].map(([n,v])=>{
+   ['Distancia preferida',locale(cfg.preferredDistance)+' %']]:[
+   ['Longitud nominal de plegado',locale(profile.bendingLength)+' mm'],
+   ['Capacidad nominal',locale(profile.tonnage)+' t'],
+   ['Trancha, amarre y mesa','Geometría no medida'],
+   ['Dedos de tope','Sin perfil CAD verificado']];
+  text.replaceChildren(...rows.map(([n,v])=>{
    const b=document.createElement('div');b.className='machine-summary-item';
    const span=document.createElement('span');span.textContent=n;
    const strong=document.createElement('strong');strong.textContent=v;
