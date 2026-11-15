@@ -12,8 +12,8 @@ test('R68: mantener la imagen ORIGINAL del Boceto 1 aprobado',()=>{
  const html=get('splash-foto-premium.html').toString();
  assert.ok(html.includes('src="./plegadox-premium-selected.png"'), 'Se debe mostrar el boceto elegido, sin rediseñarlo');
  assert.ok(!html.includes('src="./splash-machine-assembly.svg"'), 'No sustituir el boceto por un SVG distinto');
- assert.ok(html.includes('setProgress(v)'));
- assert.ok(html.includes('setStatus(v)'));
+ assert.ok(html.includes('setProgress(value)'));
+ assert.ok(html.includes('setStatus(value)'));
  assert.match(html,/PlegadoXLoading/);
  assert.equal((html.match(/role="progressbar"/g)||[]).length,1);
 });
