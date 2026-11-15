@@ -15,6 +15,7 @@ import {flatBendLayout} from './flat-layout.js';
 import {suggestBendOrder} from './sequence-advisor.js';
 import {CYBELEC_OMEGA,cybelecReferencePreset,compareCybelecOmega} from './cybelec-reference.js';
 import {compareGaugeSides} from './gauge-side-review.js';
+import {suggestGaugeContact} from './gauge-contact-advisor.js';
 import {sectionPunch,sectionDie} from './tool-profiles.js';
 import {getV85,updateV85} from './machine-config.js';
 import {gaugePlacement} from './backgauge-placement.js';
@@ -301,6 +302,25 @@ function configure(){
   const node=$('gaugeSideReview');node.dataset.bend=String(result.bend);
   node.textContent='Golpe '+(result.operation+1)+' · '+rows.join(' · ')+'.'+recommendation+
    ' NO valida la joroba real de la pata de cabra, ni topes, mesa o volteos.';
+ };
+ $('findGaugeContact').onclick=()=>{
+  const review=suggestGaugeContact(piece,sim.time);
+  const best=review.best;
+  if(!best){
+   $('gaugeSideReview').textContent='Ninguna referencia sin avisos en las cuatro combinaciones 2D de bordes libres y topes. No se ha modificado la pieza. '+
+    review.options.map(o=>'Ala '+(o.segment+1)+'/Tope '+o.stop+': '+o.gaugeWarnings+' avisos').join(' · ')+
+    '. Revisa geometría, útiles, volteo y contacto real.';
+   return;
+  }
+  const stopByBend=[...piece.stopByBend],gaugeSegmentByBend=[...piece.gaugeSegmentByBend],
+   gaugePointByBend=[...piece.gaugePointByBend];
+  stopByBend[review.bend]=best.stop;
+  gaugeSegmentByBend[review.bend]=best.segment;
+  gaugePointByBend[review.bend]=null;
+  changePiece({...piece,stopByBend,gaugeSegmentByBend,gaugePointByBend},false);
+  $('gaugeSideReview').textContent='Propuesta 2D aplicada a P'+(review.bend+1)+
+   ': Ala '+(best.segment+1)+' / Tope '+best.stop+
+   '. Cero avisos en las muestras NO garantiza ausencia de colisiones físicas.';
  };
  $('applyIntegratedPlan').onclick=()=>applyIntegratedRecommendation(pendingIntegratedPlan?.plan);
  window.addEventListener('plegadox:machineChanged',()=>scheduleIntegratedAdvisor());
