@@ -1,6 +1,7 @@
 /** PlegadoX R48 · editor táctil/ratón por cotas de herramientas en mm. */
 import {buildCustomTool,customToolRecord} from './custom-tool-geometry.js';
 import {exportToolContourDxf,safeToolDxfName} from './tool-dxf-export.js';
+import {loadImportedTools} from './tool-dxf.js';
 const $=id=>document.getElementById(id);
 const formId='customToolForm';
 const defaults={
@@ -82,6 +83,53 @@ export function setupCustomToolBuilder({add}){
   'shape','shankWidth','shankHeight','tipRadius','neckDepth',
   'opening','shoulderRadius','offset'
  ];
+ function refreshSavedList(chosen=null){
+  const select=$('customToolSavedSelect');if(!select)return;
+  let tools=[];
+  try{tools=loadImportedTools(localStorage).filter(t=>t.customProfile===true);}
+  catch(error){
+   status.dataset.error='true';
+   status.textContent='No se pueden consultar las herramientas locales: '+error.message;
+  }
+  select.replaceChildren(new Option('Selecciona una herramienta guardada',''));
+  for(const tool of tools){
+   const label=(tool.opening!=null?'MATRIZ V'+tool.opening:'PUNZÓN')+
+    ' · '+tool.name+' · '+tool.height+' mm';
+   select.append(new Option(label,tool.id));
+  }
+  if(chosen&&tools.some(t=>t.id===chosen))select.value=chosen;
+ }
+ function loadSavedDimensions(id){
+  const saved=loadImportedTools(localStorage).find(t=>t.id===id&&t.customProfile);
+  if(!saved)throw Error('La referencia seleccionada ya no figura en la biblioteca local');
+  const m=saved.customDimensions??{};
+  const config={
+   kind:m.kind??(saved.opening!=null?'die':'punch'),
+   name:saved.name,mount:saved.mount||'Desconocido',
+   angle:saved.angle,height:saved.height,width:m.width,
+   length:saved.length,
+   shape:m.shape??'straight',
+   shankWidth:m.shankWidth,shankHeight:m.shankHeight,
+   tipRadius:saved.tip!=null?saved.tip/2:null,
+   neckDepth:m.neckDepth,opening:saved.opening,
+   shoulderRadius:saved.shoulderRadius??0,offset:m.vOffset??0
+  };
+  for(const [name,value] of Object.entries(config)){
+   const node=form.elements.namedItem(name);
+   if(node&&value!=null)node.value=String(value);
+  }
+  refresh();
+  if(!model)throw Error('Las cotas de esta herramienta no producen un contorno válido');
+  status.dataset.error='false';
+  status.textContent='Cotas recuperadas de '+saved.name+
+   '. Puedes modificarlas y guardar una NUEVA referencia, sin alterar piezas anteriores.';
+ }
+ $('customToolLoadSaved')?.addEventListener('click',()=>{
+  const id=$('customToolSavedSelect')?.value;
+  if(!id){status.textContent='Selecciona una herramienta personalizada de la biblioteca.';return;}
+  try{loadSavedDimensions(id);}
+  catch(error){status.dataset.error='true';status.textContent='Error al cargar cotas: '+error.message;}
+ });
  function updateSections(){
   const die=$('customToolKind').value==='die';
   const goose=!die&&$('customToolShape').value==='gooseneck';
@@ -145,6 +193,7 @@ export function setupCustomToolBuilder({add}){
   try{
    const tool=customToolRecord(model);
    add(tool,model.kind);
+   refreshSavedList(tool.id);
    status.dataset.error='false';
    status.textContent='✓ '+tool.name+
     ' guardado en la biblioteca y seleccionado. Sus cotas pueden revisarse y crearse de nuevo; no es CAD OEM ni validación de colisiones.';
@@ -154,5 +203,6 @@ export function setupCustomToolBuilder({add}){
   }
  });
  if('ResizeObserver' in window)new ResizeObserver(()=>{if(model)draw(canvas,model);}).observe(canvas);
+ refreshSavedList();
  refresh();
 }
