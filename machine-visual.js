@@ -5,7 +5,7 @@ import {roundedRectPath} from './canvas-path.js';
 import {sectionPunch,sectionDie} from './tool-profiles.js';
 import {drawTechnicalSection,technicalScene} from './technical-section.js';
 import {currentToolContact} from './tool-collision.js';
-import {getV85} from './machine-config.js';
+import {getActiveMachineConfig} from './machine-config.js';
 import {gaugePlacement,gaugeContourAtContact} from './backgauge-placement.js';
 import {sceneAtmosphere,dieDepth,ramDepth,sheetDepth,surfaceDetail,sectionOverlay} from './render-enhancements.js';
 
@@ -110,7 +110,7 @@ function rearMachine(ctx,w,h,cx,cy,scale,placement){
  // En el vídeo real el tope llega DESDE DETRÁS (derecha en perfil)
  // hacia el borde trasero de la chapa. Esta referencia se deriva del
  // borde presentado, no de una distancia fija inventada.
- const gauge=placement.profile==='support'?getV85().support:getV85().stop;
+ const gauge=placement.profile==='support'?getActiveMachineConfig().support:getActiveMachineConfig().stop;
  const origin=placement.contact?.origin||placement.point;
  const ox=cx+origin.x*scale,oy=cy-origin.y*scale;
  // La geometría del dedo y el punto de contacto están en el mismo
