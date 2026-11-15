@@ -1477,6 +1477,38 @@ function renderToolCards(){
  const dies=$('dieCards'),punches=$('punchCards');
  dies.replaceChildren(...DIES.map(d=>toolCard(d,'die')));
  punches.replaceChildren(...PUNCHES.map(p=>toolCard(p,'punch')));
+ const sources=$('toolCadSourceLinks');
+ if(!sources)return;
+ const chosen=[
+  {kind:'Punzón',tool:PUNCHES.find(t=>t.id===piece.punch)},
+  {kind:'Matriz',tool:DIES.find(t=>t.id===piece.die)}
+ ];
+ const nodes=chosen.map(({kind,tool})=>{
+  const row=document.createElement('div');row.className='px-cad-source-row';
+  const title=document.createElement('strong');
+  title.textContent=kind+' · '+(tool?.reference||tool?.name||'Sin herramienta');
+  row.append(title);
+  if(tool?.importedDxf){
+   const span=document.createElement('span');
+   span.textContent='Perfil DXF local importado · verificar amarre, escala y sentido.';
+   row.append(span);
+  }else if(/^https:\/\/[^\s]+$/i.test(String(tool?.cadSourceUrl||''))){
+   const a=document.createElement('a');
+   a.href=tool.cadSourceUrl;a.target='_blank';a.rel='noopener noreferrer';
+   a.textContent='Abrir ficha oficial para solicitar o descargar el DXF';
+   a.setAttribute('aria-label','Ficha DXF de '+kind.toLowerCase()+' '+(tool.reference||tool.name));
+   row.append(a);
+   const note=document.createElement('small');
+   note.textContent='Contorno usado: provisional. WILA puede exigir correo o acceso MyWILA para el DXF.';
+   row.append(note);
+  }else{
+   const span=document.createElement('span');
+   span.textContent='Sin DXF OEM verificado · usa «Importar contorno» para añadir uno.';
+   row.append(span);
+  }
+  return row;
+ });
+ sources.replaceChildren(...nodes);
 }
 /** Comparador de V ligado a la pieza: no recalcular filas cada fotograma. */
 function renderVComparison(){
