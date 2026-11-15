@@ -15,7 +15,7 @@ test('R86: la integración del botón se comprueba realmente en PC y iPhone',()=
  const smoke=read('tests/usb-direct-backup-browser-smoke.mjs');
  assert.match(wf,/tests\/usb-direct-backup-browser-smoke\.mjs/);
  assert.match(smoke,/serviceWorkers:'block'/);
- assert.match(smoke,/PLEGADOX/);
+ assert.match(smoke,/PlegadoX-PRUEBA-R86/);
  assert.match(smoke,/prueba-r86/);
  assert.match(smoke,/getAttribute\('data-state'\)/);
  assert.match(smoke,/isVisible\(\),false/);
