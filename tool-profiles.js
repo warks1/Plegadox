@@ -169,9 +169,17 @@ export function sectionDie(tool={}){
  const angle=Math.min(120,Math.max(20,Number(tool.angle)||88));
  const height=Math.max(25,Number(tool.height)||80);
  const halfOpen=opening/2;
- const depth=halfOpen/Math.tan(angle*Math.PI/360);
+ // En ciertas matrices de 30º el ángulo publicado corresponde a
+ // los FLANCOS de la garganta, no a una V triangular completa hasta
+ // la anchura de los hombros. Ej.: Bystronic V32/30 H55, D33,6.
+ // NO incrementar H de fábrica para hacer caber una V ideal ficticia.
+ const idealSharpVDepth=halfOpen/Math.tan(angle*Math.PI/360);
+ const referenceDepth=Number(tool.profileDepth);
+ const depthProvided=Number.isFinite(referenceDepth)&&referenceDepth>0;
+ const depth=depthProvided?referenceDepth:Math.min(idealSharpVDepth,height-7);
+ const insufficientGeometry=!depthProvided&&idealSharpVDepth>height-7+1e-6;
  const halfBody=Number(tool.outerWidth)>opening ? Number(tool.outerWidth)/2 : Math.max(opening*.98,halfOpen+9);
- const h=Math.max(height,depth+7);
+ const h=height;
  const specifiedRadius=Number(tool.shoulderRadius);
  const beta=angle*Math.PI/360;
  // Radios sólo cuando figuran en la ficha. El punto de intersección de
@@ -199,7 +207,13 @@ export function sectionDie(tool={}){
  }
  return {points,opening,angle,height:h,depth,shoulderRadius,
   roundedShoulders:shoulderRadius>0,
-  provisional:tool.profileAccuracy!=='verified'};
+  idealSharpVDepth,depthProvided,depthVerified:tool.profileDepthVerified===true,
+  nominalGeometryInsufficient:insufficientGeometry,
+  geometryNote:insufficientGeometry?
+   'V ideal profunda no cabe en H declarado; el croquis está TRUNCADO, cargar DXF fabricante':
+   depthProvided&&tool.profileDepthVerified!==true?
+   'Profundidad de otra herramienta comparable; verificar DXF de esta referencia':null,
+  provisional:true};
 }
 export function sectionBounds(points){
  return {
