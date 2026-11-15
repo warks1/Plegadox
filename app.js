@@ -1832,9 +1832,13 @@ function renderSimulationText(){
     'chapa contra cara frontal inferior STOP 1')+
    ' · '+(shownRef.side==='before'?'presentación invertida':'presentación directa')+
   (plan?.autoSelected?' · apoyo alternativo automático del motor':'')+
-  (freeEnd?' · borde libre':shownRef.manual&&!shownRef.atEnd?
-    ' · ⚠ punto interior: requiere un contacto físico accesible':
-    ' · ⚠ vértice interior: verificar apoyo')+
+  (freeEnd?' · borde libre':
+    currentGaugeScene.gaugeSetup?.valid===true&&
+    currentGaugeScene.gaugeSetup?.foldedWingContact===true?
+     ' · apoyo lateral de pestaña YA plegada · sección 2D provisional (CAD pendiente)':
+    shownRef.manual&&!shownRef.atEnd?
+     ' · ⚠ punto interior: requiere un contacto físico accesible':
+     ' · ⚠ vértice interior: verificar apoyo')+
   (freeEnd&&!chosenGauge.sheetInFront?
    ' · ⚠ CHAPA POR DETRÁS DEL TOPE: revisar presentación':'')+
   (chosenGauge.seat&&!chosenGauge.seat.seated?
