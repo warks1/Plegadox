@@ -41,6 +41,10 @@ export function normalized(input){
  // Elección de apoyo trasero por pliegue: 1 Stop o 2 Support.
  const stopByBend=Array.from({length:n},(_,i)=>String(input?.stopByBend?.[i])==='2'?2:1);
  const gaugeSideByBend=Array.from({length:n},(_,i)=>['before','after'].includes(input?.gaugeSideByBend?.[i])?input.gaugeSideByBend[i]:'auto');
+ const gaugeSegmentByBend=Array.from({length:n},(_,i)=>{
+  const v=input?.gaugeSegmentByBend?.[i];
+  return Number.isInteger(v)&&v>=0&&v<f.length?v:null;
+ });
  // Cota manual desde la línea del pliegue hasta el punto de referencia de tope.
  // Null conserva el borde del ala. No convierte un contacto interior en seguro.
  const gaugePointByBend=Array.from({length:n},(_,i)=>{
@@ -60,7 +64,7 @@ export function normalized(input){
   const v=Number(raw);
   return Number.isFinite(v)&&v>=0&&v<=1000?v:null;
  });
- return {name:String(input?.name||'Nueva pieza').slice(0,80),material:id,thickness:clamp(finite(input?.thickness,2),0.2,30),width:clamp(finite(input?.width,500),1,10000),die:DIES.some(d=>d.id===input?.die)?input.die:'v16',punch:PUNCHES.some(p=>p.id===input?.punch)?input.punch:'straight88',punchOrientation:input?.punchOrientation==='reversed'?'reversed':'normal',flanges:f,angles:a,order,stopByBend,gaugeSideByBend,gaugePointByBend,bendDeductionByBend,kFactor:input?.kFactor==null?null:clamp(finite(input.kFactor,.36),.15,.6),radius:input?.radius==null?null:clamp(finite(input.radius,2),.1,100),rmMPa:input?.rmMPa==null||input.rmMPa===''?null:clamp(finite(input.rmMPa,450),50,1800),datum:input?.datum==='neutral'?'neutral':'outside'};
+ return {name:String(input?.name||'Nueva pieza').slice(0,80),material:id,thickness:clamp(finite(input?.thickness,2),0.2,30),width:clamp(finite(input?.width,500),1,10000),die:DIES.some(d=>d.id===input?.die)?input.die:'v16',punch:PUNCHES.some(p=>p.id===input?.punch)?input.punch:'straight88',punchOrientation:input?.punchOrientation==='reversed'?'reversed':'normal',flanges:f,angles:a,order,stopByBend,gaugeSideByBend,gaugeSegmentByBend,gaugePointByBend,bendDeductionByBend,kFactor:input?.kFactor==null?null:clamp(finite(input.kFactor,.36),.15,.6),radius:input?.radius==null?null:clamp(finite(input.radius,2),.1,100),rmMPa:input?.rmMPa==null||input.rmMPa===''?null:clamp(finite(input.rmMPa,450),50,1800),datum:input?.datum==='neutral'?'neutral':'outside'};
 }
 /** Todos los pliegues parten de una chapa recta. +90 y -90 giran en sentidos contrarios. */
 export function profile(piece,fractions=[]){
@@ -174,20 +178,25 @@ export function gaugeReference(piece,bend){
  const shorter=p.flanges[b]<=p.flanges[b+1]?'before':'after';
  const side=choice!=='auto'?choice:
    beforeFree!==afterFree?(beforeFree?'before':'after'):shorter;
- const totalLength=p.flanges[b+(side==='after'?1:0)];
+ const segmentManual=p.gaugeSegmentByBend[b]!==null;
+ const segmentIndex=segmentManual?p.gaugeSegmentByBend[b]:b+(side==='after'?1:0);
+ const actualSide=segmentIndex<=b?'before':'after';
+ const sourceIndex=actualSide==='before'?segmentIndex:segmentIndex+1;
+ const pivotIndex=actualSide==='before'?segmentIndex+1:segmentIndex;
+ const totalLength=p.flanges[segmentIndex];
  const manual=p.gaugePointByBend[b]!==null;
  const distance=manual?Math.min(totalLength,p.gaugePointByBend[b]):totalLength;
- const sourceIndex=side==='before'?b:b+2;
  const atEnd=Math.abs(totalLength-distance)<1e-6;
- return {bend:b,choice,side,distance,totalLength,manual,atEnd,
+ return {bend:b,choice,side:actualSide,distance,totalLength,manual,atEnd,
   fraction:totalLength>0?distance/totalLength:1,
-  segmentIndex:side==='before'?b:b+1,sourceIndex,
+  segmentIndex,pivotIndex,sourceIndex,segmentManual,
   freeEdge:atEnd&&(sourceIndex===0||sourceIndex===p.flanges.length),
-  label:side==='before'?'Ala anterior':'Ala siguiente',verified:false};
+  label:segmentManual?'Ala '+(segmentIndex+1)+' elegida':
+   actualSide==='before'?'Ala anterior':'Ala siguiente',verified:false};
 }
 /** Punto de apoyo propuesto sobre el tramo, en coordenadas del perfil actual. */
 export function gaugePointOnProfile(points,reference){
- const pivot=points?.[reference?.bend+1];
+ const pivot=points?.[reference?.pivotIndex??(reference?.bend+1)];
  const end=points?.[reference?.sourceIndex];
  if(!pivot||!end)return null;
  const t=clamp(Number(reference.fraction)||0,0,1);
