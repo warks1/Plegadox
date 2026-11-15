@@ -19,7 +19,7 @@ import {suggestGaugeContact} from './gauge-contact-advisor.js';
 import {resolveGaugeSetup} from './gauge-contact-solver.js';
 import {migrateLegacyOmegaGauge} from './sample-gauge-migration.js';
 import {sectionPunch,sectionDie} from './tool-profiles.js';
-import {getActiveMachineConfig} from './machine-config.js';
+import {getActiveMachineConfig,updateV85} from './machine-config.js';
 import {gaugePlacement} from './backgauge-placement.js';
 import {technicalScene} from './technical-section.js';
 import {recommendTooling} from './tooling-advisor.js';
