@@ -22,6 +22,7 @@ import {sectionPunch,sectionDie} from './tool-profiles.js';
 import {getActiveMachineConfig,updateV85} from './machine-config.js';
 import {gaugePlacement} from './backgauge-placement.js';
 import {gaugeReviewTargetTime} from './gauge-sequence-review.js';
+import {buildGaugeMotionDiagnostic} from './gauge-motion-diagnostic.js';
 import {technicalScene} from './technical-section.js';
 import {recommendTooling} from './tooling-advisor.js';
 import {optimizeBendPlan,applyBendPlan} from './integrated-bend-planner.js';
@@ -507,6 +508,20 @@ function configure(){
  };
  $('exportAuditBtn').onclick=()=>downloadProjectJson(
   auditForWorkshop(piece),projectSafeName()+'-INFORME-NO-VALIDADO.json');
+ $('exportGaugeMotionBtn').onclick=()=>{
+  const build=document.querySelector('meta[name="plegadox-build"]')?.content||
+   'compilacion-no-indicada';
+  try{
+   downloadProjectJson(buildGaugeMotionDiagnostic(piece,{build}),
+    projectSafeName()+'-DIAGNOSTICO-TOPES-2D.json');
+   const status=$('gaugeMotionExportStatus');
+   if(status)status.textContent='Diagnóstico descargado: referencias manuales, 15 poses por golpe, contacto, color y trayectoria X/R ilustrativa. No es un programa CNC.';
+  }catch(err){
+   const status=$('gaugeMotionExportStatus');
+   if(status)status.textContent='No se pudo exportar el diagnóstico: '+
+    (err instanceof Error?err.message:String(err));
+  }
+ };
  const makeCompleteBackup=()=>buildProjectBackup({
   piece,machine:getActiveMachineConfig(),
   tools:readStoredToolsForBackup(localStorage),
