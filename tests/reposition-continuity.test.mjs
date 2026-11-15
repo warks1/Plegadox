@@ -83,16 +83,19 @@ test('el origen X/R nunca sigue la chapa; replegar sólo si el barrido predice i
   }
   const planned=start.gaugePlan.enabled;
   if(planned){
-   const middle=trajectory.filter(x=>x.raw>=.3&&x.raw<=.7);
-   const parkedX=middle[0].point.x;
-   assert.ok(middle.every(x=>Math.abs(x.point.x-parkedX)<1e-6),
-    'Dedo deriva durante cambio de cara sin demanda de X');
-   assert.ok(parkedX>=Math.max(origin.x,middle[0].to.x)+12-1e-6,
-    'Aparcamiento insuficiente respecto al siguiente punto de tope');
-   const outgoing=trajectory.filter(x=>x.raw<=.22).map(x=>x.point.x);
-   const returning=trajectory.filter(x=>x.raw>=.78).map(x=>x.point.x);
-   assert.ok(outgoing.every((x,i)=>i===0||x>=outgoing[i-1]-1e-6));
-   assert.ok(returning.every((x,i)=>i===0||x<=returning[i-1]+1e-6));
+   // En .44-.84 el dedo estaba aparcado; dentro de este intervalo
+   // .84-.99 ya está VOLVIENDO a la nueva cota y sí debe moverse.
+   const park=trajectory[0].parkPoint,to=trajectory[0].to;
+   assert.ok(park.x>=Math.max(origin.x,to.x)+12-1e-6,
+    'Aparcamiento insuficiente respecto a los extremos de referencia');
+   assert.ok(Math.abs(trajectory[0].point.x-park.x)<1e-6,
+    'El dedo debe empezar la reubicación desde el aparcamiento');
+   const returning=trajectory.map(x=>x.point.x);
+   assert.ok(returning.every((x,i)=>i===0||x<=returning[i-1]+1e-6),
+    'La reubicación al nuevo apoyo no puede rebotar ni volver a aparcarse');
+   assert.ok(Math.abs(returning.at(-1)-to.x)<.01,
+    'El dedo llega a la referencia siguiente sin teletransporte');
+   assert.ok(trajectory.every(x=>x.phase==='regreso-a-siguiente-referencia'));
   }else{
    // La nueva cota puede estar a la izquierda o a la derecha: no
    // confundir reposicionamiento directo con retirada anticolisión.
