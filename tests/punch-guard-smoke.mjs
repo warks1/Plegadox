@@ -39,7 +39,14 @@ try{
   assert.equal(info.sim.blocked.kind,'punch');
   assert.deepEqual(info.piece.order,[0,1,3,2]);
   assert.deepEqual(info.piece.angles,[90,-90,-90,90]);
-  assert.equal(info.piece.gaugeSideByBend[3],'after');
+  assert.equal(info.piece.gaugeSideByBend[3],'auto',
+   'El golpe P4 utiliza asesor automático salvo selección manual');
+  const autoSide=await page.evaluate(async()=>{
+   const {gaugeReference}=await import('/engine.js');
+   return gaugeReference(window.PLEGADOX_STATE().piece,3).side;
+  });
+  assert.equal(autoSide,'after',
+   'La propuesta automática de P4 debe presentarse por el extremo libre');
   assert.match(await page.locator('#simStatus').textContent(),/DETENIDO/);
   assert.match(await page.locator('#collisionDetails').textContent(),/Reproducción detenida ANTES/);
   await page.locator('#timeline').evaluate(input=>{
