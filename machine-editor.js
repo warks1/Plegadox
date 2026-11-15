@@ -342,7 +342,16 @@ if($('machineRamFields')){
   $('machineSaveState').textContent='Restauradas las cotas de las fotografías Cybelec.';
  });
  $('machineExport')?.addEventListener('click',exportConfig);
- window.addEventListener('plegadox:machineChanged',()=>{render();window.PLEGADOX_REDRAW?.();});
+ window.addEventListener('plegadox:machineChanged',()=>{
+  // updateV85() envía este evento SÍNCRONAMENTE desde la edición de
+  // un input. Reconstruir los campos aquí sustituía el nodo enfocado
+  // antes de terminar el change: pérdida de foco, cursor y valor.
+  const focused=document.activeElement;
+  const activeEditor=focused?.matches?.('.machine-number-field input[data-path]')&&
+   !!focused.closest('#trumpfMachineFields');
+  render(!activeEditor);
+  window.PLEGADOX_REDRAW?.();
+ });
  if('ResizeObserver' in window){
   const obs=new ResizeObserver(redraw);
   for(const id of ['machineRamProfile','machineBedProfile','machineStopProfile','machineSupportProfile']){
