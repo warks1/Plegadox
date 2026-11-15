@@ -1199,3 +1199,5 @@ La pantalla inicial **TITANIUM** incluye animación SVG de chapa plegándose ent
 - La posición del punto sobre la pieza, el análisis de espesor y el control de penetración del dedo usan ahora esa cara frontal de parada.
 - El apoyo para sostener el peso de la chapa sobre una repisa es una función distinta de detener su canto y requiere una decisión de montaje y una simulación verificadas; no se asume por defecto.
 - Sigue siendo geometría provisional 2D: **no se certifica un plegado seguro en la V85 sin CAD completos y datos de ejes reales**.
+
+Revisión publicada en código: `PLEGADOX-20261115-R40` / `0.9.16` (caché independiente). Se añade `tests/gauge-front-contact.test.mjs` para comprobaciones de contacto frontal.
