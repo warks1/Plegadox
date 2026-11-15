@@ -41,6 +41,7 @@ const APP_FILES=[
  "./machine-mounting.js",
  "./machine-config.js",
  "./machine-selection.js",
+ "./gauge-motion-diagnostic.js",
  "./gauge-retract-motion.js",
  "./machine-editor.js",
  "./machine-cad.js",
