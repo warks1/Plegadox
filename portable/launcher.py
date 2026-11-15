@@ -106,10 +106,13 @@ def handler_for(directory: pathlib.Path, token: str, backup_dir: pathlib.Path):
                     prefix=".plegadox-", suffix=".tmp", delete=False
                 ) as handle:
                     temporary = pathlib.Path(handle.name)
-                    json.dump(payload, handle, ensure_ascii=False, indent=2)
-                    handle.write("\n")
+                    # Copia compacta para que el tamaño guardado coincida
+                    # con el límite de restauración en otros PC.
+                    json.dump(payload, handle, ensure_ascii=False, separators=(",", ":"))
                     handle.flush()
                     os.fsync(handle.fileno())
+                if temporary.stat().st_size > MAX_BACKUP_BYTES:
+                    return self._json(413, {"error": "La copia excede 4 MB una vez escrita"})
                 os.replace(temporary, backup_dir / filename)
             except OSError:
                 return self._json(507, {"error": "No se pudo escribir el USB. Comprueba que tiene espacio y permisos"})

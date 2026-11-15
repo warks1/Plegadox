@@ -95,6 +95,7 @@ jobs:
             " ;;
             datos) scripts="
               tests/workshop-backup-browser-smoke.mjs
+              tests/usb-direct-backup-browser-smoke.mjs
               tests/project-library-browser-smoke.mjs
               tests/workshop-calibration-browser-smoke.mjs
               tests/tool-dxf-browser-smoke.mjs
