@@ -6,7 +6,7 @@
  * es un perfil de fibra media con espesor nominal; el contacto es orientativo.
  * No usar esta vista para verificar colisiones o seguridad de máquina.
  */
-import {normalized,stage,presentedAtStage,presentedForMachine,gaugeReference,getTooling,development,clamp} from './engine.js';
+import {normalized,stage,presentedAtStage,presentedForMachine,gaugeReference,gaugePointOnProfile,getTooling,development,clamp} from './engine.js';
 import {sectionPunch,sectionDie,sectionBounds} from './tool-profiles.js';
 import {contactKinematics,roundedCorner} from './bend-contact.js';
 import {gaugePlacement,gaugeContourAtContact} from './backgauge-placement.js';
@@ -101,7 +101,7 @@ export function technicalScene(piece,instant=0){
  // anterior ANTES de retirar la chapa. El factor visual spin es
  // sólo para dibujar el giro de la CHAPA: nunca debe mover los ejes
  // X/R del TOPE ni cambiar su origen durante el mismo traslado.
- const fixedGaugePoint=setup.points[reference.sourceIndex];
+ const fixedGaugePoint=gaugePointOnProfile(setup.points,reference);
  const gaugeAnchor={
   x:(feedMirror?-1:1)*fixedGaugePoint.x,
   y:fixedGaugePoint.y+p.thickness/2
@@ -114,7 +114,7 @@ export function technicalScene(piece,instant=0){
   const nextReference=gaugeReference(p,nextBend);
   const nextFractions=[...st.fractions];nextFractions[nextBend]=0;
   const nextSetup=presentedForMachine(p,nextFractions,nextBend);
-  const nextPoint=nextSetup.points[nextReference.sourceIndex];
+  const nextPoint=gaugePointOnProfile(nextSetup.points,nextReference);
   const target={x:(nextReference.side==='before'?-1:1)*nextPoint.x,
    y:nextPoint.y+p.thickness/2};
   const sub=(st.time/5)%1,raw=Math.max(0,Math.min(1,(sub-.84)/.16));
