@@ -1463,3 +1463,14 @@ Build `PLEGADOX-20261115-R60`, versión `0.9.36`, caché `plegadox-static-0.9.36
 - Pruebas añadidas: `tests/project-backup-custom-tools.test.mjs` y `tests/tool-dxf-export.test.mjs`. Además, `tests/custom-tool-export-browser-smoke.mjs` verifica la descarga/guardado en PC y móvil a través del grupo de pruebas visuales «datos».
 
 Versionado: `PLEGADOX-20261115-R61`, `0.9.37`, caché `plegadox-static-0.9.37-custom-backup-dxf-r61`. La salida DXF no elimina ningún parámetro de la pieza ni modifica la secuencia manual.
+
+## R62 · Reabrir y modificar las cotas de herramientas ya guardadas (15-11-2026)
+
+- En **Herramientas → Crear punzón o matriz introduciendo sus cotas** aparece un selector de herramientas personalizadas almacenadas. El botón **Cargar sus cotas para editar** recupera su forma, altura, longitud, ancho, ángulo, amarre declarado, radio, vástago, cuello y abertura/descentrado V, según el tipo de útil.
+- El formulario recalcula y vuelve a visualizar el perfil. Se puede descargar un nuevo DXF ASCII 2D en milímetros desde la pantalla y guardar los cambios.
+- **No modifica el ID ni el contorno de la herramienta original:** guardar una versión editada crea otro registro con nueva ID. Así no se alteran silenciosamente las piezas existentes que utilizan la referencia anterior.
+- La lista de útiles guardados se renueva después de crear cada referencia. El panel utiliza una disposición de tres columnas en PC y una sola en móvil.
+- La prueba `tests/custom-tool-export-browser-smoke.mjs` comprueba en escritorio/iPhone: crear matriz V16, exportar/importar DXF, guardar, volver a cargar cotas, cambiar la anchura, crear una segunda referencia y verificar que la primera sigue intacta.
+- Build `PLEGADOX-20261115-R62`, versión `0.9.38`, caché `plegadox-static-0.9.38-tool-revisions-r62`.
+
+**Advertencia:** los dibujos por cotas siguen siendo perfiles 2D paramétricos, sin certificación de radios/amarres/volumetría; no garantizan que un útil diseñado se pueda montar ni que su uso quede libre de colisiones.
