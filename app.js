@@ -1744,9 +1744,15 @@ function renderSimulationText(){
    ': elige el ala de apoyo o compara ambos lados. Colisiones reales no verificadas.';
  }
  const ref=gauge.reference;
+ // Los controles muestran la elección que hizo el operario; el rótulo
+ // técnico debe mostrar la referencia que el SOLVER usa realmente.
+ // El automático puede saltar a otro extremo libre sin guardar
+ // una decisión manual que el operario nunca tomó.
+ const currentGaugeScene=technicalScene(piece,sim.time);
+ const shownRef=currentGaugeScene.gaugeReference||ref;
  $('chooseSideBefore').textContent='← Ala anterior · '+numbers(piece.flanges[gauge.bend],1)+' mm';
  $('chooseSideAfter').textContent='Ala siguiente · '+numbers(piece.flanges[gauge.bend+1],1)+' mm →';
- const freeEnd=ref.freeEdge;
+ const freeEnd=shownRef.freeEdge;
  const segmentSelect=$('activeGaugeSegment');
  if(segmentSelect.options.length!==piece.flanges.length+1){
   const make=(value,label)=>{const option=document.createElement('option');option.value=value;option.textContent=label;return option;};
@@ -1762,7 +1768,6 @@ function renderSimulationText(){
  contactInput.max=String(ref.totalLength);
  $('activeGaugeDistanceHelp').textContent='Máximo '+numbers(ref.totalLength,1)+
   ' mm desde el pliegue · vacío = extremo del ala';
- const currentGaugeScene=technicalScene(piece,sim.time);
  const chosenGauge=gaugePlacement(currentGaugeScene,gauge.value);
  // La retirada previa es una decisión por golpe basada en secciones 2D;
  // NO equivale al traslado X/R del dedo al siguiente pliegue.
@@ -1776,12 +1781,13 @@ function renderSimulationText(){
   'retirar':' · retirada previa: SÍ, recomendación por interferencia 2D',
   'mantener':' · retirada previa: NO prevista según sección 2D'
  }[retractState];
- $('activeGaugeReference').textContent=ref.label+' · '+numbers(ref.distance,1)+
+ $('activeGaugeReference').textContent=shownRef.label+' · '+numbers(shownRef.distance,1)+
   ' mm sobre el ala elegida · '+(gauge.value===2?
     'chapa sobre primer escalón SUPPORT 2, contra su cara frontal':
     'chapa contra cara frontal inferior STOP 1')+
-   ' · '+(ref.side==='before'?'presentación invertida':'presentación directa')+
-  (freeEnd?' · borde libre':ref.manual&&!ref.atEnd?
+   ' · '+(shownRef.side==='before'?'presentación invertida':'presentación directa')+
+  (plan?.autoSelected?' · apoyo alternativo automático del motor':'')+
+  (freeEnd?' · borde libre':shownRef.manual&&!shownRef.atEnd?
     ' · ⚠ punto interior: requiere un contacto físico accesible':
     ' · ⚠ vértice interior: verificar apoyo')+
   (freeEnd&&!chosenGauge.sheetInFront?

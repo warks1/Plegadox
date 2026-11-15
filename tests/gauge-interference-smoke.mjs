@@ -34,7 +34,10 @@ try{
      const label=document.querySelector('#activeGaugeReference');
      return {issue:place.gaugeInterference.warning,
       retraction:label.dataset.retraction,plan:st.gaugePlan,
-      statusText:label.textContent,green:place.alignedToSheet,
+      statusText:label.textContent,
+      refShown:label.textContent.includes(st.gaugeReference.label),
+      alternative:label.textContent.includes('apoyo alternativo automático del motor'),
+      green:place.alignedToSheet,
       warningShown:label.textContent.includes('POSIBLE INTERFERENCIA 2D'),
       dataset:label.dataset.interference,
       stop:place.stopNumber,phase:st.stage.phase,
@@ -46,6 +49,10 @@ try{
      check.plan.enabled?'retirar':'mantener';
     assert.equal(check.retraction,expected,
      'El aviso debe coincidir con la decisión real del motor 2D');
+    assert.equal(check.refShown,true,
+     'La UI debe mostrar el extremo físico que RESOLVIÓ el motor, no el inicial');
+    assert.equal(check.alternative,check.plan.autoSelected===true,
+     'La alternativa automática debe distinguirse de una elección manual');
     assert.match(check.statusText,expected==='corregir-apoyo'?
      /RETIRADA NO AUTORIZADA/:expected==='sin-datos'?
      /RETIRADA SIN EVALUAR/:expected==='retirar'?
