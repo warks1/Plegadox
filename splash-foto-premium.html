@@ -46,6 +46,33 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#060c16;col
 .px-photo-missing #pressMotion{opacity:1;left:8%;width:84%;top:25%;height:48%;mix-blend-mode:normal}
 @media (prefers-reduced-motion:reduce){#pressMotion{display:none}}
 
+
+/* R47: única fotografía seleccionada, sin doble chapa, barras ni
+   superposiciones desalineadas. El fondo rellena todas las pantallas,
+   pero la imagen frontal se conserva íntegra y sin estirar. */
+#screen{width:100vw;height:100vh;height:100dvh}
+#frame{width:100vw!important;height:100vh!important;height:100dvh!important;
+ aspect-ratio:auto!important;max-width:none!important;max-height:none!important;
+ margin:0!important;box-shadow:none!important}
+#photo{object-fit:contain;width:100%;height:100%}
+#pressMotion{display:none!important}
+.px-photo-missing #pressMotion{display:block!important;
+ left:8%;width:84%;top:25%;height:48%;mix-blend-mode:normal}
+#progress{position:absolute!important;left:0;top:0;right:auto!important;
+ bottom:auto!important;width:0;height:0;min-height:0;max-height:none;
+ border-radius:100px;display:flex;align-items:center;gap:1.5%;padding:0 .3%;
+ border:0;box-shadow:0 0 4px #0009}
+#rail{min-width:0;height:67%}
+#message{position:absolute!important;left:0;top:0;bottom:auto!important;
+ right:auto!important;width:auto;max-width:none;text-align:left;white-space:nowrap}
+#percent{min-width:9%;font-size:clamp(9px,1.5vw,27px)}
+@media(orientation:portrait){#frame{margin-top:0!important}
+ #progress{position:absolute!important;top:0;bottom:auto!important;
+   height:0;width:0;padding:0 .3%;border:0}
+ #message{position:absolute!important;top:0;bottom:auto!important;
+   text-align:left;font-size:clamp(9px,2.2vw,15px)}
+ #rail{height:67%}}
+@media(max-height:420px){#progress{height:0}#message{max-width:none}}
 </style>
 </head><body>
 <main id="screen" role="status" aria-label="PlegadoX Premium, pantalla original elegida">
@@ -94,6 +121,28 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#060c16;col
 (()=>{
 'use strict';
 const photo=document.getElementById('photo');
+const frame=document.getElementById('frame');
+const originalWidth=1672,originalHeight=941;
+// Calcular dónde se dibuja realmente la imagen con object-fit:contain.
+// Esto evita que el progreso se duplique o flote en otra zona en móvil.
+function alignToOriginal(){
+ const w=frame.clientWidth,h=frame.clientHeight;
+ const scale=Math.min(w/originalWidth,h/originalHeight);
+ const shownW=originalWidth*scale,shownH=originalHeight*scale;
+ const left=(w-shownW)/2,top=(h-shownH)/2;
+ const put=(el,x,y,rw,rh)=>{
+  el.style.left=(left+x*shownW)+'px';
+  el.style.top=(top+y*shownH)+'px';
+  el.style.width=(rw*shownW)+'px';
+  el.style.height=(rh*shownH)+'px';
+ };
+ put(document.getElementById('progress'),.1076,.814,.7812,.072);
+ put(document.getElementById('message'),.113,.7775,.75,.05);
+}
+window.addEventListener('resize',alignToOriginal,{passive:true});
+window.addEventListener('orientationchange',alignToOriginal,{passive:true});
+if('ResizeObserver' in window)new ResizeObserver(alignToOriginal).observe(frame);
+alignToOriginal();
 // Nunca sustituir el boceto elegido por la pantalla TITANIUM antigua:
 // si falta su fotografía, permanecer en este mismo diseño con chapa SVG.
 photo.onerror=()=>{document.documentElement.classList.add('px-photo-missing');};
