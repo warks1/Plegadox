@@ -105,14 +105,17 @@ export function gaugePlacement(scene,stopNumber=1){
   const contour=gaugeContourAtContact(placement,dimensions);
   const result=inspectGaugeProfile(scene?.sheetDisplay||scene?.sheet,contour,
    thickness,placement.point);
-  if(getActiveMachineConfig().gaugeGeometryDocumented===false)
-   return {...placement,alignedToSheet:false,contactEngaged:false,
-    geometryUnavailable:true,gaugeInterference:result,
-    state:'⚠ TOPE SIN PERFIL CAD BYSTRONIC: croquis provisional; verificar dedo, R/X/Z y amarre',verified:false};
+  // Sin CAD no es igual a colisión. Antes se marcaba TODO el tope
+  // Bystronic como incorrecto aunque la sección 2D mostrase apoyo
+  // frontal. Separar el estado geométrico del nivel de verificación.
+  const unverified=getActiveMachineConfig().gaugeGeometryDocumented===false;
   if(!result.warning)return {...placement,gaugeInterference:result,
-   verified:false};
+   geometryUnavailable:unverified,verified:false,
+   state:unverified&&placement.alignedToSheet?
+    'Contacto frontal 2D provisional · falta verificar CAD de dedo y ejes X/R':
+    placement.state};
   return {...placement,alignedToSheet:false,contactEngaged:false,
-   gaugeInterference:result,
+   geometryUnavailable:unverified,gaugeInterference:result,
    state:(placement.state||'Apoyo sin verificar')+
     ' · ⚠ Posible '+(result.kind==='penetracion'?'penetración':'falta de holgura')+
     ' 2D de chapa con el dedo '+selected+'; revisar apoyo y retirada del tope',
