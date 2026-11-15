@@ -213,9 +213,10 @@ function render(refreshFields=true){
  redraw();
 }
 function renderBystronicDetails(host,profile){
- const isOwner=profile.id==='bystronic-2006-100-3100';
+ const isOwner=['bystronic-2006-100-3100','bystronic-xpert-pro-100-3100'].includes(profile.id);
+ const isXpert=profile.id==='bystronic-xpert-pro-100-3100';
  let fit=null,fitError=null;
- if(isOwner)try{fit=readBystronicFit();}catch(error){fitError=error.message;}
+ if(isOwner)try{fit=readBystronicFit(undefined,profile.id);}catch(error){fitError=error.message;}
  const text=(node,value)=>{node.textContent=value;return node;};
  const h=document.createElement('h2');text(h,profile.title);
  const p=document.createElement('p');p.className='hint';text(p,profile.provenience);
@@ -224,7 +225,8 @@ function renderBystronicDetails(host,profile){
   ['Entre montantes',profile.betweenUprights==null?'Sin confirmar':profile.betweenUprights+' mm'],
   ['Escote',profile.throat==null?'Sin confirmar':profile.throat+' mm'],
   ['Luz libre entre trancha y mesa',isOwner?
-    (fit?.daylightMeasured!=null?fit.daylightMeasured+' mm · medida declarada':'Sin medir · no aplicar rango PR/Xpert'):
+    (fit?.daylightMeasured!=null?fit.daylightMeasured+' mm · medida declarada':
+     (isXpert?'640 mm · ficha fabricante del modelo (no medida en unidad)':'Sin medir · no aplicar rango PR/Xpert')):
     (profile.openHeight==null?'Sin confirmar':profile.openHeight+' mm')],
   ['Carrera de la trancha',profile.stroke==null?'Sin confirmar':profile.stroke+' mm'],
   ['Altura de mesa',profile.tableHeight==null?'Sin confirmar':profile.tableHeight+' mm'],
@@ -243,7 +245,7 @@ function renderBystronicDetails(host,profile){
    ['Mesa inferior','Con bombeo hidráulico · confirmado por propietario'],
    ['Base/regleta inferior','Adaptadora de matrices PROMECAM · confirmado por propietario'],
    ['Altura regleta adaptadora',fit?.lowerAdapterHeight==null?'Sin medir':fit.lowerAdapterHeight+' mm · medida declarada'],
-   ['Rango de luz citado (PR/Xpert)','400–515 mm · sólo orientación para otros modelos, no atribuido a esta unidad']
+   ['Referencia de apertura',isXpert?'Xpert Pro 100 estándar: 640 mm · ficha fabricante, pendiente identificar la unidad':'400–515 mm citados para otros PR/Xpert · NO atribuidos a esta AFM EP']
   ]:[]),
   ['Contornos CAD de la trancha/mesa', 'NO disponibles · requiere plano y cotas de su unidad'],
   ['Geometría de dedos y ejes', 'Croquis SOLO visual · sin recorrido X/R/Z certificado']];
@@ -251,7 +253,11 @@ function renderBystronicDetails(host,profile){
   const name=document.createElement('span'),value=document.createElement('strong');
   text(name,k);text(value,v);row.append(name,value);table.append(row);}
  const warning=document.createElement('p');warning.className='warn';
- warning.textContent='PRECAUCIÓN: el modelo AFM EP 31-100 se ha identificado por semejanza fotográfica; las medidas publicadas de unidades de esta familia NO acreditan las cotas exactas de tu máquina. No utilizar los valores de PR100 ni certificar colisiones sin placa, planos, CAD, fijaciones y calibración X/R/Z.';
+ warning.textContent=profile.id==='bystronic-2006-100-3100'?
+  'PRECAUCIÓN: identificación AFM EP provisional por foto; la fecha 2006 NO concuerda con el lanzamiento Xpert Pro en 2018. No se trasladan cotas PR100 ni Xpert Pro sin placa y CAD reales.':
+  isXpert?
+  'PRECAUCIÓN: la Xpert Pro se presentó en 2018, por lo que esta ficha oficial NO puede asignarse como máquina fabricada en 2006. Verificar placa, variante estándar/Extended, cabezales WILA, regleta Promecam y recorridos CNC antes de validar colisiones.':
+  'PRECAUCIÓN: ficha de otra unidad/modelo. Sin geometría CAD acotada de la máquina y sus montajes no hay veredicto seguro de colisiones.';
 
  const children=[h,p,table,warning];
  if(isOwner){
@@ -276,9 +282,9 @@ function renderBystronicDetails(host,profile){
    const help=document.createElement('small');text(help,hint);
    input.addEventListener('change',()=>{
     try{
-     const current=readBystronicFit();
+     const current=readBystronicFit(undefined,profile.id);
      current[field]=input.value.trim()===''?null:input.value.trim().replace(',','.');
-     writeBystronicFit(current);
+     writeBystronicFit(current,undefined,profile.id);
      window.dispatchEvent(new CustomEvent('plegadox:machineChanged',{
       detail:{selectedMachine:profile.id,mountingMeasurementsUpdated:true}
      }));
