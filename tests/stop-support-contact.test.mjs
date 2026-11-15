@@ -71,28 +71,31 @@ test('Golpe 3: elección de ala opuesta conserva 50 mm y Stop/Support respetan s
  assert.equal(s2.contact.kind,'support-step');
  assert.deepEqual(s1.point,s2.point);
 });
-test('el modo automático descarta vértices interiores y el manual los señaliza como inválidos',()=>{
+test('automático descarta vértices y manual puede apoyar en pestaña YA plegada',()=>{
  const auto=technicalScene(normalized(EXAMPLE),5.2);
  assert.ok(auto.gaugeSetup.candidates.length>=1);
  if(auto.gaugeSetup.valid){
   assert.equal(auto.gaugeReference.freeEdge,true);
   assert.equal(auto.gaugeSetup.ref.freeEdge,true);
  }
- // Si el operador fuerza el ala interior, conservar esa decisión en
- // pantalla pero NO declarar contacto seguro ni moverlo a otra ala.
+ // Si el operario elige la cara de una pestaña YA plegada, conservar
+ // la referencia sin inventar un extremo libre o cambiar al modo auto.
  const manual=normalized({...EXAMPLE,
   gaugeSideByBend:['auto','before','auto','auto'],
   gaugeSegmentByBend:[null,1,null,null]});
  const scene=technicalScene(manual,5.2);
  assert.equal(scene.gaugeSetup.manual,true);
- assert.equal(scene.gaugeSetup.valid,false);
- for(const n of [1,2]){
-  const place=gaugePlacement(scene,n);
-  assert.equal(place.freeEdge,false);
-  assert.equal(place.alignedToSheet,false);
-  assert.equal(place.verified,false);
-  assert.equal(place.contact.verified,false);
- }
+ assert.equal(scene.gaugeSetup.valid,true);
+ assert.equal(scene.gaugeSetup.foldedWingContact,true);
+ assert.equal(scene.gaugeSetup.interference.warning,false);
+ const stop=gaugePlacement(scene,1),support=gaugePlacement(scene,2);
+ assert.equal(stop.freeEdge,false);
+ assert.equal(stop.foldedWingContact,true);
+ assert.equal(stop.verified,false,'Un apoyo 2D no certifica geometría OEM');
+ assert.equal(stop.contact.verified,false);
+ assert.equal(support.foldedWingContact,false,
+  'La repisa Support no se valida con la pared Stop');
+ assert.equal(support.verified,false);
 });
 
 test('L5/L6 no modifican silenciosamente la cara CAD al faltar cota inequívoca',()=>{

@@ -32,15 +32,21 @@ test('elección manual no se reemplaza automáticamente aunque haya interferenci
  assert.equal(selected.manual,true);
  assert.equal(selected.ref.segmentIndex,segment);
  assert.equal(selected.candidates.length,1);
- if(!selected.ref.freeEdge)assert.equal(selected.valid,false);
+ if(!selected.ref.freeEdge)
+  assert.equal(selected.valid,
+   selected.foldedWingContact===true&&selected.interference.warning===false,
+   'Solo una pestaña ya plegada y sin invasión puede sustituir el canto libre');
 });
 test('apoyo inicial inválido NO se valida porque la vista prevé retroceso',()=>{
  const p=normalized(EXAMPLE),st=stage(p,5.4),bend=st.activeBend;
  const draft={...p,gaugeSegmentByBend:[...p.gaugeSegmentByBend],
-  gaugeSideByBend:[...p.gaugeSideByBend]};
+  gaugeSideByBend:[...p.gaugeSideByBend],
+  gaugePointByBend:[...p.gaugePointByBend]};
  const interior=Math.max(1,Math.min(p.flanges.length-2,bend));
  draft.gaugeSegmentByBend[bend]=interior;
  draft.gaugeSideByBend[bend]='before';
+ draft.gaugePointByBend[bend]=p.flanges[interior]/2;
+ // Un punto a mitad de ala NO equivale a cara vertical ya plegada.
  const scene=technicalScene(draft,5.4);
  assert.equal(scene.gaugeSetup.valid,false);
  assert.equal(scene.gaugePlan.setupValid,false);

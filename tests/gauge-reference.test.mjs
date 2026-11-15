@@ -79,14 +79,15 @@ test('al reordenar golpes se mantiene el lado seleccionado por pliegue físico',
  assert.deepEqual(alt.angles,p.angles);
 });
 
-test('no anuncia contacto verificado si el operador fuerza un vértice interior',()=>{
+test('no anuncia contacto cuando el operario elige un punto interior SIN cara física',()=>{
  const p=normalized({...EXAMPLE,
-  gaugeSideByBend:['auto','before','auto','auto']});
+  gaugeSideByBend:['auto','before','auto','auto'],
+  gaugePointByBend:[null,20,null,null]});
  const scene=technicalScene(p,5.2);
  const placement=gaugePlacement(scene,1);
  assert.equal(placement.sourceIndex,1);
  assert.equal(placement.freeEdge,false);
  assert.equal(placement.alignedToSheet,false);
- assert.match(placement.state,/vértice interior/);
+ assert.match(placement.state,/punto de apoyo interior|APOYO INCORRECTO/);
  assert.equal(placement.verified,false);
 });
