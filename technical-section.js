@@ -14,7 +14,7 @@ import {getActiveMachineConfig,gaugeOutline,gaugeContactFeature} from './machine
 import {gaugeRetractionPath,planGaugeRetraction} from './gauge-retract-motion.js';
 import {inspectGaugeProfile} from './gauge-interference.js';
 import {resolveGaugeSetup} from './gauge-contact-solver.js';
-import {punchParkHeight} from './punch-clearance.js';
+import {punchParkHeight,sectionPresentation} from './punch-clearance.js';
 import {gaugeRiskStatus,GAUGE_COLORS} from './gauge-risk-status.js';
 
 const mm=v=>Number.isFinite(+v)?+v:0;
@@ -107,29 +107,9 @@ export function technicalScene(piece,instant=0){
   }
  }
  const nextFeedMirror=nextResolved.ref.side==='before';
- const changingSide=from.repositioning&&nextFeedMirror!==feedMirror;
- // Cambiar el signo de alimentación DESPUÉS del volteo de cara.
- // Ambos giros simultáneos hacían colapsar X e Y a cero en el mismo instante.
- const spin=changingSide?Math.cos(Math.PI*(from.feedProgress??from.progress??0)):1;
- const mirror=pt=>({...pt,x:(feedMirror?-pt.x:pt.x)*spin});
- const presentation={...from,points:from.points.map(mirror),
-  points3D:from.points3D?.map(mirror),gaugeSide:reference.side,
-  feedMirrored:feedMirror,changingFeedSide:changingSide};
- // Referencia FIJA de presentación: se mide antes de que baje el punzón.
- // No seguir el extremo de la chapa durante la deformación del golpe.
- // El margen de retirada debe calcularse DESPUÉS de la orientación
- // que conserva el último plegado. Antes se calculaba sobre la posición
- // previa y el giro simétrico podía meter una esquina bajo la matriz.
- // No se mueve el tope: su referencia se toma del estado previo al golpe.
- if(presentation.repositioning){
-  const half=Math.abs(p.angles[st.activeBend]*st.fractions[st.activeBend])*Math.PI/360;
-  const theta=(feedMirror?1:-1)*half*(1-(presentation.progress??0));
-  const c=Math.cos(theta),s=Math.sin(theta);
-  const pivot=presentation.points[st.activeBend+1];
-  const low=Math.min(...presentation.points.map(pt=>(pt.x-pivot.x)*s+(pt.y-pivot.y)*c));
-  const factor=Math.max(0,Math.min(1,presentation.liftFactor??0));
-  presentation.clearanceLift=Math.max(presentation.clearanceLift??0,Math.max(0,5-low)*factor);
- }
+ // Se usa la MISMA presentación para calcular el aparcamiento del
+ // punzón y mostrar el cambio de golpe. Los ejes X/R del tope siguen fijos.
+ const presentation=sectionPresentation(p,st,from,feedMirror,nextFeedMirror);
  const setupFractions=[...st.fractions];setupFractions[st.activeBend]=0;
  const setup=presentedForMachine(p,setupFractions,st.activeBend);
  // CRÍTICO: el punto origen del dedo es la referencia del golpe

@@ -65,3 +65,29 @@ test('R83: punzón sube en retorno y no vuelve a bajar antes del siguiente golpe
   }
  }
 });
+
+test('R87: punzón estacionado supera la chapa presentada en giros complejos',()=>{
+ const pieces=[
+  EXAMPLE,
+  {...EXAMPLE,name:'Omega con alas largas',thickness:6,die:'v32',
+   flanges:[60,85,120,85,60],angles:[90,-90,-90,90]},
+  {...EXAMPLE,name:'Caja con cambio de alimentación',thickness:3,die:'v24',
+   flanges:[35,120,80,110,35],angles:[-90,90,-90,90],
+   order:[0,3,1,2],gaugeSideByBend:['before','after','before','after']}
+ ];
+ for(const piece of pieces){
+  for(let op=0;op<piece.order.length-1;op++){
+   let parked=null;
+   for(const sub of [.840001,.845,.86,.875,.90,.925,.95,.975,.9999]){
+    const scene=technicalScene(piece,op*5+sub*5);
+    const top=Math.max(...scene.sheetDisplay.map(pt=>pt.y))+piece.thickness/2;
+    assert.ok(scene.kinematics.tipHeight>=top+0.5,
+     piece.name+' G'+(op+1)+' chapa invade la cota del punzón: '+sub+
+     ' tip='+scene.kinematics.tipHeight+' top='+top);
+    if(parked!==null)assert.ok(Math.abs(scene.kinematics.tipHeight-parked)<1e-7,
+     piece.name+' G'+(op+1)+' el punzón sigue la chapa durante el giro');
+    parked=scene.kinematics.tipHeight;
+   }
+  }
+ }
+});
