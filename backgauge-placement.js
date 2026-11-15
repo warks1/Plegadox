@@ -4,6 +4,7 @@
  */
 import {getV85,gaugeContactFeature,gaugeOutline} from './machine-config.js';
 import {inspectGaugeProfile} from './gauge-interference.js';
+import {gaugePointOnProfile} from './engine.js';
 
 /** Contacto válido sólo si el resto de la chapa viene de la IZQUIERDA. */
 export function sheetInFrontOfGauge(scene,index,anchor,thickness=2){
@@ -135,13 +136,16 @@ export function gaugePlacement(scene,stopNumber=1){
   const reference=scene.gaugeReference,
    a=scene.gaugeTransition?.point||scene.gaugeAnchor;
   const index=reference.sourceIndex;
-  const freeEdge=index===0||index===(scene.sheet?.length||0)-1;
+  const freeEdge=reference.freeEdge===true;
   const valid=[a.x,a.y,reference.distance].every(Number.isFinite);
-  const edge=scene.sheet?.[index];
+  const edge=gaugePointOnProfile(scene.sheet,reference);
   const gap=edge?Math.hypot(edge.x-a.x,edge.y-a.y):Infinity;
   const approaching=['Posicionamiento','Aproximación'].includes(scene.stage?.phase);
-  const sheetInFront=sheetInFrontOfGauge(scene,index,a,thickness);
-  const seat=gaugeSeatAssessment(scene,index,a,thickness,feature);
+  // Un punto interior no equivale a una cara libre: mostrar su posición,
+  // pero NO conceder contacto validado ni tapar una penetración geométrica.
+  const sheetInFront=freeEdge&&sheetInFrontOfGauge(scene,index,a,thickness);
+  const seat=freeEdge?gaugeSeatAssessment(scene,index,a,thickness,feature):
+   {required:true,seated:false,reason:'punto interior sin cara de apoyo físico verificada'};
   const contactEngaged=!scene.gaugeTransition&&valid&&freeEdge&&sheetInFront&&seat.seated&&
     feature.usable&&a.x>0&&approaching&&
     gap<=Math.max(.4,thickness*.28);
@@ -152,10 +156,11 @@ export function gaugePlacement(scene,stopNumber=1){
    moving:!!scene.gaugeTransition,gaugeTransition:scene.gaugeTransition,
    seat,sheetEdgeFound:valid&&freeEdge,alignedToSheet:contactEngaged,
    contactEngaged,contactGap:gap,
-   freeEdge,referenceKind:freeEdge?'extremo libre':'vértice interior plegado',
+   freeEdge,referenceKind:freeEdge?'extremo libre':
+    reference.manual&&!reference.atEnd?'punto interior del tramo':'vértice interior plegado',
    state:scene.gaugeTransition?'tope retirado y en traslación X/R al siguiente golpe':
     !valid?'sin cota válida':!feature.usable?'sin cara física de apoyo definida':
-    !freeEdge?'apoyo sobre vértice interior: revisar':
+    !freeEdge?'⚠ punto de apoyo interior: comprobar cara física del tope y accesibilidad':
     !sheetInFront?'⚠ La chapa llega por DETRÁS del tope; invertir la presentación':
     !seat.seated?'⚠ La chapa NO asienta sobre la repisa del primer escalón':
     contactEngaged?'borde presentado contra la cara seleccionada':
