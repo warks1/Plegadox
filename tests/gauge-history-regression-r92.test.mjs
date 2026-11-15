@@ -32,6 +32,7 @@ test('R92: diagnosticar apoyo y antigua retirada sobre G2 manual del vídeo',()=
    setup:{valid:scene.gaugeSetup.valid,reason:scene.gaugeSetup.reason,
     collision:scene.gaugeSetup.interference,autoSelected:scene.gaugeSetup.autoSelected},
    actual:shapeEnd,nominal:contactPoint,
+   sheetAtSetup:sub===.06?scene.sheet:null,
    wallX,tipX:Math.max(...scene.sheet.map(p=>p.x)),
    gapToChosenPoint:contactPoint?wallX-contactPoint.x:null,
    gapToSource:shapeEnd?wallX-shapeEnd.x:null,
