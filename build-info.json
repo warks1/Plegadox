@@ -1,7 +1,8 @@
 {
-  "build": "PLEGADOX-20261115-R58",
-  "version": "0.9.34",
+  "build": "PLEGADOX-20261115-R59",
+  "version": "0.9.35",
   "machine": "bystronic-2006-2009-wila-promecam-gauge-conditional",
   "ui": "gauge-setup-diagnostics-and-parallel-browser-ci",
-  "cache": "plegadox-static-0.9.34-gauge-diagnostics-browser-shards-r58"
+  "cache": "plegadox-static-0.9.35-promecam-cad-links-r59",
+  "tooling": "promecam-16-so-clam-official-dxf-links-only"
 }
