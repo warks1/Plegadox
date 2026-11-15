@@ -1,7 +1,7 @@
 {
-  "build": "PLEGADOX-20261115-R48",
-  "version": "0.9.24",
+  "build": "PLEGADOX-20261115-R49",
+  "version": "0.9.25",
   "machine": "bystronic-2006-2009-wila-promecam-gauge-conditional",
-  "ui": "parametric-tool-builder-fullscreen-splash-industrial-icon",
-  "cache": "plegadox-static-0.9.24-custom-tool-icon-fullscreen-r48"
+  "ui": "responsive-rotation-ams-copyright-about-update-center",
+  "cache": "plegadox-static-0.9.25-about-updater-responsive-r49"
 }
