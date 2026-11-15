@@ -169,7 +169,23 @@ try{
   await page.locator('#playBtn').click();
   await page.waitForTimeout(800);
   assert.ok(Number(await page.locator('#timeline').inputValue())>0,'El tiempo de simulación avanza');
-  await page.locator('#pauseBtn').click();
+  const pauseDiagnostics=await page.evaluate(()=>{
+   const button=document.getElementById('pauseBtn'),play=document.getElementById('playBtn');
+   const rect=button?.getBoundingClientRect(),panel=button?.closest('.panel');
+   const style=button?getComputedStyle(button):null;
+   const hit=rect?document.elementFromPoint(rect.x+rect.width/2,rect.y+rect.height/2):null;
+   return {visible:!!button?.checkVisibility(),connected:!!button?.isConnected,
+    panelId:panel?.id,panelClass:panel?.className,
+    display:style?.display,visibility:style?.visibility,pointerEvents:style?.pointerEvents,
+    rect:rect?{x:rect.x,y:rect.y,w:rect.width,h:rect.height}:null,
+    viewport:{w:innerWidth,h:innerHeight},hit:{id:hit?.id,tag:hit?.tagName,
+      className:hit?.getAttribute('class')},
+    playRect:play?.getBoundingClientRect().toJSON(),
+    simPlaying:window.PLEGADOX_STATE?.().sim.playing,
+    activePanels:[...document.querySelectorAll('.panel.active')].map(x=>x.id)};
+  });
+  console.log('PAUSE_BUTTON_DIAGNOSTICS',JSON.stringify(pauseDiagnostics));
+  await page.locator('#pauseBtn').click({timeout:6000});
   await page.screenshot({path:'test-results/plegadox-desktop.png',fullPage:true});
   const preview=await page.screenshot({type:'jpeg',quality:43,fullPage:false});
   console.log('UI_SCREENSHOT_BEGIN');
