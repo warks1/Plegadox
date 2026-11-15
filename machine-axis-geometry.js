@@ -11,7 +11,7 @@
  * Los tramos con giro o deformación permanecen SIN RESOLVER.
  */
 import {normalized} from './engine.js';
-import {getV85} from './machine-config.js';
+import {getActiveMachineConfig} from './machine-config.js';
 import {technicalScene} from './technical-section.js';
 import {buildVolumeScene} from './volume-engine.js';
 import {sweptPrismPair,translatePrism} from './swept-volume.js';
@@ -75,7 +75,7 @@ export function scanAxisCADMovement(input,options={}){
  try{program=normalizeAxisMotion(options.axisMotion);
   mapping=normalizeAxisMapping(options.mapping);}
  catch(error){return unknown('TRAZA_O_DATUM_INVALIDOS',String(error.message||error));}
- const piece=normalized(input),machine=options.machine||getV85();
+ const piece=normalized(input),machine=options.machine||getActiveMachineConfig();
  if(program.pieceKey!==motionPieceKey(piece))
   return unknown('TRAZA_DE_OTRA_PIEZA','La traza no corresponde a geometría, orden y útiles actuales');
  if(mapping.machineConfigKey!==machineConfigurationKey(machine))
