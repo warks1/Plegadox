@@ -31,18 +31,24 @@ try{
   assert.ok(Math.abs(check.sim.time-time)<.01,'Saltar al instante del golpe G3');
   assert.deepEqual(check.piece.order,[0,1,3,2]);
   assert.deepEqual(check.piece.angles,[90,-90,-90,90]);
-  // R83: comprobar en PC/iPhone que un apoyo sin choque 2D es verde,
-  // aunque la geometría OEM de los dedos aún no esté certificada.
+  // El muestreo denso informa una holgura FUTURA: ámbar no autoriza
+  // retirada por sí solo (R76) y no debe simularse como choque rojo.
   const traffic=await page.evaluate(async()=>{
    const {technicalScene}=await import('/technical-section.js');
    const {gaugePlacement}=await import('/backgauge-placement.js');
    const {gaugeRiskStatus}=await import('/gauge-risk-status.js');
    const {piece}=window.PLEGADOX_STATE();
    const scene=technicalScene(piece,5+5*.30),p=gaugePlacement(scene,1);
-   return {risk:gaugeRiskStatus(p).level,setupValid:p.setupValid};
+   return {risk:gaugeRiskStatus(p).level,setupValid:p.setupValid,
+    penetrationCount:scene.gaugePlan.penetrationCount,
+    clearanceWarnings:scene.gaugePlan.clearanceWarnings,
+    retreatEnabled:scene.gaugePlan.enabled};
   });
   assert.equal(traffic.setupValid,true);
-  assert.equal(traffic.risk,'green','CAD pendiente no debe marcar naranja si no existe choque 2D');
+  assert.equal(traffic.penetrationCount,0);
+  assert.ok(traffic.clearanceWarnings>0);
+  assert.equal(traffic.retreatEnabled,false);
+  assert.equal(traffic.risk,'amber','Aviso futuro de holgura no puede ocultarse como verde');
   // Comprobar EL MOVIMIENTO QUE VE EL OPERARIO en los cuatro golpes,
   // no sólo el texto del diagnóstico: ninguna holgura nominal debe
   // sacar el dedo de su posición durante sujeción y plegado.
