@@ -42,7 +42,12 @@ export function evaluateGaugeSetup(piece,st,ref,config,stopNumber=1){
   !!neighbour&&(point.x-neighbour.x)>Math.max(.7,Math.min(2,p.thickness))&&
   Math.abs(point.y-neighbour.y)<=Math.max(.35,p.thickness*.22)
  );
- const collision=inspectGaugeProfile(positions,poly,p.thickness,point);
+ const toWorld=q=>({x:point.x-feature.point.x+q.x,
+   y:surfaceY-feature.point.y+q.y});
+ const collision=inspectGaugeProfile(positions,poly,p.thickness,point,{
+  supportShelf:feature.surface==='horizontal-top'?
+   {seated:shelfSeat,from:toWorld(feature.from),to:toWorld(feature.to)}:null
+ });
  const valid=fullContact&&surface&&shelfSeat&&!collision.warning;
  return {valid,ref,stopNumber,point,polygon:poly,warning:collision.warning,
   interference:collision,freeEdge:ref.freeEdge,faceAccessible:fullContact,
