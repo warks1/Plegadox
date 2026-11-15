@@ -33,7 +33,7 @@ test('la geometría del visor no depende del modo perspectiva al cambiar de cara
  }
 });
 
-test('al cambiar pliegue el tope X/R retrocede, se traslada y no da saltos de posición',async()=>{
+test('entre golpes el dedo cambia su referencia de forma continua sin retirar si no hace falta',async()=>{
  const {gaugePlacement,gaugeContourAtContact}=await import('../backgauge-placement.js');
  const {V85_FACTORY}=await import('../machine-config.js');
  const p=normalized(EXAMPLE);
@@ -43,53 +43,65 @@ test('al cambiar pliegue el tope X/R retrocede, se traslada y no da saltos de po
   const a=gaugePlacement(before,1),b=gaugePlacement(after,1);
   const delta=Math.hypot(a.point.x-b.point.x,a.point.y-b.point.y);
   assert.ok(delta<.2,'Salto de '+delta+' mm del tope en '+boundary+' s');
-  assert.equal(a.contactEngaged,false,'Dedo debe separarse durante cambio');
+  assert.equal(a.contactEngaged,false,'No dar contacto en el traslado');
   const scene=technicalScene(p,boundary-.4);
-  assert.ok(scene.gaugeTransition,'Debe existir una trayectoria de tope entre golpes');
-  assert.ok(scene.gaugeTransition.point.x>=scene.gaugeTransition.from.x-1e-6,
-   'El dedo debe retirarse hacia atrás, lejos de la chapa');
-  const outline=gaugeContourAtContact(a,V85_FACTORY.stop);
-  assert.equal(outline.length,6,'El tope completo se traslada rígido');
+  assert.ok(scene.gaugeTransition,'Debe haber una transición X/R entre golpes');
+  assert.deepEqual(scene.gaugeTransition.from,scene.gaugeAnchor,
+   'El origen del dedo pertenece a la cota anterior, no al giro de la chapa');
+  if(scene.gaugePlan.enabled){
+   assert.ok(scene.gaugeTransition.plannedRetraction>0,
+    'Interferencia futura: el dedo debe despejar antes de plegar');
+   assert.ok(scene.gaugeTransition.parkPoint.x>=scene.gaugeTransition.from.x);
+  }else{
+   assert.equal(scene.gaugeTransition.plannedRetraction,0,
+    'Sin riesgo 2D, no inventar movimiento de aparcamiento');
+   assert.equal(scene.gaugeTransition.phase,'reubicacion-siguiente-golpe');
+  }
+  assert.equal(gaugeContourAtContact(a,V85_FACTORY.stop).length,6);
  }
- assert.deepEqual(p.order,[0,1,3,2]);
- assert.deepEqual(p.angles,[90,-90,-90,90]);
+ assert.deepEqual(p.order,[0,1,3,2]);assert.deepEqual(p.angles,[90,-90,-90,90]);
 });
 
-test('origen X/R fijo durante el giro de la chapa: el tope no invierte ni modifica su retirada',async()=>{
+test('el origen X/R nunca sigue la chapa; replegar sólo si el barrido predice interferencia',async()=>{
  const p=normalized(EXAMPLE);
  const {gaugePlacement}=await import('../backgauge-placement.js');
+ const close=(a,b,eps=1e-6)=>Math.hypot(a.x-b.x,a.y-b.y)<eps;
  for(const boundary of [5,10,15]){
   const t=raw=>boundary-.8+Math.max(raw,1e-5)*.8;
-  const start=technicalScene(p,t(0)),initial=start.gaugeAnchor;
+  const start=technicalScene(p,t(0)),origin=start.gaugeAnchor;
   assert.equal(start.stage.phase,'Reposicionamiento');
-  // El tramo intermedio es donde antes spin=cos(pi*u) hacía variar
-  // el anclaje del dedo con el giro de la chapa.
+  const trajectory=[];
   for(const raw of [0,.12,.22,.3,.4,.5,.6,.7,.78,.9,1-1e-5]){
    const scene=technicalScene(p,t(raw));
-   assert.ok(scene.gaugeTransition,'Falta traslación de tope con raw='+raw);
-   assert.ok(Math.hypot(scene.gaugeAnchor.x-initial.x,
-     scene.gaugeAnchor.y-initial.y)<1e-7,
-    'El anclaje X/R salta al girar la chapa: golpe '+boundary+' raw='+raw);
-   assert.ok(Math.hypot(scene.gaugeTransition.from.x-initial.x,
-     scene.gaugeTransition.from.y-initial.y)<1e-7,
-    'La trayectoria cambia el origen del tope a mitad de la retirada');
+   assert.ok(scene.gaugeTransition,'No debe desaparecer la transición en raw '+raw);
+   assert.ok(close(scene.gaugeAnchor,origin),'La cota X/R cambió durante giro '+boundary);
+   assert.ok(close(scene.gaugeTransition.from,origin),
+    'La trayectoria cambió su origen sin control');
    const place=gaugePlacement(scene,2);
-   assert.equal(place.contactEngaged,false,'Sin contacto verde durante el traslado');
-   assert.equal(place.moving,true);
+   assert.equal(place.contactEngaged,false);
+   trajectory.push({raw,...scene.gaugeTransition});
   }
-  // Tras retirar, X permanece fija mientras gira la chapa.
-  const middle=[.3,.4,.5,.6,.7].map(raw=>technicalScene(p,t(raw)).gaugeTransition);
-  const withdrawnX=middle[0].point.x;
-  assert.ok(middle.every(x=>Math.abs(x.point.x-withdrawnX)<1e-7),
-   'El dedo deriva en X mientras la chapa cambia de cara');
-  assert.ok(withdrawnX>=Math.max(initial.x,middle[0].to.x)+11.99,
-   'El dedo no alcanza el despeje geométrico programado');
-  // En ambas mitades de la trayectoria la X avanza sin retrocesos.
-  const takeoff=[0,.05,.1,.15,.22].map(raw=>technicalScene(p,t(raw)).gaugeTransition.point.x);
-  const approach=[.78,.83,.9,.95,1-1e-5].map(raw=>technicalScene(p,t(raw)).gaugeTransition.point.x);
-  assert.ok(takeoff.every((x,i)=>!i||x>=takeoff[i-1]-1e-7),
-   'El tope debe retirarse siempre hacia atrás en X positivo');
-  assert.ok(approach.every((x,i)=>!i||x<=approach[i-1]+1e-7),
-   'El tope debe regresar hacia la nueva referencia sin rebotes');
+  const planned=start.gaugePlan.enabled;
+  if(planned){
+   const middle=trajectory.filter(x=>x.raw>=.3&&x.raw<=.7);
+   const parkedX=middle[0].point.x;
+   assert.ok(middle.every(x=>Math.abs(x.point.x-parkedX)<1e-6),
+    'Dedo deriva durante cambio de cara sin demanda de X');
+   assert.ok(parkedX>=Math.max(origin.x,middle[0].to.x)+12-1e-6,
+    'Aparcamiento insuficiente respecto al siguiente punto de tope');
+   const outgoing=trajectory.filter(x=>x.raw<=.22).map(x=>x.point.x);
+   const returning=trajectory.filter(x=>x.raw>=.78).map(x=>x.point.x);
+   assert.ok(outgoing.every((x,i)=>i===0||x>=outgoing[i-1]-1e-6));
+   assert.ok(returning.every((x,i)=>i===0||x<=returning[i-1]+1e-6));
+  }else{
+   // La nueva cota puede estar a la izquierda o a la derecha: no
+   // confundir reposicionamiento directo con retirada anticolisión.
+   assert.ok(trajectory.every(x=>x.plannedRetraction===0));
+   assert.ok(trajectory.every(x=>x.phase==='reubicacion-siguiente-golpe'));
+   const xs=trajectory.map(x=>x.point.x),direction=Math.sign(xs.at(-1)-xs[0]);
+   assert.ok(xs.every((x,i)=>i===0||direction*(x-xs[i-1])>=-1e-6),
+    'Reposicionamiento sin retroceso adicional ni rebote');
+  }
  }
 });
+
