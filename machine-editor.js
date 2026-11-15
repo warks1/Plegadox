@@ -222,6 +222,14 @@ function renderBystronicDetails(host,profile){
   ['Altura libre',profile.openHeight==null?'Sin confirmar':profile.openHeight+' mm'],
   ['Carrera de la trancha',profile.stroke==null?'Sin confirmar':profile.stroke+' mm'],
   ['Altura de mesa',profile.tableHeight==null?'Sin confirmar':profile.tableHeight+' mm'],
+  ['Campo nominal del tope',profile.xRange==null?'Sin confirmar':profile.xRange+' mm'],
+  ['Recorrido eje X',profile.xTravel==null?'Sin confirmar':profile.xTravel+' mm'],
+  ['Recorrido eje R',profile.rTravel==null?'Sin confirmar':profile.rTravel+' mm'],
+  ['Velocidad nominal eje X',profile.xSpeed==null?'Sin confirmar':profile.xSpeed+' mm/s'],
+  ['Velocidad nominal eje R',profile.rSpeed==null?'Sin confirmar':profile.rSpeed+' mm/s'],
+  ['Potencia de motor',profile.nominalMotorPower==null?'Sin confirmar':profile.nominalMotorPower+' kW'],
+  ['Peso nominal',profile.nominalWeightTonnes==null?'Sin confirmar':profile.nominalWeightTonnes+' toneladas'],
+  ['Aceite hidráulico',profile.hydraulicOilLitres==null?'Sin confirmar':profile.hydraulicOilLitres+' litros'],
   ['Dimensiones exteriores',profile.outer?Object.values(profile.outer).join(' × ')+' mm':'Sin confirmar'],
   ['Fijación superior e inferior',profile.clamping],
   ['Contornos CAD de la trancha/mesa', 'NO disponibles · requiere plano y cotas de su unidad'],
@@ -230,7 +238,7 @@ function renderBystronicDetails(host,profile){
   const name=document.createElement('span'),value=document.createElement('strong');
   text(name,k);text(value,v);row.append(name,value);table.append(row);}
  const warning=document.createElement('p');warning.className='warn';
- warning.textContent='ATENCIÓN: el montaje de útiles WILA, Beyeler o RF-A, su longitud útil y el perfil de fijación NO se deducen del modelo. No habilitar veredicto de colisión segura sin planos, CAD y calibración.';
+ warning.textContent='Cotas de la familia de referencia publicadas por Bystronic. El perfil real de trancha, fijaciones, mesa y dedos traseros sigue sin medidas CAD y debe comprobarse en la unidad de 2006. No habilitar veredicto de colisión segura sin planos, CAD y calibración.';
  const children=[h,p,table,warning];
  if(profile.source){const a=document.createElement('a');a.href=profile.source;
   a.target='_blank';a.rel='noopener noreferrer';a.textContent='Consultar ficha técnica de origen';children.push(a);}
