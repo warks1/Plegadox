@@ -1441,3 +1441,14 @@ Fuentes revisadas directamente en las fichas de SOCLAM:
 **Limitación importante:** el sitio de SOCLAM permite descargar DXF, pero el entorno de búsqueda utilizado no admite leer su contenido de tipo `image/vnd.dxf`. Por tanto, `profileAccuracy:'provisional'` y `cadStatus:'descarga-DXF-publica-importacion-pendiente'` se mantienen hasta que cada archivo se importe mediante el editor y pase los controles del contorno. No se convierten fichas de referencia en sólidos 3D certificados. Los perfiles a 85° existen **bajo demanda** según SOCLAM, pero no se inventa una variante CAD 85° a partir del DXF de 88°.
 
 Las referencias se registran en `catalog.js` y pueden seleccionarse/consultarse desde «Herramientas» y el importador DXF. `tests/soclam-promecam-cad-r59.test.mjs` comprueba las 16 fichas, montajes WILA arriba/Promecam abajo sin asumir un segundo adaptador, y enlaces oficiales. Build `PLEGADOX-20261115-R59`, versión `0.9.35`, caché `plegadox-static-0.9.35-promecam-cad-links-r59`.
+
+
+## R60 · DXF de útiles con familia de amarre declarada por operador (15-11-2026)
+
+El importador de contornos DXF de «Herramientas» incorpora ahora el selector **Sistema de amarre/fijación** (WILA, Amada/Promecam, Trumpf, Bystronic/Beyeler R o desconocido). Al preparar una referencia del catálogo, propone únicamente su familia nominal; el operario puede corregirla antes de guardar. Antes, la importación descartaba `mount` y las herramientas WILA/Promecam no conservaban la interfaz de montaje declarada, a pesar de la existencia de adaptador Promecam en la Bystronic del usuario.
+
+`tool-dxf.js` guarda `mount`, `mountVerified:false` y `mountDeclaration:'familia-declarada-en-formulario-sin-contraste'`; la ausencia de información produce una cadena vacía, **no una supuesta compatibilidad**. No deduce anclaje de un contorno ni acredita mordaza, adaptador, tonelaje por metro, alturas o colisiones. `tests/tool-dxf.test.mjs` comprueba WILA, Promecam, no identificado y el rechazo de valores desconocidos.
+
+Los 16 perfiles SOCLAM de R59 enlazan DXF oficiales, pero **su contenido todavía necesita importación real** para sustituir las formas provisionales. WILA puede exigir registro para descargar sus contornos.
+
+Build `PLEGADOX-20261115-R60`, versión `0.9.36`, caché `plegadox-static-0.9.36-dxf-mount-r60`. El motor conserva sin modificación las piezas y herramientas locales ya guardadas; en herramientas importadas antiguas sin `mount`, el sistema no presume conocerlo.
