@@ -65,7 +65,7 @@ test('V85: ficha histórica TRUMPF está separada de cotas Cybelec reales y no c
  assert.equal(reference.effectiveOpenHeightStandard,385);
  assert.equal(reference.effectiveOpenHeightExtendedOptional,535);
  assert.equal(reference.z1z2Optional,true);
- assert.match(reference.source,/TrumaBend-V-Series_TRUMPF_Brochure\\.pdf$/);
+ assert.match(reference.source,/TrumaBend-V-Series_TRUMPF_Brochure\.pdf$/);
  const profile=MACHINE_PROFILES['trumpf-v85'];
  assert.equal(profile.bendingLength,2040,
   'NO sobrescribir cotas de la unidad con longitud nominal 2050 del catálogo');
