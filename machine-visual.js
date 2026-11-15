@@ -3,7 +3,7 @@
 import {stage,presentedAtStage,getTooling} from './engine.js';
 import {roundedRectPath} from './canvas-path.js';
 import {sectionPunch,sectionDie} from './tool-profiles.js';
-import {drawTechnicalSection,technicalScene} from './technical-section.js';
+import {drawTechnicalSection,technicalScene,technicalCameraBounds} from './technical-section.js';
 import {currentToolContact} from './tool-collision.js';
 import {getActiveMachineConfig} from './machine-config.js';
 import {gaugePlacement,gaugeContourAtContact} from './backgauge-placement.js';
@@ -384,7 +384,7 @@ function drawWarningHud(ctx,w,h,piece,sim,view){
  const diagnostic=currentToolContact(piece,sim.time);
  if(!diagnostic.hasWarning)return;
  if(view?.section){
-  const scene=technicalScene(piece,diagnostic.stage),world=scene.world;
+  const world=technicalCameraBounds(piece);
   const reserve=w<500?67:0,usable=h-reserve;
   const padW=Math.max(28,w*.07),padH=Math.max(30,usable*.095);
   const xrange=Math.max(60,world.maxX-world.minX),
