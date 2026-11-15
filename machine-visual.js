@@ -328,7 +328,7 @@ function stageScene(ctx,w,h,piece,sim,machineView){
   ctx.save();ctx.beginPath();ctx.arc(x,y,Math.max(3,3.5*scale),0,Math.PI*2);
   const color=GAUGE_COLORS[gaugeRiskStatus(placement).level];
    ctx.fillStyle=color.face;ctx.shadowColor=color.glow;ctx.shadowBlur=10*scale;
-  ctx.fill();ctx.strokeStyle='#174e3b';ctx.lineWidth=1.2;ctx.stroke();ctx.restore();
+  ctx.fill();ctx.strokeStyle=color.edge;ctx.lineWidth=1.2;ctx.stroke();ctx.restore();
  }
  sectionOverlay(ctx,{cx,cy:baseY,s:scale},opening,punch.tip||0,Boolean(machineView?.section));
  // Workpiece shadow and hot contact glow along the working tool tip
