@@ -1,7 +1,7 @@
 /** Interfaz local de CAD de máquina y trazas de ejes: no conecta con CNC. */
 import {machineCadFromDXF,loadMachineCad,saveMachineCad,removeMachineCad,
  MACHINE_CAD_KINDS,machineConfigurationKey} from './machine-cad.js';
-import {getV85} from './machine-config.js';
+import {getActiveMachineConfig} from './machine-config.js';
 import {MOTION_AXES,normalizeAxisMotion,motionPieceKey,
  assessAxisMotion,saveAxisMotion,loadAxisMotion} from './machine-axis-motion.js';
 import {loadAxisMapping,saveAxisMapping,scanAxisCADMovement} from './machine-axis-geometry.js';
@@ -39,7 +39,7 @@ function refreshMotion(){
   try{
    const mapping=loadAxisMapping(localStorage);
    const review=p?scanAxisCADMovement(p,{
-    axisMotion:program,mapping,machine:getV85()}):null;
+    axisMotion:program,mapping,machine:getActiveMachineConfig()}):null;
    if(review)extra=' · CAD/ejes: '+review.status+
     ' · cruces modelados '+review.events.length+
     ' · intervalos sin resolver '+review.unresolved;
@@ -67,7 +67,7 @@ function installer(){
    if(!/\.dxf$/i.test(entry.name)||entry.size>1024*1024)
     throw Error('Se admite únicamente DXF ASCII inferior a 1 MB');
    const options={
-    kind:kind.value,machineConfigKey:machineConfigurationKey(getV85()),
+    kind:kind.value,machineConfigKey:machineConfigurationKey(getActiveMachineConfig()),
     offsetX:$('machineCadOffsetX').value,
     offsetY:$('machineCadOffsetY').value,
     zMin:$('machineCadZMin').value,zMax:$('machineCadZMax').value,
@@ -118,7 +118,7 @@ function installer(){
    version:1,unit:'mm',
    signs:{Y:null,X:null,R:null,Z1:null,Z2:null},
    activeFinger:null,referenceSceneTime:null,ramTiltTolerance:null,
-   machineConfigKey:machineConfigurationKey(getV85()),
+   machineConfigKey:machineConfigurationKey(getActiveMachineConfig()),
    source:'DESCRIBIR: ficha/control, origen, sentidos y prueba física',
    instructions:'Rellenar signos +1/-1, dedo Z1 o Z2, sceneTime de referencia y tolerancia Y1/Y2 documentada. La primera pose de la traza deberá declarar exactamente ese sceneTime. No utilizar valores de otra máquina.'
   },null,2));
@@ -129,7 +129,7 @@ function installer(){
    if(file.size>100*1024||!/\\.json$/i.test(file.name))
     throw Error('Selecciona JSON de calibración inferior a 100 KB');
    const parsed=JSON.parse(await file.text());
-   if(parsed.machineConfigKey!==machineConfigurationKey(getV85()))
+   if(parsed.machineConfigKey!==machineConfigurationKey(getActiveMachineConfig()))
     throw Error('La calibración pertenece a otras cotas de máquina');
    saveAxisMapping(localStorage,parsed);
    refreshMotion();signal();
