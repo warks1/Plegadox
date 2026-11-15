@@ -1,5 +1,6 @@
 /** Plegadox: núcleo geométrico determinista. Unidades: mm y grados. */
 import {registerCatalogue} from './catalog.js';
+import {getActiveMachineProfile} from './machine-selection.js';
 export const MATERIALS = [
  {id:'s235',name:'Acero S235',k:0.36,springback:1.0},
  {id:'s275',name:'Acero S275',k:0.36,springback:1.1},
@@ -128,7 +129,7 @@ export function estimateAirBendForce(piece,options={}){
   return {estimated:false,verified:false,reason:'Rm/V no válidos'};
  const kN=1.42*rm*p.width*p.thickness**2/(1000*die.opening);
  const tonneForce=kN/9.80665;
- const nominalCapacity=Number(options.tonnage??MACHINE.tonnage);
+ const nominalCapacity=Number(options.tonnage??getActiveMachineProfile().tonnage);
  const ratio=die.opening/p.thickness;
  const conventional=p.angles.every(a=>Math.abs(Math.abs(a)-90)<=5)&&
   die.angle>=80&&die.angle<=100&&ratio>=5&&ratio<=14;
