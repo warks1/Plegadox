@@ -1423,7 +1423,7 @@ function toolCard(tool,kind){
  const brand=document.createElement('span');brand.className='tool-card-brand';
  brand.textContent=tool.manufacturer||'Genérico';
  const notice=document.createElement('span');notice.className='tool-card-notice';
- notice.textContent=tool.importedDxf?'DXF · no verificado':
+ notice.textContent=tool.customProfile?'Dibujo por cotas · sin CAD OEM':tool.importedDxf?'DXF · no verificado':
   tool.verifiedSpecs?'Cotas parciales · CAD pendiente':'Perfil provisional';
  notice.classList.add('px-data-status',tool.verifiedSpecs?'px-status--documentado':'px-status--provisional');
  notice.title=tool.importedDxf?
