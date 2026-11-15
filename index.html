@@ -7,7 +7,7 @@
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="./icon-industrial-180.png">
 <link rel="manifest" href="./manifest.webmanifest">
-<meta name="plegadox-build" content="PLEGADOX-20261115-R48">
+<meta name="plegadox-build" content="PLEGADOX-20261115-R49">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="PlegadoX">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -18,7 +18,7 @@
 </div>
 <div id="app">
 <header class="topbar">
-<div class="header-logo"><span class="logo-title">PLEGADO<span>DO</span><em>X</em></span><small>PRECISIÓN EN CADA ÁNGULO</small><small id="buildMark" class="px-build-mark" aria-label="Versión instalada de PlegadoX">PLEGADOX-20261115-R48</small></div>
+<div class="header-logo"><span class="logo-title">PLEGADO<span>DO</span><em>X</em></span><small>PRECISIÓN EN CADA ÁNGULO</small><small id="buildMark" class="px-build-mark" aria-label="Versión instalada de PlegadoX">PLEGADOX-20261115-R49</small></div>
 <div class="header-project"><span class="h-icon" aria-hidden="true"><svg class="px-icon"><use href="./icons.svg#project"/></svg></span><div class="h-content"><small>PROYECTO ACTUAL</small><strong id="topProject">Omega · ejemplo geométrico</strong></div></div>
 <div class="header-stats"><div><small>Material</small><strong id="topMaterial">Acero S235</strong></div><div><small>Espesor</small><strong id="topThickness">2,00 mm</strong></div><div><small>Ángulo</small><strong id="topAngle">+90°</strong></div><div><small>Apertura V</small><strong id="topV">16 mm</strong></div><div><small>Punzón</small><strong id="topPunch">Recto 88°</strong></div><div><small>Matriz</small><strong id="topDie">V16</strong></div></div>
 <div class="header-right"><div class="header-status"><button id="topPlayBtn" class="led" type="button" aria-label="Reproducir simulación" aria-pressed="false" title="Reproducir / pausar simulación">▶</button><span id="topState">Simulación lista</span></div><span id="clock" aria-label="Hora"></span><button id="forceUpdateBtn" class="header-icon-button px-refresh-button" title="Actualizar PlegadoX sin borrar piezas" aria-label="Actualizar PlegadoX sin borrar piezas"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#refresh"/></svg></button><button id="saveBtn" class="header-icon-button" title="Guardar pieza" aria-label="Guardar pieza"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#save"/></svg></button></div>
@@ -30,7 +30,8 @@
 <button class="nav" data-tab="herramientas"><span class="nav-picto" aria-hidden="true"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#tools"/></svg></span><span>HERRAMIENTAS</span></button>
 <button class="nav" data-tab="desarrollo"><span class="nav-picto" aria-hidden="true"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#ruler"/></svg></span><span>DESARROLLO</span></button>
 <button class="nav" data-tab="maquina"><span class="nav-picto" aria-hidden="true"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#settings"/></svg></span><span>MÁQUINA</span></button>
-<div class="nav-spacer"></div><button class="side-action" id="sideSave" title="Guardar pieza" aria-label="Guardar pieza"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#save"/></svg><span>GUARDAR</span></button><button class="side-action" id="sideImport" title="Importar pieza JSON" aria-label="Importar pieza JSON"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#upload"/></svg><span>IMPORTAR</span></button><div class="nav-version">AMS · PLEGADOX v0.9.23</div>
+<button class="nav" data-tab="acerca"><span class="nav-picto" aria-hidden="true"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#info"/></svg></span><span>ACERCA DE</span></button>
+<div class="nav-spacer"></div><button class="side-action" id="sideSave" title="Guardar pieza" aria-label="Guardar pieza"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#save"/></svg><span>GUARDAR</span></button><button class="side-action" id="sideImport" title="Importar pieza JSON" aria-label="Importar pieza JSON"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#upload"/></svg><span>IMPORTAR</span></button><div class="nav-version">AMS Tecnologics Services · v0.9.25</div>
 </nav>
 <main>
 <section class="panel" id="tab-programacion">
@@ -295,7 +296,63 @@
 <details class="px-tech-details"><summary>Origen y límites de las cotas de máquina</summary><p>Los valores proceden de las fotografías del control. Los dibujos son esquemas parametrizados de cotas, NO perfiles CAD completos ni comprobación de colisiones. Verifica el amarre y la máquina real antes de usar las medidas para fabricar.</p></details>
 </section>
 
-</main></div><footer>PLEGADOX · Software de plegado · © AMS · Motor geométrico de demostración, sin conexión a la máquina <span id="layoutMode" aria-live="off"></span></footer></div>
+
+<section class="panel px-about-panel" id="tab-acerca" aria-labelledby="pxAboutTitle">
+ <div class="page-title"><div>
+  <h1 id="pxAboutTitle">Acerca de PlegadoX</h1>
+  <p>Información del software, su creador, versión instalada y actualizaciones.</p>
+ </div></div>
+ <div class="px-about-hero card">
+  <div class="px-about-hero-art"><img src="./icon-industrial-192.png" width="96" height="96" alt="Icono industrial de PlegadoX"></div>
+  <div><span class="px-about-eyebrow">SOFTWARE DE PLEGADO DE CHAPA</span>
+   <h2>PlegadoX</h2>
+   <p>Programación y representación de plegados, selección de herramientas, desarrollo de chapa y revisión orientativa de interferencias.</p>
+  </div>
+ </div>
+ <div class="px-about-grid">
+  <article class="card px-about-card">
+   <h2>Información de la aplicación</h2>
+   <dl class="px-about-facts">
+    <div><dt>Nombre comercial</dt><dd>PlegadoX</dd></div>
+    <div><dt>Versión instalada</dt><dd id="softwareInstalledVersion">v0.9.25</dd></div>
+    <div><dt>Compilación</dt><dd id="softwareInstalledBuild">PLEGADOX-20261115-R49</dd></div>
+    <div><dt>Plataformas</dt><dd>Web, PC, Mac, tablet, iOS y Android mediante aplicación web instalable</dd></div>
+    <div><dt>Orientación</dt><dd>Automática según pantalla vertical u horizontal cuando el sistema permite girar</dd></div>
+    <div><dt>Almacenamiento</dt><dd>Piezas, herramientas y ajustes almacenados localmente en este navegador</dd></div>
+   </dl>
+  </article>
+  <article class="card px-about-card">
+   <h2>Creador y titular</h2>
+   <div class="px-about-company">AMS <span>Tecnologics Services</span></div>
+   <p>Desarrollo y mantenimiento del software PlegadoX, orientado a la programación de chapa y asistencia técnica de plegado industrial.</p>
+   <p class="px-about-copyright">© 2026 AMS Tecnologics Services.<br>Todos los derechos reservados.</p>
+   <p class="hint">El uso, reproducción, distribución o modificación de esta aplicación queda sujeto a la autorización de su titular y a las licencias que resulten aplicables.</p>
+  </article>
+  <article class="card px-about-card px-about-updates">
+   <h2>Actualización del software</h2>
+   <p>Comprueba la versión publicada e instala las mejoras disponibles desde esta misma aplicación, sin borrar las piezas ni herramientas guardadas.</p>
+   <div class="px-update-version-row"><span>Instalada</span><strong id="softwareCurrentBuild">v0.9.25</strong>
+    <span>Publicada</span><strong id="softwarePublishedVersion">Sin comprobar</strong></div>
+   <div class="inline-actions"><button id="softwareUpdateBtn" class="px-about-update-button" type="button">Buscar e instalar actualizaciones</button></div>
+   <p id="softwareUpdateStatus" class="hint" role="status" aria-live="polite">Pulsa el botón para consultar la última versión publicada.</p>
+   <p class="hint">Necesita conexión a Internet. Se conserva el almacenamiento local, pero es recomendable descargar una copia de seguridad antes de actualizar.</p>
+  </article>
+  <article class="card px-about-card">
+   <h2>Funciones principales</h2>
+   <ul class="px-about-features">
+    <li>Programación de piezas y orden manual o asistido de plegado</li>
+    <li>Simulación 2D y representación 3D orientativa</li>
+    <li>Bibliotecas de punzones, matrices y creación de perfiles por medidas</li>
+    <li>Desarrollo, fuerza estimada y comparación de aperturas V</li>
+    <li>Detección preliminar de interferencias y apoyos de topes</li>
+    <li>Configuración de plegadoras y carga de contornos DXF de máquina</li>
+   </ul>
+   <p class="hint"><strong>Aviso técnico:</strong> las simulaciones y recomendaciones no sustituyen la validación física, CNC, de utillaje, ni las comprobaciones de seguridad del taller.</p>
+  </article>
+ </div>
+</section>
+
+</main></div><footer class="px-legal-footer" role="contentinfo"><span>© 2026 AMS Tecnologics Services.</span><span>Todos los derechos reservados.</span><span class="px-legal-footer-warning">Protegido por derechos de autor. Uso y reproducción sujetos a autorización y licencias aplicables.</span></footer></div>
 <script type="module">
 /*
  * Recuperación PWA iOS. Este arranque es INLINE deliberadamente:
@@ -304,7 +361,7 @@
  * PlegadoX anteriores y cargar luego todos los módulos secuencialmente.
  * Nunca se elimina localStorage, IndexedDB ni los proyectos del usuario.
  */
-const BUILD="PLEGADOX-20261115-R48";
+const BUILD="PLEGADOX-20261115-R49";
 const STATUS=document.getElementById('buildMark');
 const KEY='plegadox:verified-loader-build';
 const BASE=new URL('./',document.baseURI);
@@ -353,7 +410,7 @@ const clearOldCode=async()=>{
 };
 const loadModules=async()=>{
  const scripts=['pwa.js','app.js','cockpit.js','boceto2.js',
-  'responsive.js','studio.js','machine-editor.js','machine-cad-ui.js'];
+  'responsive.js','studio.js','machine-editor.js','machine-cad-ui.js','software-about.js'];
  for(const [index,path] of scripts.entries()){
   splashStep(18+Math.round(72*(index+1)/scripts.length),'Cargando '+path.replace('.js','')+'…');
   await import('./'+path+'?build='+encodeURIComponent(BUILD));
@@ -371,32 +428,8 @@ try{
  }
  await loadModules();
  await finishSplash();
- const refresh=document.getElementById('forceUpdateBtn');
- if(refresh)refresh.addEventListener('click',async()=>{
-  if(!navigator.onLine){show('Sin conexión · no se puede actualizar');return;}
-  refresh.disabled=true;
-  show('Comprobando versión…');
-  if(!await serverBuildId()){
-   show('No se pudo comprobar el servidor');
-   refresh.disabled=false;
-   return;
-  }
-  try{
-   await clearOldCode();
-   localStorage.removeItem(KEY);
-   if('serviceWorker' in navigator){
-    const reg=await navigator.serviceWorker.getRegistration(BASE.href);
-    if(reg)await reg.unregister();
-   }
-   const url=new URL('index.html',BASE);
-   url.searchParams.set('rev',BUILD);
-   url.searchParams.set('refresh',Date.now().toString(36));
-   location.replace(url.href);
-  }catch(error){
-   show('Error al actualizar: '+error.message);
-   refresh.disabled=false;
-  }
- });
+ // La búsqueda y aplicación de versiones se gestiona en software-about.js.
+
 }catch(error){
  show('Error de arranque: '+error.message);
  splashStep(splashProgress,'Error de inicio: '+error.message+' · pulsa Reintentar');
