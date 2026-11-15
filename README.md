@@ -1172,3 +1172,14 @@ La pantalla inicial **TITANIUM** incluye animación SVG de chapa plegándose ent
 - Build/cache sincronizados a `PLEGADOX-20261115-R37` / v0.9.13. La actualización de caché PWA no borra las piezas del almacenamiento local.
 
 **Pendiente para uso industrial:** cotas y sólidos CAD aprobados de los dedos, X/R/Z del equipo real, topes en Z, transferencia segura de pieza y comprobación física continua de 3D. La selección de contacto es de previsualización, no autorización de plegado en máquina.
+
+
+## R38 · Elegir cualquier ala como referencia de tope (15-11-2026)
+
+- Ahora **cada pliegue** puede referenciar cualquiera de las alas 1…N, no sólo sus alas contiguas. El punto se determina mediante la elección de ala y una distancia editable en mm desde el extremo de esa ala más cercano al pliegue, medido en la geometría de referencia. Vacío = extremo opuesto del ala elegida.
+- La representación calcula el punto sobre el perfil plegado presente en la operación, no proyectándolo a un vértice vecino. Los topes siguen detrás de la pieza; el perfil completo de cada dedo no se refleja ni gira entre golpes.
+- El botón **Buscar apoyo con menos interferencias (2D)** examina los dos extremos libres con Stop 1 y Support 2 para el golpe actual, e incluye avisos de útiles. Si no aparece una propuesta sin avisos en las muestras, no cambia el programa. Se conserva siempre la selección manual.
+- Los selectores por operación aparecen también en el editor de alas, y los valores permanecen al guardar y exportar/importar JSON. Pruebas añadidas a `tests/gauge-point-manual.test.mjs`.
+- Build `PLEGADOX-20261115-R38`, versión 0.9.14 y nueva caché offline para evitar mezclar módulos viejos y actuales.
+
+**Precaución:** posición visual y cribado geométrico, no preparación CNC. No usar como certificado de no colisión; aún faltan CAD íntegros, recorridos medidos y comprobación de medios físicos en la Trumpf V85.
