@@ -1815,11 +1815,13 @@ function renderSimulationText(){
  // La retirada previa es una decisión por golpe basada en secciones 2D;
  // NO equivale al traslado X/R del dedo al siguiente pliegue.
  const plan=currentGaugeScene.gaugePlan;
- const retractState=plan?.setupValid===false?'corregir-apoyo':
+ const retractState=plan?.setupValid===false?
+  (plan.enabled?'retirada-no-validada':'corregir-apoyo'):
   plan?.known!==true?'sin-datos':
   plan.enabled?'retirar':'mantener';
  const retractionNote={
-  'corregir-apoyo':' · ⚠ RETIRADA NO AUTORIZADA: corregir apoyo inicial',
+  'corregir-apoyo':' · ⚠ RETIRADA NO PREVISTA: corregir apoyo inicial',
+  'retirada-no-validada':' · ⚠ RETIRADA 2D REPRESENTADA POR PENETRACIÓN FUTURA; APOYO INICIAL SIN VALIDACIÓN. NO APTO PARA CNC',
   'sin-datos':' · ⚠ RETIRADA SIN EVALUAR: faltan secciones 2D',
   'retirar':' · retirada previa: SÍ, recomendación por interferencia 2D',
   'mantener':' · retirada previa: NO prevista según sección 2D'
