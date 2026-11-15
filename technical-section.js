@@ -22,6 +22,47 @@ const mm=v=>Number.isFinite(+v)?+v:0;
 const gaugePlanCache=new Map();
 const gaugeSetupCache=new Map();
 
+/**
+ * R90 · Envolvente de cámara estable en la sección técnica.
+ * Muestrea UNA VEZ el recorrido completo de cada operación para no
+ * mover en pantalla al punzón/matriz cuando sólo gira la chapa.
+ * La altura física ilustrada del punzón no cambia con este encuadre.
+ * No es un barrido CAD de colisiones ni una trayectoria CNC.
+ */
+const technicalCameraCache=new Map();
+export function technicalCameraBounds(piece){
+ const p=normalized(piece),machine=getActiveMachineConfig();
+ // Las referencias manuales, útil y perfil de máquina cambian el encuadre.
+ const key=JSON.stringify([p.flanges,p.angles,p.order,p.thickness,
+  p.width,p.radius,p.kFactor,p.punch,p.die,p.punchOrientation,
+  p.stopByBend,p.gaugeSideByBend,p.gaugeSegmentByBend,
+  p.gaugePointByBend,machine.profileId,machine.stop,machine.support]);
+ if(technicalCameraCache.has(key))return technicalCameraCache.get(key);
+ const result={minX:Infinity,maxX:-Infinity,minY:Infinity,maxY:-Infinity};
+ const merge=b=>{
+  if(!b)return;
+  for(const axis of ['minX','minY'])result[axis]=Math.min(result[axis],b[axis]);
+  for(const axis of ['maxX','maxY'])result[axis]=Math.max(result[axis],b[axis]);
+ };
+ // Las fases de aproximación/plegado/retorno y todos los giros
+ // comparten la MISMA escala y centro para TODA la pieza.
+ const positions=[0,.16,.36,.44,.56,.68,.78,.84,.855,.87,
+  .885,.90,.915,.93,.945,.96,.975,.99,.999999];
+ for(let operation=0;operation<p.order.length;operation++)
+  for(const sub of positions)
+   merge(technicalScene(p,5*(operation+sub)).world);
+ merge(technicalScene(p,p.order.length*5).world);
+ const margin=Math.max(4,p.thickness*2);
+ const bounds=Object.freeze({
+  minX:result.minX-margin,maxX:result.maxX+margin,
+  minY:result.minY-margin,maxY:result.maxY+margin
+ });
+ technicalCameraCache.set(key,bounds);
+ if(technicalCameraCache.size>8)technicalCameraCache.delete(technicalCameraCache.keys().next().value);
+ return bounds;
+}
+
+
 const mPoint=(x,y)=>({x:mm(x),y:mm(y)});
 
 /**
@@ -319,7 +360,7 @@ export function drawTechnicalSection(ctx,w,h,piece,sim,view={}){
  // En móvil la fila de mandos ocupa la parte inferior del visor.
  // Se resta esa franja ANTES de ajustar la escala, evitando cortar la matriz.
  const controlsReserve=w<500?67:0,drawHeight=h-controlsReserve;
- const bounds=result.world,padW=Math.max(28,w*.07),padH=Math.max(30,drawHeight*.095);
+ const bounds=technicalCameraBounds(piece),padW=Math.max(28,w*.07),padH=Math.max(30,drawHeight*.095);
  const xRange=Math.max(60,bounds.maxX-bounds.minX),yRange=Math.max(100,bounds.maxY-bounds.minY);
  const scale=Math.max(.08,Math.min((w-padW*2)/xRange,(drawHeight-padH*2)/yRange))*(view.zoom||1);
  const mx=(bounds.minX+bounds.maxX)/2,my=(bounds.minY+bounds.maxY)/2;
