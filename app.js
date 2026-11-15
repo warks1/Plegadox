@@ -53,7 +53,7 @@ let integratedPlannerEpoch=0;
 let measurementInputKey=measurementKey(piece),lastSavedMeasurement=null;
 const geometryCache={key:null,result:null};
 function geometryReport(){
- const key=JSON.stringify([piece.flanges,piece.angles,piece.order,piece.thickness,piece.width,piece.material,piece.rmMPa,piece.punch,piece.die,piece.punchOrientation,piece.gaugeSideByBend,getV85().ramWidth,getV85().holderWidth]);
+ const key=JSON.stringify([piece.flanges,piece.angles,piece.order,piece.thickness,piece.width,piece.material,piece.rmMPa,piece.punch,piece.die,piece.punchOrientation,piece.gaugeSideByBend,piece.gaugePointByBend,getV85().ramWidth,getV85().holderWidth]);
  if(key!==geometryCache.key){
   const report=analyzeSequence(piece),tools=inspectSequenceTools(piece,6),
    sheetScan=scanSheetSequence(piece,15);
@@ -245,7 +245,7 @@ function configure(){
   detachLibraryPiece();
   changePiece(cybelecReferencePreset(),true);
  };
- $('addFlange').onclick=()=>{if(piece.flanges.length>=20)return;changePiece({...piece,flanges:[...piece.flanges,50],angles:[...piece.angles,90],order:[...piece.order,piece.angles.length],stopByBend:[...piece.stopByBend,1],gaugeSideByBend:[...piece.gaugeSideByBend,'auto']},true);};
+ $('addFlange').onclick=()=>{if(piece.flanges.length>=20)return;changePiece({...piece,flanges:[...piece.flanges,50],angles:[...piece.angles,90],order:[...piece.order,piece.angles.length],stopByBend:[...piece.stopByBend,1],gaugeSideByBend:[...piece.gaugeSideByBend,'auto'],gaugePointByBend:[...piece.gaugePointByBend,null]},true);};
  $('resetOrder').onclick=()=>changePiece({...piece,order:piece.angles.map((_,i)=>i)},true);
  for(const value of [1,2])$('chooseGauge'+value).onclick=()=>{
   const current=stopAtStage(piece,sim.time),modes=[...piece.stopByBend];
@@ -260,6 +260,25 @@ function configure(){
    changePiece({...piece,gaugeSideByBend:sides},false);
   };
  }
+ const gaugeDistance=$('activeGaugeDistance');
+ gaugeDistance.addEventListener('change',()=>{
+  const bend=stopAtStage(piece,sim.time).bend;
+  const raw=gaugeDistance.value.trim().replace(',','.');
+  const value=raw===''?null:Number(raw);
+  const ref=gaugeReference(piece,bend);
+  if(value!==null&&(!Number.isFinite(value)||value<.1||value>ref.totalLength)){
+   gaugeDistance.value=piece.gaugePointByBend[bend]??'';
+   $('gaugeSideReview').textContent='La cota ha de estar entre 0,1 y '+numbers(ref.totalLength,1)+' mm desde el pliegue.';
+   return;
+  }
+  const points=[...piece.gaugePointByBend];points[bend]=value;
+  changePiece({...piece,gaugePointByBend:points},false);
+ });
+ $('resetGaugeDistance').addEventListener('click',()=>{
+  const bend=stopAtStage(piece,sim.time).bend;
+  const points=[...piece.gaugePointByBend];points[bend]=null;
+  changePiece({...piece,gaugePointByBend:points},false);
+ });
  $('compareGaugeSides').onclick=()=>{
   const result=compareGaugeSides(piece,sim.time,5);
   const rows=result.sides.map(side=>
@@ -1009,13 +1028,31 @@ function renderEditor(){
    const ref=gaugeReference(piece,i-1);
    estimate.textContent='Referencia '+numbers(ref.distance,1)+' mm · '+ref.label;
    sideCell.append(estimate);
+   const contact=document.createElement('input');contact.type='number';
+   contact.className='bend-gauge-contact';contact.min='.1';
+   contact.max=String(ref.totalLength);contact.step='.1';contact.inputMode='decimal';
+   contact.placeholder='Extremo del ala';
+   contact.value=piece.gaugePointByBend[i-1]??'';
+   contact.setAttribute('aria-label','Punto de contacto en milímetros desde el pliegue '+i);
+   contact.title='Vacío: extremo del ala. Introduce la distancia desde el pliegue para fijar un punto manual.';
+   contact.addEventListener('change',()=>{
+    const raw=contact.value.trim();
+    const value=raw===''?null:Number(raw);
+    if(value!==null&&(!Number.isFinite(value)||value<.1||value>gaugeReference(piece,i-1).totalLength)){
+     contact.value=piece.gaugePointByBend[i-1]??'';return;
+    }
+    const gaugePointByBend=[...piece.gaugePointByBend];gaugePointByBend[i-1]=value;
+    changePiece({...piece,gaugePointByBend},false);
+   });
+   sideCell.append(contact);
   }else sideCell.textContent='—';
   row.append(sideCell);
   const orderCell=document.createElement('td');orderCell.textContent=i?String(piece.order.indexOf(i-1)+1):'—';row.append(orderCell);
  const actionCell=document.createElement('td');if(i>=2){const remove=document.createElement('button');remove.className='mini';remove.textContent='×';remove.title='Eliminar ala';remove.onclick=()=>{const flanges=[...piece.flanges],angles=[...piece.angles];flanges.splice(i,1);angles.splice(i-1,1);const order=piece.order.filter(x=>x!==i-1).map(x=>x>i-1?x-1:x);
   const stopByBend=[...piece.stopByBend];stopByBend.splice(i-1,1);
   const gaugeSideByBend=[...piece.gaugeSideByBend];gaugeSideByBend.splice(i-1,1);
-  changePiece({...piece,flanges,angles,order,stopByBend,gaugeSideByBend},true);};actionCell.append(remove);}row.append(actionCell);tb.append(row);
+  const gaugePointByBend=[...piece.gaugePointByBend];gaugePointByBend.splice(i-1,1);
+  changePiece({...piece,flanges,angles,order,stopByBend,gaugeSideByBend,gaugePointByBend},true);};actionCell.append(remove);}row.append(actionCell);tb.append(row);
  });
  const seq=$('sequence');seq.replaceChildren();
  piece.order.forEach((id,i)=>{const c=document.createElement('div');c.className='seq-card';const text=document.createElement('div');const b=document.createElement('b');b.textContent=(i+1)+'. Pliegue '+(id+1)+' (G'+(i+1)+'→P'+(id+1)+')';const small=document.createElement('span');small.textContent=' '+(piece.angles[id]>0?'+':'')+piece.angles[id]+'°';text.append(b,small);const up=document.createElement('button');up.textContent='←';up.title='Hacer antes';up.disabled=!i;up.onclick=()=>reorder(i,-1);const down=document.createElement('button');down.textContent='→';down.title='Hacer después';down.disabled=i===piece.order.length-1;down.onclick=()=>reorder(i,1);c.append(text,up,down);seq.append(c);});
@@ -1550,12 +1587,22 @@ function renderSimulationText(){
  const ref=gauge.reference;
  $('chooseSideBefore').textContent='← Ala anterior · '+numbers(piece.flanges[gauge.bend],1)+' mm';
  $('chooseSideAfter').textContent='Ala siguiente · '+numbers(piece.flanges[gauge.bend+1],1)+' mm →';
- const freeEnd=ref.sourceIndex===0||ref.sourceIndex===piece.flanges.length;
+ const freeEnd=ref.freeEdge;
+ const contactInput=$('activeGaugeDistance');
+ if(document.activeElement!==contactInput){
+  const next=piece.gaugePointByBend[gauge.bend];
+  contactInput.value=next??'';
+ }
+ contactInput.max=String(ref.totalLength);
+ $('activeGaugeDistanceHelp').textContent='Máximo '+numbers(ref.totalLength,1)+
+  ' mm desde el pliegue · vacío = extremo del ala';
  const chosenGauge=gaugePlacement(technicalScene(piece,sim.time),gauge.value);
  $('activeGaugeReference').textContent=ref.label+' · '+numbers(ref.distance,1)+
   ' mm nominales desde el pliegue · '+(gauge.value===2?'chapa sobre primer escalón SUPPORT 2':'chapa contra cara frontal inferior STOP 1')+
    ' · '+(ref.side==='before'?'presentación invertida':'presentación directa')+
-  (freeEnd?' · borde libre':' · ⚠ vértice interior: verificar apoyo')+
+  (freeEnd?' · borde libre':ref.manual&&!ref.atEnd?
+    ' · ⚠ punto interior: requiere un contacto físico accesible':
+    ' · ⚠ vértice interior: verificar apoyo')+
   (freeEnd&&!chosenGauge.sheetInFront?
    ' · ⚠ CHAPA POR DETRÁS DEL TOPE: revisar presentación':'')+
   (chosenGauge.seat&&!chosenGauge.seat.seated?
@@ -1590,7 +1637,7 @@ function renderSimulationText(){
  $('timeline').value=Math.round(1000*st.time/st.duration);
  const root=$('simSequence');
  const key=JSON.stringify({order:piece.order,angles:piece.angles,flanges:piece.flanges,
-  stopByBend:piece.stopByBend,gaugeSideByBend:piece.gaugeSideByBend,issues:check.perOperation.map((x,i)=>x.potentialInterference||x.toolAngleWarning||
+  stopByBend:piece.stopByBend,gaugeSideByBend:piece.gaugeSideByBend,gaugePointByBend:piece.gaugePointByBend,issues:check.perOperation.map((x,i)=>x.potentialInterference||x.toolAngleWarning||
    x.vSupportWarning||check.tools.operations[i]?.possibleToolInterference||
    check.sheetScan.operations[i]?.possibleSheetInterference)});
  if(root.dataset.key!==key){
