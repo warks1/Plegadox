@@ -12,18 +12,25 @@ import {GAUGE_RETRACT_START,GAUGE_RETRACT_FINISH,
 
 const RANK={penetracion:4,holgura:3,'chapa-detras':3,
  'apoyo-invalido':3,'sin-asiento':2,'referencia-interior':1};
-const make=(kind,time,scene,place)=>({
- kind,time,phase:scene.stage.phase,stopNumber:place.stopNumber,
- point:place.gaugeInterference?.warning?place.gaugeInterference.point:null,
- bend:scene.stage.activeBend,operation:scene.stage.activeOperation,
- reason:kind==='penetracion'?'Posible penetración 2D chapa/tope':
-  kind==='holgura'?'Posible holgura 2D menor que el espesor':
-  kind==='chapa-detras'?'Chapa por detrás de la cara frontal del tope':
-  kind==='apoyo-invalido'?'Apoyo inicial inválido: '+
-   (place.setupReason||'la pieza no puede asentarse contra la cara de parada'):
-  kind==='sin-asiento'?'Chapa sin contacto frontal fiable con el dedo':
-  'La referencia recae en un vértice interior, no en un borde libre'
-});
+const make=(kind,time,scene,place)=>{
+ const transition=scene.gaugeTransition;
+ const movingFinger=transition?.moving===true;
+ const motionPhase=transition?.phase||null;
+ const movingLabel=movingFinger?' DURANTE el desplazamiento completo del tope':'';
+ return {
+  kind,time,phase:scene.stage.phase,stopNumber:place.stopNumber,
+  point:place.gaugeInterference?.warning?place.gaugeInterference.point:null,
+  bend:scene.stage.activeBend,operation:scene.stage.activeOperation,
+  movingFinger,motionPhase,verified:false,
+  reason:kind==='penetracion'?'Posible penetración 2D chapa/tope'+movingLabel:
+   kind==='holgura'?'Posible holgura 2D menor que el espesor'+movingLabel:
+   kind==='chapa-detras'?'Chapa por detrás de la cara frontal del tope':
+   kind==='apoyo-invalido'?'Apoyo inicial inválido: '+
+    (place.setupReason||'la pieza no puede asentarse contra la cara de parada'):
+   kind==='sin-asiento'?'Chapa sin contacto frontal fiable con el dedo':
+   'La referencia recae en un vértice interior, no en un borde libre'
+ };
+};
 /**
  * `inspect` está disponible como inyección para pruebas, no como
  * autorización de datos externos. Valores de tiempo en segundos del visor.
@@ -41,8 +48,9 @@ export function inspectGaugeOperation(piece,operation,{
  if(!Number.isInteger(samples)||samples<8||samples>100)
   throw Error('Muestreo de tope fuera de rango (8-100)');
  const start=operation*5;
- const all=[],kinds=new Map(),times=[];
+ const all=[],kinds=new Map(),times=[],movementFindings=new Map();
  let contacted=false,withdrawn=false,cadPending=false;
+ let movementWarnings=0,movementFirstTime=null;
  // Incluir el instante inicial, los extremos y la retirada final;
  // evitar tomar justo t=5,10,15 como si fuese el golpe anterior.
  const split=Math.floor(samples/2);
@@ -97,6 +105,14 @@ export function inspectGaugeOperation(piece,operation,{
    const found=make(kind,time,scene,place);
    all.push(found);
    if(!kinds.has(kind))kinds.set(kind,found);
+   // Los golpes 2 y 4 pueden mostrar contacto correcto al preparar,
+   // pero colisionar AL DESPLAZARSE el dedo entre referencias.
+   // No diluir esa interferencia bajo un aviso de apoyo estático.
+   if(found.movingFinger&&['penetracion','holgura'].includes(kind)){
+    movementWarnings++;
+    if(movementFirstTime===null)movementFirstTime=time;
+    if(!movementFindings.has(kind))movementFindings.set(kind,found);
+   }
   }
  }
  const findings=[...kinds.values()].sort((a,b)=>(RANK[b.kind]||0)-(RANK[a.kind]||0)||
@@ -106,6 +122,8 @@ export function inspectGaugeOperation(piece,operation,{
   warnings:all.length,findings,firstTime:all.length?all[0].time:null,
   example:findings[0]||null,contactObserved:contacted,
   withdrawalObserved:withdrawn,possibleInterference:all.length>0,
+  movementWarnings,movementInterference:movementWarnings>0,movementFirstTime,
+  movementFindings:[...movementFindings.values()],
   cadPending,geometryVerified:!cadPending,verified:false};
 }
 export function scanGaugeSequence(piece,{samplesPerOperation=18,inspect}={}){
@@ -114,7 +132,9 @@ export function scanGaugeSequence(piece,{samplesPerOperation=18,inspect}={}){
   samples:samplesPerOperation,...(inspect?{inspect}:{})
  }));
  return {operations,warningCount:operations.filter(o=>o.possibleInterference).length,
+  movementWarningCount:operations.filter(o=>o.movementInterference).length,
+  movementWarningSamples:operations.reduce((n,o)=>n+o.movementWarnings,0),
   contactNotObserved:operations.filter(o=>!o.contactObserved).length,
   samplesPerOperation,verified:false,
-  limitations:'Muestras discretas de sección 2D. No evalúa volumen, ejes reales, distancia de seguridad ni movimiento CNC entre muestras.'};
+  limitations:'Muestras discretas de sección 2D, incluidas transiciones del dedo; NO evalúa volumen, ejes reales, velocidad CNC, trayectoria continua ni distancias certificadas de seguridad.'};
 }

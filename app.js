@@ -895,8 +895,12 @@ function renderGaugeReview(scan){
   top.textContent='G'+(op.operation+1)+' · P'+(op.bend+1)+' · '+
    (op.stopNumber===2?'SUPPORT 2':'STOP 1');
   const summary=document.createElement('small');
+  // Diferenciar preparación del traslado: un apoyo nominal 2D puede
+  // ser correcto y, aun así, atravesar la chapa durante la retirada.
   summary.textContent=warning?
-   '⚠ '+op.findings.map(x=>x.reason).join(' · ')+
+   '⚠ '+(op.movementInterference?
+    'INTERFERENCIA AL MOVER EL TOPE ('+op.movementWarnings+' muestras 2D) · ':'')+
+    op.findings.map(x=>x.reason).join(' · ')+
     ' · muestra '+to.toFixed(2)+' s':
    'Sin interferencia detectada en '+op.samples+
     ' muestras 2D (NO verifica el tope real) · muestra '+to.toFixed(2)+' s';
