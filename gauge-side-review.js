@@ -10,7 +10,12 @@ export function compareGaugeSides(piece,time=0,steps=5){
  const current=gaugeReference(p,st.activeBend);
  const sides=['before','after'].map(side=>{
   const selected=[...p.gaugeSideByBend];selected[st.activeBend]=side;
-  const candidate=normalized({...p,gaugeSideByBend:selected});
+  // Comparar alas contiguas, no repetir por error la referencia manual.
+  const gaugeSegmentByBend=[...p.gaugeSegmentByBend];
+  const gaugePointByBend=[...p.gaugePointByBend];
+  gaugeSegmentByBend[st.activeBend]=null;
+  gaugePointByBend[st.activeBend]=null;
+  const candidate=normalized({...p,gaugeSideByBend:selected,gaugeSegmentByBend,gaugePointByBend});
   let penetrations=0,warnings=0,toolMax=0;
   for(let i=0;i<count;i++){
    const tm=st.activeOperation*5+5*(i+.5)/count;
