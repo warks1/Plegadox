@@ -1191,3 +1191,11 @@ La pantalla inicial **TITANIUM** incluye animación SVG de chapa plegándose ent
 - Al cambiar el lado de apoyo desde el simulador o la tabla, se desactiva la selección manual de ala que pudiera contradecirlo; una distancia que supere la nueva longitud se reinicia en vez de mostrar una cota imposible.
 - Nueva revisión `PLEGADOX-20261115-R39` / v0.9.15, con nuevo nombre de caché PWA, conservando datos guardados en el navegador.
 - Verificación realizada: sintaxis de módulos y comprobaciones en memoria del cálculo de referencia. **Sin afirmación de prueba final de navegador, CI o validación CAD de máquina real.**
+
+
+## R40 · Cara de parada frontal en Stop 1 y Support 2
+
+- En los dos dedos la chapa hace **tope contra la cara vertical delantera** de su contorno, no queda colocada automáticamente sobre la repisa de Support 2. El perfil completo del dedo y sus cotas siguen sin invertirse ni alterarse.
+- La posición del punto sobre la pieza, el análisis de espesor y el control de penetración del dedo usan ahora esa cara frontal de parada.
+- El apoyo para sostener el peso de la chapa sobre una repisa es una función distinta de detener su canto y requiere una decisión de montaje y una simulación verificadas; no se asume por defecto.
+- Sigue siendo geometría provisional 2D: **no se certifica un plegado seguro en la V85 sin CAD completos y datos de ejes reales**.
