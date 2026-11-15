@@ -435,7 +435,7 @@ function stageScene(ctx,w,h,piece,sim,machineView){
   ctx.fillText(machineView?.perspective?'PERSPECTIVA ILUSTRATIVA · NO CAD':'MODELO PARAMÉTRICO · NO CONTROL CNC',w-12,h-14);
  }else if(w>=470){
   ctx.font='700 9px system-ui';ctx.fillStyle='#6f94ad';ctx.textAlign='left';
-  ctx.fillText('VISTA LATERAL · MODELO PARAMÉTRICO',12,h-12);
+  ctx.fillText(machineView?.perspective?'PERSPECTIVA 2.5D · NO CAD':'VISTA LATERAL · MODELO PARAMÉTRICO',12,h-12);
  }
 }
 // Entrypoint used from app.js drawMachine without changing the core timing engine.
