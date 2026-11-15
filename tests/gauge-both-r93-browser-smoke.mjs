@@ -40,8 +40,8 @@ try{
     anchor:scene.gaugeAnchor,reference:scene.gaugeReference.distance};
   },sub);
   const before=await frame(.25);
-  assert.equal(before.setupValid,false);
-  assert.equal(before.setupNeedsCorrection,true);
+  assert.equal(before.setupValid,true);
+  assert.equal(before.setupNeedsCorrection,false);
   assert.ok(before.predictedPenetration>0);
   assert.equal(before.retractionEnabled,true);
   assert.equal(before.movement,'quieto');
@@ -51,12 +51,13 @@ try{
   const clamping=await frame(.40);
   assert.equal(clamping.movement,'retroceso-antes-plegado');
   const during=await frame(.60);
-  assert.equal(during.unverified,true);
+  assert.equal(during.unverified,false);
   assert.equal(during.movement,'retirado-durante-plegado');
-  assert.equal(during.setupValid,false,'No falsear el apoyo manual');
+  assert.equal(during.setupValid,true,
+   'Pestaña ya plegada permite apoyo 2D, pero no certifica CAD OEM');
   assert.match(await page.locator('#activeGaugeReference').textContent(),
-   /RETIRADA 2D REPRESENTADA.*APOYO INICIAL SIN VALIDACIÓN/,
-   'No anunciar una retirada segura al no estar validado el apoyo');
+   /retirada previa: SÍ/,
+   'La retirada 2D debe aparecer en el texto del operario');
   const afterPixels=await screenshot.evaluate(c=>c.toDataURL());
   assert.notEqual(afterPixels,beforePixels,
    'La vista 3D debe mostrar desplazamiento durante el plegado');
