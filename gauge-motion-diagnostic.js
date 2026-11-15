@@ -6,7 +6,7 @@
  * sin pedir al operario que cambie un apoyo para grabar otro vídeo.
  * Nunca constituye un programa CNC ni una certificación de colisiones.
  */
-import {normalized} from './engine.js';
+import {normalized,getTooling} from './engine.js';
 import {technicalScene} from './technical-section.js';
 import {gaugePlacement,gaugeContourAtContact} from './backgauge-placement.js';
 import {gaugeRiskStatus} from './gauge-risk-status.js';
@@ -94,6 +94,7 @@ export function buildGaugeMotionDiagnostic(input,{
  samples=GAUGE_DIAGNOSTIC_SUBSTEPS
 }={}){
  const piece=normalized(input),machine=getActiveMachineConfig();
+ const selectedTools=getTooling(piece);
  if(!Array.isArray(samples)||!samples.length||
   samples.some((x,i)=>!Number.isFinite(x)||x<=0||x>=1||
    (i>0&&x<=samples[i-1])))
@@ -112,18 +113,18 @@ export function buildGaugeMotionDiagnostic(input,{
   generatedAt:new Date().toISOString(),
   source:'Modelo de sección 2D usado por el visor PlegadoX, no medición CNC',
   piece,
-  machine:{
-   name:machine.name,profileId:machine.profileId,
-   stop:[...machine.stop],support:[...machine.support],
-   ram:Array.isArray(machine.ram)?[...machine.ram]:null,
-   bed:Array.isArray(machine.bed)?[...machine.bed]:null,
-   gaugeGeometryDocumented:machine.gaugeGeometryDocumented===true,
-   verified:machine.verified===true
+  // Copiar los datos reales, incluidas las cotas y desplazamientos
+  // personalizados. No basta saber que el operario eligió "V16":
+  // una geometría DXF importada puede ser distinta a la de catálogo.
+  machine:JSON.parse(JSON.stringify(machine)),
+  tooling:{
+   punch:JSON.parse(JSON.stringify(selectedTools.punch)),
+   die:JSON.parse(JSON.stringify(selectedTools.die))
   },
   operationOrder:piece.order.map(x=>x+1),
   samplesPerOperation:samples.length,
   operations,
   verified:false,canApproveForMachine:false,
-  limitations:'Diagnóstico por poses discretas en sección 2D y perspectiva 2,5D; NO comprueba recorridos CNC continuos, ejes X/R/Z, sólidos OEM ni seguridad física. No autoriza fabricar.'
+  limitations:'Diagnóstico por poses discretas en sección 2D y perspectiva 2,5D; incluye perfiles de útiles seleccionados y cotas del simulador, pero NO incluye archivos CAD externos o calibración certificada de ejes X/R/Z. No comprueba recorridos CNC continuos, sólidos OEM ni seguridad física. No autoriza fabricar.'
  };
 }
