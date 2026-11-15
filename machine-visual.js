@@ -131,12 +131,8 @@ export function gaugePerspectiveContours(polygon,scale,perspective=false){
  return {near,far,depthX:perspective?23*scale:0,
   depthY:perspective?-13*scale:0};
 }
-/**
- * Señala el extremo DELANTERO del Stop cuando apoya lateralmente una
- * pestaña preplegada. Es una superposición técnica: la matriz puede
- * ocultar parte del labio en perspectiva 2.5D, aunque el contacto
- * físico se calcule sobre el mismo punto de la chapa.
- * Jamás altera el tope, la referencia X/R ni el detector de choques.
+/** Perfil físico del labio frontal del Stop, sin desplazar la chapa.
+ * Se conserva como referencia geométrica; no duplica capas en pantalla.
  */
 export function gaugeFrontNosePolygon(placement,dimensions){
  const contour=gaugeContourAtContact(placement,dimensions);
@@ -146,30 +142,7 @@ export function gaugeFrontNosePolygon(placement,dimensions){
   {x:contour[4].x,y:contour[0].y},
   contour[4],contour[5]].map(p=>({...p}));
 }
-function drawHiddenGaugeNoseGuide(ctx,scene,cx,cy,scale,placement,perspective){
- if(!perspective||!placement?.foldedWingContact||!placement.alignedToSheet)return;
- const cfg=getActiveMachineConfig();
- const values=placement.profile==='support'?cfg.support:cfg.stop;
- const polyWorld=gaugeFrontNosePolygon(placement,values);
- if(!polyWorld)return;
- const polyScreen=polyWorld.map(p=>[cx+p.x*scale,cy-p.y*scale]);
- const colors=GAUGE_COLORS[gaugeRiskStatus(placement).level];
- ctx.save();
- // Representación traslúcida del labio oculto por la extrusión de la
- // matriz, no un sólido adicional ni una segunda posición del tope.
- ctx.globalAlpha=.32;
- poly(ctx,polyScreen,colors.fill,colors.edge,Math.max(1,scale*1.5));
- ctx.globalAlpha=.95;
- ctx.strokeStyle=colors.face;
- ctx.lineWidth=Math.max(1.8,scale*2.2);
- ctx.setLineDash([Math.max(3,scale*4),Math.max(2,scale*2)]);
- ctx.beginPath();
- ctx.moveTo(...polyScreen[3]);
- ctx.lineTo(...polyScreen[2]);
- ctx.stroke();
- ctx.restore();
-}
-function rearMachine(ctx,w,h,cx,cy,scale,placement,perspective=false){
+function rearMachineBackdrop(ctx,w,h,cx,cy,scale){
  ctx.save();
  // Horizontal steel rails across the background
  const y=cy+18*scale;
@@ -182,6 +155,20 @@ function rearMachine(ctx,w,h,cx,cy,scale,placement,perspective=false){
   const x=w*.69+(w*.26*i/4);
   steelRect(ctx,x,cy+23*scale,4*scale,25*scale,false);
  }
+ // Carriles y bancada, SIEMPRE detrás del volumen de la matriz.
+ steelRect(ctx,0,cy+26*scale,w*.3,40*scale,false);
+ for(let i=0;i<4;i++){
+  shape(ctx,20+i*32*scale,cy+28*scale,8*scale,34*scale,'#20394e','#435b6b');
+ }
+ ctx.restore();
+}
+/**
+ * El tope se dibuja después de la matriz en perspectiva 2.5D para
+ * mantener visible su cara frontal en alas cortas; la chapa se dibuja
+ * después del tope. Las posiciones métricas X/R no cambian.
+ */
+function rearMachine(ctx,w,h,cx,cy,scale,placement,perspective=false){
+ ctx.save();
  // En el vídeo real el tope llega DESDE DETRÁS (derecha en perfil)
  // hacia el borde trasero de la chapa. Esta referencia se deriva del
  // borde presentado, no de una distancia fija inventada.
@@ -256,9 +243,6 @@ function rearMachine(ctx,w,h,cx,cy,scale,placement,perspective=false){
     (cadPending?' · CAD PENDIENTE':'');
  ctx.fillText(label,Math.min(Math.max(8,ox+3*scale),w-145*scale),
   Math.max(20,cy-placement.point.y*scale-24*scale));
- // Left support and machine rails
- steelRect(ctx,0,cy+26*scale,w*.3,40*scale,false);
- for(let i=0;i<4;i++){shape(ctx,20+i*32*scale,cy+28*scale,8*scale,34*scale,'#20394e','#435b6b');}
  ctx.restore();
 }
 function drawDie(ctx,scene,cx,cy,scale){
@@ -365,11 +349,16 @@ function stageScene(ctx,w,h,piece,sim,machineView){
  backdrop(ctx,w,h);
  sceneAtmosphere(ctx,w,h,{cx,cy:baseY,s:scale});
  const stopNumber=piece.stopByBend?.[st.activeBend]===2?2:1;
-  const placement=gaugePlacement(scene,stopNumber);
- rearMachine(ctx,w,h,cx,baseY,scale,placement,
-  Boolean(machineView?.perspective));
- dieDepth(ctx,{cx,cy:baseY,s:scale},opening,Boolean(machineView?.perspective),scene.die);
+ const placement=gaugePlacement(scene,stopNumber);
+ const perspective=Boolean(machineView?.perspective);
+ rearMachineBackdrop(ctx,w,h,cx,baseY,scale);
+ // En 2D conservar EXACTAMENTE el orden anterior que ya funcionaba.
+ if(!perspective)rearMachine(ctx,w,h,cx,baseY,scale,placement,false);
+ dieDepth(ctx,{cx,cy:baseY,s:scale},opening,perspective,scene.die);
  drawDie(ctx,scene,cx,baseY,scale);
+ // Sólo en PERSPECTIVA el tope se pinta después de la matriz y antes
+ // de la chapa; así el labio delantero no queda tapado por la V.
+ if(perspective)rearMachine(ctx,w,h,cx,baseY,scale,placement,true);
  // Los reflejos de la matriz se recortan a su contorno real en drawDie.
  // Ram advances to the sheet and descends while deforming it.
  // La formación no comienza antes de que la punta alcance la chapa.
@@ -388,10 +377,6 @@ function stageScene(ctx,w,h,piece,sim,machineView){
  const transformed=machineSheetProjection(scene,cx,baseY,scale,Boolean(machineView?.perspective));
  sheetDepth(ctx,transformed,{cx,cy:baseY,s:scale},t,Boolean(machineView?.perspective));
  drawSheet(ctx,transformed,t,scale,st.press>.4);
- // Mostrar en 3D el labio real del STOP oculto por el relieve de la
- // matriz, sólo si la pestaña YA plegada tiene apoyo lateral 2D válido.
- drawHiddenGaugeNoseGuide(ctx,scene,cx,baseY,scale,placement,
-  Boolean(machineView?.perspective));
  // Punzón en primer plano: el cuerpo de la herramienta NUNCA debe
  // desaparecer detrás de la chapa o de la textura de la máquina.
  drawPunchForeground(ctx,scene,cx,baseY,scale,Boolean(machineView?.transparent));
@@ -450,7 +435,7 @@ function stageScene(ctx,w,h,piece,sim,machineView){
   ctx.fillText(machineView?.perspective?'PERSPECTIVA ILUSTRATIVA · NO CAD':'MODELO PARAMÉTRICO · NO CONTROL CNC',w-12,h-14);
  }else if(w>=470){
   ctx.font='700 9px system-ui';ctx.fillStyle='#6f94ad';ctx.textAlign='left';
-  ctx.fillText('VISTA LATERAL · MODELO PARAMÉTRICO',12,h-12);
+  ctx.fillText(machineView?.perspective?'PERSPECTIVA 2.5D · NO CAD':'VISTA LATERAL · MODELO PARAMÉTRICO',12,h-12);
  }
 }
 // Entrypoint used from app.js drawMachine without changing the core timing engine.

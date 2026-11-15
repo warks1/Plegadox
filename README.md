@@ -1,5 +1,9 @@
 # Plegadox — control y simulador de plegado
 
+## Estado actual · R95 (v0.9.69) · 15 de noviembre de 2026
+
+- **Perspectiva y tope R95:** se corrige el orden de capas de máquina: bancada detrás, matriz antes del dedo trasero, y después chapa y punzón. En la perspectiva 2.5D la matriz ya no oculta el labio frontal del STOP 1 ni del SUPPORT 2, sin modificar posiciones X/R, referencias manuales, cinemática de retroceso ni detección de colisiones. La vista lateral 2D conserva el orden anterior. Se elimina el falso doble perfil traslúcido de la corrección R94 y se actualiza el rótulo a «PERSPECTIVA 2.5D · NO CAD». Pruebas R95 en G1 automático (20 mm) y G2 manual (30 mm), PC/iPhone y capturas de pantalla.
+
 ## Estado actual · R94 (v0.9.68) · 15 de noviembre de 2026
 
 - **Topes R94:** la referencia manual sobre el ala ya plegada permite contacto en la cara exterior del Stop 1 cuando existe solape geométrico 2D y el ala fue plegada antes. El dedo retrocede en sujeción cuando se prevé penetración futura y se mantiene retirado durante el doblado; el modo 3D (perspectiva 2.5D) marca el labio frontal cuando lo tapa el relieve de la matriz. La selección manual no se sustituye y no se declara validación OEM/CNC. Pruebas del caso G2 y cuatro golpes Omega; conservar comprobación física con las medidas reales.
