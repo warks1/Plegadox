@@ -1672,7 +1672,7 @@ function renderSimulationText(){
    ' · ⚠ CHAPA POR DETRÁS DEL TOPE: revisar presentación':'')+
   (chosenGauge.seat&&!chosenGauge.seat.seated?
    (chosenGauge.seat.required?
-    ' · ⚠ CHAPA SIN APOYO O SIN CONTRAHUELLA ÚTIL EN EL ESCALÓN':
+    ' · ⚠ CARA FRONTAL DEL TOPE SIN SOLAPE SUFICIENTE':
     ' · ⚠ CARA FRONTAL DEL TOPE SIN SOLAPE DE ESPESOR'):'')+
   (chosenGauge.gaugeInterference?.warning?
    ' · ⚠ POSIBLE INTERFERENCIA 2D DEL TOPE CON LA CHAPA: revisar apoyo y retirada':
