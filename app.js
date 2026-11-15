@@ -1894,7 +1894,7 @@ function renderSimulationText(){
      details.replaceChildren(...messages.map((m,i)=>{const line=document.createElement('p');line.textContent=(i?'• ':'')+m;return line;}));
      details.title=check.limitations;
    }
-   details.classList.toggle('has-warning',check.hasGeometryWarning||toolNow.hasWarning||sheetNow.hasWarning||!!toolStep?.possibleToolInterference||!!sim.error);
+   details.classList.toggle('has-warning',check.hasGeometryWarning||toolNow.hasWarning||sheetNow.hasWarning||!!toolStep?.possibleToolInterference||!!sim.error||!!sim.blocked);
  }
 }
 function paintAll(){drawProfile('finalCanvas',piece.angles.map(()=>1),true);drawMachine();drawProfile('progressCanvas',stage(piece,sim.time).fractions,false);drawScene();toolDrawing();renderDevelopment();renderToolCards();renderSimulationText();}
@@ -1913,6 +1913,10 @@ function tick(now){
    if(checked.blocked){
     sim.blocked=checked.issue;pausePlayback();
     $('playBtn').title='Detenido por posible penetración 2D con el punzón';
+    // La UI debe confirmar la detención EN EL MISMO fotograma que el motor.
+    // Con el refresco limitado a 250 ms podía quedar el rótulo «Plegado»
+    // cuando la simulación ya estaba detenida por penetración.
+    renderSimulationText();lastStatusFrame=now;
    }else if(checked.looped){sim.time=0;sim.last=null;}
   }
   if(sim.playing)sim.last=now;

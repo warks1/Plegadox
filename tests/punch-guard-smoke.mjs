@@ -47,8 +47,11 @@ try{
   });
   assert.equal(autoSide,'after',
    'La propuesta automática de P4 debe presentarse por el extremo libre');
-  assert.match(await page.locator('#simStatus').textContent(),/DETENIDO/);
+  assert.match(await page.locator('#simStatus').textContent(),/DETENIDO/,
+   'La etiqueta visual debe reflejar el bloqueo en el mismo fotograma');
   assert.match(await page.locator('#collisionDetails').textContent(),/Reproducción detenida ANTES/);
+  assert.ok(await page.locator('#collisionDetails').evaluate(el=>el.classList.contains('has-warning')),
+   'Un bloqueo de diagnóstico debe resaltar el aviso, incluso sin otro error');
   await page.locator('#timeline').evaluate(input=>{
    input.value='0';input.dispatchEvent(new Event('input',{bubbles:true}));
   });
