@@ -82,6 +82,7 @@ jobs:
               tests/legacy-canvas-smoke.mjs
               tests/backgauge-smoke.mjs
               tests/gauge-both-r93-browser-smoke.mjs
+              tests/gauge-motion-export-r97-browser-smoke.mjs
               tests/gauge-perspective-r95-browser-smoke.mjs
               tests/gauge-side-smoke.mjs
               tests/punch-stop-visibility-smoke.mjs

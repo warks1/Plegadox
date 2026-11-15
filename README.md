@@ -1,5 +1,11 @@
 # Plegadox — control y simulador de plegado
 
+## Estado actual · R97 (v0.9.71) · 15 de noviembre de 2026
+
+- **Diagnóstico de topes exportable:** en Auditoría técnica previa a taller → Revisión de topes por golpe hay un botón «Descargar diagnóstico de movimientos del tope (JSON)». Registra la pieza y las referencias elegidas, la máquina con sus cotas configuradas y el perfil de punzón/matriz seleccionado, las coordenadas de chapa/contacto y las transiciones a 15 tiempos por cada golpe, más penetración/holgura estimada y semáforo. No cambia la pieza ni el movimiento de la simulación. Permite contrastar vídeos con la configuración exacta sin reconstruir las decisiones manuales.
+- **Offline y trazabilidad:** archivo descargable localmente desde Windows/USB y navegador, versión de compilación indicada y módulo incluido en caché PWA. El informe no es un programa CNC ni una certificación de colisiones. Las distancias X/R son coordenadas del modelo de sección 2D, no ejes calibrados en máquina.
+- **Conservación de R96:** no se alteran los motores de retroceso, montaje, geometrías ni vistas 2D/3D. Backup fijo R96 disponible en GitHub.
+
 ## Estado actual · R96 (v0.9.70) · 15 de noviembre de 2026
 
 - **Avisos del tope visibles en perspectiva:** estado verde/ámbar/rojo en tarjeta compacta de dos líneas, sin tapar el dedo ni salirse del área entre paneles en móvil o PC; se dibuja por delante de los sólidos. El diagnóstico detallado permanece en el panel correspondiente.
