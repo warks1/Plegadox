@@ -1161,3 +1161,14 @@ Las fotografías facilitadas muestran **cinco caras de 50 mm**, ángulos de perf
 El cálculo anterior de PlegadoX con V16/88°, radio estimado 2,56 mm, K=0,36 y criterio de cotas exteriores da aproximadamente **234,13 mm**. El botón **Cargar referencia Cybelec** usa una **matriz genérica V16/30°**, punzón genérico 30° y radio 2,63 mm; propone un **K equivalente matemático** calculado para reproducir el L DIN nominal de 233,94 mm con la convención actual del motor. No se afirma que ese K sea el parámetro original del control, que el acero sea S235 real, ni que el DIN sea longitud de corte medida. No reemplaza otras piezas guardadas sin acción explícita.
 
 La pantalla inicial **TITANIUM** incluye animación SVG de chapa plegándose entre punzón y matriz, barra de progreso vinculada a la carga efectiva de los módulos, identidad PlegadoX y aviso © A.M.S TECNOLIGICS. No se oculta hasta completar el arranque; si falla, muestra un error y permite reintentar. Se adapta a PC, tablet y móvil, con alternativa para movimiento reducido. El resto de la interfaz mantiene su diseño previo.
+
+
+## R37 · Punto de contacto del tope + splash animado (15-11-2026)
+
+- Por **cada pliegue** se conserva la selección de tope Stop 1/Support 2, ala anterior/siguiente/automática y ahora una **cota de contacto manual en mm desde la línea del pliegue**. El campo vacío vuelve al extremo del ala. El ajuste es independiente para cada pliegue, se conserva con el JSON de la pieza y se muestra en la secuencia y en la sección 2D.
+- En la escena de máquina, el punto de anclaje se calcula por interpolación del tramo seleccionado y no obligatoriamente por su vértice. El desplazamiento ilustrativo del dedo entre golpes usa también ese punto manual. El resto de la pieza no se mueve para hacer parecer correcto el contacto.
+- Seleccionar un punto interior **no garantiza que exista una superficie física capaz de hacer tope**. Se marca como referencia no verificada; no se declara contacto seguro sin borde libre, y continúa el chequeo de penetración del perfil 2D de chapa y dedo.
+- La pantalla premium conserva la foto seleccionada y añade una animación SVG de chapa/punzón durante la carga real. Si falla la foto, ya **no se sustituye silenciosamente por la antigua pantalla TITANIUM**; el mismo diseño presenta un fallback vectorial.
+- Build/cache sincronizados a `PLEGADOX-20261115-R37` / v0.9.13. La actualización de caché PWA no borra las piezas del almacenamiento local.
+
+**Pendiente para uso industrial:** cotas y sólidos CAD aprobados de los dedos, X/R/Z del equipo real, topes en Z, transferencia segura de pieza y comprobación física continua de 3D. La selección de contacto es de previsualización, no autorización de plegado en máquina.
