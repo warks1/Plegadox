@@ -1,5 +1,6 @@
 /** Interfaz de importación DXF de utillaje, completamente local. */
 import {parseToolDxf,importedTool} from './tool-dxf.js';
+import {CATALOG_PUNCHES,CATALOG_DIES} from './catalog.js';
 const $=id=>document.getElementById(id);
 function drawPreview(canvas,parsed){
  const rect=canvas.getBoundingClientRect();
@@ -31,6 +32,44 @@ export function setupToolDxfImporter({add}){
   $('toolDxfPunchOptions').hidden=kind.value!=='punch';
  };
  kind.addEventListener('change',toggle);toggle();
+ const cadSources=$('toolCadSources');
+ if(cadSources){
+  const records=[
+   ...CATALOG_PUNCHES.filter(x=>x.cadSourceUrl).map(x=>({tool:x,kind:'punch'})),
+   ...CATALOG_DIES.filter(x=>x.cadSourceUrl).map(x=>({tool:x,kind:'die'}))
+  ];
+  const display=records.map(({tool,kind:toolKind})=>{
+   const card=document.createElement('article');card.className='px-oem-cad-source';
+   const title=document.createElement('strong');
+   title.textContent=(tool.manufacturer||'OEM')+' · '+(tool.reference||tool.name);
+   const details=document.createElement('small');
+   details.textContent=(toolKind==='punch'?'Punzón':'Matriz')+' · '+tool.angle+'°'+
+    (toolKind==='die'?' · V'+tool.opening:' · R'+(tool.tip/2))+
+    ' · H nominal '+tool.height+' mm · DXF todavía sin importar';
+   const actions=document.createElement('div');actions.className='px-oem-cad-actions';
+   const preset=document.createElement('button');preset.type='button';
+   preset.textContent='Preparar importación';
+   preset.addEventListener('click',()=>{
+    kind.value=toolKind;toggle();name.value=tool.reference||tool.name;
+    $('toolDxfAngle').value=String(tool.angle);
+    $('toolDxfLength').value=String(tool.length||415);
+    if(toolKind==='die')$('toolDxfOpening').value=String(tool.opening);
+    else $('toolDxfTip').value=String(tool.tip||1);
+    say('Referencia '+tool.reference+' preparada. Descarga el DXF OEM y súbelo a este formulario. El contorno y el amarre quedan pendientes de comprobación.');
+   });
+   const ref=document.createElement('a');ref.href=tool.cadSourceUrl;
+   ref.target='_blank';ref.rel='noopener noreferrer';
+   ref.textContent='Ficha + DXF del fabricante';
+   actions.append(preset,ref);
+   if(tool.cadDownloadUrl){
+    const direct=document.createElement('a');
+    direct.href=tool.cadDownloadUrl;direct.target='_blank';direct.rel='noopener noreferrer';
+    direct.textContent='Archivo DXF directo';actions.append(direct);
+   }
+   card.append(title,details,actions);return card;
+  });
+  cadSources.replaceChildren(...display);
+ }
  input.addEventListener('change',async()=>{
   parsed=null;save.disabled=true;preview.hidden=true;
   const file=input.files?.[0];
