@@ -1,5 +1,12 @@
 # Plegadox — control y simulador de plegado
 
+## Estado actual · R96 (v0.9.70) · 15 de noviembre de 2026
+
+- **Avisos del tope visibles en perspectiva:** estado verde/ámbar/rojo en tarjeta compacta de dos líneas, sin tapar el dedo ni salirse del área entre paneles en móvil o PC; se dibuja por delante de los sólidos. El diagnóstico detallado permanece en el panel correspondiente.
+- **Movimientos diferenciados:** la tarjeta indica retroceso preventivo, aparcamiento durante plegado y cambio de cota del siguiente golpe sin confundirlos.
+- **Conservación estricta:** ningún cambio en matriz, punzón, coordenadas X/R, referencias manuales, barrido de colisiones, retroceso, orden de pasos o representación lateral 2D. R95 permanece en la rama backup/PLEGADOX-R95-2026-11-15.
+- **Validación:** pruebas unitarias y navegador PC/iPhone con capturas; no implica certificación OEM ni autorización CNC.
+
 ## Estado actual · R95 (v0.9.69) · 15 de noviembre de 2026
 
 - **Perspectiva y tope R95:** se corrige el orden de capas de máquina: bancada detrás, matriz antes del dedo trasero, y después chapa y punzón. En la perspectiva 2.5D la matriz ya no oculta el labio frontal del STOP 1 ni del SUPPORT 2, sin modificar posiciones X/R, referencias manuales, cinemática de retroceso ni detección de colisiones. La vista lateral 2D conserva el orden anterior. Se elimina el falso doble perfil traslúcido de la corrección R94 y se actualiza el rótulo a «PERSPECTIVA 2.5D · NO CAD». Pruebas R95 en G1 automático (20 mm) y G2 manual (30 mm), PC/iPhone y capturas de pantalla.
