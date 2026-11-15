@@ -307,7 +307,10 @@ export function loadImportedTools(storage){
   if(!Array.isArray(data))return [];
   return data.slice(0,30).filter(t=>{
    try{
-    if(!t||t.importedDxf!==true||!/^user-dxf-(punch|die)-[a-z0-9-]+$/.test(t.id))return false;
+    const imported=t?.importedDxf===true&&/^user-dxf-(punch|die)-[a-z0-9-]+$/.test(t.id);
+    const custom=t?.customProfile===true&&t.importedDxf===false&&
+     /^user-custom-(punch|die)-[a-z0-9-]+$/.test(t.id);
+    if(!imported&&!custom)return false;
     validateContour(t.profilePoints);
     return Number.isFinite(t.angle)&&Number.isFinite(t.height)&&
       (t.opening!=null?Number.isFinite(t.opening):Number.isFinite(t.tip));
@@ -325,7 +328,7 @@ export function persistImportedTool(storage,tool){
  if(!storage)throw Error('Almacenamiento local no disponible');
  validateContour(tool.profilePoints);
  const items=loadImportedTools(storage);
- if(items.length>=30)throw Error('Máximo de 30 herramientas DXF guardadas');
+ if(items.length>=50)throw Error('Máximo de 50 herramientas personalizadas/DXF guardadas');
  if(items.some(t=>t.id===tool.id))throw Error('La referencia ya está registrada');
  const next=[...items,tool];
  storage.setItem(TOOL_DXF_STORAGE_KEY,JSON.stringify(next));
