@@ -56,7 +56,7 @@ export function inspectGaugeOperation(piece,operation,{
   const approaching=['Posicionamiento','Aproximación'].includes(phase);
   const transitioning=!!scene.gaugeTransition;
   if(place.contactEngaged)contacted=true;
-  if(transitioning)withdrawn=true;
+  if(transitioning&&scene.gaugeTransition?.plannedRetraction>0)withdrawn=true;
   const issue=place.gaugeInterference;
   let kind=null;
   if(issue?.warning&&['penetracion','holgura'].includes(issue.kind))
