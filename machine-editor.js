@@ -3,6 +3,7 @@
 import {V85_FACTORY,getV85,getActiveMachineConfig,updateV85,resetV85,gaugeOutline,gaugeBounds,gaugeContactFeature} from './machine-config.js';
 import {getActiveMachineId,getActiveMachineProfile,selectMachine} from './machine-selection.js';
 import {roundedRectPath} from './canvas-path.js';
+import {readBystronicFit,writeBystronicFit,assessBystronicWorkingOpening} from './bystronic-fit.js';
 import {loadMachineCad,machineConfigurationKey} from './machine-cad.js';
 
 const $=id=>document.getElementById(id);
@@ -212,6 +213,9 @@ function render(refreshFields=true){
  redraw();
 }
 function renderBystronicDetails(host,profile){
+ const isOwner=profile.id==='bystronic-2006-100-3100';
+ let fit=null,fitError=null;
+ if(isOwner)try{fit=readBystronicFit();}catch(error){fitError=error.message;}
  const text=(node,value)=>{node.textContent=value;return node;};
  const h=document.createElement('h2');text(h,profile.title);
  const p=document.createElement('p');p.className='hint';text(p,profile.provenience);
@@ -219,7 +223,9 @@ function renderBystronicDetails(host,profile){
  const rows=[['Capacidad',profile.tonnage+' t'],['Longitud de plegado',profile.bendingLength+' mm'],
   ['Entre montantes',profile.betweenUprights==null?'Sin confirmar':profile.betweenUprights+' mm'],
   ['Escote',profile.throat==null?'Sin confirmar':profile.throat+' mm'],
-  ['Altura libre',profile.openHeight==null?'Sin confirmar':profile.openHeight+' mm'],
+  ['Luz libre entre trancha y mesa',isOwner?
+    (fit?.daylightMeasured!=null?fit.daylightMeasured+' mm · medida declarada':'Sin medir · no aplicar rango PR/Xpert'):
+    (profile.openHeight==null?'Sin confirmar':profile.openHeight+' mm')],
   ['Carrera de la trancha',profile.stroke==null?'Sin confirmar':profile.stroke+' mm'],
   ['Altura de mesa',profile.tableHeight==null?'Sin confirmar':profile.tableHeight+' mm'],
   ['Campo nominal del tope',profile.xRange==null?'Sin confirmar':profile.xRange+' mm'],
@@ -232,6 +238,13 @@ function renderBystronicDetails(host,profile){
   ['Aceite hidráulico',profile.hydraulicOilLitres==null?'Sin confirmar':profile.hydraulicOilLitres+' litros'],
   ['Dimensiones exteriores',profile.outer?Object.values(profile.outer).join(' × ')+' mm':'Sin confirmar'],
   ['Fijación superior e inferior',profile.clamping],
+  ...(isOwner?[
+   ['Cabezales superiores','WILA · confirmado por propietario'],
+   ['Mesa inferior','Con bombeo hidráulico · confirmado por propietario'],
+   ['Base/regleta inferior','Adaptadora de matrices PROMECAM · confirmado por propietario'],
+   ['Altura regleta adaptadora',fit?.lowerAdapterHeight==null?'Sin medir':fit.lowerAdapterHeight+' mm · medida declarada'],
+   ['Rango de luz citado (PR/Xpert)','400–515 mm · sólo orientación para otros modelos, no atribuido a esta unidad']
+  ]:[]),
   ['Contornos CAD de la trancha/mesa', 'NO disponibles · requiere plano y cotas de su unidad'],
   ['Geometría de dedos y ejes', 'Croquis SOLO visual · sin recorrido X/R/Z certificado']];
  for(const [k,v] of rows){const row=document.createElement('div');
@@ -239,7 +252,60 @@ function renderBystronicDetails(host,profile){
   text(name,k);text(value,v);row.append(name,value);table.append(row);}
  const warning=document.createElement('p');warning.className='warn';
  warning.textContent='PRECAUCIÓN: el modelo AFM EP 31-100 se ha identificado por semejanza fotográfica; las medidas publicadas de unidades de esta familia NO acreditan las cotas exactas de tu máquina. No utilizar los valores de PR100 ni certificar colisiones sin placa, planos, CAD, fijaciones y calibración X/R/Z.';
+
  const children=[h,p,table,warning];
+ if(isOwner){
+  const section=document.createElement('section');section.className='px-bystronic-fit';
+  const heading=document.createElement('h3');text(heading,'Luz libre útil · montaje WILA / adaptador Promecam');
+  const guide=document.createElement('p');guide.className='hint';
+  text(guide,'Introduce únicamente medidas tomadas en TU máquina, en milímetros. Deja vacío lo que desconozcas. La luz libre entre trancha y mesa NO es el espacio útil con punzón, cabezal WILA, regleta y matriz montados.');
+  section.append(heading,guide);
+  const inputs=document.createElement('div');inputs.className='machine-field-grid';
+  const specs=[
+   ['daylightMeasured','Luz real trancha–mesa (mm)','Entre caras de referencia sin herramientas, a apertura máxima'],
+   ['upperAssemblyProjection','Conjunto superior WILA + punzón (mm)','Desde cara inferior de la trancha hasta punta del punzón ya montado'],
+   ['lowerAdapterHeight','Regleta inferior Promecam (mm)','Altura añadida sobre la mesa de bombeo'],
+   ['lowerDieProjection','Altura de matriz sobre regleta (mm)','Desde la cara de apoyo en la regleta hasta la coronación de la matriz']
+  ];
+  for(const [field,name,hint] of specs){
+   const label=document.createElement('label');label.className='machine-number-field';
+   const title=document.createElement('span');text(title,name);
+   const input=document.createElement('input');input.type='number';input.min='0';input.max='1200';
+   input.step='0.1';input.inputMode='decimal';input.value=fit?.[field]==null?'':String(fit[field]);
+   input.placeholder='Sin medir';input.setAttribute('aria-label',name);
+   const help=document.createElement('small');text(help,hint);
+   input.addEventListener('change',()=>{
+    try{
+     const current=readBystronicFit();
+     current[field]=input.value.trim()===''?null:input.value.trim().replace(',','.');
+     writeBystronicFit(current);
+     window.dispatchEvent(new CustomEvent('plegadox:machineChanged',{
+      detail:{selectedMachine:profile.id,mountingMeasurementsUpdated:true}
+     }));
+     const save=$('machineSaveState');
+     if(save)text(save,'Medidas guardadas en este dispositivo; no equivalen a verificación industrial.');
+    }catch(error){
+     window.alert('Medida no guardada: '+error.message);
+     input.value=fit?.[field]==null?'':String(fit[field]);
+    }
+   });
+   label.append(title,input,help);inputs.append(label);
+  }
+  section.append(inputs);
+  const calc=document.createElement('p');calc.className='hint';
+  const check=fit?assessBystronicWorkingOpening(fit):null;
+  if(check?.calculable)
+   text(calc,'Apertura nominal entre útiles montados: '+locale(check.opening)+
+    ' mm. Es una resta dimensional, NO valida carrera, colisiones ni accesibilidad física.');
+  else text(calc,'Apertura útil pendiente: introducir las cuatro alturas medidas. No se calcula con valores genéricos PR/Xpert.');
+  section.append(calc);
+  if(fitError){
+   const err=document.createElement('p');err.className='warn';
+   text(err,'Error de lectura de medidas almacenadas: '+fitError);
+   section.append(err);
+  }
+  children.push(section);
+ }
  if(profile.source){const a=document.createElement('a');a.href=profile.source;
   a.target='_blank';a.rel='noopener noreferrer';a.textContent='Consultar ficha técnica de origen';children.push(a);}
  host.replaceChildren(...children);
