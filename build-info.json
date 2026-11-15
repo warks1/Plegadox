@@ -1,6 +1,6 @@
 {
-  "build": "PLEGADOX-20261115-R38",
-  "version": "0.9.14",
-  "gauge": "full-flange-gauge-contact-r38",
-  "cache": "plegadox-static-0.9.14-axis-geometry-r36-b"
+  "build": "PLEGADOX-20261115-R39",
+  "version": "0.9.15",
+  "gauge": "full-flange-gauge-contact-r39",
+  "cache": "plegadox-static-0.9.15-axis-geometry-r36-b"
 }
