@@ -1,6 +1,9 @@
 # Plegadox — control y simulador de plegado
 
-## Estado actual · R93 (v0.9.67) · 15 de noviembre de 2026
+## Estado actual · R94 (v0.9.68) · 15 de noviembre de 2026
+
+- **Topes R94:** la referencia manual sobre el ala ya plegada permite contacto en la cara exterior del Stop 1 cuando existe solape geométrico 2D y el ala fue plegada antes. El dedo retrocede en sujeción cuando se prevé penetración futura y se mantiene retirado durante el doblado; el modo 3D (perspectiva 2.5D) marca el labio frontal cuando lo tapa el relieve de la matriz. La selección manual no se sustituye y no se declara validación OEM/CNC. Pruebas del caso G2 y cuatro golpes Omega; conservar comprobación física con las medidas reales.
+
 
 - **Simulación de punzón:** un solo descenso continuo por golpe; la punta permanece alta y fija durante el giro de la chapa. La altura se calcula con la misma presentación geométrica que muestra la sección técnica, incluyendo cambios de cara y de sentido de alimentación.
 - **Topes traseros (R93):** alineación de perspectiva del dedo con el plano visible de la chapa, sin alterar las coordenadas X/R ni los datos manuales. Al preverse una penetración FUTURA del ala, la vista puede mostrar la retirada del dedo durante sujeción, incluso si el apoyo inicial está sin validar; en ese caso se conserva el aviso **NO APTO PARA CNC**, ya que retirar no convierte un apoyo incorrecto en válido. La retirada no se activa por simple holgura nominal. Las geometrías reales de topes requieren todavía validación OEM.
