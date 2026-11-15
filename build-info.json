@@ -1,7 +1,7 @@
 {
-  "build": "PLEGADOX-20261115-R53",
-  "version": "0.9.29",
+  "build": "PLEGADOX-20261115-R54",
+  "version": "0.9.30",
   "machine": "bystronic-2006-2009-wila-promecam-gauge-conditional",
-  "ui": "responsive-splash-mounted-tooling-continuous-backgauge-conditional-retreat",
-  "cache": "plegadox-static-0.9.29-gauge-continuity-splash-fit-r53"
+  "ui": "fixed-splash-screen-shelf-contact-gauge-continuity-oem-dxf-links",
+  "cache": "plegadox-static-0.9.30-shelf-gauge-cad-r54"
 }
