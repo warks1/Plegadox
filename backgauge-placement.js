@@ -163,7 +163,8 @@ export function gaugePlacement(scene,stopNumber=1){
    freeEdge,referenceKind:freeEdge?'extremo libre':
     reference.manual&&!reference.atEnd?'punto interior del tramo':'vértice interior plegado',
    state:scene.gaugeTransition?
-    (scene.gaugeTransition.phase==='retroceso-antes-plegado'?'TOPE EN RETROCESO · SUJECIÓN':
+    (scene.gaugeTransition.phase==='reubicacion-siguiente-golpe'?'TOPE POSICIONANDO REFERENCIA DEL SIGUIENTE GOLPE':
+     scene.gaugeTransition.phase==='retroceso-antes-plegado'?'TOPE EN RETROCESO · SUJECIÓN':
      scene.gaugeTransition.phase==='retirado-durante-plegado'?'TOPE APARCADO · PLEGADO':
      'TOPE VOLVIENDO A LA REFERENCIA DEL SIGUIENTE GOLPE'):
     !valid?'sin cota válida':!feature.usable?'sin cara física de apoyo definida':
