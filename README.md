@@ -1393,3 +1393,9 @@ La captura facilitada por el propietario confirmó un fallo visual grave de la p
 - WILA facilita enlaces a contornos DXF después de proporcionar correo o identificarse en MyWILA; **no se ha descargado ni inventado ningún DXF**. Cuando el operario obtenga el archivo, puede utilizar el importador existente de la aplicación para registrar el contorno y revisarlo.
 
 **Límites físicos explícitos:** toda validación de chapa-dedo es por muestras discretas 2D, sin geometría volumétrica contrastada del cuerpo de máquina, punzón, matriz, amarre WILA, regleta Promecam ni cinemática X/R/Z; tampoco hay sincronización CNC. No usar como garantía de ausencia de colisiones en una plegadora real.
+
+## R55 · Carga por metro de utillaje en la recomendación automática (15-11-2026)
+
+El asesor `tooling-advisor.js` ahora calcula `forceTonnesPerMetre = force.tonneForce × 1000 / ancho_mm` para cada combinación de punzón y matriz, utilizando el modelo existente de fuerza de plegado al aire. Si la ficha de algún útil proporciona `maxTPerMetre` documentado y el cálculo lo supera, **no recomienda esa combinación**, aunque el tonelaje total de la plegadora alcance. La capacidad de punzón y matriz se comprueba por separado; si el límite de uno o ambos es desconocido, **se indica como pendiente**, no se supone permitido. Mantiene los avisos de montaje, reparto de carga entre segmentos, longitud Z de utillaje y ausencia de certificación industrial. Pruebas nuevas: `tests/tooling-load-capacity-r55.test.mjs` con rechazo por punzón, rechazo por matriz, aceptación nominal condicionada y advertencia de datos ausentes.
+
+Referencias WILA: BIU-021 H útil 163 mm, α=28°, R1 y carga 70 t/m; OZU-012 V16/86°, R1,5 y carga 120 t/m. Datos nominales en páginas oficiales WILA citadas en la sección R54. El modelo no valida de manera independiente la fuerza de plegado, el montaje WILA/Promecam, la capacidad real de mordazas o la distribución de presiones en una pieza segmentada.
