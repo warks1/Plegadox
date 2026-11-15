@@ -1415,7 +1415,7 @@ function toolCard(tool,kind){
  const meta=document.createElement('span');meta.className='tool-card-measure';
  meta.textContent=kind==='punch'?
   tool.angle+'° · R'+numbers((Number(tool.tip)||0)/2,2)+' · '+
-  (tool.profileStyle==='user-photo'?'H útil ':'H total ')+tool.height+' mm'+
+  (tool.profileStyle==='user-photo'||tool.nominalHeightType==='working'?'H útil ':'H total ')+tool.height+' mm'+
   (tool.type==='cabra'?' · Pata de cabra':''):
   'V'+tool.opening+' · '+tool.angle+'°'+
   (tool.shoulderRadius?' · R'+numbers(tool.shoulderRadius,2):'')+
