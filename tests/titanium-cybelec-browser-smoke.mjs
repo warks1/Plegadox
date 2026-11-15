@@ -16,12 +16,13 @@ try{
   await splash.waitFor({state:'visible',timeout:30000});
   assert.equal(await splash.isVisible(),true,view.name+': el splash aparece al entrar');
   const selected=page.frameLocator('#pxSplashReference');
-  const photo=selected.locator('#photo');
-  await photo.waitFor({state:'visible'});
+  const art=selected.locator('#machineArt');
+  await art.waitFor({state:'visible'});
   await page.waitForFunction(()=>{
-   const img=document.querySelector('#pxSplashReference')?.contentDocument?.getElementById('photo');
-   return img?.complete&&img.naturalWidth===1672&&img.naturalHeight===941;
+   const img=document.querySelector('#pxSplashReference')?.contentDocument?.getElementById('machineArt');
+   return img?.complete&&img.naturalWidth>0;
   },null,{timeout:20000});
+  assert.equal(await selected.locator('#machineArt').getAttribute('src'),'./splash-machine-assembly.svg');
   assert.equal(await selected.locator('#progress').getAttribute('role'),'progressbar');
   await splash.waitFor({state:'hidden',timeout:30000});
   await page.waitForFunction(()=>!!window.PLEGADOX_STATE,null,{timeout:30000});
