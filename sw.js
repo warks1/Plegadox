@@ -1,5 +1,5 @@
 // PlegadoX · caché offline estática. Se versiona para no arrastrar JS obsoleto.
-const CACHE='plegadox-static-0.9.25-about-updater-responsive-r49';
+const CACHE='plegadox-static-0.9.26-gauge-contact-icon-splash-r50';
 const APP_FILES=[
  "./",
  "./app.js",
@@ -15,14 +15,15 @@ const APP_FILES=[
  "./dxf-export.js",
  "./engine.js",
  "./favicon.svg",
- "./icon-industrial-180.png",
- "./icon-industrial-192.png",
- "./icon-industrial-512.png",
+ "./icon-premium-180.png",
+ "./icon-premium-192.png",
+ "./icon-premium-512.png",
  "./flat-layout.js",
  "./gauge-side-review.js",
  "./gauge-contact-advisor.js",
  "./gauge-interference.js",
  "./gauge-sequence-review.js",
+ "./gauge-contact-solver.js",
  "./icons.svg",
  "./incident-navigation.js",
  "./index.html",
