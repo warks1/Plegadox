@@ -1520,3 +1520,21 @@ html{background:#020913}
 .px-machine-select-settings{display:grid;gap:4px;font-size:11px;font-weight:750;min-width:175px;color:#bbd7e6}
 .px-machine-select-settings select{width:100%;min-height:42px;color:#e9f8ff;background:#10364e;border:1px solid #4c99b6;border-radius:8px;padding:6px 10px}
 @media(max-width:560px){.px-machine-select-settings{width:100%;min-width:0}.px-machine-select-settings select{font-size:16px}}
+
+/* R47 · fuentes de CAD OEM, sin hacer pasar fichas por contornos importados */
+.px-oem-cad-sources{margin:12px 0;padding:12px;border:1px solid #3f7086;
+ border-radius:11px;background:linear-gradient(150deg,#0b2536,#101d32)}
+.px-oem-cad-sources h3{font-size:14px;margin:0 0 8px}
+.px-oem-cad-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,235px),1fr));gap:8px}
+.px-oem-cad-source{display:flex;flex-direction:column;gap:5px;min-width:0;
+ background:#081827;border:1px solid #294f68;border-radius:8px;padding:10px}
+.px-oem-cad-source strong{font-size:12px;color:#c1f0ff;overflow-wrap:anywhere}
+.px-oem-cad-source small{font-size:11px;line-height:1.5;color:#9cbccc}
+.px-oem-cad-actions{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin-top:auto;padding-top:6px}
+.px-oem-cad-actions button,.px-oem-cad-actions a{display:inline-flex;align-items:center;
+ padding:8px 10px;font-size:11px;line-height:1.2;border:1px solid #5086a3;
+ border-radius:7px;background:#12354d;color:#d5f6ff;text-decoration:none}
+.px-oem-cad-actions button{cursor:pointer}
+.px-oem-cad-actions button:focus-visible,.px-oem-cad-actions a:focus-visible{
+ outline:2px solid #8ae9ff;outline-offset:2px}
+@media(max-width:560px){.px-oem-cad-grid{grid-template-columns:1fr}}
