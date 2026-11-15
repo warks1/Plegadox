@@ -1,6 +1,6 @@
 {
-  "build": "PLEGADOX-20261115-R44",
-  "version": "0.9.20",
-  "gauge": "bystronic-pr100-reference-dimensions-r44",
-  "cache": "plegadox-static-0.9.20-bystronic-pr100-r44"
+  "build": "PLEGADOX-20261115-R45",
+  "version": "0.9.21",
+  "machine": "photo-afm-ep31-100-probable-r45",
+  "cache": "plegadox-static-0.9.21-afm-ep-photo-r45"
 }
