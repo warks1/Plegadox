@@ -2,6 +2,15 @@
 // IMPORTANTE: que un artículo exista en un catálogo no implica que su amarre
 // sea compatible con la Trumpf V85 concreta. Validar mordazas reales.
 export const CATALOG_SOURCES = {
+  wilaBIU021:{title:'WILA BIU-021 · página fabricante (DXF bajo acceso WILA)',url:'https://www.wilatooling.com/en-us/products/press-brake-tooling/new-standard-tooling/new-standard-premium/biu-021/',scope:'punzón WILA H útil y ángulo nominal; contorno CAD pendiente'},
+  wilaBIU033:{title:'WILA BIU-033 · página fabricante',url:'https://www.wilatooling.com/en-us/products/press-brake-tooling/new-standard-tooling/new-standard-premium/biu-033/',scope:'punzón WILA, datos nominales; CAD pendiente'},
+  wilaBIU053:{title:'WILA BIU-053 · página fabricante',url:'https://www.wilatooling.com/en-us/products/press-brake-tooling/new-standard-tooling/new-standard-premium/biu-053/',scope:'punzón WILA, datos nominales; CAD pendiente'},
+  wilaOZU012:{title:'WILA OZU-012 · página fabricante',url:'https://www.wilatooling.com/en-us/products/press-brake-tooling/new-standard-tooling/new-standard-premium/ozu-012/',scope:'matriz nominal V16 WILA; no montar en regleta Promecam sin adaptador'},
+  wilaOZU045:{title:'WILA OZU-045 · página fabricante',url:'https://www.wilatooling.com/products/press-brake-tooling/new-standard-tooling/new-standard-premium/ozu-045/',scope:'matriz V16/90º de serie WILA; CAD pendiente'},
+  wilaOZU312:{title:'WILA OZU-312 · página fabricante',url:'https://www.wilatooling.com/en-us/products/press-brake-tooling/new-standard-tooling/new-standard-premium/ozu-312/',scope:'matriz nominal WILA; CAD pendiente'},
+  eurostamp1193:{title:'Eurostamp 1193/30° · referencia comercial',url:'https://machinistsvault.com/products/1193-punch-30',scope:'punzón tipo Promecam H nominal; plano fabricante por verificar'},
+  soclamPromecam2012:{title:'SOCLAM 20.12 · matriz Amada/Promecam dos V',url:'https://www.soclam.com/produit/matrice-amada-a-2-ves-a-88/',scope:'V6/V10, DXF disponible para importar; no etiquetar certificado'},
+  soclamPromecam2015:{title:'SOCLAM 20.15 · matriz Amada/Promecam dos V',url:'https://www.soclam.com/produit/matrice-amada-a-2-ves-a-88/',scope:'V16/V25, DXF disponible para importar; no etiquetar certificado'},
   mecosGeneral2025: {title:"MECOS — Catálogo general 2025/26, página 3", url:"", scope:"familias de utillaje; sin referencias ni perfiles acotados"},
   mecosTooling2022: {title:"MECOS — Catálogo técnico de utillaje 2022",url:"https://www.mecos.es/files/productos/utillaje-plegadora/MECOS-Catalogo-General-de-Utillaje-2022.pdf",scope:"familias Bystronic / Beyeler, Amada / Promecam y Trumpf / Wila"},
   trumpfES2025: {title:"TRUMPF — Catálogo útiles plegado 2025 ES",url:"https://www.trumpf.com/filestorage/TRUMPF_ES/user_upload/2025_Catalogo_Utiles_plegado_ES.pdf",scope:"EV001 V6, EV001/H V6"},
