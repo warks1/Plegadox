@@ -6,7 +6,7 @@
  * secuencia seleccionada. No certifica que una operación sea segura.
  */
 import { normalized, profile, stage, getTooling, toolAngleCompatibility } from './engine.js';
-import {getV85} from './machine-config.js';
+import {getActiveMachineConfig} from './machine-config.js';
 
 const EPS=1e-7;
 const round=(x,n=2)=>Number(x.toFixed(n));
@@ -233,7 +233,7 @@ export function analyzeSequence(raw){
     {kind,reference:tool.reference||tool.name,availableLength:length,requiredLength:p.width}));
   }
  }
- const machine=getV85();
+ const machine=getActiveMachineConfig();
  if(p.width>machine.ramWidth){
   issues.push(issue('machine-width','warning',null,
    'La pieza excede el ancho configurado de la trancha: '+machine.ramWidth+' mm.'));
