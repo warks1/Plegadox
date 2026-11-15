@@ -217,7 +217,8 @@ export function stage(piece,time){
  let phase='Preparación',press=0;
  if(sub<.16){phase='Posicionamiento';press=0;}
  else if(sub<.36){phase='Aproximación';press=(sub-.16)/.2*.45;}
- else if(sub<.68){phase='Plegado';const f=clamp((sub-.36)/.32,0,1);press=.45+.55*f;fractions[p.order[index]]=f*f*(3-2*f);}
+ else if(sub<.44){phase='Sujeción · retroceso tope';press=.45;}
+ else if(sub<.68){phase='Plegado';const f=clamp((sub-.44)/.24,0,1);press=.45+.55*f;fractions[p.order[index]]=f*f*(3-2*f);}
  else if(sub<.84){phase='Retorno';press=1-(sub-.68)/.16;fractions[p.order[index]]=1;}
  else{phase='Reposicionamiento';press=0;fractions[p.order[index]]=1;}
  if(t===loop){for(const id of p.order)fractions[id]=1;phase='Pieza terminada';press=0;}
