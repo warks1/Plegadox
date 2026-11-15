@@ -1,6 +1,6 @@
 {
-  "build": "PLEGADOX-20261115-R41",
-  "version": "0.9.17",
-  "gauge": "advance-retraction-before-bending-r41",
-  "cache": "plegadox-static-0.9.17-bystronic-retract-r41"
+  "build": "PLEGADOX-20261115-R42",
+  "version": "0.9.18",
+  "gauge": "backgauge-prebend-retreat-multimachine-r42",
+  "cache": "plegadox-static-0.9.18-backgauge-bystronic-r42"
 }
