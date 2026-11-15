@@ -35,7 +35,7 @@ test('alarma de penetración durante retirada aparece con instante del golpe',()
   const op=Math.min(p.order.length-1,Math.floor(time/5));
   const isWithdrawal=(time%5)>4;
   return {scene:{stage:{activeOperation:op,activeBend:p.order[op],
-    phase:isWithdrawal?'Retirada':'Posicionamiento'},gaugeTransition:isWithdrawal?{point:{x:100,y:0}}:null},
+    phase:isWithdrawal?'Retirada':'Posicionamiento'},gaugeTransition:isWithdrawal?{point:{x:100,y:0},plannedRetraction:50}:null},
    place:{stopNumber:p.stopByBend[p.order[op]]||1,freeEdge:true,
     sheetInFront:true,seat:{seated:true},contactEngaged:!isWithdrawal,
     gaugeInterference:{warning:isWithdrawal,kind:'penetracion',
