@@ -38,7 +38,7 @@ export function cybelecReferencePreset(){
   radius:CYBELEC_OMEGA.photographedRadius,
   kFactor:equivalentKForCybelec(),
   datum:'outside',
-  gaugeSideByBend:['before','before','before','after']
+  gaugeSideByBend:['auto','auto','auto','auto']
  });
 }
 
