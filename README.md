@@ -1474,3 +1474,11 @@ Versionado: `PLEGADOX-20261115-R61`, `0.9.37`, caché `plegadox-static-0.9.37-cu
 - Build `PLEGADOX-20261115-R62`, versión `0.9.38`, caché `plegadox-static-0.9.38-tool-revisions-r62`.
 
 **Advertencia:** los dibujos por cotas siguen siendo perfiles 2D paramétricos, sin certificación de radios/amarres/volumetría; no garantizan que un útil diseñado se pueda montar ni que su uso quede libre de colisiones.
+
+## R63 · Actualizaciones sin reinicio sorpresa de la simulación (15-11-2026)
+
+El cambio de controlador del service worker `pwa.js` ya **no invoca `location.reload()`** mientras el operario está programando, reproduciendo un plegado o editando cotas. En su lugar envía el evento `plegadox:cacheControllerChanged`. La pestaña «Acerca de» muestra que se han renovado archivos en caché y remite al botón «Buscar e instalar actualizaciones». El botón verifica que exista una versión más nueva publicada antes de instalarla; conserva las piezas, herramientas y ajustes almacenados.
+
+La prueba `tests/pwa-controller-no-reload.test.mjs` simula la sustitución de un controlador PWA e impide cualquier recarga automática. No altera el chequeo offline, la caché de recursos estáticos ni la capacidad del operador de actualizar deliberadamente.
+
+Build `PLEGADOX-20261115-R63`, `0.9.39`, caché `plegadox-static-0.9.39-safe-sw-r63`.
