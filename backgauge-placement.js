@@ -159,21 +159,13 @@ export function gaugePlacement(scene,stopNumber=1){
   const approaching=['Posicionamiento','Aproximación'].includes(scene.stage?.phase);
   // Un punto interior no equivale a una cara libre: mostrar su posición,
   // pero NO conceder contacto validado ni tapar una penetración geométrica.
-  const foldedWingContact=scene?.gaugeSetup?.foldedWingContact===true;
-  const sheetInFront=foldedWingContact||
-   (freeEdge&&sheetInFrontOfGauge(scene,index,a,thickness));
-  const seat=foldedWingContact?
-   {required:true,seated:true,reason:'cara lateral de pestaña plegada · sólo sección 2D'}:
-   freeEdge?gaugeSeatAssessment(scene,index,a,thickness,feature):
+  const sheetInFront=freeEdge&&sheetInFrontOfGauge(scene,index,a,thickness);
+  const seat=freeEdge?gaugeSeatAssessment(scene,index,a,thickness,feature):
    {required:true,seated:false,reason:'punto interior sin cara de apoyo físico verificada'};
   const setupValid=scene?.gaugeSetup?.valid!==false;
-  // Contacto por el canto: fibra media al plano X. En pestaña plegada:
-  // su superficie EXTERIOR está medio espesor detrás de la fibra.
-  const contactTolerance=foldedWingContact?
-   thickness/2+Math.max(.2,thickness*.15):Math.max(.4,thickness*.28);
-  const contactEngaged=setupValid&&!scene.gaugeTransition&&valid&&
-    (freeEdge||foldedWingContact)&&sheetInFront&&seat.seated&&
-    feature.usable&&a.x>0&&approaching&&gap<=contactTolerance;
+  const contactEngaged=setupValid&&!scene.gaugeTransition&&valid&&freeEdge&&sheetInFront&&seat.seated&&
+    feature.usable&&a.x>0&&approaching&&
+    gap<=Math.max(.4,thickness*.28);
   return review({phase:scene.stage?.phase,stopNumber:selected,profile:selected===2?'support':'stop',
    point:{x:a.x,y:a.y},contact:contactAt(a),nominalDistance:reference.distance,
    referenceSide:reference.side,referenceLabel:reference.label,
@@ -181,12 +173,10 @@ export function gaugePlacement(scene,stopNumber=1){
    moving:scene.gaugeTransition?.moving===true,
    gaugeTransition:scene.gaugeTransition,
    seat,setupValid,setupReason:scene?.gaugeSetup?.reason??null,
-   foldedWingContact,gaugeDecision:scene?.gaugePlan??null,
-   sheetEdgeFound:valid&&(freeEdge||foldedWingContact),
-   alignedToSheet:contactEngaged,
+   gaugeDecision:scene?.gaugePlan??null,
+   sheetEdgeFound:valid&&freeEdge,alignedToSheet:contactEngaged,
    contactEngaged,contactGap:gap,
    freeEdge,referenceKind:freeEdge?'extremo libre':
-    foldedWingContact?'cara lateral de pestaña ya plegada':
     reference.manual&&!reference.atEnd?'punto interior del tramo':'vértice interior plegado',
    state:scene.gaugeTransition?
     (scene.gaugeTransition.phase==='reubicacion-siguiente-golpe'?'TOPE POSICIONANDO REFERENCIA DEL SIGUIENTE GOLPE':
@@ -196,10 +186,7 @@ export function gaugePlacement(scene,stopNumber=1){
     !setupValid?'⚠ APOYO INCORRECTO ANTES DEL PLEGADO: '+(scene?.gaugeSetup?.reason||'revisar cara frontal')+
      ' · cambiar ala/posición; NO retirar tope para ocultar interferencia':
     !valid?'sin cota válida':!feature.usable?'sin cara física de apoyo definida':
-    !freeEdge&&!foldedWingContact?
-     '⚠ punto de apoyo interior: comprobar cara física del tope y accesibilidad':
-    foldedWingContact&&contactEngaged?
-     'Contacto lateral de pestaña plegada · 2D provisional':
+    !freeEdge?'⚠ punto de apoyo interior: comprobar cara física del tope y accesibilidad':
     !sheetInFront?'⚠ La chapa llega por DETRÁS del tope; invertir la presentación':
     !seat.seated?(feature.surface==='horizontal-top'?
       '⚠ La chapa NO asienta sobre la repisa baja ni detiene su canto contra la pared del tope Support':
