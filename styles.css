@@ -1658,3 +1658,11 @@ html,body{min-width:0;min-height:100%}
 html[data-layout="mobile"] .px-about-panel,
 html[data-layout="tablet"] .px-about-panel{min-width:0;max-width:100%}
 html[data-orientation="landscape"] .px-about-card{overflow-wrap:anywhere}
+
+/* R50 · acción de recuperación del apoyo frontal de tope */
+.px-correct-gauge{display:flex;align-items:center;justify-content:center;width:100%;max-width:100%;
+ border:1px solid #43bfe7!important;background:linear-gradient(112deg,#075079,#0c829f)!important;
+ color:#e4faff!important;font-size:12px;font-weight:800;line-height:1.45;
+ min-height:44px;margin:8px 0;white-space:normal;overflow-wrap:anywhere}
+.px-correct-gauge:hover{filter:brightness(1.12)}
+@media(max-width:699px){.px-correct-gauge{font-size:11px;padding:10px 7px}}
