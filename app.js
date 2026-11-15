@@ -1663,7 +1663,7 @@ function renderSimulationText(){
   ' mm desde el pliegue · vacío = extremo del ala';
  const chosenGauge=gaugePlacement(technicalScene(piece,sim.time),gauge.value);
  $('activeGaugeReference').textContent=ref.label+' · '+numbers(ref.distance,1)+
-  ' mm sobre el ala elegida · '+(gauge.value===2?'chapa sobre primer escalón SUPPORT 2':'chapa contra cara frontal inferior STOP 1')+
+  ' mm sobre el ala elegida · '+(gauge.value===2?'chapa contra CARA FRONTAL SUPPORT 2':'chapa contra CARA FRONTAL STOP 1')+
    ' · '+(ref.side==='before'?'presentación invertida':'presentación directa')+
   (freeEnd?' · borde libre':ref.manual&&!ref.atEnd?
     ' · ⚠ punto interior: requiere un contacto físico accesible':
