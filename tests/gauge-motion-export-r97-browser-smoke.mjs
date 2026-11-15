@@ -23,13 +23,14 @@ try{
     gaugeSideByBend:['auto','before','before','auto']}));
    return JSON.stringify(state.piece);
   });
+  const expectedBuild=await page.locator('meta[name="plegadox-build"]').getAttribute('content');
   const pending=page.waitForEvent('download');
   await page.locator('#exportGaugeMotionBtn').click();
   const download=await pending,filename=download.suggestedFilename();
   assert.match(filename,/DIAGNOSTICO-TOPES-2D\.json$/);
   const saved=JSON.parse(await readFile(await download.path(),'utf8'));
   assert.equal(saved.schema,'plegadox-gauge-motion-diagnostic-v1');
-  assert.equal(saved.build,'PLEGADOX-20261115-R96',
+  assert.equal(saved.build,expectedBuild,
    'El informe identifica exactamente la compilación desde la que se exporta');
   assert.deepEqual(saved.operationOrder,[1,2,4,3]);
   assert.equal(saved.operations.length,4);
