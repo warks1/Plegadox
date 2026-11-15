@@ -30,15 +30,17 @@ export function normalizeBystronicFit(input={}){
  }
  return fit;
 }
-export function readBystronicFit(storage=typeof localStorage==='undefined'?null:localStorage){
+export function readBystronicFit(storage=typeof localStorage==='undefined'?null:localStorage,profileId='bystronic-2006-100-3100'){
+ const key=profileId==='bystronic-xpert-pro-100-3100'?BYSTRONIC_FIT_KEY+':xpert-pro':BYSTRONIC_FIT_KEY;
  if(!storage?.getItem)return normalizeBystronicFit();
- const raw=storage.getItem(BYSTRONIC_FIT_KEY);
+ const raw=storage.getItem(key);
  return normalizeBystronicFit(raw==null?{}:JSON.parse(raw));
 }
-export function writeBystronicFit(input,storage=typeof localStorage==='undefined'?null:localStorage){
+export function writeBystronicFit(input,storage=typeof localStorage==='undefined'?null:localStorage,profileId='bystronic-2006-100-3100'){
+ const key=profileId==='bystronic-xpert-pro-100-3100'?BYSTRONIC_FIT_KEY+':xpert-pro':BYSTRONIC_FIT_KEY;
  const measured=normalizeBystronicFit(input);
  if(!storage?.setItem)throw Error('Almacenamiento de medidas no disponible');
- storage.setItem(BYSTRONIC_FIT_KEY,JSON.stringify(measured));
+ storage.setItem(key,JSON.stringify(measured));
  return measured;
 }
 /** Apertura libre NOMINAL entre las puntas de los conjuntos ya montados.
