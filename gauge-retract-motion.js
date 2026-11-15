@@ -3,6 +3,7 @@
  * Animación cinemática 2D, NO trayectoria CNC certificada.
  * El cierre en la chapa se representa entre .36 y .44 del ciclo.
  */
+import {inspectGaugeProfile} from './gauge-interference.js';
 export const GAUGE_RETRACT_START=.36;
 export const GAUGE_RETRACT_FINISH=.44;
 export const GAUGE_REPOSITION_START=.84;
@@ -61,13 +62,14 @@ export function gaugeRetractionPath({anchor,target=null,maxSheetX,fingerReach=0,
 export function planGaugeRetraction({sheetSamples,polygon,thickness=2,contact,
  inspect=null,geometryDocumented=true}={}){
  if(!Array.isArray(sheetSamples)||!sheetSamples.length||
-  !Array.isArray(polygon)||polygon.length<3)
+  !Array.isArray(polygon)||polygon.length<3||
+  sheetSamples.some(s=>!Array.isArray(s?.sheet)||s.sheet.length<2))
   return {enabled:false,known:false,reason:'Faltan secciones para decidir retroceso',
    geometryDocumented,verified:false,issues:[]};
  const issues=[];
  for(const sample of sheetSamples){
   const assessment=inspect?inspect(sample,polygon,thickness,contact):
-   null;
+   inspectGaugeProfile(sample.sheet,polygon,thickness,contact);
   if(!assessment)continue;
   if(assessment.warning){
    issues.push({at:sample.at??null,kind:assessment.kind,point:assessment.point??null});
