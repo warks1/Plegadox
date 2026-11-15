@@ -1282,3 +1282,21 @@ Pendiente: placa de modelo/año para conciliar ambas identificaciones y CAD fís
 **Splash:** se mantiene la imagen original aprobada `plegadox-premium-selected.png` como ÚNICO arte. Se elimina la chapa SVG superpuesta y la imagen repetida como fondo; la barra única y el texto dinámico se anclan con cálculo geométrico a la ubicación en la imagen original escalada, incluso en orientación vertical, tablets, monitor panorámico o alta densidad. No duplicar controles ni añadir otra pantalla de carga.
 
 **Pendiente para cierre industrial:** inspeccionar placa/curso de fabricación y CAD metrológico de dedos y apoyos reales, geometría 3D WILA/Promecam (originales DXF descargados e importados), límites X/R/Z y su barrido volumétrico, y prueba de interfaz en iOS/Android/PC. La advertencia roja indica posible colisión; no se silencia solo para mejorar la estética.
+
+## R48 · Editor de útiles por cotas y nueva identidad PWA (15-11-2026)
+
+**Creador de herramientas, pestaña Herramientas:**
+- Nuevo formulario desplegable «Crear punzón o matriz introduciendo sus cotas» con vista previa 2D que se redibuja en cada edición. Funciona en ratón y táctil.
+- Punzones rectos y de pata de cabra: H total, ancho del cuerpo, largo Z, ángulo incluido, ancho y altura del vástago, radio de punta; para pata de cabra, profundidad de cuello. Los perfiles son polígonos derivados de las cotas y se comprueba su cierre/autointersección, pero los radios y escotes no constituyen contornos CAD exactos de fábrica.
+- Matrices V: apertura V, ángulo, H total, ancho de cuerpo, radio nominal de hombros, descentrado de V y longitud Z; se impide una garganta que atraviese la base o deje menos de 3 mm de cuerpo lateral. Los hombros se aproximan por un tramo suavizado: NO equivalen a radios OEM certificados.
+- Montaje elegible WILA, Amada/Promecam, Trumpf, Bystronic/Beyeler R o desconocido.
+- Guardado mediante el almacén existente de herramientas personalizadas; `customProfile:true`, `importedDxf:false`. Se utiliza el perfil generado en todos los dibujos y cálculos ilustrativos que consumen `sectionPunch`/`sectionDie`; no se etiqueta falsamente como DXF OEM. La biblioteca combinada admite hasta 50 perfiles persistidos.
+- Archivos: `custom-tool-geometry.js`, `custom-tool-builder.js`, vistas de `index.html`, estilos de `styles.css`, `tests/custom-tool-geometry.test.mjs`.
+
+**Icono industrial:** `favicon.svg` nuevo (estructura de plegadora, punzón, chapa V y matriz). Versiones PNG industriales creadas para 180, 192 y 512 px en `icon-industrial-180.png`, `icon-industrial-192.png` e `icon-industrial-512.png`; enlace de iOS `apple-touch-icon` y `manifest.webmanifest` apuntan a las nuevas rutas para evitar que Safari use la antigua imagen descargada.
+
+**Splash original seleccionado:** se conserva exclusivamente `plegadox-premium-selected.png` como imagen principal (no se sustituye por boceto alternativo), se elimina el pseudo-fondo con la misma imagen duplicada, se desactiva la segunda animación de chapa sobrepuesta y se cubre la barra de porcentaje pintada en la foto antes de mostrar **una sola barra de progreso real** controlada por el cargador. El contenedor ocupa 100vw × 100dvh, utiliza `object-fit:cover` para llenarlo sin estirar los píxeles y un posicionamiento/recorte distinto en orientación vertical. La foto panorámica puede recortar parte de sus extremos en pantallas estrechas: es físicamente imposible llenarlas sin recortar y preservar a la vez toda la composición 16:9; si se exige todo su contenido en vertical debe crearse además una composición vertical aprobada.
+
+Se renueva SW a `plegadox-static-0.9.24-custom-tool-icon-fullscreen-r48` para que no arrastre la versión antigua. En iOS, los accesos ya añadidos a la pantalla de inicio pueden conservar el icono instalado: retirar ese acceso y volverlo a añadir después de actualizar suele ser necesario para verlo.
+
+**Seguridad:** las poligonales personalizadas son aproximaciones del perfil definido por el operador; no hay CAD completo verificado de fijaciones WILA/Promecam ni evaluación industrial de carga, trayectorias o colisiones CNC. Ningún resultado de simulación debe etiquetarse certificado.
