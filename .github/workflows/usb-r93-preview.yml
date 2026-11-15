@@ -1,0 +1,45 @@
+name: Compilar PlegadoX R93 de prueba USB para Windows
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build-portable-usb:
+    if: github.event_name == 'workflow_dispatch' || github.head_ref == 'fix/r93-gauge-depth-and-collision-retreat'
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Instalar herramientas para compilar EXE sin dependencias externas
+        run: python -m pip install "pyinstaller>=6.16,<7" pillow
+      - name: Probar servidor localhost y carga de recursos
+        run: python -m unittest discover -s portable -p "test_*.py" -v
+      - name: Generar icono premium de Windows
+        run: python portable/make_icon.py
+      - name: Compilar ejecutable con Python incluido
+        run: python -m PyInstaller --noconfirm --clean --onefile --windowed --name PlegadoX --icon portable/plegadox.ico portable/launcher.py
+      - name: Preparar pendrive completo con aplicación, EXE y guía
+        run: python portable/make_bundle.py
+      - name: Auditoría completa del contenido web del pendrive
+        run: python portable/verify_bundle.py dist/PlegadoX-USB-Windows/app
+      - name: Probar el EXE compilado dentro del paquete USB real
+        shell: pwsh
+        run: |
+          $exe = Join-Path $PWD 'dist/PlegadoX-USB-Windows/PlegadoX.exe'
+          $process = Start-Process -FilePath $exe -ArgumentList '--self-test' -Wait -PassThru
+          if ($process.ExitCode -ne 0) {
+            throw "El ejecutable portátil falla al servir su HTML y build-info.json: código $($process.ExitCode)"
+          }
+          Write-Host "PLEGADOX_EXE_WINDOWS_OK"
+      - name: Guardar ZIP listo para copiar al USB
+        uses: actions/upload-artifact@v4
+        with:
+          name: PlegadoX-R93-USB-Windows-PREVIEW
+          path: dist/PlegadoX-USB-Windows.zip
+          if-no-files-found: error
+          retention-days: 30
