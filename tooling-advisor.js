@@ -46,6 +46,16 @@ function pairData(p,die,punch,minimumInterior,minimumFlange,requiresClearance){
  const force=estimateAirBendForce({...p,die:die.id});
  if(!force.estimated||!Number.isFinite(force.tonneForce)||
   force.tonneForce>(activeMachine.tonnage??MACHINE.tonnage)+1e-8)return null;
+ // WILA y otros fabricantes publican cargas MÁXIMAS por metro. Una
+ // herramienta no debe RECOMENDARSE cuando la fuerza de aire calculada
+ // por la anchura de chapa sobrepasa su límite, aunque la máquina
+ // tenga tonelaje suficiente. La carga se estima y NO certifica
+ // segmentación, distribución lineal ni mordazas.
+ const forcePerMetre=force.tonneForce*1000/p.width;
+ const punchRating=finitePositive(punch.maxTPerMetre)?Number(punch.maxTPerMetre):null;
+ const dieRating=finitePositive(die.maxTPerMetre)?Number(die.maxTPerMetre):null;
+ if((punchRating!==null&&forcePerMetre>punchRating+1e-8)||
+    (dieRating!==null&&forcePerMetre>dieRating+1e-8))return null;
  const target=targetVRatio(p.thickness);
  const isGoose=punch.type==='cabra';
  const needsAcute=minimumInterior<85;
@@ -76,10 +86,17 @@ function pairData(p,die,punch,minimumInterior,minimumFlange,requiresClearance){
  warnings.push('Si se utilizan segmentos, verificar montaje, continuidad y carga por segmento');
  if(p.angles.some(a=>Math.abs(Math.abs(a)-90)>5))
   warnings.push('Ángulo fuera de aire típico 90°: comprobar ala mínima, radio y fuerza en tablas reales');
- warnings.push('Carga admisible por metro de útiles y mordazas NO comprobada');
+ if(punchRating!==null&&dieRating!==null)
+  warnings.push('Carga estimada '+forcePerMetre.toFixed(1)+' t/m frente a límites nominales: punzón '+punchRating+' t/m; matriz '+dieRating+' t/m. Verificar distribución y amarres reales.');
+ else
+  warnings.push('Carga nominal del '+(punchRating===null&&dieRating===null?
+   'punzón y la matriz':punchRating===null?'punzón':'matriz')+
+   ' sin documentar; montaje y mordazas tampoco están validados.');
  return {dieId:die.id,punchId:punch.id,dieName:die.name,punchName:punch.name,
   dieOpening:opening,dieAngle:included,punchAngle,ratio,minimumFlange,
   flangeLimit,forceTonnes:force.tonneForce,forceKNm:force.kNPerMetre,
+  forceTonnesPerMetre:forcePerMetre,nominalPunchTPerMetre:punchRating,
+  nominalDieTPerMetre:dieRating,
   radiusEstimate,goose:isGoose,score,warnings,
   mountStatus:mount.reason,verified:false};
 }
