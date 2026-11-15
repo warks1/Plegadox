@@ -7,6 +7,7 @@ import {resolveGaugeSetup,foldedStopFaceCandidate} from '../gauge-contact-solver
 import {technicalScene} from '../technical-section.js';
 import {gaugePlacement} from '../backgauge-placement.js';
 import {gaugeRiskStatus} from '../gauge-risk-status.js';
+import {scanGaugeSequence} from '../gauge-sequence-review.js';
 
 test('R94: estudiar referencia G2 a cara de pestaña preplegada, sin cambiar datos del operario',()=>{
  selectMachine('trumpf-v85');
@@ -81,4 +82,25 @@ test('R94: auditar los cuatro golpes con referencias manuales del vídeo sin inv
  assert.equal(report[1].support,true);
  assert.equal(JSON.stringify(p),snapshot);
  console.log('R94_MANUAL_SEQUENCE_REPORT='+JSON.stringify(report));
+});
+
+test('R94: revisión de los 4 golpes distingue apoyo de pestaña y retirada real',()=>{
+ selectMachine('trumpf-v85');
+ const p=normalized({...EXAMPLE,flanges:[50,30,50,30,20],
+  punch:'goose',die:'v16',
+  gaugeSideByBend:['auto','before','before','auto']});
+ const report=scanGaugeSequence(p);
+ const normalizedRisks=report.operations.map(o=>({
+  G:o.operation+1,contact:o.contactObserved,retreat:o.withdrawalObserved,
+  findings:o.findings.map(f=>f.kind)}));
+ console.log('R94_GAUGE_SEQUENCE_REVIEW='+JSON.stringify(normalizedRisks));
+ assert.equal(report.operations.length,4);
+ assert.equal(report.contactNotObserved,0);
+ assert.equal(report.operations[1].withdrawalObserved,true);
+ assert.equal(report.operations[3].withdrawalObserved,false);
+ for(const o of [report.operations[1],report.operations[3]]){
+  assert.equal(o.findings.some(f=>f.kind==='referencia-interior'),false,
+   'El escáner no debe llamar inválida a una pestaña físicamente apoyada');
+  assert.equal(o.findings.some(f=>f.kind==='apoyo-invalido'),false);
+ }
 });
