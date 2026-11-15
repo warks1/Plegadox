@@ -150,7 +150,8 @@ export function gaugePlacement(scene,stopNumber=1){
   const sheetInFront=freeEdge&&sheetInFrontOfGauge(scene,index,a,thickness);
   const seat=freeEdge?gaugeSeatAssessment(scene,index,a,thickness,feature):
    {required:true,seated:false,reason:'punto interior sin cara de apoyo físico verificada'};
-  const contactEngaged=!scene.gaugeTransition&&valid&&freeEdge&&sheetInFront&&seat.seated&&
+  const setupValid=scene?.gaugeSetup?.valid!==false;
+  const contactEngaged=setupValid&&!scene.gaugeTransition&&valid&&freeEdge&&sheetInFront&&seat.seated&&
     feature.usable&&a.x>0&&approaching&&
     gap<=Math.max(.4,thickness*.28);
   return review({stopNumber:selected,profile:selected===2?'support':'stop',
@@ -158,7 +159,9 @@ export function gaugePlacement(scene,stopNumber=1){
    referenceSide:reference.side,referenceLabel:reference.label,
    feedMirrored:!!scene.feedMirrored,sourceIndex:index,sheetInFront,
    moving:!!scene.gaugeTransition,gaugeTransition:scene.gaugeTransition,
-   seat,sheetEdgeFound:valid&&freeEdge,alignedToSheet:contactEngaged,
+   seat,setupValid,setupReason:scene?.gaugeSetup?.reason??null,
+   gaugeDecision:scene?.gaugePlan??null,
+   sheetEdgeFound:valid&&freeEdge,alignedToSheet:contactEngaged,
    contactEngaged,contactGap:gap,
    freeEdge,referenceKind:freeEdge?'extremo libre':
     reference.manual&&!reference.atEnd?'punto interior del tramo':'vértice interior plegado',
@@ -167,6 +170,8 @@ export function gaugePlacement(scene,stopNumber=1){
      scene.gaugeTransition.phase==='retroceso-antes-plegado'?'TOPE EN RETROCESO · SUJECIÓN':
      scene.gaugeTransition.phase==='retirado-durante-plegado'?'TOPE APARCADO · PLEGADO':
      'TOPE VOLVIENDO A LA REFERENCIA DEL SIGUIENTE GOLPE'):
+    !setupValid?'⚠ APOYO INCORRECTO ANTES DEL PLEGADO: '+(scene?.gaugeSetup?.reason||'revisar cara frontal')+
+     ' · cambiar ala/posición; NO retirar tope para ocultar interferencia':
     !valid?'sin cota válida':!feature.usable?'sin cara física de apoyo definida':
     !freeEdge?'⚠ punto de apoyo interior: comprobar cara física del tope y accesibilidad':
     !sheetInFront?'⚠ La chapa llega por DETRÁS del tope; invertir la presentación':
