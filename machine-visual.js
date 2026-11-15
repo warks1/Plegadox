@@ -111,7 +111,23 @@ function backdrop(ctx,w,h){
  // Ambient cyan illumination around tool
  shape(ctx,0,0,w,h,radial(ctx,w*.53,h*.48,w*.6,[[0,'#0b4b7c48'],[.45,'#0e285b24'],[1,'#02081400']]),null);
 }
-function rearMachine(ctx,w,h,cx,cy,scale,placement){
+/**
+ * La chapa en perspectiva tiene profundidad ilustrativa de 23 x -13 px
+ * por unidad de escala. El dedo antes se dibujaba plano y parecía
+ * SEPARADO del canto de la chapa aunque ambas referencias X coincidieran.
+ * Proyectar SOLO el dibujo del dedo al mismo plano frontal visible;
+ * ningún valor X/R, el contorno 2D ni la retirada de la máquina cambian.
+ */
+export function gaugePerspectiveContours(polygon,scale,perspective=false){
+ if(!Array.isArray(polygon)||polygon.some(p=>!Array.isArray(p)||p.length!==2||
+  !p.every(Number.isFinite))||!Number.isFinite(scale)||scale<=0)
+  throw Error('Contorno del tope inválido para perspectiva');
+ const near=perspective?polygon.map(([x,y])=>[x-23*scale,y+13*scale]):
+  polygon.map(p=>[...p]);
+ return {near,far:polygon.map(p=>[...p]),depthX:perspective?23*scale:0,
+  depthY:perspective?-13*scale:0};
+}
+function rearMachine(ctx,w,h,cx,cy,scale,placement,perspective=false){
  ctx.save();
  // Horizontal steel rails across the background
  const y=cy+18*scale;
@@ -134,6 +150,8 @@ function rearMachine(ctx,w,h,cx,cy,scale,placement){
  // sistema de mm que chapa, punzón y matriz.
  const gg=gaugeContourAtContact(placement,gauge).map(p=>[
   cx+p.x*scale,cy-p.y*scale]);
+ const projection=gaugePerspectiveContours(gg,scale,perspective);
+ const front=projection.near;
  const faceX=cx+placement.point.x*scale;
  // El brazo viene por DETRÁS del dedo: no debe atravesar el propio perfil
  // ni nacer en el punto de contacto chapa/dedo (fallo visible en vídeo).
@@ -149,12 +167,22 @@ function rearMachine(ctx,w,h,cx,cy,scale,placement){
    amber:[[0,'#ffe8ad'],[.28,'#d1a34b'],[.76,'#775826'],[1,'#302b23']],
    red:[[0,'#ffb8a4'],[.28,'#e56a58'],[.76,'#8c382c'],[1,'#4b2528']]
   };
-  poly(ctx,gg,gradient(ctx,ox,oy,rodEnd,oy,gradients[risk.level]),
-   colors.edge,Math.max(1.2,1.9*scale));
+  if(perspective){
+   // Caras del dedo en el MISMO plano visual que la chapa extruida.
+   // El contorno físico de referencia sigue siendo gg, sin traslaciones.
+   for(let i=0;i<gg.length;i++){
+    const j=(i+1)%gg.length;
+    poly(ctx,[gg[i],gg[j],front[j],front[i]],
+     colors.fill,colors.edge,Math.max(.6,.75*scale));
+   }
+  }
+  poly(ctx,front,gradient(ctx,ox-projection.depthX,oy,rodEnd,oy,
+   gradients[risk.level]),colors.edge,Math.max(1.2,1.9*scale));
  // Resaltar la cara real del dedo: STOP frontal o escalón SUPPORT.
  // Un vértice interior de la chapa no constituye un apoyo fiable.
  const contact=placement.contact;
- const screen=pt=>[cx+pt.x*scale,cy-pt.y*scale];
+ const screen=pt=>[cx+pt.x*scale-projection.depthX,
+  cy-pt.y*scale-projection.depthY];
  if(contact){
   const a=screen(contact.from),b=screen(contact.to);
   ctx.save();ctx.lineWidth=Math.max(3,3.6*scale);
@@ -297,7 +325,8 @@ function stageScene(ctx,w,h,piece,sim,machineView){
  sceneAtmosphere(ctx,w,h,{cx,cy:baseY,s:scale});
  const stopNumber=piece.stopByBend?.[st.activeBend]===2?2:1;
   const placement=gaugePlacement(scene,stopNumber);
- rearMachine(ctx,w,h,cx,baseY,scale,placement);
+ rearMachine(ctx,w,h,cx,baseY,scale,placement,
+  Boolean(machineView?.perspective));
  dieDepth(ctx,{cx,cy:baseY,s:scale},opening,Boolean(machineView?.perspective),scene.die);
  drawDie(ctx,scene,cx,baseY,scale);
  // Los reflejos de la matriz se recortan a su contorno real en drawDie.
