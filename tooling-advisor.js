@@ -5,6 +5,8 @@
  */
 import {DIES,PUNCHES,MACHINE,normalized,estimateAirBendForce} from './engine.js';
 import {selectionCompatibility} from './catalog.js';
+import {getActiveMachineConfig} from './machine-config.js';
+import {checkMachineToolMounting} from './machine-mounting.js';
 
 const finitePositive=n=>Number.isFinite(Number(n))&&Number(n)>0;
 const close=(a,b)=>Math.abs(a-b)<1e-8;
@@ -34,11 +36,16 @@ function pairData(p,die,punch,minimumInterior,minimumFlange,requiresClearance){
  if(ratio<5-1e-8||ratio>14+1e-8||
   minimumFlange+1e-8<flangeLimit||
   included>minimumInterior+1e-8||punchAngle>minimumInterior+1e-8)return null;
- const mount=selectionCompatibility(punch,die);
+ const activeMachine=getActiveMachineConfig();
+ // Cabezal superior y portamatriz inferior son interfaces DISTINTAS.
+ // No comparar mount de punzón y mount de matriz entre sí para Bystronic.
+ const mount=activeMachine.profileId==='bystronic-2006-100-3100'?
+  checkMachineToolMounting(activeMachine,punch,die):
+  selectionCompatibility(punch,die);
  if(mount.compatible===false)return null;
  const force=estimateAirBendForce({...p,die:die.id});
  if(!force.estimated||!Number.isFinite(force.tonneForce)||
-  force.tonneForce>MACHINE.tonnage+1e-8)return null;
+  force.tonneForce>(activeMachine.tonnage??MACHINE.tonnage)+1e-8)return null;
  const target=targetVRatio(p.thickness);
  const isGoose=punch.type==='cabra';
  const needsAcute=minimumInterior<85;
@@ -60,7 +67,10 @@ function pairData(p,die,punch,minimumInterior,minimumFlange,requiresClearance){
  if(p.radius!=null)warnings.push('Radio interior solicitado: contrastar con prueba real de plegado');
  if(requiresClearance)warnings.push('Alas cerradas o signos alternos: verificar cuello del punzón y colisiones 3D');
  if(mount.compatible!==true)warnings.push(mount.reason);
- if(die.mount||punch.mount)warnings.push('Confirmar adaptación de los amarres a la Trumpf V85');
+ if(die.mount||punch.mount)
+  warnings.push(activeMachine.profileId==='bystronic-2006-100-3100'?
+   'Verificar cabezal WILA, regleta adaptadora Promecam, asiento y altura montada antes de plegar':
+   'Confirmar adaptación de los amarres a '+(activeMachine.name||'la plegadora activa'));
  if(!finitePositive(die.length)||!finitePositive(punch.length))
   warnings.push('Longitud comercial no documentada: comprobar que cubre el ancho de pieza');
  warnings.push('Si se utilizan segmentos, verificar montaje, continuidad y carga por segmento');
