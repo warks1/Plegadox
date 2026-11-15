@@ -19,7 +19,7 @@ function deviceState(){
  // adaptamos según el espacio, aunque el navegador no declare pantalla táctil.
  const phoneLandscape=landscape&&height<=560&&width<1200;
  const layout=width<700||phoneLandscape?'mobile':width<1200?'tablet':'desktop';
- const orientation=landscape?'landscape':'portrait';
+ const orientation=matchMedia('(orientation:landscape)').matches?'landscape':'portrait';
  return {width,height,layout,orientation,input:coarse?'touch':'pointer',dpr:Math.min(window.devicePixelRatio||1,4)};
 }
 function schedulePaint(){
@@ -40,11 +40,7 @@ function synchronize(){
  root.style.setProperty('--app-vh',s.height+'px');
  root.style.setProperty('--app-vw',s.width+'px');
  root.style.setProperty('--app-dpr',String(s.dpr));
- const label=document.querySelector('#layoutMode');
- if(label){
-  const mode=s.layout==='mobile'?'Smartphone':s.layout==='tablet'?'Tablet':'PC';
-  label.textContent=' · Pantalla adaptada: '+mode+' · '+(s.orientation==='landscape'?'horizontal':'vertical');
- }
+ // El modo y la orientación son datos de maquetación, nunca texto del footer.
  const changed=Object.keys(previous).some(k=>previous[k]!== (k==='viewport'?s.width+'×'+s.height:k==='dpr'?String(s.dpr):s[k]));
  if(changed){
   previous.layout=s.layout;previous.orientation=s.orientation;
@@ -56,7 +52,18 @@ function synchronize(){
 function refresh(){if(scheduled)return;scheduled=true;requestAnimationFrame(synchronize);}
 refresh();
 window.addEventListener('resize',refresh,{passive:true});
-window.addEventListener('orientationchange',refresh,{passive:true});
+const afterRotation=()=>{
+ // En iOS el primer evento puede llegar antes de que cambien las cotas
+ // internas del viewport; un segundo RAF recalcula el lienzo actualizado.
+ refresh();
+ requestAnimationFrame(()=>requestAnimationFrame(()=>{refresh();schedulePaint();}));
+};
+window.addEventListener('orientationchange',afterRotation,{passive:true});
+window.screen.orientation?.addEventListener?.('change',afterRotation);
+window.addEventListener('pageshow',afterRotation,{passive:true});
+document.addEventListener('visibilitychange',()=>{
+ if(!document.hidden)afterRotation();
+});
 window.visualViewport?.addEventListener('resize',refresh,{passive:true});
 for(const query of ['(pointer:coarse)','(hover:none)','(orientation:portrait)']){
  const m=matchMedia(query);
