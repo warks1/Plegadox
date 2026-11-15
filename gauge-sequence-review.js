@@ -9,7 +9,7 @@ import {technicalScene} from './technical-section.js';
 import {gaugePlacement} from './backgauge-placement.js';
 
 const RANK={penetracion:4,holgura:3,'chapa-detras':3,
- 'sin-asiento':2,'referencia-interior':1,'tope-sin-cad':5};
+ 'apoyo-invalido':3,'sin-asiento':2,'referencia-interior':1};
 const make=(kind,time,scene,place)=>({
  kind,time,phase:scene.stage.phase,stopNumber:place.stopNumber,
  point:place.gaugeInterference?.warning?place.gaugeInterference.point:null,
@@ -17,7 +17,8 @@ const make=(kind,time,scene,place)=>({
  reason:kind==='penetracion'?'Posible penetración 2D chapa/tope':
   kind==='holgura'?'Posible holgura 2D menor que el espesor':
   kind==='chapa-detras'?'Chapa por detrás de la cara frontal del tope':
-  kind==='tope-sin-cad'?'Dedo trasero sin geometría CAD contrastada para esta plegadora':
+  kind==='apoyo-invalido'?'Apoyo inicial inválido: '+
+   (place.setupReason||'la pieza no puede asentarse contra la cara de parada'):
   kind==='sin-asiento'?'Chapa sin contacto frontal fiable con el dedo':
   'La referencia recae en un vértice interior, no en un borde libre'
 });
@@ -71,6 +72,8 @@ export function inspectGaugeOperation(piece,operation,{
   let kind=null;
   if(issue?.warning&&['penetracion','holgura'].includes(issue.kind))
    kind=issue.kind;
+  else if(approaching&&!transitioning&&place.setupValid===false)
+   kind='apoyo-invalido';
   else if(approaching&&!transitioning&&place.freeEdge&&place.sheetInFront===false)
    kind='chapa-detras';
   else if(approaching&&!transitioning&&place.freeEdge&&place.seat?.seated===false)
