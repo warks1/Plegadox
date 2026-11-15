@@ -259,7 +259,10 @@ function configure(){
    const current=stopAtStage(piece,sim.time),sides=[...piece.gaugeSideByBend];
    sides[current.bend]=mode;
    const segments=[...piece.gaugeSegmentByBend];segments[current.bend]=null;
-   changePiece({...piece,gaugeSideByBend:sides,gaugeSegmentByBend:segments},false);
+   const points=[...piece.gaugePointByBend];
+   const proposed={...piece,gaugeSideByBend:sides,gaugeSegmentByBend:segments};
+   if(points[current.bend]>gaugeReference(proposed,current.bend).totalLength)points[current.bend]=null;
+   changePiece({...proposed,gaugePointByBend:points},false);
   };
  }
  $('activeGaugeSegment').addEventListener('change',()=>{
@@ -1050,7 +1053,11 @@ function renderEditor(){
    side.value=piece.gaugeSideByBend[i-1];
    side.addEventListener('change',()=>{
     const gaugeSideByBend=[...piece.gaugeSideByBend];gaugeSideByBend[i-1]=side.value;
-    changePiece({...piece,gaugeSideByBend},false);
+    const gaugeSegmentByBend=[...piece.gaugeSegmentByBend];gaugeSegmentByBend[i-1]=null;
+    const gaugePointByBend=[...piece.gaugePointByBend];
+    const proposed={...piece,gaugeSideByBend,gaugeSegmentByBend};
+    if(gaugePointByBend[i-1]>gaugeReference(proposed,i-1).totalLength)gaugePointByBend[i-1]=null;
+    changePiece({...proposed,gaugePointByBend},false);
    });
    sideCell.append(side);
    const segment=document.createElement('select');segment.className='bend-segment-select';
