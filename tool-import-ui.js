@@ -23,6 +23,7 @@ export function setupToolDxfImporter({add}){
  const input=$('toolDxfFile'),save=$('toolDxfCommit'),status=$('toolDxfStatus');
  if(!input||!save||!status)return;
  const kind=$('toolDxfKind'),name=$('toolDxfName'),preview=$('toolDxfCanvas');
+ const mount=$('toolDxfMount');
  let parsed=null;
  const say=(message,error=false)=>{
   status.textContent=message;status.dataset.error=String(error);
@@ -52,6 +53,12 @@ export function setupToolDxfImporter({add}){
    preset.addEventListener('click',()=>{
     parsed=null;input.value='';save.disabled=true;preview.hidden=true;
     kind.value=toolKind;toggle();name.value=tool.reference||tool.name;
+    // Las familias de amarre se proponen desde catálogo, pero la
+    // fijación física debe comprobarla el operador antes de guardar.
+    const family=String(tool.mount||'');
+    const declared=['WILA','Amada/Promecam','TRUMPF','Bystronic/Beyeler R'].includes(family)?
+     family:/Bystronic|Beyeler/i.test(family)?'Bystronic/Beyeler R':'Desconocido';
+    if(mount)mount.value=declared;
     $('toolDxfAngle').value=String(tool.angle);
     $('toolDxfLength').value=String(tool.length||415);
     if(toolKind==='die')$('toolDxfOpening').value=String(tool.opening);
@@ -118,12 +125,12 @@ export function setupToolDxfImporter({add}){
    const tool=importedTool(parsed,{
     kind:kind.value,name:name.value,angle:$('toolDxfAngle').value,
     length:$('toolDxfLength').value,opening:$('toolDxfOpening').value,
-    tip:$('toolDxfTip').value
+    tip:$('toolDxfTip').value,mount:mount?.value||'Desconocido'
    });
    add(tool,kind.value);
    say('✓ Perfil DXF añadido a la biblioteca y seleccionado. '+
     'Se utiliza su contorno 2D en el dibujo y cribado geométrico. '+
-    'No está certificada su compatibilidad con la máquina.');
+    'El amarre seleccionado es una declaración del operador, no una certificación de compatibilidad con la máquina.');
    save.disabled=true;
   }catch(e){say('No se pudo guardar: '+e.message,true);}
  });
