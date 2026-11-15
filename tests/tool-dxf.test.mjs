@@ -94,3 +94,21 @@ test('importación persistente y rehidratación de una biblioteca personalizada'
  assert.deepEqual(loaded[0].profilePoints,tool.profilePoints);
  assert.throws(()=>persistImportedTool(storage,tool),/ya está registrada/);
 });
+
+test('DXF declara WILA o Promecam sin afirmar homologación del amarre',()=>{
+ const contour=parseToolDxf(rectangle());
+ const wila=importedTool(contour,{kind:'punch',name:'BIU OEM importado',
+  angle:88,length:415,tip:1,mount:'WILA'});
+ const promecam=importedTool(contour,{kind:'die',name:'Matriz Promecam importada',
+  angle:88,length:415,opening:16,mount:'Amada/Promecam'});
+ assert.equal(wila.mount,'WILA');
+ assert.equal(promecam.mount,'Amada/Promecam');
+ assert.equal(wila.mountVerified,false);
+ assert.equal(promecam.mountVerified,false);
+ assert.equal(wila.verifiedSpecs,false);
+ const undecided=importedTool(contour,{kind:'punch',name:'Sin identificar',
+  angle:88,length:415,tip:1});
+ assert.equal(undecided.mount,'');
+ assert.throws(()=>importedTool(contour,{kind:'punch',name:'Amarre falso',
+  angle:88,length:415,tip:1,mount:'Certificado OEM'}),/Tipo de amarre no admitido/);
+});
