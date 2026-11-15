@@ -28,7 +28,11 @@ export function gaugeRetractionPath({anchor,target=null,maxSheetX,fingerReach=0,
  const radius=Math.max(10,Number(opening)||16);
  // La chapa no debería alcanzar el cuerpo del dedo cuando este se aparca.
  // No afirma que la carrera X de la máquina alcance esta referencia.
- const parkX=Math.max(anchor.x,Number(maxSheetX)||anchor.x)+
+ // Cuando se prevé choque, el aparcamiento queda detrás de la
+ // envolvente futura de la chapa Y de la posición nominal siguiente.
+ // De otro modo la vuelta podía cruzar X en sentido contrario al real.
+ const parkX=Math.max(anchor.x,Number(maxSheetX)||anchor.x,
+    Number.isFinite(target?.x)?target.x:anchor.x)+
   Math.max(1,Number(fingerReach)||0)+radius+8;
  const park={x:parkX,y:anchor.y};
  const t=clamp01(sub);
