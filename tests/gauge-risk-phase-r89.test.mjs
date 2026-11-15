@@ -4,6 +4,7 @@ import {gaugeRiskStatus} from '../gauge-risk-status.js';
 import {technicalScene} from '../technical-section.js';
 import {gaugePlacement} from '../backgauge-placement.js';
 import {EXAMPLE} from '../engine.js';
+import {readFileSync} from 'node:fs';
 
 const valid={
  phase:'Aproximación',setupValid:true,freeEdge:true,sheetEdgeFound:true,
@@ -52,4 +53,13 @@ test('R89: el estado de fase real del visor llega al evaluador',()=>{
  assert.equal(place.freeEdge,true);
  assert.equal(gaugeRiskStatus(place).level,'green');
  assert.equal(gaugeRiskStatus({...place,freeEdge:false}).level,'amber');
+});
+
+test('R89: color de distintivo y marcador sigue al semáforo en ambos visores',()=>{
+ const section=readFileSync(new URL('../technical-section.js',import.meta.url),'utf8');
+ const machine=readFileSync(new URL('../machine-visual.js',import.meta.url),'utf8');
+ assert.match(section,/stopBadgeColor=\{green:/);
+ assert.match(section,/badge\('TOPE '\+stopNumber,9,83,stopBadgeColor\)/);
+ assert.match(section,/badge\('TOPE '\+stopNumber\+' · REFERENCIA',9,103,stopBadgeColor\)/);
+ assert.match(machine,/ctx\.strokeStyle=color\.edge/);
 });
