@@ -24,6 +24,8 @@ jobs:
         run: python -m PyInstaller --noconfirm --clean --onefile --windowed --name PlegadoX --icon portable/plegadox.ico portable/launcher.py
       - name: Preparar pendrive completo con aplicación, EXE y guía
         run: python portable/make_bundle.py
+      - name: Auditoría completa del contenido web del pendrive
+        run: python portable/verify_bundle.py dist/PlegadoX-USB-Windows/app
       - name: Probar el EXE compilado dentro del paquete USB real
         shell: pwsh
         run: |

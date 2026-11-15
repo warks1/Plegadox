@@ -103,6 +103,19 @@ def self_test():
             data = json.load(response)
             if not data.get("version") or not data.get("build"):
                 raise RuntimeError("Metadatos incompletos en el paquete")
+        # Validar archivos reales desde la copia USB, no el árbol del repositorio.
+        import re
+        sw = (program_directory() / "sw.js").read_text(encoding="utf-8")
+        match = re.search(r"const\s+APP_FILES\s*=\s*\[(.*?)\]\s*;", sw, re.S)
+        if not match:
+            raise RuntimeError("Falta el manifiesto de recursos locales APP_FILES")
+        paths = re.findall(r'"(\./[^"]*)"', match.group(1))
+        if len(paths) < 65:
+            raise RuntimeError("Paquete USB incompleto: faltan módulos")
+        for path in paths:
+            with urlopen(base + path, timeout=8) as response:
+                if response.status != 200:
+                    raise RuntimeError(f"No responde el archivo {path}")
         return 0
     finally:
         server.shutdown()

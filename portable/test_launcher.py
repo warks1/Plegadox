@@ -37,5 +37,23 @@ class PortableTests(unittest.TestCase):
                 server.server_close()
 
 
+
+
+class BundleIntegrityTests(unittest.TestCase):
+    def test_real_app_resources_resolve(self):
+        from verify_bundle import verify
+        root = Path(__file__).resolve().parents[1]
+        found = verify(root)
+        self.assertGreaterEqual(found["sw_entries"], 65)
+        self.assertGreaterEqual(found["assets"], 65)
+
+    def test_missing_resource_is_detected(self):
+        from verify_bundle import verify
+        with tempfile.TemporaryDirectory() as temp:
+            folder = Path(temp)
+            (folder / "index.html").write_text("<h1>PlegadoX</h1>", encoding="utf-8")
+            with self.assertRaises(FileNotFoundError):
+                verify(folder)
+
 if __name__ == "__main__":
     unittest.main()
