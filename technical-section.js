@@ -15,6 +15,9 @@ import {gaugeRetractionPath,planGaugeRetraction} from './gauge-retract-motion.js
 import {inspectGaugeProfile} from './gauge-interference.js';
 
 const mm=v=>Number.isFinite(+v)?+v:0;
+// LRU pequeño: el barrido es POR CONFIGURACIÓN/PLIEGUE, no cada frame.
+const gaugePlanCache=new Map();
+
 const mPoint=(x,y)=>({x:mm(x),y:mm(y)});
 
 /**
@@ -120,31 +123,46 @@ export function technicalScene(piece,instant=0){
  const fixedFingerPolygon=fingerShape.map(q=>({
   x:q.x+anchorOrigin.x,y:q.y+anchorOrigin.y
  }));
- const fractionsForBend=[.44,.48,.52,.56,.60,.64,.68,.72,.76,.8,.83];
- const nominalRadius=development(p).radius;
- const sheetSamples=fractionsForBend.map(relative=>{
-  const next=stage(p,st.activeOperation*5+5*relative);
-  const projected=presentedAtStage(p,next);
-  const points=projected.points.map(pt=>({...pt,x:(feedMirror?-1:1)*pt.x}));
-  const modeled=contactKinematics({
-   points,activeBend:st.activeBend,
-   angle:p.angles[st.activeBend]*next.fractions[st.activeBend],
-   opening:die.opening,dieDepth:die.depth,thickness:t,
-   phase:next.phase,press:next.press,insideRadius:nominalRadius,
-   feedMirrored:feedMirror,
-   repositionProgress:projected.repositioning?projected.progress:1,
-   presentationLift:projected.clearanceLift??0
+ const cacheKey=JSON.stringify([
+  p.flanges,p.angles,p.thickness,p.width,p.order,p.stopByBend,
+  p.gaugeSideByBend,p.gaugeSegmentByBend,p.gaugePointByBend,
+  p.punch,p.die,p.kFactor,p.radius,p.material,p.punchOrientation,
+  machine.profileId||machine.name,st.activeOperation,reference.side,
+  gaugeAnchor,finger,die.opening
+ ]);
+ let prediction=gaugePlanCache.get(cacheKey);
+ if(!prediction){
+  const fractionsForBend=[.44,.48,.52,.56,.60,.64,.68,.72,.76,.8,.83];
+  const nominalRadius=development(p).radius;
+  const sheetSamples=fractionsForBend.map(relative=>{
+   const next=stage(p,st.activeOperation*5+5*relative);
+   const projected=presentedAtStage(p,next);
+   const points=projected.points.map(pt=>({...pt,x:(feedMirror?-1:1)*pt.x}));
+   const modeled=contactKinematics({
+    points,activeBend:st.activeBend,
+    angle:p.angles[st.activeBend]*next.fractions[st.activeBend],
+    opening:die.opening,dieDepth:die.depth,thickness:t,
+    phase:next.phase,press:next.press,insideRadius:nominalRadius,
+    feedMirrored:feedMirror,
+    repositionProgress:projected.repositioning?projected.progress:1,
+    presentationLift:projected.clearanceLift??0
+   });
+   return {at:relative,sheet:modeled.sheet};
   });
-  return {at:relative,sheet:modeled.sheet};
- });
- const gaugePlan=planGaugeRetraction({
-  sheetSamples,polygon:fixedFingerPolygon,thickness:t,contact:gaugeAnchor,
-  geometryDocumented:machine.gaugeGeometryDocumented!==false,
-  inspect:(sample,polygon,thickness,contact)=>
-   inspectGaugeProfile(sample.sheet,polygon,thickness,contact)
- });
- const maxSheetX=Math.max(gaugeAnchor.x,...sheetSamples.flatMap(
-  sample=>sample.sheet.map(q=>q.x)));
+  const gaugePlan=planGaugeRetraction({
+   sheetSamples,polygon:fixedFingerPolygon,thickness:t,contact:gaugeAnchor,
+   geometryDocumented:machine.gaugeGeometryDocumented!==false,
+   inspect:(sample,polygon,thickness,contact)=>
+    inspectGaugeProfile(sample.sheet,polygon,thickness,contact)
+  });
+  const maxSheetX=Math.max(gaugeAnchor.x,...sheetSamples.flatMap(
+   sample=>sample.sheet.map(q=>q.x)));
+
+  prediction={gaugePlan,maxSheetX};
+  gaugePlanCache.set(cacheKey,prediction);
+  if(gaugePlanCache.size>24)gaugePlanCache.delete(gaugePlanCache.keys().next().value);
+ }
+ const {gaugePlan,maxSheetX}=prediction;
  let target=null;
  if(st.activeOperation<p.order.length-1){
   const nextReference=gaugeReference(p,nextBend);
