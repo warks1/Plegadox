@@ -1,5 +1,5 @@
 // PlegadoX · caché offline estática. Se versiona para no arrastrar JS obsoleto.
-const CACHE='plegadox-static-0.9.16-front-gauge-r40';
+const CACHE='plegadox-static-0.9.17-bystronic-retract-r41';
 const APP_FILES=[
  "./",
  "./app.js",
@@ -30,6 +30,8 @@ const APP_FILES=[
  "./splash-foto-premium.html",
  "./plegadox-premium-selected.png",
  "./machine-config.js",
+ "./machine-selection.js",
+ "./gauge-retract-motion.js",
  "./machine-editor.js",
  "./machine-cad.js",
  "./machine-cad-ui.js",
