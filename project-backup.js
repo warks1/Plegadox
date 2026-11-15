@@ -14,10 +14,10 @@ import {MOTION_KEY,normalizeAxisMotion,loadAxisMotion} from './machine-axis-moti
 import {AXIS_MAPPING_KEY,normalizeAxisMapping,loadAxisMapping} from './machine-axis-geometry.js';
 export const PROJECT_FORMAT='plegadox-complete-project-v1';
 export const PIECE_KEY='plegadox:piece:v1';
-const MAX_TOOLS=30;
+const MAX_TOOLS=50;
 const check=(ok,msg)=>{if(!ok)throw Error(msg);};
 const finite=(n,min,max)=>typeof n==='number'&&Number.isFinite(n)&&n>=min&&n<=max;
-const idRule=/^user-dxf-(punch|die)-[a-z0-9-]+$/;
+const idRule=/^user-(dxf|custom)-(punch|die)-[a-z0-9-]+$/;
 function checkedPiece(p){
  check(p&&typeof p==='object'&&!Array.isArray(p),'La pieza del backup no es válida');
  check(Array.isArray(p.flanges)&&p.flanges.length>=2&&p.flanges.length<=20,
@@ -46,19 +46,61 @@ function checkedPiece(p){
  return {...p,flanges:[...p.flanges],angles:[...p.angles],order:[...p.order]};
 }
 function checkedTool(t){
- check(t&&t.importedDxf===true&&typeof t.id==='string'&&idRule.test(t.id),
-  'ID de útil importado no válido');
+ const imported=!!(t?.importedDxf===true&&t?.customProfile!==true&&
+  /^user-dxf-(punch|die)-[a-z0-9-]+$/.test(t?.id));
+ const custom=!!(t?.customProfile===true&&t?.importedDxf===false&&
+  /^user-custom-(punch|die)-[a-z0-9-]+$/.test(t?.id));
+ check(t&&(imported||custom)&&typeof t.id==='string'&&idRule.test(t.id),
+  'El útil no es DXF ni un dibujo por cotas reconocido');
  check(typeof t.name==='string'&&t.name.trim().length>0&&t.name.length<=65,
   'Nombre de útil DXF inválido');
  const contour=validateContour(t.profilePoints);
- const die=t.id.startsWith('user-dxf-die-');
- check(die===Boolean(t.opening!=null),'Tipo de herramienta DXF incoherente');
+ const die=/^user-(?:dxf|custom)-die-/.test(t.id);
+ check(die===Boolean(t.opening!=null),'Tipo de herramienta DXF/por cotas incoherente');
  check(finite(t.angle,15,120)&&finite(t.length,10,6000),
   'Ángulo o longitud de herramienta fuera de rango');
  check(Math.abs(t.height-contour.height)<.01,'La altura del útil DXF no coincide con su contorno');
  check(die?finite(t.opening,2,200):finite(t.tip,.1,30),
   'Apertura V o radio de punta inválidos');
- // Regenerar metadatos sin aceptar un falso indicador "CAD verificado".
+ // No inventar certificación; conservar las cotas EDITABLES de un útil
+ // hecho por el operario en vez de convertirlo falsamente en DXF OEM.
+ const mount=typeof t.mount==='string'&&
+  ['WILA','Amada/Promecam','TRUMPF','Bystronic/Beyeler R',''].includes(t.mount)?
+   t.mount:'';
+ if(custom){
+  const raw=t.customDimensions;
+  check(raw&&typeof raw==='object'&&!Array.isArray(raw),
+   'Faltan las cotas originales para editar el útil personalizado');
+  const dimensions={};
+  const allowed=['kind','shape','width','opening','shoulderRadius',
+   'activeV','vOffset','vDepth','tip','shankWidth','shankHeight',
+   'referenceSpan','neckDepth','type','outerWidth'];
+  check(Object.keys(raw).every(key=>allowed.includes(key)),
+   'La herramienta personalizada contiene cotas desconocidas');
+  for(const [key,value] of Object.entries(raw)){
+   if(['kind','shape','type'].includes(key)){
+    check(typeof value==='string'&&value.length<=30,
+     'Etiqueta de geometría personalizada incorrecta');
+    dimensions[key]=value;
+   }else{
+    check(finite(value,-4000,4000),
+     'Cota personalizada '+key+' fuera de rango');
+    dimensions[key]=value;
+   }
+  }
+  check(dimensions.kind===(die?'die':'punch'),
+   'Tipo de geometría personalizada no coincide con herramienta');
+  return {id:t.id,name:t.name,reference:t.name,manufacturer:'Personalizado',
+   mount,angle:t.angle,height:t.height,length:t.length,
+   profilePoints:contour.points,customProfile:true,importedDxf:false,
+   customDimensions:dimensions,verifiedSpecs:false,
+   profileAccuracy:'provisional',
+   sourceDescription:'Perfil dibujado por cotas: geometría de amarre y colisiones físicas no verificadas',
+   ...(die?{opening:t.opening,shoulderRadius:t.shoulderRadius??0,
+     outerWidth:t.outerWidth??dimensions.width}:
+    {tip:t.tip,type:dimensions.type||'recto',
+     referenceSpan:dimensions.referenceSpan??dimensions.width})};
+ }
  return {id:t.id,name:t.name,reference:t.name,manufacturer:'Importado DXF',
   mount:'',angle:t.angle,height:t.height,length:t.length,
   profilePoints:contour.points,importedDxf:true,
@@ -67,7 +109,7 @@ function checkedTool(t){
   ...(die?{opening:t.opening}:{tip:t.tip,type:'importado'})};
 }
 function checkedTools(list){
- check(Array.isArray(list)&&list.length<=MAX_TOOLS,'Máximo 30 herramientas DXF en un proyecto');
+ check(Array.isArray(list)&&list.length<=MAX_TOOLS,'Máximo 50 herramientas DXF o creadas por cotas en un proyecto');
  const data=list.map(checkedTool);
  check(new Set(data.map(t=>t.id)).size===data.length,'IDs de herramientas repetidos');
  return data;
@@ -166,9 +208,9 @@ export function buildProjectBackup({piece,machine,tools,measurements=[],library=
  check(machine&&Array.isArray(machine.ram)&&Array.isArray(machine.bed)&&
   Array.isArray(machine.stop)&&Array.isArray(machine.support),
   'Configuración de máquina incompleta');
- check(t.some(x=>x.id===p.punch)||!p.punch.startsWith('user-dxf-'),
+ check(t.some(x=>x.id===p.punch)||!/^user-(?:dxf|custom)-/.test(p.punch),
   'Falta el DXF del punzón asociado a la pieza');
- check(t.some(x=>x.id===p.die)||!p.die.startsWith('user-dxf-'),
+ check(t.some(x=>x.id===p.die)||!/^user-(?:dxf|custom)-/.test(p.die),
   'Falta el DXF de la matriz asociada a la pieza');
  const tested=mergeMeasurements([],measurements);
  const checked=checkedLibrary(library,t);
@@ -192,9 +234,9 @@ export function parseProjectBackup(source){
  check(raw.machine&&Array.isArray(raw.machine.ram)&&Array.isArray(raw.machine.bed)&&
   Array.isArray(raw.machine.stop)&&Array.isArray(raw.machine.support),
   'Configuración de máquina incompleta');
- check(tools.some(x=>x.id===p.punch)||!p.punch.startsWith('user-dxf-'),
+ check(tools.some(x=>x.id===p.punch)||!/^user-(?:dxf|custom)-/.test(p.punch),
   'El proyecto no incluye su punzón DXF');
- check(tools.some(x=>x.id===p.die)||!p.die.startsWith('user-dxf-'),
+ check(tools.some(x=>x.id===p.die)||!/^user-(?:dxf|custom)-/.test(p.die),
   'El proyecto no incluye su matriz DXF');
  const hasMeasurements=Object.prototype.hasOwnProperty.call(raw,'measurements');
  const measurements=hasMeasurements?mergeMeasurements([],raw.measurements):[];
@@ -237,7 +279,7 @@ export function restoreProjectBackup(storage,source){
   }else merged.push(tool);
  }
  check(merged.length<=MAX_TOOLS,
-  'La unión supera 30 útiles DXF. Exporta tu biblioteca antes de importar.');
+  'La unión supera 50 herramientas locales. Exporta una copia antes de importar.');
  const records=data.hasMeasurements?
   mergeMeasurements(readMeasurements(storage),data.measurements):null;
  let finalLibrary=null;
