@@ -13,7 +13,10 @@ export function gaugeRiskStatus(placement){
  // El asiento frontal se exige durante la preparación, no cuando la chapa
  // ya ha sido retirada de la V después de sujetar.
  const preparing=['Posicionamiento','Aproximación'].includes(placement?.phase);
- const invalidReference=placement?.freeEdge===false||
+ // El canto puede ser también la cara EXTERIOR de una pestaña ya
+ // plegada si el solver ha comprobado el asiento lateral en 2D.
+ const invalidReference=(placement?.freeEdge===false&&
+   placement?.foldedWingContact!==true)||
   placement?.sheetEdgeFound===false||
   placement?.contact?.usable===false||
   placement?.setupValid===false||
