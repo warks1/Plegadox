@@ -16,8 +16,8 @@ try{
   await page.locator('[data-tab="programacion"]').click();
   await page.locator('#sampleBtn').click();
   assert.equal(await page.locator('.bend-side-select').count(),4);
-  assert.equal(await page.locator('.bend-side-select[data-bend="0"]').inputValue(),'before');
-  assert.equal(await page.locator('.bend-side-select[data-bend="3"]').inputValue(),'after');
+  assert.equal(await page.locator('.bend-side-select[data-bend="0"]').inputValue(),'auto');
+  assert.equal(await page.locator('.bend-side-select[data-bend="3"]').inputValue(),'auto');
   assert.deepEqual(await page.evaluate(()=>window.PLEGADOX_STATE().piece.order),[0,1,3,2]);
   const initial=await page.evaluate(()=>window.PLEGADOX_STATE().piece.angles);
   await page.locator('[data-tab="simulacion"]').click();

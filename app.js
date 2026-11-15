@@ -1867,12 +1867,15 @@ function renderSimulationText(){
  }
 }
 function paintAll(){drawProfile('finalCanvas',piece.angles.map(()=>1),true);drawMachine();drawProfile('progressCanvas',stage(piece,sim.time).fractions,false);drawScene();toolDrawing();renderDevelopment();renderToolCards();renderSimulationText();}
+// R65: el reloj avanza por requestAnimationFrame SIN obligar a redibujar
+// el 2D, el 3D y la auditoría de incidencias sesenta veces por segundo.
+let lastMachineFrame=-Infinity,lastSceneFrame=-Infinity,lastStatusFrame=-Infinity;
 function tick(now){
  try{
  if(sim.playing){
   if(sim.last!=null){
-   const dt=Math.min((now-sim.last)/1000,.12)*sim.speed;
-   const next=Math.min(piece.order.length*5,sim.time+dt);
+   const dt=Math.min(Math.max(0,(now-sim.last)/1000),
+    pauseOn2DPenetration?.12:.75)*sim.speed;
    const checked=advancePreview(piece,sim.time,dt,piece.order.length*5,
     {pauseOnPenetration:pauseOn2DPenetration});
    sim.time=checked.time;
@@ -1882,8 +1885,14 @@ function tick(now){
    }else if(checked.looped){sim.time=0;sim.last=null;}
   }
   if(sim.playing)sim.last=now;
-  drawMachine();drawProfile('progressCanvas',stage(piece,sim.time).fractions);
-  drawScene();renderSimulationText();
+  // Cuadros 2D, 3D y estado a frecuencias independientes para evitar
+  // bloquear clics del operador en equipos de rendimiento limitado.
+  if(now-lastMachineFrame>=64){
+   lastMachineFrame=now;drawMachine();
+   drawProfile('progressCanvas',stage(piece,sim.time).fractions);
+  }
+  if(now-lastSceneFrame>=100){lastSceneFrame=now;drawScene();}
+  if(now-lastStatusFrame>=250){lastStatusFrame=now;renderSimulationText();}
  }
  }catch(error){
   sim.playing=false;sim.last=null;

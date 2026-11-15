@@ -17,7 +17,8 @@ try{
   await page.goto('http://127.0.0.1:4385/',{waitUntil:'networkidle',timeout:30000});
   await page.locator('.nav[data-tab="herramientas"]').click();
   const panel=page.locator('#customToolPanel');
-  if(!(await panel.getAttribute('open')))await panel.locator('summary').click();
+  // El atributo booleano presente tiene valor de texto vacío (falsy).
+   if(!(await panel.evaluate(node=>node.open)))await panel.locator('summary').click();
   await page.locator('#customToolKind').selectOption('die');
   await page.locator('#customToolName').fill('V16/88 PROMECAM PERSONALIZADA');
   await page.locator('#customToolMount').selectOption('Amada/Promecam');
