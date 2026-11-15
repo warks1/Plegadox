@@ -53,7 +53,7 @@ let integratedPlannerEpoch=0;
 let measurementInputKey=measurementKey(piece),lastSavedMeasurement=null;
 const geometryCache={key:null,result:null};
 function geometryReport(){
- const key=JSON.stringify([piece.flanges,piece.angles,piece.order,piece.thickness,piece.width,piece.material,piece.rmMPa,piece.punch,piece.die,piece.punchOrientation,piece.gaugeSideByBend,piece.gaugePointByBend,getV85().ramWidth,getV85().holderWidth]);
+ const key=JSON.stringify([piece.flanges,piece.angles,piece.order,piece.thickness,piece.width,piece.material,piece.rmMPa,piece.punch,piece.die,piece.punchOrientation,piece.gaugeSideByBend,piece.gaugeSegmentByBend,piece.gaugePointByBend,getV85().ramWidth,getV85().holderWidth]);
  if(key!==geometryCache.key){
   const report=analyzeSequence(piece),tools=inspectSequenceTools(piece,6),
    sheetScan=scanSheetSequence(piece,15);
@@ -245,7 +245,7 @@ function configure(){
   detachLibraryPiece();
   changePiece(cybelecReferencePreset(),true);
  };
- $('addFlange').onclick=()=>{if(piece.flanges.length>=20)return;changePiece({...piece,flanges:[...piece.flanges,50],angles:[...piece.angles,90],order:[...piece.order,piece.angles.length],stopByBend:[...piece.stopByBend,1],gaugeSideByBend:[...piece.gaugeSideByBend,'auto'],gaugePointByBend:[...piece.gaugePointByBend,null]},true);};
+ $('addFlange').onclick=()=>{if(piece.flanges.length>=20)return;changePiece({...piece,flanges:[...piece.flanges,50],angles:[...piece.angles,90],order:[...piece.order,piece.angles.length],stopByBend:[...piece.stopByBend,1],gaugeSideByBend:[...piece.gaugeSideByBend,'auto'],gaugeSegmentByBend:[...piece.gaugeSegmentByBend,null],gaugePointByBend:[...piece.gaugePointByBend,null]},true);};
  $('resetOrder').onclick=()=>changePiece({...piece,order:piece.angles.map((_,i)=>i)},true);
  for(const value of [1,2])$('chooseGauge'+value).onclick=()=>{
   const current=stopAtStage(piece,sim.time),modes=[...piece.stopByBend];
@@ -257,9 +257,18 @@ function configure(){
   $('chooseSide'+suffix).onclick=()=>{
    const current=stopAtStage(piece,sim.time),sides=[...piece.gaugeSideByBend];
    sides[current.bend]=mode;
-   changePiece({...piece,gaugeSideByBend:sides},false);
+   const segments=[...piece.gaugeSegmentByBend];segments[current.bend]=null;
+   changePiece({...piece,gaugeSideByBend:sides,gaugeSegmentByBend:segments},false);
   };
  }
+ $('activeGaugeSegment').addEventListener('change',()=>{
+  const bend=stopAtStage(piece,sim.time).bend;
+  const segment=$('activeGaugeSegment').value===''?null:Number($('activeGaugeSegment').value);
+  const segments=[...piece.gaugeSegmentByBend];segments[bend]=segment;
+  const points=[...piece.gaugePointByBend];
+  if(segment!==null&&points[bend]!==null&&points[bend]>piece.flanges[segment])points[bend]=null;
+  changePiece({...piece,gaugeSegmentByBend:segments,gaugePointByBend:points},false);
+ });
  const gaugeDistance=$('activeGaugeDistance');
  gaugeDistance.addEventListener('change',()=>{
   const bend=stopAtStage(piece,sim.time).bend;
@@ -1024,6 +1033,21 @@ function renderEditor(){
     changePiece({...piece,gaugeSideByBend},false);
    });
    sideCell.append(side);
+   const segment=document.createElement('select');segment.className='bend-segment-select';
+   segment.setAttribute('aria-label','Elegir ala concreta donde hace tope el pliegue '+i);
+   for(const [value,title] of [['','Alas contiguas · según lado'],
+    ...piece.flanges.map((_,j)=>[String(j),'Apoyar en ala '+(j+1)])]){
+    const opt=document.createElement('option');opt.value=value;opt.textContent=title;segment.append(opt);
+   }
+   segment.value=piece.gaugeSegmentByBend[i-1]??'';
+   segment.addEventListener('change',()=>{
+    const selected=segment.value===''?null:Number(segment.value);
+    const gaugeSegmentByBend=[...piece.gaugeSegmentByBend];gaugeSegmentByBend[i-1]=selected;
+    const gaugePointByBend=[...piece.gaugePointByBend];
+    if(selected!==null&&gaugePointByBend[i-1]>piece.flanges[selected])gaugePointByBend[i-1]=null;
+    changePiece({...piece,gaugeSegmentByBend,gaugePointByBend},false);
+   });
+   sideCell.append(segment);
    const estimate=document.createElement('small');estimate.className='gauge-nominal-hint';
    const ref=gaugeReference(piece,i-1);
    estimate.textContent='Referencia '+numbers(ref.distance,1)+' mm · '+ref.label;
@@ -1051,8 +1075,15 @@ function renderEditor(){
  const actionCell=document.createElement('td');if(i>=2){const remove=document.createElement('button');remove.className='mini';remove.textContent='×';remove.title='Eliminar ala';remove.onclick=()=>{const flanges=[...piece.flanges],angles=[...piece.angles];flanges.splice(i,1);angles.splice(i-1,1);const order=piece.order.filter(x=>x!==i-1).map(x=>x>i-1?x-1:x);
   const stopByBend=[...piece.stopByBend];stopByBend.splice(i-1,1);
   const gaugeSideByBend=[...piece.gaugeSideByBend];gaugeSideByBend.splice(i-1,1);
+  const gaugeSegmentByBend=[...piece.gaugeSegmentByBend];gaugeSegmentByBend.splice(i-1,1);
+  for(let j=0;j<gaugeSegmentByBend.length;j++){
+   if(gaugeSegmentByBend[j]!==null){
+    if(gaugeSegmentByBend[j]===i)gaugeSegmentByBend[j]=null;
+    else if(gaugeSegmentByBend[j]>i)gaugeSegmentByBend[j]--;
+   }
+  }
   const gaugePointByBend=[...piece.gaugePointByBend];gaugePointByBend.splice(i-1,1);
-  changePiece({...piece,flanges,angles,order,stopByBend,gaugeSideByBend,gaugePointByBend},true);};actionCell.append(remove);}row.append(actionCell);tb.append(row);
+  changePiece({...piece,flanges,angles,order,stopByBend,gaugeSideByBend,gaugeSegmentByBend,gaugePointByBend},true);};actionCell.append(remove);}row.append(actionCell);tb.append(row);
  });
  const seq=$('sequence');seq.replaceChildren();
  piece.order.forEach((id,i)=>{const c=document.createElement('div');c.className='seq-card';const text=document.createElement('div');const b=document.createElement('b');b.textContent=(i+1)+'. Pliegue '+(id+1)+' (G'+(i+1)+'→P'+(id+1)+')';const small=document.createElement('span');small.textContent=' '+(piece.angles[id]>0?'+':'')+piece.angles[id]+'°';text.append(b,small);const up=document.createElement('button');up.textContent='←';up.title='Hacer antes';up.disabled=!i;up.onclick=()=>reorder(i,-1);const down=document.createElement('button');down.textContent='→';down.title='Hacer después';down.disabled=i===piece.order.length-1;down.onclick=()=>reorder(i,1);c.append(text,up,down);seq.append(c);});
@@ -1588,6 +1619,13 @@ function renderSimulationText(){
  $('chooseSideBefore').textContent='← Ala anterior · '+numbers(piece.flanges[gauge.bend],1)+' mm';
  $('chooseSideAfter').textContent='Ala siguiente · '+numbers(piece.flanges[gauge.bend+1],1)+' mm →';
  const freeEnd=ref.freeEdge;
+ const segmentSelect=$('activeGaugeSegment');
+ if(segmentSelect.options.length!==piece.flanges.length+1){
+  const make=(value,label)=>{const option=document.createElement('option');option.value=value;option.textContent=label;return option;};
+  segmentSelect.replaceChildren(make('','Automático · alas junto al pliegue'),
+   ...piece.flanges.map((_,i)=>make(String(i),'Ala '+(i+1)+' · '+numbers(piece.flanges[i],1)+' mm')));
+ }
+ if(document.activeElement!==segmentSelect)segmentSelect.value=ref.segmentManual?String(ref.segmentIndex):'';
  const contactInput=$('activeGaugeDistance');
  if(document.activeElement!==contactInput){
   const next=piece.gaugePointByBend[gauge.bend];
@@ -1598,7 +1636,7 @@ function renderSimulationText(){
   ' mm desde el pliegue · vacío = extremo del ala';
  const chosenGauge=gaugePlacement(technicalScene(piece,sim.time),gauge.value);
  $('activeGaugeReference').textContent=ref.label+' · '+numbers(ref.distance,1)+
-  ' mm nominales desde el pliegue · '+(gauge.value===2?'chapa sobre primer escalón SUPPORT 2':'chapa contra cara frontal inferior STOP 1')+
+  ' mm sobre el ala elegida · '+(gauge.value===2?'chapa sobre primer escalón SUPPORT 2':'chapa contra cara frontal inferior STOP 1')+
    ' · '+(ref.side==='before'?'presentación invertida':'presentación directa')+
   (freeEnd?' · borde libre':ref.manual&&!ref.atEnd?
     ' · ⚠ punto interior: requiere un contacto físico accesible':
@@ -1617,7 +1655,7 @@ function renderSimulationText(){
   !!chosenGauge.gaugeInterference?.warning);
  for(const mode of ['auto','before','after']){
   const suffix=mode==='auto'?'Auto':mode==='before'?'Before':'After';
-  const btn=$('chooseSide'+suffix),active=gauge.reference.choice===mode;
+  const btn=$('chooseSide'+suffix),active=!ref.segmentManual&&gauge.reference.choice===mode;
   btn.classList.toggle('selected',active);btn.setAttribute('aria-pressed',String(active));
  }
  for(const n of [1,2]){
@@ -1637,7 +1675,7 @@ function renderSimulationText(){
  $('timeline').value=Math.round(1000*st.time/st.duration);
  const root=$('simSequence');
  const key=JSON.stringify({order:piece.order,angles:piece.angles,flanges:piece.flanges,
-  stopByBend:piece.stopByBend,gaugeSideByBend:piece.gaugeSideByBend,gaugePointByBend:piece.gaugePointByBend,issues:check.perOperation.map((x,i)=>x.potentialInterference||x.toolAngleWarning||
+  stopByBend:piece.stopByBend,gaugeSideByBend:piece.gaugeSideByBend,gaugeSegmentByBend:piece.gaugeSegmentByBend,gaugePointByBend:piece.gaugePointByBend,issues:check.perOperation.map((x,i)=>x.potentialInterference||x.toolAngleWarning||
    x.vSupportWarning||check.tools.operations[i]?.possibleToolInterference||
    check.sheetScan.operations[i]?.possibleSheetInterference)});
  if(root.dataset.key!==key){
