@@ -204,10 +204,13 @@ export function technicalScene(piece,instant=0){
   autoSelected:resolvedGauge.autoSelected,
   referenceSegment:reference.segmentIndex};
  let target=null;
- if(st.activeOperation<p.order.length-1&&nextResolved.valid){
-  // El objetivo de reposicionamiento debe ser la MISMA cara de apoyo
-  // seleccionada por el motor en el golpe siguiente. No recalcularlo
-  // con un ala vieja que pertenece a otro pliegue.
+ if(st.activeOperation<p.order.length-1&&
+    Number.isFinite(nextResolved.point?.x)&&Number.isFinite(nextResolved.point?.y)){
+  // Es obligatorio llegar geométricamente a la referencia propuesta del
+  // próximo golpe incluso si el apoyo es inválido. Sin este destino, el
+  // dedo quedaba aparcado y TELETRANSPORTABA al comenzar el golpe nuevo.
+  // Llegar a esa coordenada NO autoriza el contacto: la validación
+  // inicial sigue señalando el apoyo erróneo en rojo.
   target={x:nextResolved.point.x,y:nextResolved.point.y};
  }
  const sub=st.completed?1:(st.time/5)%1;
