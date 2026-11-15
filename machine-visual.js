@@ -10,6 +10,22 @@ import {gaugePlacement,gaugeContourAtContact} from './backgauge-placement.js';
 import {sceneAtmosphere,dieDepth,ramDepth,sheetDepth,surfaceDetail,sectionOverlay} from './render-enhancements.js';
 
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+// Etiqueta verificable: no denominar RETROCESO a un cambio de cota X/R.
+// Dos movimientos diferentes: apartar por penetración prevista y
+// colocar la referencia del golpe siguiente.
+export function gaugeMovementLabel(placement){
+ const n=placement?.stopNumber===2?2:1;
+ const phase=placement?.gaugeTransition?.phase;
+ if(phase==='retroceso-antes-plegado')
+  return 'TOPE '+n+' · RETROCESO POR PENETRACIÓN 2D PREVISTA';
+ if(phase==='retirado-durante-plegado')
+  return 'TOPE '+n+' · APARCADO POR PENETRACIÓN 2D PREVISTA';
+ if(phase==='regreso-a-siguiente-referencia')
+  return 'TOPE '+n+' · VUELTA DESDE RETIRADA PREVENTIVA';
+ if(phase==='reubicacion-siguiente-golpe')
+  return 'TOPE '+n+' · CAMBIO DE COTA PARA EL SIGUIENTE GOLPE';
+ return '';
+}
 /**
  * Cabina y sección técnica usan exactamente las mismas poligonales en mm.
  * Solo cambia la transformación de coordenadas (y de mm hacia arriba a
@@ -170,7 +186,7 @@ function rearMachine(ctx,w,h,cx,cy,scale,placement){
   placement.gaugeInterference?.kind==='penetracion'?
    '⚠ TOPE '+placement.stopNumber+' · CHAPA INVADE EL DEDO':
    '⚠ TOPE '+placement.stopNumber+' · REVISAR HOLGURA / APOYO'):
-  placement.moving?'TOPE '+placement.stopNumber+' · REUBICANDO / RETIRADO':
+  placement.gaugeTransition?gaugeMovementLabel(placement):
   nominal?'TOPE '+placement.stopNumber+(cadPending?' · APOYO 2D PROVISIONAL · CAD PENDIENTE':' · CONTACTO NOMINAL 2D'):
   'TOPE '+placement.stopNumber+' · SIN CONTACTO CONFIRMADO';
  ctx.fillText(label,Math.min(Math.max(8,ox+3*scale),w-145*scale),
@@ -330,9 +346,15 @@ function stageScene(ctx,w,h,piece,sim,machineView){
  if(presentation.repositioning){
   ctx.save();ctx.fillStyle='#9dd8ff';
   ctx.font='700 '+Math.max(9,11*scale)+'px system-ui';ctx.textAlign='center';
-  ctx.fillText(machineView?.perspective?
-    'RETIRADA → RECOLOCACIÓN ORIENTATIVA · NO 3D REAL':
-    'RETIRADA → RECOLOCACIÓN ESQUEMÁTICA',w/2,h-48*scale);
+  // La CHAPA se reorienta entre golpes; el DEDO sólo se retira si
+  // gaugePlan.enabled. No dibujar "RETIRADA" cuando el dedo no se apartó.
+  const gaugeWithdrawn=scene.gaugePlan?.enabled===true;
+  ctx.fillText(gaugeWithdrawn?
+    'CHAPA REORIENTÁNDOSE · TOPE RETIRADO POR PENETRACIÓN 2D':
+    scene.gaugeTransition?.phase==='reubicacion-siguiente-golpe'?
+     'CAMBIO DE COTA DEL TOPE · SIN RETROCESO PREVENTIVO':
+     'REORIENTACIÓN DE CHAPA · TOPE SIN RETIRADA',
+   w/2,h-48*scale);
   ctx.restore();
  }
  // El signo del plano no se cambia: sólo cambia la CARA de presentación
