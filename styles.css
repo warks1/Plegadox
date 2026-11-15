@@ -1497,3 +1497,7 @@ html{background:#020913}
 .px-gauge-point-actions button{flex:0 1 auto;min-height:44px;padding:8px 13px;border-radius:7px;color:#e9fbff;background:#1e5267;border:1px solid #64aac4}
 .px-gauge-point-editor small{color:#a2d8e2;font-size:11px}
 .bend-gauge-contact{display:block;width:100%;max-width:175px;min-width:100px;margin-top:7px;padding:6px;font-size:13px;border:1px solid #6db5cd;border-radius:6px}
+
+/* R38 · Lista del tramo concreto de chapa donde referenciar el dedo. */
+.px-gauge-point-editor select,.bend-segment-select{width:100%;max-width:100%;min-height:44px;font-size:14px;padding:8px 10px;border-radius:7px;border:1px solid #5abbd2;background:#0b273a;color:#fff}
+.bend-segment-select{margin-top:6px;min-width:140px;min-height:35px;font-size:12px}
