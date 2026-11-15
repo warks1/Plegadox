@@ -1,0 +1,33 @@
+name: Compilar PlegadoX portátil USB para Windows
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build-portable-usb:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Instalar herramientas para compilar EXE sin dependencias externas
+        run: python -m pip install "pyinstaller>=6.16,<7" pillow
+      - name: Probar servidor localhost y carga de recursos
+        run: python -m unittest discover -s portable -p "test_*.py" -v
+      - name: Generar icono premium de Windows
+        run: python portable/make_icon.py
+      - name: Compilar ejecutable con Python incluido
+        run: python -m PyInstaller --noconfirm --clean --onefile --windowed --name PlegadoX --icon portable/plegadox.ico portable/launcher.py
+      - name: Preparar pendrive completo con aplicación, EXE y guía
+        run: python portable/make_bundle.py
+      - name: Guardar ZIP listo para copiar al USB
+        uses: actions/upload-artifact@v4
+        with:
+          name: PlegadoX-USB-Windows
+          path: dist/PlegadoX-USB-Windows.zip
+          if-no-files-found: error
+          retention-days: 30
