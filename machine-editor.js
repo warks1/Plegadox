@@ -179,6 +179,7 @@ function render(refreshFields=true){
  const profile=getActiveMachineProfile(),isTrumpf=profile.id==='trumpf-v85';
  const machineChooser=$('machineSelector');
  if(machineChooser)machineChooser.value=profile.id;
+ if($('machineSelectorInSettings'))$('machineSelectorInSettings').value=profile.id;
  const title=$('machinePanelTitle'),description=$('machinePanelDescription');
  if(title)title.textContent=profile.title+' · configuración de máquina';
  if(description)description.textContent=isTrumpf?
@@ -253,6 +254,9 @@ function exportConfig(){
 if($('machineRamFields')){
  const chooser=$('machineSelector');
  if(chooser){chooser.value=getActiveMachineId();chooser.addEventListener('change',()=>selectMachine(chooser.value));}
+ const chooserSettings=$('machineSelectorInSettings');
+ if(chooserSettings){chooserSettings.value=getActiveMachineId();
+  chooserSettings.addEventListener('change',()=>selectMachine(chooserSettings.value));}
  $('machineResetValues')?.addEventListener('click',()=>{
   resetV85();dirty=false;render();
   $('machineSaveState').textContent='Restauradas las cotas de las fotografías Cybelec.';
