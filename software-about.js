@@ -1,3 +1,4 @@
+import {validRelease,canInstallRelease} from './software-update-policy.js';
 /**
  * PlegadoX · Centro de información y actualizaciones de la PWA.
  * Solo comprueba versiones publicadas en el MISMO origen.
@@ -27,11 +28,6 @@ function active(busy){
  for(const button of [action,topAction])if(button){
   button.disabled=busy;button.setAttribute('aria-busy',String(busy));
  }
-}
-function validRelease(release){
- return release&&typeof release==='object'&&
-  typeof release.build==='string'&&/^PLEGADOX-[A-Z0-9-]{6,70}$/.test(release.build)&&
-  typeof release.version==='string'&&/^\d+\.\d+\.\d+(?:[-+][a-zA-Z0-9.-]+)?$/.test(release.version);
 }
 async function publishedRelease(){
  const url=new URL('build-info.json',BASE);
@@ -95,8 +91,10 @@ async function checkAndUpdate(){
  try{
   const release=await publishedRelease();
   if(remoteVersion)remoteVersion.textContent='v'+release.version;
-  if(release.build===BUILD){
-   show('PlegadoX ya está actualizado (v'+VERSION+'). No hay una versión posterior publicada.','ok');
+  if(!canInstallRelease(release,BUILD,VERSION)){
+   show(release.build===BUILD?
+    'PlegadoX ya está actualizado (v'+VERSION+'). No hay una versión posterior publicada.':
+    'La versión publicada ('+release.version+') es anterior o no está identificada como una mejora. Se conserva la versión instalada.','ok');
    return;
   }
   show('Nueva versión detectada: v'+release.version+'. Preparando la instalación…');
@@ -109,4 +107,4 @@ async function checkAndUpdate(){
 }
 if(action)action.addEventListener('click',checkAndUpdate);
 if(topAction)topAction.addEventListener('click',checkAndUpdate);
-export {validRelease};
+
