@@ -120,7 +120,7 @@ export function gooseneckOutline(tool,{height,tipRadius,angle,noseArc}){
  * cabina, inspector y análisis de sección de colisiones).
  */
 export function sectionPunch(tool={}){
- if(tool.importedDxf&&Array.isArray(tool.profilePoints)&&tool.profilePoints.length>=3){
+ if((tool.importedDxf||tool.customProfile)&&Array.isArray(tool.profilePoints)&&tool.profilePoints.length>=3){
   return {points:tool.profilePoints.map(p=>[...p]),
    angle:Number(tool.angle),height:Number(tool.height),
    tipRadius:Number(tool.tip)/2,roundedNose:false,
@@ -156,7 +156,7 @@ export function sectionPunch(tool={}){
   provisional:tool.profileAccuracy!=='verified'};
 }
 export function sectionDie(tool={}){
- if(tool.importedDxf&&Array.isArray(tool.profilePoints)&&tool.profilePoints.length>=3){
+ if((tool.importedDxf||tool.customProfile)&&Array.isArray(tool.profilePoints)&&tool.profilePoints.length>=3){
   const opening=Number(tool.opening),angle=Number(tool.angle),height=Number(tool.height);
   // El DXF aporta el contorno. V/ángulo son metadatos declarados,
   // su profundidad geométrica sólo se estima; no se certifica contacto.
