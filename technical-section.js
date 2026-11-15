@@ -182,7 +182,13 @@ export function technicalScene(piece,instant=0){
    sheetSamples,polygon:fixedFingerPolygon,thickness:t,contact:gaugeAnchor,
    geometryDocumented:machine.gaugeGeometryDocumented!==false,
    inspect:(sample,polygon,thickness,contact)=>
-    inspectGaugeProfile(sample.sheet,polygon,thickness,contact)
+    inspectGaugeProfile(sample.sheet,polygon,thickness,contact,{
+     supportShelf:feature.surface==='horizontal-top'?{
+      seated:resolvedGauge.valid,
+      from:{x:anchorOrigin.x+feature.from.x,y:anchorOrigin.y+feature.from.y},
+      to:{x:anchorOrigin.x+feature.to.x,y:anchorOrigin.y+feature.to.y}
+     }:null
+    })
   });
   const maxSheetX=Math.max(gaugeAnchor.x,...sheetSamples.flatMap(
    sample=>sample.sheet.map(q=>q.x)));
