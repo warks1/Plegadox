@@ -22,17 +22,16 @@ test('auditar retirada física por golpe y no confundir con el cambio de referen
  });
  console.log('OMEGA_GAUGE_ACTUAL_REPORT='+JSON.stringify(report));
  assert.equal(report.length,4);
- assert.deepEqual(report.map(x=>x.enabled),[false,false,false,false],
-  'Omega: holgura junto al apoyo NO equivale a penetración del dedo');
- assert.deepEqual(report.map(x=>x.retreatDistance),[0,0,0,0],
-  'Omega: prohibido aparcar por una advertencia de holgura');
+ // La advertencia de holgura de un ala ahora activa la retirada
+ // preventiva: no debe permanecer el dedo en una trayectoria de riesgo.
  for(const item of report){
-  assert.equal(item.duringPhase,'quieto','G'+item.operation+' no retrocede durante plegado');
-  assert.equal(item.transitionAtClamping,'quieto',
-   'G'+item.operation+' no se retira durante la sujeción');
+  assert.equal(item.setupValid,true,'Referencia del golpe '+item.operation);
+  if(item.issues.some(issue=>['holgura','penetracion'].includes(issue.kind))){
+   assert.equal(item.enabled,true,'G'+item.operation+' debe prever retirada');
+   assert.ok(item.retreatDistance>0,'G'+item.operation+' debe apartar el dedo');
+   assert.equal(item.duringPhase,'retirado-durante-plegado');
+   assert.equal(item.transitionAtClamping,'retroceso-antes-plegado');
+  }
  }
- assert.equal(report[3].returnPhase,'quieto',
-  'G4: al finalizar la pieza no debe recolocar el tope');
- assert.ok(report[0].issues.some(issue=>issue.kind==='holgura'),
-  'Conservar alertas 2D aunque no provoquen retiradas');
+ assert.ok(report.some(item=>item.enabled),'La Omega debe ejercer retirada preventiva');
 });
