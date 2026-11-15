@@ -10,3 +10,5 @@ La ausencia de un choque en una comprobación parcial NO basta para mostrar verd
 - Pruebas R89 comprueban referencias inválidas, geometría insuficiente, prioridad roja y fases reales de la Omega.
 
 **Alcance:** simulador geométrico 2D, no verificación de máquina ni autorización para ejecutar CNC. Los CAD OEM y recorridos físicos de V85/Bystronic siguen siendo necesarios.
+
+Los rótulos «TOPE» de la sección (móvil y escritorio) y el contorno del punto de contacto en cabina heredan también el semáforo; no permanecen verdes cuando el indicador principal es naranja o rojo.
