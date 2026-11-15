@@ -183,7 +183,9 @@ export function gaugePlacement(scene,stopNumber=1){
     !valid?'sin cota válida':!feature.usable?'sin cara física de apoyo definida':
     !freeEdge?'⚠ punto de apoyo interior: comprobar cara física del tope y accesibilidad':
     !sheetInFront?'⚠ La chapa llega por DETRÁS del tope; invertir la presentación':
-    !seat.seated?'⚠ La chapa NO CONTACTA la cara frontal del tope':
+    !seat.seated?(feature.surface==='horizontal-top'?
+      '⚠ La chapa NO asienta sobre la repisa baja ni detiene su canto contra la pared del tope Support':
+      '⚠ La chapa NO CONTACTA la cara frontal del tope'):
     contactEngaged?'borde presentado contra la cara seleccionada':
     'referencia nominal fijada antes del golpe (sin contacto actual)',
    verified:false});
