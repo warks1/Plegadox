@@ -143,7 +143,12 @@ export function gaugePlacement(scene,stopNumber=1){
   const reference=scene.gaugeReference,
    a=scene.gaugeTransition?.point||scene.gaugeAnchor;
   const index=reference.sourceIndex;
-  const freeEdge=reference.freeEdge===true;
+  // Referencias antiguas podían omitir freeEdge; determinarlo a partir
+  // del índice del canto sin marcar vértices interiores como válidos.
+  // Si se declara explícitamente freeEdge=false, respetar esa prohibición.
+  const freeEdge=reference.freeEdge===true||
+   (reference.freeEdge!==false&&reference.atEnd!==false&&
+    (index===0||index===(scene.sheet?.length??0)-1));
   const valid=[a.x,a.y,reference.distance].every(Number.isFinite);
   const edge=gaugePointOnProfile(scene.sheet,reference);
   const gap=edge?Math.hypot(edge.x-a.x,edge.y-a.y):Infinity;
