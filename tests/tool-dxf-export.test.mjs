@@ -29,7 +29,7 @@ test('perfiles por cotas se exportan como DXF 2D y vuelven a entrar al importado
 });
 test('nombres de exportación no contienen rutas ni caracteres peligrosos',()=>{
  assert.equal(safeToolDxfName('Pata de cabra / WILA Nº1'),
-  'pata-de-cabra-wila-no1-NO-CERTIFICADO.dxf');
+  'pata-de-cabra-wila-n-1-NO-CERTIFICADO.dxf');
  assert.equal(safeToolDxfName('../../\\<script>alert(1)'),
   'script-alert-1-NO-CERTIFICADO.dxf');
 });
