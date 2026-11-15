@@ -47,6 +47,10 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#060c16;col
 @media (prefers-reduced-motion:reduce){#pressMotion{display:none}}
 
 
+/* El fondo NO repite la foto original: en móviles esa segunda copia
+   se percibía como una imagen encima de otra. */
+#screen::before{background:radial-gradient(ellipse at center,#15344a 0%,#06111f 62%,#040b14 100%);
+ filter:none;transform:none;inset:0}
 /* R47: única fotografía seleccionada, sin doble chapa, barras ni
    superposiciones desalineadas. El fondo rellena todas las pantallas,
    pero la imagen frontal se conserva íntegra y sin estirar. */
