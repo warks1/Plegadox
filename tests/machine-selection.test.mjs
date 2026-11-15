@@ -27,15 +27,25 @@ test('códigos desconocidos no sustituyen configuración guardada',()=>{
  assert.throws(()=>selectMachine('bystronic-otro'),/no conocido/);
 });
 
-test('la Bystronic real declarada 2006 no hereda medidas de modelos candidatos',()=>{
+test('Bystronic 2006 incorpora las cotas documentadas PR100/3100 como referencia',()=>{
  selectMachine('bystronic-2006-100-3100');
  const cfg=getActiveMachineConfig();
- assert.equal(getActiveMachineProfile().year,2006);
+ const profile=getActiveMachineProfile();
+ assert.equal(profile.year,2006);
  assert.equal(cfg.tonnage,100);
  assert.equal(cfg.bendingLength,3100);
- assert.equal(cfg.betweenUprights,null);
- assert.equal(cfg.stroke,null);
+ assert.equal(cfg.betweenUprights,2750);
+ assert.equal(cfg.throat,400);
+ assert.equal(cfg.openHeight,500);
+ assert.equal(cfg.stroke,215);
+ assert.equal(cfg.xRange,1040);
+ assert.equal(cfg.xTravel,590);
+ assert.equal(cfg.rTravel,250);
+ assert.deepEqual(cfg.outer,{length:4100,depth:2050,height:2600});
+ assert.equal(cfg.nominalWeightTonnes,9);
  assert.equal(cfg.tableHeight,null);
  assert.equal(cfg.gaugeGeometryDocumented,false);
+ assert.ok(cfg.dimensionsSource.includes('politesi'));
+ assert.equal(cfg.dimensionsVerified,'cotas-fabricante-pr100-3100-atribuidas-como-referencia');
  selectMachine('trumpf-v85');
 });
