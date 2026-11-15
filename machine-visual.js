@@ -149,7 +149,7 @@ export function gaugeFrontNosePolygon(placement,dimensions){
  * de estado; aquí solo mostramos el nivel y la acción requerida.
  * Es geometría de interfaz, NO movimiento de máquina.
  */
-export function gaugeStatusCardLayout(width,height,faceX,faceY,stopNumber,level,scale=1){
+export function gaugeStatusCardLayout(width,height,faceX,faceY,stopNumber,level,scale=1,movementPhase=null){
  if(![width,height,faceX,faceY,scale].every(Number.isFinite)||
   width<=0||height<=0||scale<=0||![1,2].includes(stopNumber)||
   !['green','amber','red'].includes(level))
@@ -166,8 +166,16 @@ export function gaugeStatusCardLayout(width,height,faceX,faceY,stopNumber,level,
  const headline=level==='red'?`⛔ TOPE ${stopNumber} · COLISIÓN`:
   level==='amber'?`⚠ TOPE ${stopNumber} · ATENCIÓN`:
   `TOPE ${stopNumber} · SIN CHOQUE 2D`;
+ // No perder los avisos de MOVIMIENTO que ya existían antes de R96.
+ // Cambiar de cota no se debe anunciar como retroceso anticolisión.
+ const motionText={
+  'retroceso-antes-plegado':'RETROCEDIENDO ANTES DEL GOLPE',
+  'retirado-durante-plegado':'RETIRADO DURANTE EL PLEGADO',
+  'regreso-a-siguiente-referencia':'VOLVIENDO DESDE RETIRADA',
+  'reubicacion-siguiente-golpe':'CAMBIO DE COTA · NO RETROCESO'
+ }[movementPhase]??null;
  const subline=level==='red'?'PENETRACIÓN 2D · REVISAR':
-  level==='amber'?'REVISAR APOYO / HOLGURA':'COMPROBACIÓN 2D';
+  motionText||(level==='amber'?'REVISAR APOYO / HOLGURA':'COMPROBACIÓN 2D');
  return {x,y,width:boxW,height:boxH,headline,subline,below,
   reservedLeft:left,reservedRight:right};
 }
@@ -444,7 +452,8 @@ function stageScene(ctx,w,h,piece,sim,machineView){
   // tapada por la matriz ni sobreescribir el canto frontal del dedo.
   const level=gaugeRiskStatus(placement).level;
   const layout=gaugeStatusCardLayout(w,h,cx+placement.point.x*scale,
-   baseY-placement.point.y*scale,placement.stopNumber,level,scale);
+   baseY-placement.point.y*scale,placement.stopNumber,level,scale,
+   placement.gaugeTransition?.phase??null);
   drawGaugeStatusCard(ctx,layout,level,GAUGE_COLORS[level]);
  }
  // Workpiece shadow and hot contact glow along the working tool tip
