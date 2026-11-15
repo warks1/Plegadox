@@ -22,6 +22,22 @@ test('R96: las advertencias Stop 1 no se cortan ni pisan el labio en PC/iPhone',
  }
 });
 
+test('R96: el aviso distingue retirada preventiva de simple cambio X/R',()=>{
+ const args=[390,245,190,160,1,'amber',.4];
+ const withdrawing=gaugeStatusCardLayout(...args,'retroceso-antes-plegado');
+ const parked=gaugeStatusCardLayout(...args,'retirado-durante-plegado');
+ const next=gaugeStatusCardLayout(...args,'reubicacion-siguiente-golpe');
+ assert.match(withdrawing.subline,/RETROCEDIENDO/);
+ assert.match(parked.subline,/RETIRADO DURANTE/);
+ assert.match(next.subline,/NO RETROCESO/);
+ assert.deepEqual([withdrawing.x,withdrawing.y,withdrawing.width],
+  [next.x,next.y,next.width]);
+ const red=gaugeStatusCardLayout(618,430,314,280,1,'red',.8,
+  'retirado-durante-plegado');
+ assert.match(red.subline,/PENETRACIÓN 2D/,
+  'Una colisión actual tiene preferencia sobre el estado de movimiento');
+});
+
 test('R96: nivel de riesgo visible, sin cambiar geometría ni instrucciones de retirada',()=>{
  const green=gaugeStatusCardLayout(390,245,190,160,2,'green',.4);
  const amber=gaugeStatusCardLayout(390,245,190,160,2,'amber',.4);
