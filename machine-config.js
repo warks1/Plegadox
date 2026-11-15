@@ -103,7 +103,8 @@ export function getActiveMachineConfig(){
   betweenUprights:profile.betweenUprights,throat:profile.throat,
   tableWidth:profile.tableWidth??null,
   openHeight:fit?.daylightMeasured??profile.openHeight,
-  openHeightProvenance:fit?.daylightMeasured!=null?'medicion-declarada-operador':'sin-medir',
+  openHeightProvenance:fit?.daylightMeasured!=null?'medicion-declarada-operador':
+   (profile.openHeight!=null?'ficha-fabricante-modelo-no-medida':'sin-medir'),
   daylightReference:profile.daylightReference??null,
   daylightMeasured:fit?.daylightMeasured??null,
   upperClampingSystem:profile.upperClampingSystem??null,
