@@ -82,6 +82,7 @@ export function toolMatchesBrand(tool,brand){
  return brand==="Todos" ||
   (brand==="Genéricos"?!tool.manufacturer:
     brand==="Amada"?tool.manufacturer==="Amada"||tool.manufacturer==="CONIC (tipo Amada)":
+     brand==="Bystronic"?String(tool.manufacturer||"").includes("Bystronic"):
      tool.manufacturer===brand);
 }
 export function selectionCompatibility(punch,die){
