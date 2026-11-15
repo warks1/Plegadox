@@ -110,7 +110,7 @@ export function getActiveMachineConfig(){
   dimensionsSource:profile.source,
   gaugeGeometryDocumented:false,holderGeometryDocumented:false,
   geometrySource:'Croquis visual sin cotas CAD verificadas de Bystronic',
-  sources:[profile.source].filter(Boolean),verified:false
+  sources:[profile.source,profile.additionalSource].filter(Boolean),verified:false
  };
 }
 
