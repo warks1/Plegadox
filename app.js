@@ -17,6 +17,7 @@ import {CYBELEC_OMEGA,cybelecReferencePreset,compareCybelecOmega} from './cybele
 import {compareGaugeSides} from './gauge-side-review.js';
 import {suggestGaugeContact} from './gauge-contact-advisor.js';
 import {resolveGaugeSetup} from './gauge-contact-solver.js';
+import {migrateLegacyOmegaGauge} from './sample-gauge-migration.js';
 import {sectionPunch,sectionDie} from './tool-profiles.js';
 import {getActiveMachineConfig} from './machine-config.js';
 import {gaugePlacement} from './backgauge-placement.js';
@@ -71,7 +72,7 @@ function geometryReport(){
 }
 const numbers=(n,d=1)=>Number(n).toLocaleString('es-ES',{maximumFractionDigits:d,minimumFractionDigits:d});
 function restore(){
- try{const saved=localStorage.getItem(storeKey);return normalized(saved?JSON.parse(saved):EXAMPLE);}
+ try{const saved=localStorage.getItem(storeKey);return normalized(saved?migrateLegacyOmegaGauge(JSON.parse(saved)):EXAMPLE);}
  catch(error){notifyStorageFailure('No se pudo recuperar la pieza guardada',error);return normalized(EXAMPLE);}
 }
 function persist(){
