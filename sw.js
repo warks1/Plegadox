@@ -1,5 +1,5 @@
 // PlegadoX · caché offline estática. Se versiona para no arrastrar JS obsoleto.
-const CACHE='plegadox-static-0.9.21-afm-ep-photo-r45';
+const CACHE='plegadox-static-0.9.22-xpert-pro-wila-r46';
 const APP_FILES=[
  "./",
  "./app.js",
@@ -29,6 +29,8 @@ const APP_FILES=[
  "./titanium-loading-original.html",
  "./splash-foto-premium.html",
  "./plegadox-premium-selected.png",
+ "./bystronic-fit.js",
+ "./machine-mounting.js",
  "./machine-config.js",
  "./machine-selection.js",
  "./gauge-retract-motion.js",
