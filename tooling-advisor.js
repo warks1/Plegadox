@@ -46,7 +46,9 @@ function pairData(p,die,punch,minimumInterior,minimumFlange,requiresClearance){
   checkMachineToolMounting(activeMachine,punch,die):
   selectionCompatibility(punch,die);
  if(mount.compatible===false)return null;
- const force=estimateAirBendForce({...p,die:die.id});
+ const force=estimateAirBendForce({...p,die:die.id},{
+  opening,dieAngle:included
+ });
  if(!force.estimated||!Number.isFinite(force.tonneForce)||
   force.tonneForce>(activeMachine.tonnage??MACHINE.tonnage)+1e-8)return null;
  // WILA y otros fabricantes publican cargas MÁXIMAS por metro. Una
