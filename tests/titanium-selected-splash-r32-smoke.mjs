@@ -24,42 +24,34 @@ try{
   const splash=page.locator('#pxTitaniumSplash');
   await splash.waitFor({state:'visible',timeout:15000});
   const view=page.frameLocator('#pxSplashReference');
-  await view.locator('#machineArt').waitFor({state:'visible',timeout:15000});
+  await view.locator('#photo').waitFor({state:'visible',timeout:15000});
   await page.waitForFunction(()=>{
-   const img=document.querySelector('#pxSplashReference')?.contentDocument?.getElementById('machineArt');
-   return !!img&&img.complete&&img.naturalWidth>0;
+   const img=document.querySelector('#pxSplashReference')?.contentDocument?.getElementById('photo');
+   return !!img&&img.complete&&img.naturalWidth===1672;
   },null,{timeout:20000});
   const info=await page.evaluate(()=>{
-   const iframe=document.querySelector('#pxSplashReference'),doc=iframe.contentDocument;
-   const box=id=>{const b=doc.getElementById(id).getBoundingClientRect();
-    return {left:b.left,top:b.top,right:b.right,bottom:b.bottom,width:b.width,height:b.height};
-   };
-   const img=doc.getElementById('machineArt'),screen=box('screen');
-   return {screen,art:box('machineArt'),brand:box('brand'),dock:box('dock'),
-    progress:box('progress'),features:doc.querySelectorAll('.feature').length,
-    progressValue:Number(doc.getElementById('progress').getAttribute('aria-valuenow')),
-    progressBars:doc.querySelectorAll('[role=progressbar]').length,
-    horizontalScroll:doc.documentElement.scrollWidth>doc.documentElement.clientWidth+2,
-    loaded:img.complete,title:doc.title};
+   const doc=document.getElementById('pxSplashReference').contentDocument;
+   const bounds=id=>{const b=doc.getElementById(id).getBoundingClientRect();return {
+    left:b.left,right:b.right,top:b.top,bottom:b.bottom,width:b.width,height:b.height};};
+   return {photo:bounds('photo'),screen:bounds('screen'),progress:bounds('progress'),
+    bars:doc.querySelectorAll('[role=progressbar]').length,
+    src:doc.getElementById('photo').getAttribute('src'),
+    percent:Number(doc.getElementById('progress').getAttribute('aria-valuenow')),
+    scroll:doc.documentElement.scrollWidth>doc.documentElement.clientWidth+2};
   });
-  assert.equal(info.progressBars,1,device.name+': una sola barra real');
-  assert.equal(info.features,6,device.name+': seis funciones visibles');
-  assert.ok(info.loaded,device.name+': SVG ensamblado cargado');
-  assert.ok(Math.abs(info.screen.width-device.w)<2,device.name+': splash ocupa todo el ancho');
-  assert.ok(Math.abs(info.screen.height-device.h)<2,device.name+': splash ocupa todo el alto');
-  assert.equal(info.horizontalScroll,false,device.name+': sin scroll horizontal');
-  assert.ok(info.art.left>=-2&&info.art.right<=device.w+2,device.name+': máquina no recortada');
-  assert.ok(info.art.top>=-2&&info.art.bottom<=device.h+2,device.name+': máquina no cortada');
-  assert.ok(info.dock.top>=info.art.top,device.name+': progreso fuera del arte, sin tapar punzón');
-  assert.ok(info.progressValue>=0&&info.progressValue<100,device.name+': sin progreso ficticio 78 %');
-  assert.match(info.title,/Pantalla Titanium Industrial Premium/);
-  await page.screenshot({path:'test-results/titanium-industrial-r52-'+device.slug+'.png'});
+  assert.equal(info.src,'./plegadox-premium-selected.png',device.name+': no cambiar el boceto');
+  assert.equal(info.bars,1);
+  assert.equal(info.scroll,false);
+  assert.ok(info.screen.left>=-2&&info.screen.right<=device.w+2);
+  assert.ok(info.screen.top>=-2&&info.screen.bottom<=device.h+2);
+  assert.ok(info.percent>=0&&info.percent<100);
+  await page.screenshot({path:'test-results/boceto1-aprobado-r68-'+device.slug+'.png'});
   await splash.waitFor({state:'hidden',timeout:35000});
   assert.equal(await view.locator('#progress').getAttribute('aria-valuenow'),'100');
   await page.waitForFunction(()=>!!window.PLEGADOX_STATE?.(),null,{timeout:30000});
-  assert.equal(await page.locator('#machineCanvas').isVisible(),true,device.name+': app operativa');
-  assert.deepEqual(errors,[],device.name+': sin errores JavaScript');
+  assert.equal(await page.locator('#machineCanvas').isVisible(),true);
+  assert.deepEqual(errors,[],device.name+': sin errores JS');
   await context.close();
  }
- console.log('TITANIUM_R52_ASSEMBLY_RESPONSIVE_BROWSER_OK');
+ console.log('BOCETO1_ORIGINAL_INICIO_OK');
 }finally{await browser?.close();server.kill();}

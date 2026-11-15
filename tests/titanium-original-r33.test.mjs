@@ -17,18 +17,18 @@ test('R33 permanece como respaldo y el splash R52 usa útiles realmente montados
  assert.ok(reference.includes('© 2026 AMS Tecnologics Services'));
  assert.doesNotMatch(html,/id="pxSplashSheet"/,'No reinstalar boceto 2D antiguo');
 });
-test('R52 muestra una sola barra real y SVG animado con matriz inferior montada',()=>{
+test('R68 conserva el diseño original aprobado y el progreso auténtico',()=>{
  const html=read('index.html'),photo=read('splash-foto-premium.html');
  assert.ok(html.includes('getOriginalLoading()?.finish()'));
  assert.ok(html.includes('original?.setProgress(splashProgress)'));
  assert.ok(html.includes('original?.setStatus(splashMessage)'));
  assert.ok(html.includes('await loadModules();'));
- assert.ok(photo.includes('setProgress(v)'));
- assert.ok(photo.includes('setStatus(v)'));
- assert.ok(photo.includes('src="./splash-machine-assembly.svg"'));
- assert.ok(!photo.includes('id="photo"'),'No reincorporar fotografía con punzón desalineado');
+ assert.ok(photo.includes('setProgress(value)'));
+ assert.ok(photo.includes('setStatus(value)'));
+ assert.ok(photo.includes('src="./plegadox-premium-selected.png"'));
+ assert.ok(photo.includes('id="photo"'));
  assert.equal((photo.match(/role="progressbar"/g)||[]).length,1);
- assert.doesNotMatch(html,/1450-\(Date\.now\(\)/,'Arranque sin demora artificial');
+ assert.doesNotMatch(html,/1450-\(Date\.now\(\)/);
 });
 test('R52 incluye SVG industrial montado, archivo histórico y no borra piezas',()=>{
  const sw=read('sw.js'),html=read('index.html'),css=read('styles.css');

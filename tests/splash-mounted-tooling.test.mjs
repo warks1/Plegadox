@@ -25,13 +25,12 @@ test('la chapa se anima entre los útiles, pero no mueve la matriz',()=>{
  assert.ok(svg.includes('values="0,-64;0,-64;0,24;0,24;0,-64"'));
  assert.ok(svg.includes('repeatCount="indefinite"'));
 });
-test('la carga no usa una imagen con 78 % fijo ni dos barras',()=>{
- assert.ok(splash.includes('src="./splash-machine-assembly.svg"'));
- assert.ok(!splash.includes('src="./plegadox-premium-selected.png"'));
+test('R68: usar únicamente la imagen aprobada y una sola barra real',()=>{
+ assert.ok(splash.includes('src="./plegadox-premium-selected.png"'));
+ assert.ok(!splash.includes('src="./splash-machine-assembly.svg"'));
  assert.equal((splash.match(/role="progressbar"/g)||[]).length,1);
  assert.equal((splash.match(/id="progress"/g)||[]).length,1);
- assert.ok(splash.includes('setProgress(v)'));
- assert.ok(splash.includes('setStatus(v)'));
- assert.ok(splash.includes('@media(orientation:portrait)'));
- assert.ok(splash.includes('@media(orientation:landscape)'));
+ assert.ok(splash.includes('setProgress(value)'));
+ assert.ok(splash.includes('setStatus(value)'));
+ assert.ok(splash.includes('aspect-ratio:1672/941'));
 });

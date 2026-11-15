@@ -38,15 +38,14 @@ test('punzón, chapa y matriz quedan centrados en el mismo eje de plegado',()=>{
  assert.ok(Math.abs((sheetCentre+sheetThickness/2)-dieBottomY)<=2);
  assert.match(svg,/EJE DEL PUNZÓN = EJE DE LA V/);
 });
-test('carga responsive usa una única barra REAL y no incrusta la vieja fotografía defectuosa',()=>{
+test('R68: el dibujo técnico queda como referencia separada del Boceto 1 aprobado',()=>{
  const html=read('splash-foto-premium.html'),sw=read('sw.js');
  assert.equal((html.match(/role="progressbar"/g)||[]).length,1);
- assert.ok(html.includes('src="./splash-machine-assembly.svg"'));
- assert.ok(html.includes('setProgress(v)'));
- assert.ok(html.includes('#machine{position:relative'));
- assert.ok(html.includes('grid-template-rows:minmax(0,1fr)'));
- assert.ok(html.includes('@media(orientation:portrait)'));
- assert.ok(html.includes('@media(orientation:landscape) and (max-height:530px)'));
- assert.ok(!html.includes('src="./plegadox-premium-selected.png"'));
+ assert.ok(html.includes('src="./plegadox-premium-selected.png"'));
+ assert.ok(!html.includes('src="./splash-machine-assembly.svg"'));
+ assert.ok(html.includes('setProgress(value)'));
+ assert.ok(html.includes('object-fit:contain'));
+ assert.ok(html.includes('aspect-ratio:1672/941'));
  assert.ok(sw.includes('"./splash-machine-assembly.svg"'));
+ assert.ok(sw.includes('"./plegadox-premium-selected.png"'));
 });

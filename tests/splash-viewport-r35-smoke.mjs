@@ -5,44 +5,40 @@ const server=spawn('python3',['-m','http.server','4345','--bind','127.0.0.1'],{s
 let browser;
 try{
  browser=await chromium.launch({headless:true,args:['--no-sandbox']});
- const devices=[
-  {name:'PC 16:9',width:1440,height:900},
+ for(const device of [
+  {name:'PC',width:1440,height:900},
   {name:'Tablet vertical',width:820,height:1180},
   {name:'iPhone vertical',width:390,height:844},
   {name:'iPhone horizontal',width:844,height:390},
   {name:'Pantalla estrecha',width:320,height:568}
- ];
- for(const device of devices){
+ ]){
   const page=await browser.newPage({viewport:{width:device.width,height:device.height}}),errors=[];
   page.on('pageerror',error=>errors.push(error.message));
   await page.goto('http://127.0.0.1:4345/splash-foto-premium.html',{waitUntil:'load'});
-  await page.waitForFunction(()=>document.querySelector('#machineArt')?.naturalWidth>0);
-  const d=await page.evaluate(()=>{
-   const rect=id=>{const x=document.getElementById(id).getBoundingClientRect();
-    return {x:x.x,y:x.y,w:x.width,h:x.height,right:x.right,bottom:x.bottom};};
-   const photo=document.getElementById('machineArt');
-   return {screen:rect('screen'),image:rect('machineArt'),
-    progress:rect('progress'),message:rect('message'),brand:rect('brand'),
-    dock:rect('dock'),fit:getComputedStyle(photo).objectFit,
-    natural:[photo.naturalWidth,photo.naturalHeight],
-    features:document.querySelectorAll('.feature').length,
-    bars:document.querySelectorAll('[role=progressbar]').length};
+  await page.waitForFunction(()=>document.querySelector('#photo')?.naturalWidth>0);
+  const data=await page.evaluate(()=>{
+   const box=id=>{const b=document.getElementById(id).getBoundingClientRect();return {
+    left:b.left,right:b.right,top:b.top,bottom:b.bottom,width:b.width,height:b.height};};
+   const img=document.getElementById('photo');
+   return {frame:box('screen'),photo:box('photo'),progress:box('progress'),
+    bars:document.querySelectorAll('[role=progressbar]').length,
+    src:img.getAttribute('src'),natural:[img.naturalWidth,img.naturalHeight],
+    overflow:document.documentElement.scrollWidth>window.innerWidth+2 ||
+     document.documentElement.scrollHeight>window.innerHeight+2};
   });
-  assert.ok(Math.abs(d.screen.w-device.width)<2,device.name+' ancho completo');
-  assert.ok(Math.abs(d.screen.h-device.height)<2,device.name+' alto completo');
-  assert.ok(d.natural[0]>0&&d.natural[1]>0,device.name+' SVG montado accesible');
-  assert.equal(d.fit,'contain',device.name+' no deformar máquina');
-  assert.equal(d.features,6,device.name+' funciones completas');
-  assert.equal(d.bars,1,device.name+' no duplicar barra');
-  assert.ok(d.image.x>=-2&&d.image.right<=device.width+2,device.name+' máquina sin desborde horizontal');
-  assert.ok(d.image.y>=-2&&d.image.bottom<=device.height+2,device.name+' máquina sin desborde vertical');
-  assert.ok(d.progress.x>=-2&&d.progress.right<=device.width+2,device.name+' barra horizontal dentro');
-  assert.ok(d.progress.y>=-2&&d.progress.bottom<=device.height+2,device.name+' barra vertical dentro');
-  assert.ok(d.message.x>=-2&&d.message.right<=device.width+2,device.name+' mensaje dentro');
+  assert.equal(data.src,'./plegadox-premium-selected.png');
+  assert.deepEqual(data.natural,[1672,941]);
+  assert.equal(data.bars,1);
+  assert.equal(data.overflow,false,device.name+': sin scroll');
+  assert.ok(data.frame.left>=-2&&data.frame.right<=device.width+2,device.name+': arte completo X');
+  assert.ok(data.frame.top>=-2&&data.frame.bottom<=device.height+2,device.name+': arte completo Y');
+  assert.ok(Math.abs(data.frame.width/data.frame.height-1672/941)<.01,device.name+': proporciones exactas');
+  assert.ok(data.progress.left>=data.frame.left-2&&data.progress.right<=data.frame.right+2);
+  assert.ok(data.progress.top>=data.frame.top-2&&data.progress.bottom<=data.frame.bottom+2);
   await page.evaluate(()=>window.PlegadoXLoading.setProgress(73));
-  assert.equal(await page.locator('#percent').textContent(),'73 %');
-  assert.deepEqual(errors,[],device.name+' errores JS');
+  assert.equal(await page.locator('#percent').textContent(),'73%');
+  assert.deepEqual(errors,[],device.name+': sin errores JS');
   await page.close();
  }
- console.log('SPLASH_VIEWPORT_R52_OK');
+ console.log('SPLASH_BOCETO1_ORIGINAL_RESPONSIVE_OK');
 }finally{await browser?.close();server.kill();}
