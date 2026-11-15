@@ -1,6 +1,7 @@
 // Plegadox · editor funcional de las cotas de Cybelec 30a / 29.
 // Las dimensiones editadas también actualizan la máquina dibujada en cabina.
-import {V85_FACTORY,getV85,updateV85,resetV85,gaugeOutline,gaugeBounds,gaugeContactFeature} from './machine-config.js';
+import {V85_FACTORY,getV85,getActiveMachineConfig,updateV85,resetV85,gaugeOutline,gaugeBounds,gaugeContactFeature} from './machine-config.js';
+import {getActiveMachineId,getActiveMachineProfile,selectMachine} from './machine-selection.js';
 import {roundedRectPath} from './canvas-path.js';
 import {loadMachineCad,machineConfigurationKey} from './machine-cad.js';
 
@@ -175,7 +176,20 @@ function draw(canvas,key){
  }
 }
 function render(refreshFields=true){
- if(refreshFields)fields();const cfg=getV85();
+ const profile=getActiveMachineProfile(),isTrumpf=profile.id==='trumpf-v85';
+ const machineChooser=$('machineSelector');
+ if(machineChooser)machineChooser.value=profile.id;
+ const title=$('machinePanelTitle'),description=$('machinePanelDescription');
+ if(title)title.textContent=profile.title+' · configuración de máquina';
+ if(description)description.textContent=isTrumpf?
+  'Cotas de tus fotografías Cybelec: trancha, mesa, topes y fijaciones disponibles. Editables en milímetros.':
+  'Valores técnicos publicados para la familia de máquina. Los perfiles de trancha, amarres, mesa y dedos montados siguen SIN CAD verificado; no confundir un croquis con medidas reales.';
+ const grid=$('trumpfMachineFields'),details=$('bystronicMachineDetails');
+ if(grid)grid.hidden=!isTrumpf;
+ if(details){details.hidden=isTrumpf;if(!isTrumpf)renderBystronicDetails(details,profile);}
+ if($('machineResetValues'))$('machineResetValues').hidden=!isTrumpf;
+ if(refreshFields&&isTrumpf)fields();
+ const cfg=getActiveMachineConfig();
  const text=$('machineSummary');
  if(text){
   text.replaceChildren(...[
@@ -192,27 +206,55 @@ function render(refreshFields=true){
  }
  redraw();
 }
+function renderBystronicDetails(host,profile){
+ const text=(node,value)=>{node.textContent=value;return node;};
+ const h=document.createElement('h2');text(h,profile.title);
+ const p=document.createElement('p');p.className='hint';text(p,profile.provenience);
+ const table=document.createElement('div');table.className='px-bystronic-spec-list';
+ const rows=[['Capacidad',profile.tonnage+' t'],['Longitud de plegado',profile.bendingLength+' mm'],
+  ['Entre montantes',profile.betweenUprights==null?'Sin confirmar':profile.betweenUprights+' mm'],
+  ['Escote',profile.throat==null?'Sin confirmar':profile.throat+' mm'],
+  ['Altura libre',profile.openHeight==null?'Sin confirmar':profile.openHeight+' mm'],
+  ['Carrera de la trancha',profile.stroke==null?'Sin confirmar':profile.stroke+' mm'],
+  ['Altura de mesa',profile.tableHeight==null?'Sin confirmar':profile.tableHeight+' mm'],
+  ['Dimensiones exteriores',profile.outer?Object.values(profile.outer).join(' × ')+' mm':'Sin confirmar'],
+  ['Fijación superior e inferior',profile.clamping],
+  ['Contornos CAD de la trancha/mesa', 'NO disponibles · requiere plano y cotas de su unidad'],
+  ['Geometría de dedos y ejes', 'Croquis SOLO visual · sin recorrido X/R/Z certificado']];
+ for(const [k,v] of rows){const row=document.createElement('div');
+  const name=document.createElement('span'),value=document.createElement('strong');
+  text(name,k);text(value,v);row.append(name,value);table.append(row);}
+ const warning=document.createElement('p');warning.className='warn';
+ warning.textContent='ATENCIÓN: el montaje de útiles WILA, Beyeler o RF-A, su longitud útil y el perfil de fijación NO se deducen del modelo. No habilitar veredicto de colisión segura sin planos, CAD y calibración.';
+ const children=[h,p,table,warning];
+ if(profile.source){const a=document.createElement('a');a.href=profile.source;
+  a.target='_blank';a.rel='noopener noreferrer';a.textContent='Consultar ficha técnica de origen';children.push(a);}
+ host.replaceChildren(...children);
+}
 function redraw(){
  for(const [id,key] of [['machineRamProfile','ram'],['machineBedProfile','bed'],
   ['machineStopProfile','stop'],['machineSupportProfile','support']])
   draw($(id),key);
 }
 function exportConfig(){
- const data=JSON.stringify({format:'Plegadox V85 configuración 1.0',
-  unit:'mm',source:'fotografías Cybelec de usuario',machine:getV85()},null,2);
+ const profile=getActiveMachineProfile();
+ const data=JSON.stringify({format:'PlegadoX perfil máquina 1.0',
+  unit:'mm',source:profile.provenience,profile,machine:getActiveMachineConfig()},null,2);
  const blob=new Blob([data],{type:'application/json'});
  const url=URL.createObjectURL(blob),link=document.createElement('a');
- link.href=url;link.download='Plegadox-Trumpf-V85-configuracion.json';
+ link.href=url;link.download='Plegadox-'+getActiveMachineId()+'-configuracion.json';
  document.body.append(link);link.click();link.remove();
  setTimeout(()=>URL.revokeObjectURL(url),1200);
 }
 if($('machineRamFields')){
+ const chooser=$('machineSelector');
+ if(chooser){chooser.value=getActiveMachineId();chooser.addEventListener('change',()=>selectMachine(chooser.value));}
  $('machineResetValues')?.addEventListener('click',()=>{
   resetV85();dirty=false;render();
   $('machineSaveState').textContent='Restauradas las cotas de las fotografías Cybelec.';
  });
  $('machineExport')?.addEventListener('click',exportConfig);
- window.addEventListener('plegadox:machineChanged',()=>{redraw();window.PLEGADOX_REDRAW?.();});
+ window.addEventListener('plegadox:machineChanged',()=>{render();window.PLEGADOX_REDRAW?.();});
  if('ResizeObserver' in window){
   const obs=new ResizeObserver(redraw);
   for(const id of ['machineRamProfile','machineBedProfile','machineStopProfile','machineSupportProfile']){
