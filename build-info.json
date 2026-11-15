@@ -1,6 +1,6 @@
 {
-  "build": "PLEGADOX-20261115-R46",
-  "version": "0.9.22",
-  "machine": "xpert-pro100-reference-wila-promecam-r46",
-  "cache": "plegadox-static-0.9.22-xpert-pro-wila-r46"
+  "build": "PLEGADOX-20261115-R47",
+  "version": "0.9.23",
+  "machine": "bystronic-2006-2009-wila-promecam-gauge-conditional-splash",
+  "cache": "plegadox-static-0.9.23-gauge-oem-splash-r47"
 }
