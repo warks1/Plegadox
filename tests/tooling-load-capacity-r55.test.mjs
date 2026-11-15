@@ -37,3 +37,18 @@ test('sin límite documentado no declarar carga admisible comprobada',()=>{
  assert.ok(result.choice.warnings.some(w=>w.includes('sin documentar')));
  assert.equal(result.choice.verified,false);
 });
+
+test('matriz externa V32 se evalúa con apertura 32 y no con la V16 activa',()=>{
+ const candidateDie={...die,id:'matriz-nueva-v32-no-registrada',
+  opening:32,angle:88,maxTPerMetre:25};
+ const piece={...p,thickness:3};
+ const result=recommendTooling(piece,{dies:[candidateDie],punches:[punch(25)]});
+ assert.ok(result.choice,'V32 3 mm debería superar cribado de fuerza lineal');
+ assert.equal(result.choice.dieOpening,32);
+ assert.equal(result.choice.dieAngle,88);
+ assert.ok(result.choice.forceTonnesPerMetre>18&&
+  result.choice.forceTonnesPerMetre<19,
+  'La fuerza debe corresponder a V32, no a la V16 de la pieza activa');
+ assert.ok(result.choice.forceTonnesPerMetre<result.choice.nominalPunchTPerMetre);
+ assert.equal(result.choice.verified,false);
+});
