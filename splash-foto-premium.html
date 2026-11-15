@@ -12,7 +12,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#04101f;col
    The painted-in 78% progress bar at the original image bottom is
    removed by cropping only the last 24% of the image, not by zooming. */
 #artFrame{position:relative;width:min(96vw,173dvh);max-height:100%;aspect-ratio:1672/715;overflow:hidden;box-shadow:0 20px 38px #0007}
-#photo{position:absolute;left:0;top:0;display:block;width:100%;height:auto;max-width:none;-webkit-user-drag:none;user-select:none}
+#photo{position:absolute;left:0;top:0;display:block;width:100%;height:auto;object-fit:contain;max-width:none;-webkit-user-drag:none;user-select:none}
 #artFrame::after{content:"";position:absolute;inset:0;border:1px solid #3e94c052;pointer-events:none}
 #fallback{display:none;place-items:center;position:absolute;inset:0;font-weight:900;font-size:clamp(35px,7vw,94px);color:#d5efff}
 .px-photo-missing #photo{display:none}
@@ -61,8 +61,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#04101f;col
  const progress=document.getElementById('progress'),fill=document.getElementById('fill'),
   percent=document.getElementById('percent'),message=document.getElementById('message');
  window.PlegadoXLoading={
-  setProgress(v){const n=Math.max(0,Math.min(100,Number(v)||0));
-   progress.setAttribute('aria-valuenow',String(Math.round(n)));fill.style.width=n+'%';percent.textContent=Math.round(n)+' %';},
+  setProgress(value){const n=Math.max(0,Math.min(100,Number(value)||0));
+   progress.setAttribute('aria-valuenow',String(Math.round(n)));fill.style.width=n+'%';percent.textContent=Math.round(n)+'%';},
   setStatus(v){message.textContent=String(v??'Iniciando PlegadoX…');},
   finish(){this.setProgress(100);this.setStatus('PlegadoX listo');},
   error(v){document.body.classList.add('is-error');this.setStatus(v||'Error al iniciar');}
