@@ -48,7 +48,7 @@ test('iconos PNG PWA/Apple válidos y presentes entre los archivos offline',()=>
   assert.ok(manifest.icons.some(icon=>icon.src==='./icon-premium-'+size+'.png'&&
    icon.sizes===size+'x'+size&&icon.type==='image/png'));
  }
- assert.match(html,/rel="apple-touch-icon" sizes="180x180" href="\\.\\/icon-premium-180\\.png"/);
+ assert.ok(html.includes('rel="apple-touch-icon" sizes="180x180" href="./icon-premium-180.png"'));
  assert.ok(manifest.icons.some(icon=>icon.src==='./favicon.svg'));
  assert.ok(sw.includes('"./storage-notice.js"'));
 });
