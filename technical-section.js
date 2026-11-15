@@ -10,7 +10,8 @@ import {normalized,stage,presentedAtStage,presentedForMachine,gaugeReference,gau
 import {sectionPunch,sectionDie,sectionBounds} from './tool-profiles.js';
 import {contactKinematics,roundedCorner} from './bend-contact.js';
 import {gaugePlacement,gaugeContourAtContact} from './backgauge-placement.js';
-import {getV85} from './machine-config.js';
+import {getActiveMachineConfig,gaugeOutline} from './machine-config.js';
+import {gaugeRetractionPath} from './gauge-retract-motion.js';
 
 const mm=v=>Number.isFinite(+v)?+v:0;
 const mPoint=(x,y)=>({x:mm(x),y:mm(y)});
@@ -28,7 +29,7 @@ export function technicalWorldBounds(scene){
  const pts=[...scene.sheetDisplay,...scene.sheet,
   ...scene.diePolygon,...scene.punchPolygon];
  const stopNumber=scene.piece.stopByBend?.[scene.stage.activeBend]===2?2:1;
- const dims=stopNumber===2?getV85().support:getV85().stop;
+ const dims=stopNumber===2?getActiveMachineConfig().support:getActiveMachineConfig().stop;
  const place=gaugePlacement(scene,stopNumber);
  const contour=gaugeContourAtContact(place,dims);
  pts.push(...contour);
@@ -39,7 +40,7 @@ export function technicalWorldBounds(scene){
   const withdraw=Math.max(transition.from.x,transition.to.x)+
    Math.max(12,scene.die.opening||16);
   for(const reference of [
-   transition.from,transition.to,
+   transition.parkPoint||transition.from,transition.from,transition.to,
    {x:withdraw,y:transition.from.y},{x:withdraw,y:transition.to.y}
   ]){
    const dx=reference.x-place.point.x,dy=reference.y-place.point.y;
@@ -106,29 +107,36 @@ export function technicalScene(piece,instant=0){
   x:(feedMirror?-1:1)*fixedGaugePoint.x,
   y:fixedGaugePoint.y+p.thickness/2
  };
- // El tope es un dedo rígido con ejes X/R: durante la retirada no debe
- // teletransportarse al cambiar de pliegue. Se RETRAE, se reposiciona
- // cuando la chapa está alzada y vuelve a la referencia siguiente.
- let gaugeTransition=null;
- if(presentation.repositioning&&st.activeOperation<p.order.length-1){
+ // Un tope físico se retira después de sujetar y ANTES de deformar el ala.
+ // Para la vista se calcula un aparcamiento ilustrativo fuera de la proyección
+ // de la chapa durante el golpe, nunca desde un valor X CNC inventado.
+ const stopNumber=p.stopByBend[st.activeBend]===2?2:1;
+ const machine=getActiveMachineConfig();
+ const finger=stopNumber===2?machine.support:machine.stop;
+ const fingerReach=Math.max(0,...gaugeOutline(finger,stopNumber).map(q=>q.x));
+ const samples=[.35,.40,.44,.50,.56,.62,.68,.74,.80,.83];
+ const maxSheetX=Math.max(gaugeAnchor.x,...samples.flatMap(relative=>{
+  const next=stage(p,st.activeOperation*5+5*relative);
+  const projected=presentedAtStage(p,next);
+  return projected.points.map(q=>(feedMirror?-1:1)*q.x);
+ }));
+ let target=null;
+ if(st.activeOperation<p.order.length-1){
   const nextReference=gaugeReference(p,nextBend);
   const nextFractions=[...st.fractions];nextFractions[nextBend]=0;
   const nextSetup=presentedForMachine(p,nextFractions,nextBend);
   const nextPoint=gaugePointOnProfile(nextSetup.points,nextReference);
-  const target={x:(nextReference.side==='before'?-1:1)*nextPoint.x,
+  target={x:(nextReference.side==='before'?-1:1)*nextPoint.x,
    y:nextPoint.y+p.thickness/2};
-  const sub=(st.time/5)%1,raw=Math.max(0,Math.min(1,(sub-.84)/.16));
-  const smooth=t=>t*t*(3-2*t);
-  const withdraw=Math.max(gaugeAnchor.x,target.x)+Math.max(12,die.opening||16);
-  const x=raw<.22?
-    gaugeAnchor.x+(withdraw-gaugeAnchor.x)*smooth(raw/.22):
-    raw<.78?withdraw:
-    withdraw+(target.x-withdraw)*smooth((raw-.78)/.22);
-  const middle=smooth(Math.max(0,Math.min(1,(raw-.22)/.56)));
-  gaugeTransition={point:{x,y:gaugeAnchor.y+(target.y-gaugeAnchor.y)*middle},
-   from:gaugeAnchor,to:target,raw,progress:middle,
-   withdrawn:raw>=.22&&raw<=.78,nextBend};
  }
+ const sub=st.completed?1:(st.time/5)%1;
+ // Retroceso visible .36→.44, plegado real solo después de .44.
+ // El dedo permanece aparcado hasta reorientar y se recoloca antes
+ // de presentar la siguiente pieza; no existe teletransporte X/R.
+ const gaugeTransition=gaugeRetractionPath({
+  anchor:gaugeAnchor,target,maxSheetX,fingerReach,
+  opening:die.opening,sub
+ });
  const kinematics=contactKinematics({
   points:presentation.points,activeBend:st.activeBend,
   angle:p.angles[st.activeBend]*st.fractions[st.activeBend],
@@ -236,7 +244,7 @@ export function drawTechnicalSection(ctx,w,h,piece,sim,view={}){
  // Sin reconstrucción CAD ni posición de los ejes X/R/Z de la máquina.
  const stopNumber=result.piece.stopByBend?.[st.activeBend]===2?2:1;
  const place=gaugePlacement(result,stopNumber);
- const v85=getV85(),dimensions=place.profile==='support'?v85.support:v85.stop;
+ const v85=getActiveMachineConfig(),dimensions=place.profile==='support'?v85.support:v85.stop;
  const gp=gaugeContourAtContact(place,dimensions).map(map);
  ctx.save();ctx.lineWidth=1.8;
  const gaugeIssue=!!place.gaugeInterference?.warning;
