@@ -1,5 +1,6 @@
 /** PlegadoX R48 · editor táctil/ratón por cotas de herramientas en mm. */
 import {buildCustomTool,customToolRecord} from './custom-tool-geometry.js';
+import {exportToolContourDxf,safeToolDxfName} from './tool-dxf-export.js';
 const $=id=>document.getElementById(id);
 const formId='customToolForm';
 const defaults={
@@ -100,8 +101,10 @@ export function setupCustomToolBuilder({add}){
     val(model.width)+' × '+val(model.height)+
     ' mm · longitud '+val(model.length)+' mm. Dibujo paramétrico 2D, sin certificar.';
    $('customToolSave').disabled=false;
+   if($('customToolExportDxf'))$('customToolExportDxf').disabled=false;
   }catch(error){
    model=null;$('customToolSave').disabled=true;
+   if($('customToolExportDxf'))$('customToolExportDxf').disabled=true;
    status.dataset.error='true';
    status.textContent='⚠ Revisa las cotas: '+error.message;
    const ctx=canvas.getContext('2d');
@@ -113,6 +116,24 @@ export function setupCustomToolBuilder({add}){
   if(node)node.addEventListener('input',refresh);
   if(node)node.addEventListener('change',refresh);
  }
+ $('customToolExportDxf')?.addEventListener('click',()=>{
+  refresh();if(!model)return;
+  try{
+   const source=exportToolContourDxf(model);
+   const blob=new Blob([source],{type:'application/dxf'});
+   const url=URL.createObjectURL(blob);
+   const a=document.createElement('a');
+   a.href=url;a.download=safeToolDxfName(model.name);
+   document.body.append(a);a.click();a.remove();
+   // Se revoca después del gesto de descarga, no en el mismo stack de clic.
+   setTimeout(()=>URL.revokeObjectURL(url),1200);
+   status.dataset.error='false';
+   status.textContent='DXF 2D exportado en milímetros · perfil paramétrico aproximado, NO certificado ni original de fabricante.';
+  }catch(error){
+   status.dataset.error='true';
+   status.textContent='No se pudo exportar DXF: '+error.message;
+  }
+ });
  $('customToolReset')?.addEventListener('click',()=>{
   for(const [name,value] of Object.entries(defaults)){
    const node=form.elements.namedItem(name);if(node)node.value=value;
