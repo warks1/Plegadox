@@ -13,10 +13,12 @@ import {gaugePlacement,gaugeContourAtContact} from './backgauge-placement.js';
 import {getActiveMachineConfig,gaugeOutline,gaugeContactFeature} from './machine-config.js';
 import {gaugeRetractionPath,planGaugeRetraction} from './gauge-retract-motion.js';
 import {inspectGaugeProfile} from './gauge-interference.js';
+import {resolveGaugeSetup} from './gauge-contact-solver.js';
 
 const mm=v=>Number.isFinite(+v)?+v:0;
 // LRU pequeño: el barrido es POR CONFIGURACIÓN/PLIEGUE, no cada frame.
 const gaugePlanCache=new Map();
+const gaugeSetupCache=new Map();
 
 const mPoint=(x,y)=>({x:mm(x),y:mm(y)});
 
@@ -65,7 +67,19 @@ export function technicalScene(piece,instant=0){
  const t=p.thickness;
  // One real-world coordinate system (millimetres, matrix top at y=0).
  // Symmetric bend presentation uses both shoulders of the V as supports.
- const reference=gaugeReference(p,st.activeBend);
+ const machine=getActiveMachineConfig();
+ const setupKey=JSON.stringify([p.flanges,p.angles,p.order,p.stopByBend,
+  p.gaugeSideByBend,p.gaugeSegmentByBend,p.gaugePointByBend,
+  p.thickness,p.kFactor,p.radius,p.punch,p.die,
+  machine.profileId||machine.name,machine.stop,machine.support,st.activeBend,
+  st.activeOperation]);
+ let resolvedGauge=gaugeSetupCache.get(setupKey);
+ if(!resolvedGauge){
+  resolvedGauge=resolveGaugeSetup(p,st,machine);
+  gaugeSetupCache.set(setupKey,resolvedGauge);
+  if(gaugeSetupCache.size>24)gaugeSetupCache.delete(gaugeSetupCache.keys().next().value);
+ }
+ const reference=resolvedGauge.ref;
  // La máquina tiene el tope trasero a la derecha del eje de perfil.
  // Para apoyar el ala ANTERIOR hay que alimentar desde el lado contrario;
  // no se cambia el signo firmado del pliegue en el programa.
@@ -107,14 +121,11 @@ export function technicalScene(piece,instant=0){
  // sólo para dibujar el giro de la CHAPA: nunca debe mover los ejes
  // X/R del TOPE ni cambiar su origen durante el mismo traslado.
  const fixedGaugePoint=gaugePointOnProfile(setup.points,reference);
- const gaugeAnchor={
-  x:(feedMirror?-1:1)*fixedGaugePoint.x,
-  y:fixedGaugePoint.y+p.thickness/2
- };
+ const gaugeAnchor={x:resolvedGauge.point?.x??(feedMirror?-1:1)*fixedGaugePoint.x,
+  y:resolvedGauge.point?.y??fixedGaugePoint.y+p.thickness/2};
  // El tope permanece apoyado hasta sujetar. Sólo se retira si un
  // barrido 2D prevé interferencia durante el plegado, no en todos los golpes.
  const stopNumber=p.stopByBend[st.activeBend]===2?2:1;
- const machine=getActiveMachineConfig();
  const finger=stopNumber===2?machine.support:machine.stop;
  const feature=gaugeContactFeature(finger,stopNumber);
  const fingerShape=gaugeOutline(finger,stopNumber);
@@ -163,6 +174,17 @@ export function technicalScene(piece,instant=0){
   if(gaugePlanCache.size>24)gaugePlanCache.delete(gaugePlanCache.keys().next().value);
  }
  const {gaugePlan,maxSheetX}=prediction;
+ // Nunca resolver una preparación que YA colisiona moviendo el dedo.
+ // Primero corregir el apoyo/volteo; la retirada sólo libera un
+ // obstáculo que aparece DESPUÉS de sujetar una chapa bien apoyada.
+ const gaugeSetup=resolvedGauge;
+ const gaugeDecision={...gaugePlan,
+  enabled:resolvedGauge.valid&&gaugePlan.enabled,
+  setupValid:resolvedGauge.valid,
+  setupReason:resolvedGauge.reason,
+  needsSetupCorrection:!resolvedGauge.valid,
+  autoSelected:resolvedGauge.autoSelected,
+  referenceSegment:reference.segmentIndex};
  let target=null;
  if(st.activeOperation<p.order.length-1){
   const nextReference=gaugeReference(p,nextBend);
@@ -175,7 +197,7 @@ export function technicalScene(piece,instant=0){
  const sub=st.completed?1:(st.time/5)%1;
  const gaugeTransition=gaugeRetractionPath({
   anchor:gaugeAnchor,target,maxSheetX,fingerReach,
-  opening:die.opening,sub,enabled:gaugePlan.enabled
+  opening:die.opening,sub,enabled:gaugeDecision.enabled
  });
  const kinematics=contactKinematics({
   points:presentation.points,activeBend:st.activeBend,
@@ -206,10 +228,10 @@ export function technicalScene(piece,instant=0){
  // Include the selected punch, the V and all sheet wings in view bounds.
  const world=technicalWorldBounds({
   piece:p,stage:st,sheet,sheetDisplay,diePolygon,punchPolygon,die,
-  gaugeReference:reference,gaugeAnchor,gaugeTransition,gaugePlan,feedMirrored:feedMirror
+  gaugeReference:reference,gaugeAnchor,gaugeTransition,gaugePlan:gaugeDecision,gaugeSetup,feedMirrored:feedMirror
  });
  return {piece:p,stage:st,presentation,sheet,sheetDisplay,kinematics,diePolygon,punchPolygon,die,punch,
-         gaugeReference:reference,gaugeAnchor,gaugeTransition,gaugePlan,feedMirrored:feedMirror,
+         gaugeReference:reference,gaugeAnchor,gaugeTransition,gaugePlan:gaugeDecision,gaugeSetup,feedMirrored:feedMirror,
          dimensions:{opening:die.opening,dieAngle:die.angle,depth:die.depth,
            punchAngle:punch.angle,punchHeight:punch.height,
            punchTipDiameter:tooling.punch.tip,thickness:t,engagement},
