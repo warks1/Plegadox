@@ -1,5 +1,5 @@
 // PlegadoX · caché offline estática. Se versiona para no arrastrar JS obsoleto.
-const CACHE='plegadox-static-0.9.36-dxf-mount-r60';
+const CACHE='plegadox-static-0.9.37-custom-backup-dxf-r61';
 const APP_FILES=[
  "./",
  "./app.js",
@@ -75,6 +75,7 @@ const APP_FILES=[
  "./project-library.js",
  "./workshop-measurements.js",
  "./tool-dxf.js",
+ "./tool-dxf-export.js",
  "./tool-import-ui.js",
  "./custom-tool-geometry.js",
  "./custom-tool-builder.js",
