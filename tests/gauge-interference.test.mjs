@@ -60,3 +60,14 @@ test('tope conserva la cota X/R nominal; sólo se aparta tras detectar colisión
  }
  if(initial.gaugePlan.enabled)assert.ok(retreatObserved);
 });
+
+// Un primer ala que roce el cuerpo NO puede ocultar que una segunda ala
+// atraviesa físicamente el volumen 2D del dedo en el MISMO fotograma.
+test('penetración posterior prevalece sobre holgura detectada primero',()=>{
+ const sheet=[{x:0,y:6},{x:25,y:6},{x:25,y:0}];
+ const hit=inspectGaugeProfile(sheet,rect,4,contact);
+ assert.equal(hit.warning,true);
+ assert.equal(hit.kind,'penetracion');
+ assert.equal(hit.segment,1,'el segundo tramo cruza el cuerpo del tope');
+ assert.ok(hit.point.x>10&&hit.point.x<40);
+});

@@ -81,6 +81,9 @@ export function inspectGaugeProfile(sheet,polygon,thickness=2,contact=null,{
     nearestPoint.x>=Math.min(u.x,v.x)-1e-5&&
     nearestPoint.x<=Math.max(u.x,v.x)+1e-5;
  };
+ // Conservar la primera falta de holgura para notificarla al final,
+ // pero NUNCA permitir que oculte una penetración en un ala posterior.
+ let firstClearance=null;
  for(let i=0;i<sheet.length-1;i++){
   const a=sheet[i],b=sheet[i+1],cuts=[0,1];
   for(let j=0;j<polygon.length;j++){
@@ -104,8 +107,10 @@ export function inspectGaugeProfile(sheet,polygon,thickness=2,contact=null,{
    const near=nearestSegment(a,b,polygon[j],polygon[(j+1)%polygon.length]);
    if(near.distance<allowance-.18&&!exempt(near.point)&&
       !isPermittedShelf(a,b,polygon[j],polygon[(j+1)%polygon.length],near.point))
-    return {warning:true,kind:'holgura',point:near.point,segment:i};
+    {if(firstClearance===null)
+      firstClearance={warning:true,kind:'holgura',point:near.point,segment:i};
+     break;}
   }
  }
- return {warning:false,kind:'sin-interferencia-detectada',point:null};
+ return firstClearance||{warning:false,kind:'sin-interferencia-detectada',point:null};
 }

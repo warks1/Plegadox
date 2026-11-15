@@ -77,3 +77,15 @@ test('penetración real sí provoca la retirada preventiva, no por defecto',()=>
  assert.ok(gaugeRetractionPath({anchor,target,maxSheetX:47,
   fingerReach:10,sub:.60,enabled:plan.enabled}).plannedRetraction>0);
 });
+
+test('una holgura anterior no oculta penetración posterior al planificar',()=>{
+ const gauge=[{x:10,y:-5},{x:40,y:-5},{x:40,y:5},{x:10,y:5}];
+ const plan=planGaugeRetraction({
+  sheetSamples:[sample(.55,[{x:0,y:6},{x:25,y:6},{x:25,y:0}])],
+  polygon:gauge,thickness:4,contact:{x:10,y:0}
+ });
+ assert.equal(plan.known,true);
+ assert.equal(plan.enabled,true);
+ assert.equal(plan.penetrationCount,1);
+ assert.equal(plan.issues[0].kind,'penetracion');
+});
