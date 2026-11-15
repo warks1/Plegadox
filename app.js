@@ -17,7 +17,7 @@ import {CYBELEC_OMEGA,cybelecReferencePreset,compareCybelecOmega} from './cybele
 import {compareGaugeSides} from './gauge-side-review.js';
 import {suggestGaugeContact} from './gauge-contact-advisor.js';
 import {sectionPunch,sectionDie} from './tool-profiles.js';
-import {getV85,updateV85} from './machine-config.js';
+import {getActiveMachineConfig} from './machine-config.js';
 import {gaugePlacement} from './backgauge-placement.js';
 import {technicalScene} from './technical-section.js';
 import {recommendTooling} from './tooling-advisor.js';
@@ -54,7 +54,7 @@ let integratedPlannerEpoch=0;
 let measurementInputKey=measurementKey(piece),lastSavedMeasurement=null;
 const geometryCache={key:null,result:null};
 function geometryReport(){
- const key=JSON.stringify([piece.flanges,piece.angles,piece.order,piece.thickness,piece.width,piece.material,piece.rmMPa,piece.punch,piece.die,piece.punchOrientation,piece.gaugeSideByBend,piece.gaugeSegmentByBend,piece.gaugePointByBend,getV85().ramWidth,getV85().holderWidth]);
+ const key=JSON.stringify([piece.flanges,piece.angles,piece.order,piece.thickness,piece.width,piece.material,piece.rmMPa,piece.punch,piece.die,piece.punchOrientation,piece.gaugeSideByBend,piece.gaugeSegmentByBend,piece.gaugePointByBend,getActiveMachineConfig().ramWidth,getActiveMachineConfig().holderWidth]);
  if(key!==geometryCache.key){
   const report=analyzeSequence(piece),tools=inspectSequenceTools(piece,6),
    sheetScan=scanSheetSequence(piece,15);
@@ -449,7 +449,7 @@ function configure(){
  $('exportCompleteProject').onclick=()=>{
   const status=$('completeProjectStatus');
   try{
-   const backup=buildProjectBackup({piece,machine:getV85(),
+   const backup=buildProjectBackup({piece,machine:getActiveMachineConfig(),
     tools:readStoredToolsForBackup(localStorage),
     measurements:readMeasurements(localStorage),
     library:readProjectLibrary(localStorage),
@@ -703,7 +703,7 @@ function scheduleIntegratedAdvisor(){
   try{
    const complex=piece.angles.length>6;
    const report=optimizeBendPlan(piece,{
-    machine:getV85(),maxPairs:complex?4:8,maxOrders:complex?3:8,
+    machine:getActiveMachineConfig(),maxPairs:complex?4:8,maxOrders:complex?3:8,
     maxFinalists:complex?5:12,toolSamples:complex?2:3,gaugeSamples:8,
     maxVolumeCandidates:complex?3:8,volumeSamples:4
    });
