@@ -519,7 +519,7 @@ function configure(){
     axisMapping:loadAxisMapping(localStorage)});
    downloadProjectJson(backup,projectSafeName()+'-BACKUP-COMPLETO.json');
    status.textContent='Copia descargada: pieza, V85, '+backup.importedTools.length+
-    ' herramientas DXF, '+Object.keys(backup.machineCad).length+
+    ' herramientas DXF/por cotas, '+Object.keys(backup.machineCad).length+
     ' CAD de máquina, '+(backup.axisMotion?'1 recorrido de ejes, ':'sin recorrido de ejes, ')+
     (backup.axisMapping?'1 referencia de ejes, ':'sin referencia de ejes, ')+
     backup.measurements.length+' mediciones y '+
@@ -553,7 +553,7 @@ function configure(){
    changePiece(restored.piece,true);
    renderProjectLibrary();renderMeasurementHistory();
    status.textContent='Recuperado: pieza, V85, '+restored.importedTools.length+
-    ' herramientas DXF, '+(restored.machineCad?
+    ' herramientas DXF/por cotas, '+(restored.machineCad?
      Object.keys(restored.machineCad).length+' CAD de máquina, ':'')+
     (restored.axisMotion?'recorrido de ejes incluido, ':'')+
     (restored.axisMapping?'datum de ejes incluido, ':'')+
