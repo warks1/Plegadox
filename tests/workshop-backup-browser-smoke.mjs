@@ -46,9 +46,14 @@ try{
   await page.locator('#completeProjectInput').setInputFiles({
    name:'backup.json',mimeType:'application/json',
    buffer:Buffer.from(JSON.stringify(backup))});
-  await page.waitForFunction(()=>window.PLEGADOX_STATE().piece.name===
+  await page.waitForFunction(()=>['success','error'].includes(
+   document.querySelector('#completeProjectStatus')?.dataset.state),
+   null,{timeout:12000});
+  const restoredMessage=await page.locator('#completeProjectStatus').textContent();
+  assert.match(restoredMessage,/Recuperado/,
+   'La restauración debe informar su causa, sin 30 s de espera: '+restoredMessage);
+  assert.equal(await page.evaluate(()=>window.PLEGADOX_STATE().piece.name),
    'Omega · ejemplo geométrico');
-  assert.match(await page.locator('#completeProjectStatus').textContent(),/Recuperado/);
   assert.equal(await page.locator('#libraryItems .px-library-entry').count(),1);
   // Una importación corrupta no puede borrar el proyecto.
   await page.locator('#completeProjectInput').setInputFiles({
