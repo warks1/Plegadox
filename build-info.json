@@ -1,6 +1,6 @@
 {
-  "build": "PLEGADOX-20261115-R40",
-  "version": "0.9.16",
-  "gauge": "front-stop-gauge-contact-r40",
-  "cache": "plegadox-static-0.9.16-front-gauge-r40"
+  "build": "PLEGADOX-20261115-R41",
+  "version": "0.9.17",
+  "gauge": "advance-retraction-before-bending-r41",
+  "cache": "plegadox-static-0.9.17-bystronic-retract-r41"
 }
