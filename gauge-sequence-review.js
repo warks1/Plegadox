@@ -2,6 +2,7 @@
  * Barrido TEMPORAL del conjunto chapa + dedo trasero en la sección 2D.
  * Comparte technicalScene/gaugePlacement con el visor; no altera movimiento.
  * NO es un barrido continuo 3D, no conoce ejes X/R/Z físicos ni calibra CNC.
+ * La falta de CAD se avisa APARTE: no es una colisión en la sección 2D.
  */
 import {normalized} from './engine.js';
 import {technicalScene} from './technical-section.js';
@@ -38,7 +39,7 @@ export function inspectGaugeOperation(piece,operation,{
   throw Error('Muestreo de tope fuera de rango (8-100)');
  const start=operation*5;
  const all=[],kinds=new Map(),times=[];
- let contacted=false,withdrawn=false;
+ let contacted=false,withdrawn=false,cadPending=false;
  // Incluir el instante inicial, los extremos y la retirada final;
  // evitar tomar justo t=5,10,15 como si fuese el golpe anterior.
  const split=Math.floor(samples/2);
@@ -58,10 +59,10 @@ export function inspectGaugeOperation(piece,operation,{
   if(place.contactEngaged)contacted=true;
   if(transitioning&&scene.gaugeTransition?.plannedRetraction>0)withdrawn=true;
   const issue=place.gaugeInterference;
+  if(place.geometryUnavailable)cadPending=true;
   let kind=null;
   if(issue?.warning&&['penetracion','holgura'].includes(issue.kind))
    kind=issue.kind;
-  else if(place.geometryUnavailable)kind='tope-sin-cad';
   else if(approaching&&!transitioning&&place.freeEdge&&place.sheetInFront===false)
    kind='chapa-detras';
   else if(approaching&&!transitioning&&place.freeEdge&&place.seat?.seated===false)
@@ -82,7 +83,7 @@ export function inspectGaugeOperation(piece,operation,{
   warnings:all.length,findings,firstTime:all.length?all[0].time:null,
   example:findings[0]||null,contactObserved:contacted,
   withdrawalObserved:withdrawn,possibleInterference:all.length>0,
-  verified:false};
+  cadPending,geometryVerified:!cadPending,verified:false};
 }
 export function scanGaugeSequence(piece,{samplesPerOperation=18,inspect}={}){
  const p=normalized(piece);
