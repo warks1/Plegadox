@@ -88,14 +88,16 @@ export function planGaugeRetraction({sheetSamples,polygon,thickness=2,contact,
    issues.push({at:sample.at??null,kind:assessment.kind,point:assessment.point??null});
   }
  }
- // La holgura nominal próxima al canto NO es prueba de colisión con
- // el cuerpo del dedo. Sin penetración geométrica prevista, no ordenamos
- // apartar el tope ni convertimos una alerta en un movimiento CNC.
+ // R91: una falta de holgura de un ala durante el barrido ya es motivo
+ // de retirada preventiva; esperar a penetración permite que el ala roce
+ // el dedo antes de que el simulador reaccione. El contacto nominal se
+ // excluye en inspectGaugeProfile. Esto NO autoriza movimiento CNC.
  const penetrations=issues.filter(item=>item.kind==='penetracion');
- const enabled=penetrations.length>0;
+ const clearances=issues.filter(item=>item.kind==='holgura');
+ const enabled=penetrations.length>0||clearances.length>0;
  return {enabled,known:true,geometryDocumented,verified:false,issues,
   penetrationCount:penetrations.length,clearanceWarnings:issues.length-penetrations.length,
-  reason:enabled?'Retroceso sugerido: penetración 2D prevista contra el dedo inmóvil':
-   issues.length?'Holgura 2D advertida, pero SIN penetración: mantener el tope en el golpe':
+  reason:penetrations.length?'Retirada preventiva: penetración 2D prevista contra el dedo inmóvil':
+   clearances.length?'Retirada preventiva: ala sin holgura 2D suficiente frente al dedo':
    'No se detecta penetración ni holgura 2D: mantener el tope durante este golpe'};
 }
