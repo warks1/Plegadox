@@ -2,6 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {normalizeV85,V85_FACTORY} from '../machine-config.js';
+import {EXAMPLE} from '../engine.js';
+import {technicalScene} from '../technical-section.js';
+import {gaugePlacement} from '../backgauge-placement.js';
 
 test('un esquema Cybelec V85 no puede presentar una geometría de dedo certificada',()=>{
  const config=normalizeV85(V85_FACTORY);
@@ -30,4 +33,17 @@ test('manifest y acceso iPhone apuntan al mismo diseño premium, no al icono ant
  assert.ok(icons.includes('./icon-premium-512.png'));
  assert.ok(index.includes('href="./icon-premium-180.png"'));
  assert.ok(!icons.includes('./icon-192.png'));
+});
+
+test('la vista técnica mantiene el aviso de CAD pendiente incluso con apoyo nominal',()=>{
+ const scene=technicalScene(EXAMPLE,.5);
+ for(const stopNumber of [1,2]){
+  const place=gaugePlacement(scene,stopNumber);
+  assert.equal(place.geometryUnavailable,true);
+  assert.equal(place.verified,false);
+  if(place.alignedToSheet){
+   assert.equal(place.gaugeInterference.warning,false);
+   assert.match(place.state,/2D provisional|CAD/i);
+  }
+ }
 });
