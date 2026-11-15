@@ -1,6 +1,29 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="PlegadoX">
-<rect width="64" height="64" rx="13" fill="#081a2c"/>
-<path d="M11 18h42v9H37L28 46H11l13-28Z" fill="#81bbd5"/>
-<path d="M37 30l13 16h-12l-9-12Z" fill="#00bcf2"/>
-<path d="M8 53h48" stroke="#22bef5" stroke-width="3" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="PlegadoX · icono industrial">
+ <defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#233f58"/><stop offset=".35" stop-color="#081927"/><stop offset="1" stop-color="#02070f"/></linearGradient>
+  <linearGradient id="steel" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#f4faff"/><stop offset=".22" stop-color="#8c9cad"/><stop offset=".43" stop-color="#d7e2ef"/><stop offset=".7" stop-color="#40576e"/><stop offset="1" stop-color="#c8d6e6"/></linearGradient>
+  <linearGradient id="cyan" x1="0" x2="1" y1="0" y2="0"><stop stop-color="#116aaf"/><stop offset=".5" stop-color="#52e6ff"/><stop offset="1" stop-color="#00a2e6"/></linearGradient>
+  <linearGradient id="tool" x1=".1" x2=".9" y1="0" y2="1"><stop stop-color="#dcefff"/><stop offset=".5" stop-color="#5a7188"/><stop offset="1" stop-color="#c5e4ff"/></linearGradient>
+ </defs>
+ <rect width="512" height="512" rx="102" fill="url(#bg)"/>
+ <rect x="22" y="22" width="468" height="468" rx="81" fill="none" stroke="#2d5875" stroke-width="5"/>
+ <path d="M73 81H439" stroke="#15c5fc" stroke-width="7" stroke-linecap="round" opacity=".9"/>
+ <path d="M78 94H434" stroke="#bddff5" stroke-width="2" opacity=".5"/>
+ <!-- Light industrial upper beam and machine columns -->
+ <rect x="99" y="123" width="314" height="51" rx="8" fill="url(#steel)" stroke="#b5d6ea" stroke-width="3"/>
+ <rect x="102" y="172" width="25" height="150" rx="5" fill="#57728b"/>
+ <rect x="385" y="172" width="25" height="150" rx="5" fill="#57728b"/>
+ <rect x="133" y="174" width="246" height="19" rx="3" fill="#263d54" stroke="#6f9cb8" stroke-width="3"/>
+ <!-- Punch descending towards V -->
+ <path d="M196 193H316L301 244L256 307L211 244Z" fill="url(#tool)" stroke="#caedfc" stroke-width="3"/>
+ <path d="M249 211V274" stroke="#9eb7ca" stroke-width="3" opacity=".7"/>
+ <!-- Bent sheet, bright cyan with central V -->
+ <path d="M116 284L256 360L396 284" fill="none" stroke="#09517f" stroke-width="26" stroke-linejoin="round"/>
+ <path d="M116 277L256 353L396 277" fill="none" stroke="url(#cyan)" stroke-width="13" stroke-linejoin="round" stroke-linecap="round"/>
+ <path d="M118 272L256 346L392 272" fill="none" stroke="#dcfdff" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+ <!-- Lower die, industrial base -->
+ <path d="M133 353L184 353L256 416L328 353L379 353V422H133Z" fill="#405e76" stroke="#96c5df" stroke-width="3"/>
+ <path d="M184 353L256 416L328 353" fill="none" stroke="#071927" stroke-width="14" stroke-linejoin="round"/>
+ <path d="M138 428H374" stroke="#13b9e9" stroke-width="6" stroke-linecap="round"/>
+ <path d="M139 450H373" stroke="#526c83" stroke-width="3" opacity=".65"/>
 </svg>
