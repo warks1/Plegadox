@@ -166,7 +166,7 @@ export function gaugePlacement(scene,stopNumber=1){
   const contactEngaged=setupValid&&!scene.gaugeTransition&&valid&&freeEdge&&sheetInFront&&seat.seated&&
     feature.usable&&a.x>0&&approaching&&
     gap<=Math.max(.4,thickness*.28);
-  return review({stopNumber:selected,profile:selected===2?'support':'stop',
+  return review({phase:scene.stage?.phase,stopNumber:selected,profile:selected===2?'support':'stop',
    point:{x:a.x,y:a.y},contact:contactAt(a),nominalDistance:reference.distance,
    referenceSide:reference.side,referenceLabel:reference.label,
    feedMirrored:!!scene.feedMirrored,sourceIndex:index,sheetInFront,
@@ -209,7 +209,7 @@ export function gaugePlacement(scene,stopNumber=1){
  const neighbour=index===0?points[1]:index===points.length-1?points.at(-2):null;
  const sheetInFront=!!neighbour&&neighbour.x<edge.x-Math.max(.12,thickness*.12);
  const seat=gaugeSeatAssessment({sheet:points},index,edge,thickness,feature);
- return review({stopNumber:selected,profile:selected===2?'support':'stop',
+ return review({phase:scene.stage?.phase,stopNumber:selected,profile:selected===2?'support':'stop',
   point:{...edge},contact:contactAt(edge),sheetInFront,seat,
   sheetEdgeFound:!!rear,alignedToSheet:validEdge&&sheetInFront&&
    seat.seated&&feature.usable,
