@@ -11,7 +11,7 @@ test('La compilación visible, el manifiesto de recuperación y el SW tienen la 
  assert.ok(html.includes('const BUILD="'+build+'"'));
  assert.ok(html.includes('await clearOldCode()'));
  assert.ok(html.indexOf('await clearOldCode()')<html.indexOf('await loadModules()'));
- assert.ok(html.includes("location.replace(url.href)"));
+ assert.ok(get('software-about.js').includes('window.location.replace(next.href)'));
  assert.ok(!html.includes("localStorage.clear("));
  assert.ok(!html.includes("indexedDB.deleteDatabase("));
  assert.ok(get('sw.js').includes('"./build-info.json"'));
