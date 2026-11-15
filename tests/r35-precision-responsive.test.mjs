@@ -70,14 +70,16 @@ test('no descarta el orden físicamente viable por empate de puntuación de chap
  assert.equal(r.best.order[0],2);
  assert.equal(r.best.toolPenetrations,0);
 });
-test('splash conserva foto original y cubre el viewport sin deformarla',()=>{
+test('splash R52 reacomoda marca y máquina sin recortes ni imagen duplicada',()=>{
  const html=readFileSync(new URL('../splash-foto-premium.html',import.meta.url),'utf8');
- assert.match(html,/id="frame"/);
- assert.match(html,/#screen\{position:fixed;inset:0/);
+ assert.match(html,/id="hero"/);
+ assert.match(html,/#screen\\{position:fixed;inset:0/);
  assert.match(html,/#screen::before/);
  assert.match(html,/object-fit:contain/);
- assert.match(html,/@media\(orientation:portrait\)/);
- assert.match(html,/src="\.\/plegadox-premium-selected\.png"/);
+ assert.match(html,/@media\\(orientation:portrait\\)/);
+ assert.match(html,/src="\\.\\/splash-machine-assembly\\.svg"/);
+ assert.doesNotMatch(html,/id="photo"/);
+ assert.equal((html.match(/role="progressbar"/g)||[]).length,1);
  assert.match(html,/id="progress"/);
 });
 test('UI incluye compensación individual y estado de medidas',()=>{
