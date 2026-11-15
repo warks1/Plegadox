@@ -162,9 +162,15 @@ function rearMachine(ctx,w,h,cx,cy,scale,placement){
  for(const frac of [.24,.58])bolt(ctx,rodStart+(rodEnd-rodStart)*frac,
   cy-placement.point.y*scale-10*scale,2.4*scale);
  ctx.font='800 '+Math.max(8,11*scale)+'px system-ui';
- ctx.fillStyle='#a5ffcc';ctx.textAlign='left';
- const label=conflict?'⚠ TOPE '+placement.stopNumber+' · APOYO INCORRECTO / COLISIÓN':
-  placement.moving?'TOPE '+placement.stopNumber+' · RETIRADO / EN MOVIMIENTO':
+ ctx.fillStyle=conflict?'#ffafa0':
+  nominal?(cadPending?'#ffe0a3':'#a5ffcc'):'#b3c8d6';
+ ctx.textAlign='left';
+ const label=conflict?(
+  placement.setupValid===false?'⚠ TOPE '+placement.stopNumber+' · CORREGIR CANTO DE APOYO':
+  placement.gaugeInterference?.kind==='penetracion'?
+   '⚠ TOPE '+placement.stopNumber+' · CHAPA INVADE EL DEDO':
+   '⚠ TOPE '+placement.stopNumber+' · REVISAR HOLGURA / APOYO'):
+  placement.moving?'TOPE '+placement.stopNumber+' · REUBICANDO / RETIRADO':
   nominal?'TOPE '+placement.stopNumber+(cadPending?' · APOYO 2D PROVISIONAL · CAD PENDIENTE':' · CONTACTO NOMINAL 2D'):
   'TOPE '+placement.stopNumber+' · SIN CONTACTO CONFIRMADO';
  ctx.fillText(label,Math.min(Math.max(8,ox+3*scale),w-145*scale),
