@@ -2,5 +2,5 @@
   "build": "PLEGADOX-20261115-R40",
   "version": "0.9.16",
   "gauge": "front-stop-gauge-contact-r40",
-  "cache": "plegadox-static-0.9.16-axis-geometry-r36-b"
+  "cache": "plegadox-static-0.9.16-front-gauge-r40"
 }
