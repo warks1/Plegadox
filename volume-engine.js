@@ -7,7 +7,7 @@
  * ejes, radios y carrera reales siguen requiriendo evidencia y calibración.
  */
 import {normalized,getTooling} from './engine.js';
-import {getV85,gaugeOutline} from './machine-config.js';
+import {getActiveMachineConfig,gaugeOutline} from './machine-config.js';
 import {gaugePlacement} from './backgauge-placement.js';
 import {sheetSolidMesh} from './sheet-solid.js';
 import {loadMachineCad,positionMachineCad} from './machine-cad.js';
@@ -105,7 +105,7 @@ function strip(a,b,t){
  return [v(a.x+nx,a.y+ny),v(b.x+nx,b.y+ny),
   v(b.x-nx,b.y-ny),v(a.x-nx,a.y-ny)];
 }
-export function buildVolumeScene(scene,{machine=getV85(),machineCAD=null}={}){
+export function buildVolumeScene(scene,{machine=getActiveMachineConfig(),machineCAD=null}={}){
  const p=normalized(scene.piece);
  // Los perfiles DXF sólo se usan si el fichero y su colocación están
  // explícitamente dados. Las cotas L* no se convierten en CAD inventado.
@@ -185,12 +185,12 @@ export function buildVolumeScene(scene,{machine=getV85(),machineCAD=null}={}){
   missingCadComponents:['ram','bed',stopNumber===2?'support':'stop']
    .filter(k=>!usedCAD.includes(k)),
   geometryKnown:segments.every(s=>s.valid)&&punchPrism.valid&&diePrism.valid,
-  provenance:{machineDimensions:'cotas Cybelec del usuario 30-10-2026',
+  provenance:{machineDimensions:machine.geometrySource||'cotas Cybelec del usuario 30-10-2026',
    ram:ram.provenance,
    bed:bed.provenance,
    gauge:gauge.provenance,
    punch:punchPrism.provenance,die:diePrism.provenance,
-   machineTonnage:85,ramWidth:machine.ramWidth,holderWidth:machine.holderWidth,
+   machineTonnage:machine.tonnage,ramWidth:machine.ramWidth,holderWidth:machine.holderWidth,
    documentedDimensions:{
     ramL:[...machine.ram],bedL:[...machine.bed],
     stopL:[...machine.stop],supportL:[...machine.support],
