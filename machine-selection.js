@@ -52,14 +52,19 @@ export const MACHINE_PROFILES=Object.freeze({
   xRange:1050,xTravel:600,rTravel:250,zTravel:1900,
   xSpeed:650,rSpeed:200,zSpeed:1500,
   nominalMotorPower:null,nominalWeightTonnes:12.2,hydraulicOilLitres:300,
-  frontSupportArmLength:null,hydraulicCrowning:null,
+  frontSupportArmLength:null,hydraulicCrowning:true,
+  crowningSystem:'Mesa con bombeo hidráulico: configuración declarada por usuario, pendiente conciliar con la unidad fotografiada',
+  upperClampingSystem:'WILA',upperClampingConfirmed:true,
+  lowerDieSystem:'PROMECAM_CON_ADAPTADOR',
+  lowerAdapter:'Base/regleta adaptadora de matrices tipo Promecam indicada por el usuario',
+  lowerAdapterHeight:null,daylightMeasured:null,
   control:'ByVision Bending (gama Xpert Pro); comprobar configuración exacta',
   identificationConfidence:'modelo-nombrado-por-usuario-no-conciliado-con-2006',
   provenience:'Ficha OFICIAL Bystronic Xpert Pro 100/3100 estándar. La familia Xpert Pro fue presentada en diciembre de 2018: estas cotas NO se pueden adjudicar a la máquina del propietario indicada como año 2006 sin verificar la placa de identificación. El modelo Extended utiliza cotas distintas. Equipamiento de cabezales WILA/adaptador Promecam a confirmar si esta ficha corresponde a su unidad real.',
   source:'https://www.bystronic.com/sites/default/files/2026-03/tp007-BE-Techdaten-Xpert%20Pro_es.pdf',
   additionalSource:'https://www.bystronic.com/che/en/news/xpert-pro-bending-technology-highest-demands',
   dimensionsVerified:'ficha-fabricante-modelo-xpert-pro-estandar',
-  clamping:'Ficha del modelo: amarre, mesa bombeada y adaptadores concretos variables según configuración; pendiente acreditar que corresponde a la máquina fotografiada'
+  clamping:'WILA superior, bombeo hidráulico inferior y regleta adaptadora Promecam declarados por el propietario para su Bystronic. PENDIENTE conciliar el modelo Xpert Pro (2018+) con año 2006; montaje real no verificado por CAD.'
  }),
  'bystronic-pr100-3100':Object.freeze({
   id:'bystronic-pr100-3100',manufacturer:'Bystronic / Beyeler',
