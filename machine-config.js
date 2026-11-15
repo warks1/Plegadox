@@ -190,14 +190,14 @@ export function gaugeContactFeature(values,stopNumber=1){
   // feature.point marca la superficie de la repisa, NO fibra media.
   const from={x:0,y:-stepDepth},to={x:ledge,y:-stepDepth};
   const frontFace={from:{x:ledge,y:-stepDepth},to:{x:ledge,y:0}};
-  return {kind:'support-shelf-front-wall',surface:'horizontal-top',
+  return {kind:'support-step',surface:'horizontal-top',
    label:'TOPE 2 · CANTO DELANTE DE PARED · REPISA INFERIOR',
    from,to,frontFace,point:{x:ledge,y:-stepDepth},
    usable:usable&&ledge>0&&stepDepth>0,verified:false};
  }
  const from={...outline[0]},to={...outline[5]};
  const point={x:from.x,y:(from.y+to.y)/2};
- return {kind:'stop-front-face',surface:'vertical-front',
+ return {kind:'stop-face',surface:'vertical-front',
   label:'TOPE 1 · CANTO CONTRA CARA FRONTAL',
   from,to,frontFace:{from:{...from},to:{...to}},point,
   usable,verified:false};
