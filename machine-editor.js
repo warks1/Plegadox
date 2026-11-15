@@ -238,7 +238,7 @@ function renderBystronicDetails(host,profile){
   const name=document.createElement('span'),value=document.createElement('strong');
   text(name,k);text(value,v);row.append(name,value);table.append(row);}
  const warning=document.createElement('p');warning.className='warn';
- warning.textContent='Cotas de la familia de referencia publicadas por Bystronic. El perfil real de trancha, fijaciones, mesa y dedos traseros sigue sin medidas CAD y debe comprobarse en la unidad de 2006. No habilitar veredicto de colisión segura sin planos, CAD y calibración.';
+ warning.textContent='PRECAUCIÓN: el modelo AFM EP 31-100 se ha identificado por semejanza fotográfica; las medidas publicadas de unidades de esta familia NO acreditan las cotas exactas de tu máquina. No utilizar los valores de PR100 ni certificar colisiones sin placa, planos, CAD, fijaciones y calibración X/R/Z.';
  const children=[h,p,table,warning];
  if(profile.source){const a=document.createElement('a');a.href=profile.source;
   a.target='_blank';a.rel='noopener noreferrer';a.textContent='Consultar ficha técnica de origen';children.push(a);}
