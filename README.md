@@ -1367,3 +1367,29 @@ La captura facilitada por el propietario confirmó un fallo visual grave de la p
 **Herramientas:** ampliación de fuentes WILA/Promecam y corrección de un error físico de dibujo de V32/30° H55, cuyo perfil 30° no debe alargar automáticamente la altura de la matriz: las profundidades de garganta de herramientas de 30° pueden diferir del triángulo ideal (en catálogo Bystronic comparable se publica D=33,6 mm para V32/30° H55). Las cotas usadas para un perfil SOCLAM siguen marcadas como referenciales y pendiente el DXF del fabricante.
 
 **No certificado:** no se han obtenido los sólidos CAD completos de la unidad de 2006–2009 ni los perfiles exactos del dedo, trancha, base, regleta, cabezal, fijaciones y útiles montados. Las simulaciones actuales no certifican ni garantizan la ausencia de colisiones físicas; validar en el CNC y con personal autorizado antes de realizar cualquier operación.
+
+
+## R52–R54 · Montaje de útiles, apoyo de tope y diagnóstico de colisiones (15-11-2026)
+
+**Pantalla de carga nueva** (`splash-foto-premium.html`, `splash-machine-assembly.svg`):
+- Se elimina de la pantalla activa la antigua fotografía con herramientas montadas en posiciones incorrectas y con un porcentaje fijo dibujado. El archivo histórico `plegadox-premium-selected.png` se mantiene como respaldo y no se utiliza en el nuevo visor.
+- Se representa la trancha con el amarre WILA y el punzón **dentro del mismo conjunto animado**; la matriz V16 se monta sobre la regleta adaptadora tipo Promecam, apoyada en la mesa de la plegadora, de forma estática. Eje de punzón = eje central de la V.
+- En la animación, la punta y la chapa se aproximan a la garganta V16 sin atravesarla gráficamente. La sección se dibuja en SVG, **es ilustrativa y NO constituye un CAD validado de Bystronic, Trumpf, WILA ni Promecam**.
+- Una sola barra real `role=progressbar` y estado del arranque enlazado a `PlegadoXLoading.setProgress`. Diseño adaptado en vertical y horizontal mediante CSS, sin duplicar fondos ni barras pintadas.
+- Pruebas: `tests/splash-assembly-r53.test.mjs`, `tests/splash-mounted-tooling.test.mjs`, `tests/splash-viewport-r35-smoke.mjs`, `tests/titanium-selected-splash-r32-smoke.mjs`.
+
+**Tope con retroceso únicamente por necesidad de interferencia 2D**:
+- `resolveGaugeSetup` conserva las elecciones manuales y, en automático, descarta vértices interiores y examina cantos libres. `correctGaugeSetup` prueba explícitamente ambos dedos si el operador pulsa «Corregir apoyo»; no modifica silenciosamente orden, signo, cota o herramientas.
+- `gaugeAnchor` es la referencia física nominal anterior al golpe y permanece estable durante ese golpe. Se distinguen el retroceso de prevención `retroceso-antes-plegado` y el traslado normal a la cota del golpe siguiente `reubicacion-siguiente-golpe`. Durante la vuelta, `gaugeRetractionPath.from` permanece anclado a la referencia original; `movementStart` identifica el punto de aparcamiento.
+- La reubicación tiene un destino propuesto aun si la referencia siguiente es inválida: evita que el dedo se teletransporte de una posición a otra al cambiar de golpe. **Alcanzar ese destino no constituye autorización de contacto; el apoyo inválido sigue marcado como inválido.**
+- Se calcula la necesidad de retirada a partir de las muestras de la misma sección de chapa que se representa, **incluyendo los radios de pliegues previos**. Antes el motor estimaba un perfil simplificado distinto al visualizado, de modo que una interferencia podía aparecer roja durante el plegado sin haberse previsto.
+- Se distingue `rojo` = error de apoyo o penetración/holgura detectada en la sección y `ámbar` = 2D nominalmente aceptable pero geometría CAD del dedo/ejes aún sin verificar. Sin CAD nunca se muestra certificado verde.
+- En el Support 2 se admite un contacto normal únicamente sobre la **repisa baja horizontal**, con la chapa horizontal apoyada y detenida contra la **pared vertical que asciende**; el detector no debe confundir esa superficie específica con una interferencia. La excepción no permite ocultar una chapa que penetra la pared o el resto del cuerpo del dedo.
+- Pruebas: `tests/gauge-retraction-conditional.test.mjs`, `tests/gauge-contact-solver.test.mjs`, `tests/gauge-support-shelf-interference.test.mjs`, `tests/reposition-continuity.test.mjs`, `tests/stop-support-contact.test.mjs`, `tests/gauge-sequence-review.test.mjs`.
+
+**Biblioteca CAD por fabricante**:
+- Al seleccionar un punzón o matriz en «Herramientas», `toolCadSourceLinks` muestra su estado de perfil y un enlace de consulta de DXF OEM cuando el catálogo incluye `cadSourceUrl`. Los enlaces se crean por DOM con `target=_blank` y `rel=noopener noreferrer` fuera de los botones para elegir útil.
+- WILA BIU-021: H útil 163 mm, α=28°, R1 mm, máx. 70 t/m; OZU-012: V16/86°, R1,5, H útil 55 mm. Fuentes fabricante: https://www.wilatooling.com/es-us/productos/herramientas-para-prensas-dobladoras/herramientas-new-standard/new-standard-premium/biu-021/ y https://www.wilatooling.com/en-us/products/press-brake-tooling/new-standard-tooling/new-standard-premium/ozu-012/
+- WILA facilita enlaces a contornos DXF después de proporcionar correo o identificarse en MyWILA; **no se ha descargado ni inventado ningún DXF**. Cuando el operario obtenga el archivo, puede utilizar el importador existente de la aplicación para registrar el contorno y revisarlo.
+
+**Límites físicos explícitos:** toda validación de chapa-dedo es por muestras discretas 2D, sin geometría volumétrica contrastada del cuerpo de máquina, punzón, matriz, amarre WILA, regleta Promecam ni cinemática X/R/Z; tampoco hay sincronización CNC. No usar como garantía de ausencia de colisiones en una plegadora real.
