@@ -39,19 +39,17 @@ export function technicalWorldBounds(scene){
  const place=gaugePlacement(scene,stopNumber);
  const contour=gaugeContourAtContact(place,dims);
  pts.push(...contour);
- const transition=scene.gaugeTransition;
- if(transition){
-  // Reserva fija durante TODA la retirada: origen, destino y posición
-  // posterior extrema. El perfil se TRASLADA rígido, nunca se espeja.
-  const withdraw=Math.max(transition.from.x,transition.to.x)+
-   Math.max(12,scene.die.opening||16);
-  for(const reference of [
-   transition.parkPoint||transition.from,transition.from,transition.to,
-   {x:withdraw,y:transition.from.y},{x:withdraw,y:transition.to.y}
-  ]){
-   const dx=reference.x-place.point.x,dy=reference.y-place.point.y;
-   pts.push(...contour.map(pt=>({x:pt.x+dx,y:pt.y+dy})));
-  }
+ // La cámara conoce el RECORRIDO COMPLETO desde el primer fotograma.
+ // Antes la retirada comenzaba en .36 del golpe, el encuadre se expandía
+ // de golpe y el operador veía un salto aparente del tope y de la chapa.
+ // La envolvente se calcula una vez por golpe, sin cambiar X/R ni el
+ // punto físico de contacto en la simulación.
+ const references=scene.gaugeMotionEnvelope?.points||
+  (scene.gaugeTransition?[scene.gaugeTransition.from,
+   scene.gaugeTransition.to,scene.gaugeTransition.parkPoint].filter(Boolean):[]);
+ for(const reference of references){
+  const dx=reference.x-place.point.x,dy=reference.y-place.point.y;
+  pts.push(...contour.map(pt=>({x:pt.x+dx,y:pt.y+dy})));
  }
  const valid=pts.filter(pt=>Number.isFinite(pt.x)&&Number.isFinite(pt.y));
  if(!valid.length)return {minX:-50,maxX:50,minY:-50,maxY:50};
@@ -234,6 +232,28 @@ export function technicalScene(piece,instant=0){
   anchor:gaugeAnchor,target,maxSheetX,fingerReach,
   opening:die.opening,sub,enabled:gaugeDecision.enabled
  });
+ // R64 · Envolvente INVARIABLE del recorrido visible para cada golpe,
+ // incluso ANTES de que comience el retroceso condicional del dedo.
+ // La misma función de trayectoria calcula la posición de aparcamiento:
+ // nunca mantenemos dos fórmulas independientes que puedan divergir.
+ const expectedParking=gaugeDecision.enabled?gaugeRetractionPath({
+  anchor:gaugeAnchor,target,maxSheetX,fingerReach,
+  opening:die.opening,sub:.6,enabled:true
+ })?.parkPoint:null;
+ const movingToNext=!!target&&
+  Math.hypot(target.x-gaugeAnchor.x,target.y-gaugeAnchor.y)>1e-7;
+ const needsEnvelope=!!(gaugeDecision.enabled||movingToNext);
+ const safetyFrame=Math.max(12,die.opening||16);
+ const farthest=Math.max(gaugeAnchor.x,target?.x??gaugeAnchor.x,
+  expectedParking?.x??gaugeAnchor.x);
+ const gaugeMotionEnvelope=needsEnvelope?{
+  from:gaugeAnchor,to:target,parkPoint:expectedParking,
+  points:[gaugeAnchor,...(target?[target]:[]),
+   ...(expectedParking?[expectedParking]:[]),
+   {x:farthest+safetyFrame,y:gaugeAnchor.y},
+   {x:farthest+safetyFrame,y:target?.y??gaugeAnchor.y}],
+  verified:false
+ }:null;
  const kinematics=contactKinematics({
   points:presentation.points,activeBend:st.activeBend,
   angle:p.angles[st.activeBend]*st.fractions[st.activeBend],
@@ -263,10 +283,12 @@ export function technicalScene(piece,instant=0){
  // Include the selected punch, the V and all sheet wings in view bounds.
  const world=technicalWorldBounds({
   piece:p,stage:st,sheet,sheetDisplay,diePolygon,punchPolygon,die,
-  gaugeReference:reference,gaugeAnchor,gaugeTransition,gaugePlan:gaugeDecision,gaugeSetup,feedMirrored:feedMirror
+  gaugeReference:reference,gaugeAnchor,gaugeTransition,gaugeMotionEnvelope,
+  gaugePlan:gaugeDecision,gaugeSetup,feedMirrored:feedMirror
  });
  return {piece:p,stage:st,presentation,sheet,sheetDisplay,kinematics,diePolygon,punchPolygon,die,punch,
-         gaugeReference:reference,gaugeAnchor,gaugeTransition,gaugePlan:gaugeDecision,gaugeSetup,feedMirrored:feedMirror,
+         gaugeReference:reference,gaugeAnchor,gaugeTransition,gaugeMotionEnvelope,
+         gaugePlan:gaugeDecision,gaugeSetup,feedMirrored:feedMirror,
          dimensions:{opening:die.opening,dieAngle:die.angle,depth:die.depth,
            punchAngle:punch.angle,punchHeight:punch.height,
            punchTipDiameter:tooling.punch.tip,thickness:t,engagement},
