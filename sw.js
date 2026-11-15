@@ -1,5 +1,5 @@
 // PlegadoX · caché offline estática. Se versiona para no arrastrar JS obsoleto.
-const CACHE='plegadox-static-0.9.34-gauge-diagnostics-browser-shards-r58';
+const CACHE='plegadox-static-0.9.35-promecam-cad-links-r59';
 const APP_FILES=[
  "./",
  "./app.js",
