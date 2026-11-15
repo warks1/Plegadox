@@ -48,20 +48,20 @@ test('fase de reposicionamiento no equivale a retroceso de chapa',()=>{
  assert.equal(motion.point.x,anchor.x);
 });
 
-test('holgura sin penetración no ordena retirada aunque sí conserva el aviso',()=>{
+test('R91: holgura prevista del ala ordena retirada preventiva antes del plegado',()=>{
  const plan=planGaugeRetraction({
   sheetSamples:[sample(.48,[{x:0,y:1},{x:40,y:1}])],
   polygon:finger,thickness:2,contact:anchor,
   inspect:()=>({warning:true,kind:'holgura',point:{x:40,y:2.6}})
  });
  assert.equal(plan.known,true);
- assert.equal(plan.enabled,false);
+ assert.equal(plan.enabled,true);
  assert.equal(plan.penetrationCount,0);
  assert.equal(plan.clearanceWarnings,1);
  assert.equal(plan.issues[0].kind,'holgura');
- assert.match(plan.reason,/SIN penetración/);
+ assert.match(plan.reason,/Retirada preventiva/);
  assert.equal(gaugeRetractionPath({anchor,target,maxSheetX:47,
-  fingerReach:10,sub:.6,enabled:plan.enabled}),null);
+  fingerReach:10,sub:.6,enabled:plan.enabled}).phase,'retirado-durante-plegado');
 });
 test('siguiente referencia X/R idéntica no crea una carrera ficticia',()=>{
  const same={x:anchor.x,y:anchor.y};
