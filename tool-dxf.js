@@ -287,12 +287,17 @@ export function importedTool(parsed,options={}){
  if(!name)throw Error('Indica un nombre de referencia');
  const angle=getNumber(options.angle,'Ángulo nominal',15,120);
  const length=getNumber(options.length,'Longitud de segmento',10,6000);
+ const requestedMount=String(options.mount??'Desconocido').trim();
+ if(!['Desconocido','WILA','Amada/Promecam','TRUMPF','Bystronic/Beyeler R'].includes(requestedMount))
+  throw Error('Tipo de amarre no admitido: revisa WILA, Promecam o la interfaz real');
  const tool={id:'user-dxf-'+kind+'-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,9),
-  name,reference:name,manufacturer:'Importado DXF',mount:'',
+  name,reference:name,manufacturer:'Importado DXF',
+  mount:requestedMount==='Desconocido'?'':requestedMount,
+  mountVerified:false,mountDeclaration:'familia-declarada-en-formulario-sin-contraste',
   angle,height:Number(contour.height.toFixed(5)),length,
   profilePoints:contour.points,importedDxf:true,
   verifiedSpecs:false,profileAccuracy:'provisional',
-  sourceDescription:'Contorno 2D aportado por el usuario, orientación/amarre sin validar'};
+  sourceDescription:'Contorno DXF 2D importado, punta/V y fijación sin verificación física'};
  if(kind==='die'){
   tool.opening=getNumber(options.opening,'Apertura V nominal',2,200);
  }else{
