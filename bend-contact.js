@@ -71,7 +71,10 @@ export function contactKinematics({
  const contactTip=centerHeight+thickness/2;
  let tipHeight;
  if(phase==='Plegado')tipHeight=contactTip;
- else if(phase==='Retorno')tipHeight=contactTip+retractGap*clamp(1-press,0,1);
+ // R82: durante SUJECIÓN la punta ya está en contacto con la chapa.
+  // Antes el else la elevaba a setupTip y PLEGADO la bajaba por segunda vez.
+  else if(phase==='Sujeción')tipHeight=contactTip;
+  else if(phase==='Retorno')tipHeight=contactTip+retractGap*clamp(1-press,0,1);
  else if(phase==='Aproximación')tipHeight=contactTip+
   (setupTip-contactTip)*clamp(1-press/.45,0,1);
  else tipHeight=setupTip;

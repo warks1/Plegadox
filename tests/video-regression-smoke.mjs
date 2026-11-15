@@ -12,6 +12,21 @@ try{
  page.on('pageerror',e=>errors.push(e.message));
  await page.goto('http://127.0.0.1:4197/',{waitUntil:'networkidle'});
  await page.locator('#machineCanvas').waitFor({state:'visible'});
+ // R82: comprobación sobre el motor del visor en los cuatro golpes.
+ const strokes=await page.evaluate(async()=>{
+  const {technicalScene}=await import('/technical-section.js');
+  const {piece}=window.PLEGADOX_STATE();
+  const offsets=[.35,.36,.40,.43999,.44,.48,.60];
+  return piece.order.map((bend,operation)=>({
+   operation,bend,
+   tips:offsets.map(offset=>technicalScene(piece,operation*5+offset*5).kinematics.tipHeight)
+  }));
+ });
+ for(const stroke of strokes)
+  for(let i=1;i<stroke.tips.length;i++)
+   assert.ok(stroke.tips[i]<=stroke.tips[i-1]+1e-5,
+    'R82: punzón rebota en G'+(stroke.operation+1)+': '+JSON.stringify(stroke.tips));
+
  // El visor 3D debe empezar plano y NO mostrar la omega final.
  const sceneInitial=await page.locator('#sceneCanvas').evaluate(c=>c.toDataURL());
  // The second operation of 1-2-4-3 is −90; show this exact moment.
@@ -78,6 +93,17 @@ try{
  const mobile=await phone.newPage(),err2=[];mobile.on('pageerror',e=>err2.push(e.message));
  await mobile.goto('http://127.0.0.1:4197/',{waitUntil:'networkidle'});
  await mobile.locator('#machineCanvas').waitFor({state:'visible'});
+ // En móvil, igual que en PC: una sola aproximación, sin rebote.
+ const mobileStroke=await mobile.evaluate(async()=>{
+  const {technicalScene}=await import('/technical-section.js');
+  const {piece}=window.PLEGADOX_STATE();
+  return [.35,.36,.40,.44,.50].map(sub=>
+   technicalScene(piece,5*sub).kinematics.tipHeight);
+ });
+ for(let i=1;i<mobileStroke.length;i++)
+  assert.ok(mobileStroke[i]<=mobileStroke[i-1]+1e-5,
+   'R82: rebote de punzón en móvil '+JSON.stringify(mobileStroke));
+
  await mobile.locator('#cpBrandTabs [data-brand="Genéricos"]').click();
  await mobile.locator('.cp-kind-tabs [data-kind="punch"]').click();
  await mobile.locator('#showTool3D').click();
