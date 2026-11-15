@@ -176,7 +176,17 @@ export function technicalScene(piece,instant=0){
     repositionProgress:projected.repositioning?projected.progress:1,
     presentationLift:projected.clearanceLift??0
    });
-   return {at:relative,sheet:modeled.sheet};
+   // El plan de retirada debe usar EXACTAMENTE la misma sección
+   // de chapa que el visor y el detector del dedo, incluidos los radios
+   // ya plegados. Antes analizaba sólo la fibra poligonal sin radios:
+   // podía anunciar "sin riesgo" y mostrar una invasión ROJA al ejecutar.
+   let scannedSheet=modeled.sheet;
+   for(let bend=p.angles.length-1;bend>=0;bend--){
+    if(next.fractions[bend]>1e-5)
+     scannedSheet=roundedCorner(scannedSheet,bend+1,
+      modeled.requestedCenterlineRadius);
+   }
+   return {at:relative,sheet:scannedSheet};
   });
   const gaugePlan=planGaugeRetraction({
    sheetSamples,polygon:fixedFingerPolygon,thickness:t,contact:gaugeAnchor,
