@@ -1,8 +1,8 @@
 {
-  "build": "PLEGADOX-20261115-R61",
-  "version": "0.9.37",
+  "build": "PLEGADOX-20261115-R62",
+  "version": "0.9.38",
   "machine": "bystronic-2006-2009-wila-promecam-gauge-conditional",
-  "ui": "custom-tool-backup-and-parametric-dxf-export",
-  "cache": "plegadox-static-0.9.37-custom-backup-dxf-r61",
+  "ui": "editable-user-tool-dimensions-and-non-destructive-new-references",
+  "cache": "plegadox-static-0.9.38-tool-revisions-r62",
   "tooling": "wila-promecam-custom-profile-dxf-mm-backup50"
 }
