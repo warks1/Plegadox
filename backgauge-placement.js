@@ -116,7 +116,7 @@ export function gaugePlacement(scene,stopNumber=1){
  };
  const contactAt=edge=>{
   // Mantener X del borde de chapa. Stop toca la cara frontal vertical;
-  // Support apoya SOBRE el escalón, a e/2 bajo la fibra media de chapa.
+  // Ambos dedos presentan cara frontal; una repisa no es por defecto superficie de parada.
   const shelfContact=feature.surface==='horizontal-top';
   const surface={x:edge.x,y:edge.y-(shelfContact?thickness/2:0)};
   const origin={x:surface.x-feature.point.x,y:surface.y-feature.point.y};
@@ -186,7 +186,7 @@ export function gaugePlacement(scene,stopNumber=1){
   sheetEdgeFound:!!rear,alignedToSheet:validEdge&&sheetInFront&&
    seat.seated&&feature.usable,
   state:!sheetInFront&&rear?'⚠ Chapa por detrás del dedo; revisar orientación':
-   !seat.seated?'⚠ Chapa sin apoyo horizontal en el escalón':
+   !seat.seated?'⚠ Sin contacto frontal suficiente con el dedo':
    validEdge?'borde visible orientativo':rear?'borde inclinado o elevado':
    'sin borde trasero accesible',
   verified:false});
