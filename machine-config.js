@@ -11,6 +11,7 @@
 import {MACHINE} from './engine.js';
 import {getActiveMachineProfile} from './machine-selection.js';
 import {notifyStorageFailure} from './storage-notice.js';
+import {readBystronicFit,assessBystronicWorkingOpening,normalizeBystronicFit} from './bystronic-fit.js';
 
 export const V85_FACTORY=Object.freeze({
  name:'Trumpf V85 · Cybelec',tonnage:85,
@@ -84,6 +85,10 @@ export function getActiveMachineConfig(){
  const profile=getActiveMachineProfile();
  if(profile.id==='trumpf-v85')return getV85();
  const preview=[40,65,8,18,0,0]; // CROQUIS NO ACOTADO, NO dato Bystronic.
+ let fit=null;
+ if(profile.id==='bystronic-2006-100-3100'){
+  try{fit=readBystronicFit();}catch{fit=normalizeBystronicFit();}
+ }
  return {
   name:profile.manufacturer+' '+profile.model,
   profileId:profile.id,tonnage:profile.tonnage,
@@ -96,7 +101,18 @@ export function getActiveMachineConfig(){
   stopOx:0,stopOz:0,supportOx:0,supportOz:0,
   preferredDistance:80,toolWorkingDistance:0,
   betweenUprights:profile.betweenUprights,throat:profile.throat,
-  openHeight:profile.openHeight,stroke:profile.stroke,tableHeight:profile.tableHeight,
+  openHeight:fit?.daylightMeasured??profile.openHeight,
+  openHeightProvenance:fit?.daylightMeasured!=null?'medicion-declarada-operador':'sin-medir',
+  daylightReference:profile.daylightReference??null,
+  daylightMeasured:fit?.daylightMeasured??null,
+  upperClampingSystem:profile.upperClampingSystem??null,
+  lowerDieSystem:profile.lowerDieSystem??null,
+  lowerAdapter:profile.lowerAdapter??null,
+  lowerAdapterHeight:fit?.lowerAdapterHeight??profile.lowerAdapterHeight??null,
+  upperAssemblyProjection:fit?.upperAssemblyProjection??null,
+  lowerDieProjection:fit?.lowerDieProjection??null,
+  nominalWorkingOpening:fit?assessBystronicWorkingOpening(fit):null,
+  stroke:profile.stroke,tableHeight:profile.tableHeight,
   outer:profile.outer,clamping:profile.clamping,
   xRange:profile.xRange??null,xTravel:profile.xTravel??null,rTravel:profile.rTravel??null,
   xSpeed:profile.xSpeed??null,rSpeed:profile.rSpeed??null,zSpeed:profile.zSpeed??null,
