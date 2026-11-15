@@ -19,7 +19,7 @@ function lowerPromecam(tool){
  return null;
 }
 export function checkMachineToolMounting(machine,punch,die){
- if(machine?.profileId!=='bystronic-2006-100-3100')
+ if(!['bystronic-2006-100-3100','bystronic-xpert-pro-100-3100'].includes(machine?.profileId))
   return {compatible:null,verified:false,reason:'Montaje de esta máquina no definido aquí'};
  const up=upperWila(punch),down=lowerPromecam(die);
  if(up===false||down===false)
