@@ -24,6 +24,7 @@ const APP_FILES=[
  "./gauge-interference.js",
  "./gauge-sequence-review.js",
  "./gauge-contact-solver.js",
+ "./sample-gauge-migration.js",
  "./icons.svg",
  "./incident-navigation.js",
  "./index.html",
