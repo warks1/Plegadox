@@ -173,6 +173,12 @@
 <details class="card px-custom-tool" id="customToolPanel" open>
  <summary><strong>Crear punzón o matriz introduciendo sus cotas</strong></summary>
  <p class="hint">Dibujo editable de sección 2D en milímetros. Cambia las medidas y comprueba cómo se actualiza la forma antes de guardarla. El plano creado es paramétrico, no una geometría certificada del fabricante.</p>
+ <div class="px-custom-tool-restore" role="group" aria-label="Editar herramienta personalizada guardada">
+  <label for="customToolSavedSelect">Reabrir punzón o matriz creada por cotas</label>
+  <select id="customToolSavedSelect"><option value="">Selecciona una herramienta guardada</option></select>
+  <button type="button" id="customToolLoadSaved">Cargar sus cotas para editar</button>
+  <small>Al guardar los cambios se crea una referencia nueva, sin modificar la herramienta utilizada por piezas anteriores.</small>
+ </div>
  <div class="px-custom-tool-grid">
   <form id="customToolForm" class="px-custom-tool-form" autocomplete="off">
    <label>Tipo de herramienta<select id="customToolKind" name="kind"><option value="punch">Punzón</option><option value="die">Matriz en V</option></select></label>
