@@ -41,3 +41,23 @@ test('una referencia interior no se declara extremo libre',()=>{
  assert.equal(g.freeEdge,false);
  assert.equal(gaugePointOnProfile(profile(p).points,g).x,75);
 });
+
+test('puede elegirse un ala no contigua y su extremo libre como referencia',()=>{
+ const p=normalized({name:'Omega',flanges:[40,50,60,70,80],
+  angles:[90,-90,90,-90],gaugeSegmentByBend:[4,0,null,null],
+  gaugePointByBend:[null,null,null,null]});
+ const a=gaugeReference(p,0),b=gaugeReference(p,1);
+ assert.equal(a.segmentIndex,4);
+ assert.equal(a.sourceIndex,5);
+ assert.equal(a.pivotIndex,4);
+ assert.equal(a.side,'after');
+ assert.equal(a.freeEdge,true);
+ assert.equal(a.distance,80);
+ assert.equal(b.segmentIndex,0);
+ assert.equal(b.sourceIndex,0);
+ assert.equal(b.pivotIndex,1);
+ assert.equal(b.side,'before');
+ assert.equal(b.freeEdge,true);
+ assert.equal(gaugePointOnProfile(profile(p).points,a).x,300);
+ assert.equal(gaugePointOnProfile(profile(p).points,b).x,0);
+});
