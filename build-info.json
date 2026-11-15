@@ -1,7 +1,7 @@
 {
-  "build": "PLEGADOX-20261115-R52",
-  "version": "0.9.28",
+  "build": "PLEGADOX-20261115-R53",
+  "version": "0.9.29",
   "machine": "bystronic-2006-2009-wila-promecam-gauge-conditional",
-  "ui": "mounted-wila-punch-promecam-die-splash-animation-and-gauge-2d-review",
-  "cache": "plegadox-static-0.9.28-mounted-tooling-splash-r52"
+  "ui": "responsive-splash-mounted-tooling-continuous-backgauge-conditional-retreat",
+  "cache": "plegadox-static-0.9.29-gauge-continuity-splash-fit-r53"
 }
