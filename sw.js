@@ -1,5 +1,5 @@
 // PlegadoX · caché offline estática. Se versiona para no arrastrar JS obsoleto.
-const CACHE='plegadox-static-0.9.27-omega-contact-icon-r51';
+const CACHE='plegadox-static-0.9.28-mounted-tooling-splash-r52';
 const APP_FILES=[
  "./",
  "./app.js",
@@ -30,6 +30,7 @@ const APP_FILES=[
  "./index.html",
  "./titanium-loading-original.html",
  "./splash-foto-premium.html",
+ "./splash-machine-assembly.svg",
  "./plegadox-premium-selected.png",
  "./bystronic-fit.js",
  "./machine-mounting.js",
