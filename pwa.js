@@ -4,11 +4,16 @@
 if('serviceWorker' in navigator &&
  (location.protocol==='https:' ||
   ['localhost','127.0.0.1'].includes(location.hostname))){
+ // No recargar automáticamente una pieza mientras se programa o simula.
+ // Una toma de control del nuevo SW sólo señala disponibilidad:
+ // el botón «Actualizar software» comprueba release y conserva datos.
  const previousController=navigator.serviceWorker.controller;
  if(previousController){
   navigator.serviceWorker.addEventListener('controllerchange',()=>{
    if(navigator.serviceWorker.controller &&
-      navigator.serviceWorker.controller!==previousController)location.reload();
+      navigator.serviceWorker.controller!==previousController){
+    window.dispatchEvent(new CustomEvent('plegadox:cacheControllerChanged'));
+   }
   });
  }
  // Con carga dinámica, el evento load puede haber ocurrido ANTES de
