@@ -24,6 +24,15 @@ jobs:
         run: python -m PyInstaller --noconfirm --clean --onefile --windowed --name PlegadoX --icon portable/plegadox.ico portable/launcher.py
       - name: Preparar pendrive completo con aplicación, EXE y guía
         run: python portable/make_bundle.py
+      - name: Probar el EXE compilado dentro del paquete USB real
+        shell: pwsh
+        run: |
+          $exe = Join-Path $PWD 'dist/PlegadoX-USB-Windows/PlegadoX.exe'
+          $process = Start-Process -FilePath $exe -ArgumentList '--self-test' -Wait -PassThru
+          if ($process.ExitCode -ne 0) {
+            throw "El ejecutable portátil falla al servir su HTML y build-info.json: código $($process.ExitCode)"
+          }
+          Write-Host "PLEGADOX_EXE_WINDOWS_OK"
       - name: Guardar ZIP listo para copiar al USB
         uses: actions/upload-artifact@v4
         with:

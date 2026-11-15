@@ -87,5 +87,27 @@ def main():
     return 0
 
 
+def self_test():
+    """Prueba el propio ejecutable empaquetado: web local sin abrir ventanas."""
+    import json
+    from urllib.request import urlopen
+
+    server = serve(program_directory(), 0)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    try:
+        base = f"http://{HOST}:{server.server_port}/"
+        with urlopen(base, timeout=8) as response:
+            if b"PLEGA" not in response.read():
+                raise RuntimeError("La interfaz HTML no responde")
+        with urlopen(base + "build-info.json", timeout=8) as response:
+            data = json.load(response)
+            if not data.get("version") or not data.get("build"):
+                raise RuntimeError("Metadatos incompletos en el paquete")
+        return 0
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(self_test() if "--self-test" in sys.argv else main())

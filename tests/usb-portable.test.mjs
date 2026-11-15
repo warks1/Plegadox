@@ -22,3 +22,10 @@ test('USB: el ZIP contiene los archivos web, el EXE y explica dónde guardar pie
  assert.match(wf,/PyInstaller/);
  assert.match(wf,/upload-artifact/);
 });
+
+test('USB: el EXE se ejecuta en CI Windows y verifica el HTML real',()=>{
+ assert.match(read('portable/launcher.py'),/def self_test\(\)/);
+ const wf=read('.github/workflows/usb-portable-windows.yml');
+ assert.match(wf,/PLEGADOX_EXE_WINDOWS_OK/);
+ assert.match(wf,/--self-test/);
+});
