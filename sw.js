@@ -1,5 +1,5 @@
 // PlegadoX · caché offline estática. Se versiona para no arrastrar JS obsoleto.
-const CACHE='plegadox-static-0.9.23-gauge-oem-splash-r47';
+const CACHE='plegadox-static-0.9.24-custom-tool-icon-fullscreen-r48';
 const APP_FILES=[
  "./",
  "./app.js",
@@ -15,9 +15,9 @@ const APP_FILES=[
  "./dxf-export.js",
  "./engine.js",
  "./favicon.svg",
- "./icon-180.png",
- "./icon-192.png",
- "./icon-512.png",
+ "./icon-industrial-180.png",
+ "./icon-industrial-192.png",
+ "./icon-industrial-512.png",
  "./flat-layout.js",
  "./gauge-side-review.js",
  "./gauge-contact-advisor.js",
@@ -68,6 +68,8 @@ const APP_FILES=[
  "./workshop-measurements.js",
  "./tool-dxf.js",
  "./tool-import-ui.js",
+ "./custom-tool-geometry.js",
+ "./custom-tool-builder.js",
  "./validation.js",
  "./viewer-profile.js"
 ];
