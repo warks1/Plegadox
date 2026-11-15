@@ -50,6 +50,7 @@ export function setupToolDxfImporter({add}){
    const preset=document.createElement('button');preset.type='button';
    preset.textContent='Preparar importación';
    preset.addEventListener('click',()=>{
+    parsed=null;input.value='';save.disabled=true;preview.hidden=true;
     kind.value=toolKind;toggle();name.value=tool.reference||tool.name;
     $('toolDxfAngle').value=String(tool.angle);
     $('toolDxfLength').value=String(tool.length||415);
