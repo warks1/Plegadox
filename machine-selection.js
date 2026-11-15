@@ -15,15 +15,21 @@ export const MACHINE_PROFILES=Object.freeze({
   clamping:'Datos de fijación CAD no aportados'
  }),
  'bystronic-2006-100-3100':Object.freeze({
-  id:'bystronic-2006-100-3100',manufacturer:'Bystronic',
-  model:'100 T × 3100 mm · modelo sin identificar',
-  title:'Bystronic 2006 · 100 t / 3100 mm · modelo pendiente',
+  id:'bystronic-2006-100-3100',manufacturer:'Bystronic / Beyeler',
+  model:'100 T × 3100 mm (2006) · medidas de referencia PR100/3100',
+  title:'Bystronic 2006 · 100 t / 3100 mm · referencia PR100',
   year:2006,tonnage:100,bendingLength:3100,
-  betweenUprights:null,throat:null,openHeight:null,stroke:null,
-  tableHeight:null,outer:null,
-  provenience:'Año 2006, capacidad 100 t y longitud 3100 mm indicados por el propietario. No se ha confirmado la serie/modelo.',
-  source:null,dimensionsVerified:'datos-del-propietario-sin-identificacion-de-modelo',
-  clamping:'Fijaciones y agarres sin identificar; NO atribuirle las cotas PR100 ni EP II'
+  betweenUprights:2750,throat:400,openHeight:500,stroke:215,
+  tableHeight:null,outer:{length:4100,depth:2050,height:2600},
+  xRange:1040,xTravel:590,rTravel:250,
+  xSpeed:500,rSpeed:150,zSpeed:1000,ramApproachSpeed:180,ramReturnSpeed:150,
+  nominalMotorPower:7.5,nominalWeightTonnes:9,hydraulicOilLitres:205,
+  frontSupportArmLength:750,hydraulicCrowning:true,
+  control:'ModEva 10S (ficha PR); verificar control instalado',
+  provenience:'Propietario: Bystronic 100 t, 3100 mm, año 2006. Se adoptan como referencia de trabajo las cotas del modelo PR100/3100 en la ficha histórica original Bystronic de 2005; no confirma submodelo ni equipamiento instalado.',
+  source:'https://www.politesi.polimi.it/bitstream/10589/7642/4/Data%20Sheet_Beyeler%20PR150_Bystronic.pdf',
+  dimensionsVerified:'cotas-fabricante-pr100-3100-atribuidas-como-referencia',
+  clamping:'Referencia PR100: amarre de punzón/matriz, mordazas, mesa y dedos sin plano acotado; confirmar montaje real, no trasladar cotas de otros equipos'
  }),
  'bystronic-pr100-3100':Object.freeze({
   id:'bystronic-pr100-3100',manufacturer:'Bystronic / Beyeler',
