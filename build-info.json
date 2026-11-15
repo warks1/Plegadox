@@ -1,6 +1,6 @@
 {
-  "build": "PLEGADOX-20261115-R42",
-  "version": "0.9.18",
-  "gauge": "backgauge-prebend-retreat-multimachine-r42",
-  "cache": "plegadox-static-0.9.18-backgauge-bystronic-r42"
+  "build": "PLEGADOX-20261115-R43",
+  "version": "0.9.19",
+  "gauge": "bystronic-2006-owner-confirmed-r43",
+  "cache": "plegadox-static-0.9.19-owner-machine-r43"
 }
