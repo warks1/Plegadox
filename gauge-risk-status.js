@@ -1,19 +1,37 @@
-/** Semáforo de tope para el visor geométrico 2D.
- * Verde: no se detecta interferencia; naranja: posible interferencia
- * o comprobación incompleta; rojo: penetración GEOMÉTRICA en esta pose.
- * No significa ausencia de colisiones 3D ni aprobación CNC. Una
- * penetración roja puede resolverse cambiando la secuencia/herramienta.
+/** Semáforo orientativo del tope en la sección 2D.
+ * Verde: geometría calculada y sin interferencia detectada.
+ * Naranja: apoyo inválido, datos insuficientes o riesgo/retirada prevista.
+ * Rojo: penetración geométrica detectada en la pose mostrada.
+ * Ningún color equivale a una certificación 3D o autorización CNC.
  */
 export function gaugeRiskStatus(placement){
  const hit=placement?.gaugeInterference,plan=placement?.gaugeDecision;
  if(hit?.kind==='penetracion')
   return {level:'red',message:'PENETRACIÓN DETECTADA EN 2D',verified:false};
- if(hit?.warning===true||placement?.setupValid===false||
-    plan?.enabled===true||plan?.needsSetupCorrection===true||
+ // Una referencia interior o un dedo sin superficie de apoyo NO pueden
+ // recibir verde sólo porque el detector no haya informado penetración.
+ // El asiento frontal se exige durante la preparación, no cuando la chapa
+ // ya ha sido retirada de la V después de sujetar.
+ const preparing=['Posicionamiento','Aproximación'].includes(placement?.phase);
+ const invalidReference=placement?.freeEdge===false||
+  placement?.sheetEdgeFound===false||
+  placement?.contact?.usable===false||
+  placement?.setupValid===false||
+  plan?.needsSetupCorrection===true;
+ const invalidSeat=preparing&&
+  (placement?.sheetInFront===false||placement?.seat?.seated===false);
+ if(invalidReference||invalidSeat)
+  return {level:'amber',message:'APOYO NO VÁLIDO · REVISAR PRESENTACIÓN 2D',verified:false};
+ // warning:false significa también "no pude evaluar", según el detector.
+ // Sólo se concede verde con kind explícito de ausencia de interferencia.
+ if(!hit||hit.kind==='sin-geometria'||hit.kind!=='sin-interferencia-detectada'&&hit.warning===false)
+  return {level:'amber',message:'COMPROBACIÓN 2D INCOMPLETA',verified:false};
+ if(hit.warning===true||
+    plan?.enabled===true||
     (Number(plan?.clearanceWarnings)||0)>0||
     (Number(plan?.penetrationCount)||0)>0)
   return {level:'amber',message:'POSIBLE INTERFERENCIA / REVISAR APOYO',verified:false};
- if(hit?.warning===false&&plan?.known===true&&placement?.setupValid!==false)
+ if(hit.kind==='sin-interferencia-detectada'&&hit.warning===false&&plan?.known===true)
   return {level:'green',message:'SIN INTERFERENCIA DETECTADA EN 2D',verified:false};
  return {level:'amber',message:'COMPROBACIÓN 2D INCOMPLETA',verified:false};
 }
