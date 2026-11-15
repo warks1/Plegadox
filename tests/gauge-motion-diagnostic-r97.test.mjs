@@ -27,6 +27,12 @@ test('R97: informe de los 4 golpes conserva pieza, selección manual y posicione
  assert.deepEqual(data.piece.gaugeSegmentByBend,piece.gaugeSegmentByBend);
  assert.deepEqual(data.piece.gaugePointByBend,piece.gaugePointByBend);
  assert.equal(data.machine.profileId,'trumpf-v85');
+ assert.equal(data.tooling.die.id,piece.die);
+ assert.equal(data.tooling.punch.id,piece.punch);
+ assert.deepEqual(data.machine.stop.length,6);
+ assert.ok(data.machine.support.length>=6);
+ assert.equal(data.machine.gaugeGeometryDocumented,false,
+  'No dar por certificado el dedo por exportar la geometría nominal');
  assert.ok(data.operations.every(o=>o.frames.length===data.samplesPerOperation));
  assert.ok(data.operations.every(o=>o.contactObserved),
   'Los cuatro golpes deben registrar el apoyo inicial');
