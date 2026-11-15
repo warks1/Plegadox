@@ -8,6 +8,7 @@ import {currentToolContact} from './tool-collision.js';
 import {getActiveMachineConfig} from './machine-config.js';
 import {gaugePlacement,gaugeContourAtContact} from './backgauge-placement.js';
 import {sceneAtmosphere,dieDepth,ramDepth,sheetDepth,surfaceDetail,sectionOverlay} from './render-enhancements.js';
+import {gaugeRiskStatus,GAUGE_COLORS} from './gauge-risk-status.js';
 
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 // Etiqueta verificable: no denominar RETROCESO a un cambio de cota X/R.
@@ -141,18 +142,15 @@ function rearMachine(ctx,w,h,cx,cy,scale,placement){
  const rodEnd=rodStart+Math.max(35,gauge[0]*.45)*scale;
  steelRect(ctx,rodStart,cy-placement.point.y*scale+4*scale,
   Math.max(8,rodEnd-rodStart),6*scale,false);
- const conflict=!!placement.gaugeInterference?.warning||placement.setupValid===false;
- const nominal=placement.alignedToSheet&&!conflict;
- const cadPending=!!placement.geometryUnavailable;
- const validated=nominal&&!cadPending;
- poly(ctx,gg,
-  gradient(ctx,ox,oy,rodEnd,oy,validated?
-   [[0,'#9ff6b7'],[.28,'#44b975'],[.76,'#235a48'],[1,'#112f31']]:
-   nominal?
-   [[0,'#ffedbe'],[.28,'#b7914a'],[.76,'#66562a'],[1,'#2e2b25']]:
-   [[0,'#c5d1dc'],[.28,'#7890a4'],[.76,'#475b6c'],[1,'#1e3447']]),
-  conflict?'#ff906f':validated?'#c8ffe0':nominal?'#ffe3a0':'#9ab5c8',
-  Math.max(1.2,1.9*scale));
+ const risk=gaugeRiskStatus(placement),colors=GAUGE_COLORS[risk.level];
+  const cadPending=!!placement.geometryUnavailable;
+  const gradients={
+   green:[[0,'#a9ffd3'],[.28,'#50c987'],[.76,'#267250'],[1,'#17392e']],
+   amber:[[0,'#ffe8ad'],[.28,'#d1a34b'],[.76,'#775826'],[1,'#302b23']],
+   red:[[0,'#ffb8a4'],[.28,'#e56a58'],[.76,'#8c382c'],[1,'#4b2528']]
+  };
+  poly(ctx,gg,gradient(ctx,ox,oy,rodEnd,oy,gradients[risk.level]),
+   colors.edge,Math.max(1.2,1.9*scale));
  // Resaltar la cara real del dedo: STOP frontal o escalón SUPPORT.
  // Un vértice interior de la chapa no constituye un apoyo fiable.
  const contact=placement.contact;
@@ -160,35 +158,33 @@ function rearMachine(ctx,w,h,cx,cy,scale,placement){
  if(contact){
   const a=screen(contact.from),b=screen(contact.to);
   ctx.save();ctx.lineWidth=Math.max(3,3.6*scale);
-  ctx.strokeStyle=conflict?'#ff856e':validated?'#c1ffe2':'#ffd18d';
-  ctx.shadowBlur=11*scale;ctx.shadowColor=conflict?'#ff4b37':validated?'#4fffb6':'#ffad56';
+  ctx.strokeStyle=colors.face;
+  ctx.shadowBlur=11*scale;ctx.shadowColor=colors.glow;
   ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();
   // Support: cara INFERIOR de la chapa apoyada sobre la pestaña BAJA
   // frontal y canto detenido contra la contrahuella ALTA posterior.
   // Esta cara debe subir, no bajar tras el punto de contacto.
   if(contact.surface==='horizontal-top'&&contact.frontFace){
    const u=screen(contact.frontFace.from),v=screen(contact.frontFace.to);
-   ctx.strokeStyle=conflict?'#ff856e':validated?'#7ddaff':'#adc0ce';
+   ctx.strokeStyle=colors.edge;
    ctx.beginPath();ctx.moveTo(...u);ctx.lineTo(...v);ctx.stroke();
   }
   const cp=screen(contact.point);
   ctx.beginPath();ctx.arc(...cp,Math.max(2.5,3*scale),0,Math.PI*2);
-  ctx.fillStyle=conflict?'#ff7769':validated?'#e1fff1':'#ffd18d';ctx.fill();ctx.restore();
+  ctx.fillStyle=colors.face;ctx.fill();ctx.restore();
  }
  for(const frac of [.24,.58])bolt(ctx,rodStart+(rodEnd-rodStart)*frac,
   cy-placement.point.y*scale-10*scale,2.4*scale);
  ctx.font='800 '+Math.max(8,11*scale)+'px system-ui';
- ctx.fillStyle=conflict?'#ffafa0':
-  nominal?(cadPending?'#ffe0a3':'#a5ffcc'):'#b3c8d6';
- ctx.textAlign='left';
- const label=conflict?(
-  placement.setupValid===false?'⚠ TOPE '+placement.stopNumber+' · CORREGIR CANTO DE APOYO':
-  placement.gaugeInterference?.kind==='penetracion'?
-   '⚠ TOPE '+placement.stopNumber+' · CHAPA INVADE EL DEDO':
-   '⚠ TOPE '+placement.stopNumber+' · REVISAR HOLGURA / APOYO'):
-  placement.gaugeTransition?gaugeMovementLabel(placement):
-  nominal?'TOPE '+placement.stopNumber+(cadPending?' · APOYO 2D PROVISIONAL · CAD PENDIENTE':' · CONTACTO NOMINAL 2D'):
-  'TOPE '+placement.stopNumber+' · SIN CONTACTO CONFIRMADO';
+ ctx.fillStyle=colors.label;
+  ctx.textAlign='left';
+  const label=risk.level==='red'?
+   '⛔ TOPE '+placement.stopNumber+' · PENETRACIÓN EN 2D':
+   risk.level==='amber'?
+    '⚠ TOPE '+placement.stopNumber+' · '+risk.message:
+    placement.gaugeTransition?gaugeMovementLabel(placement):
+    'TOPE '+placement.stopNumber+' · SIN INTERFERENCIA 2D'+
+    (cadPending?' · CAD PENDIENTE':'');
  ctx.fillText(label,Math.min(Math.max(8,ox+3*scale),w-145*scale),
   Math.max(20,cy-placement.point.y*scale-24*scale));
  // Left support and machine rails
@@ -330,7 +326,8 @@ function stageScene(ctx,w,h,piece,sim,machineView){
  if(placement.alignedToSheet){
   const x=cx+placement.point.x*scale,y=baseY-placement.point.y*scale;
   ctx.save();ctx.beginPath();ctx.arc(x,y,Math.max(3,3.5*scale),0,Math.PI*2);
-  ctx.fillStyle=placement.geometryUnavailable?'#ffe3a0':'#b5ffe2';ctx.shadowColor=placement.geometryUnavailable?'#f0b356':'#4bffb0';ctx.shadowBlur=10*scale;
+  const color=GAUGE_COLORS[gaugeRiskStatus(placement).level];
+   ctx.fillStyle=color.face;ctx.shadowColor=color.glow;ctx.shadowBlur=10*scale;
   ctx.fill();ctx.strokeStyle='#174e3b';ctx.lineWidth=1.2;ctx.stroke();ctx.restore();
  }
  sectionOverlay(ctx,{cx,cy:baseY,s:scale},opening,punch.tip||0,Boolean(machineView?.section));

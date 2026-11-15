@@ -28,6 +28,18 @@ try{
     'R82: punzón rebota en G'+(stroke.operation+1)+': '+JSON.stringify(stroke.tips));
 
  // El visor 3D debe empezar plano y NO mostrar la omega final.
+ // Regresión vídeo 15/11/2026: el punzón no sigue verticalmente a la
+ // chapa mientras ésta se voltea y se coloca para el siguiente golpe.
+ const parkedTurns=await page.evaluate(async()=>{
+  const {technicalScene}=await import('/technical-section.js');
+  const {piece}=window.PLEGADOX_STATE();
+  return piece.order.slice(0,-1).map((_,op)=>
+   [.85,.88,.91,.94,.98].map(sub=>
+    technicalScene(piece,op*5+5*sub).kinematics.tipHeight));
+ });
+ for(const [op,values] of parkedTurns.entries())
+  assert.ok(values.every(v=>Math.abs(v-values[0])<1e-7),
+   'Punzón oscila mientras se voltea G'+(op+1)+' '+JSON.stringify(values));
  const sceneInitial=await page.locator('#sceneCanvas').evaluate(c=>c.toDataURL());
  // The second operation of 1-2-4-3 is −90; show this exact moment.
  await page.evaluate(()=>{

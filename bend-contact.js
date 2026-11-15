@@ -15,7 +15,7 @@ const lerp=(a,b,t)=>a+(b-a)*t;
 export function contactKinematics({
  points,activeBend,angle=0,opening=16,dieDepth=8,thickness=2,
  phase='Posicionamiento',press=0,approachGap=null,presentationLift=0,
- insideRadius=null,feedMirrored=false,repositionProgress=1
+ insideRadius=null,feedMirrored=false,repositionProgress=1,parkHeight=null
 }){
  const input=Array.isArray(points)?points:[];
  if(input.length<2)return {sheet:[],rounded:[],tipHeight:0,
@@ -67,14 +67,17 @@ export function contactKinematics({
  const retractGap=Math.max(gap,sheetTop-(centerHeight+thickness/2)+Math.max(5,thickness*2));
  // Mantener la punta elevada por encima de todas las alas durante la
  // presentación del golpe siguiente, no sólo a una distancia fija de V.
- const setupTip=Math.max(thickness+gap,sheetTop+Math.max(5,thickness*2));
+ const setupTip=Number.isFinite(parkHeight)?
+  Math.max(thickness+gap,parkHeight):
+  Math.max(thickness+gap,sheetTop+Math.max(5,thickness*2));
  const contactTip=centerHeight+thickness/2;
  let tipHeight;
  if(phase==='Plegado')tipHeight=contactTip;
  // R82: durante SUJECIÓN la punta ya está en contacto con la chapa.
   // Antes el else la elevaba a setupTip y PLEGADO la bajaba por segunda vez.
   else if(phase==='Sujeción')tipHeight=contactTip;
-  else if(phase==='Retorno')tipHeight=contactTip+retractGap*clamp(1-press,0,1);
+  else if(phase==='Retorno')tipHeight=contactTip+
+   (Number.isFinite(parkHeight)?setupTip-contactTip:retractGap)*clamp(1-press,0,1);
  else if(phase==='Aproximación')tipHeight=contactTip+
   (setupTip-contactTip)*clamp(1-press/.45,0,1);
  else tipHeight=setupTip;

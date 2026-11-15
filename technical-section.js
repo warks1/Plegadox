@@ -14,6 +14,8 @@ import {getActiveMachineConfig,gaugeOutline,gaugeContactFeature} from './machine
 import {gaugeRetractionPath,planGaugeRetraction} from './gauge-retract-motion.js';
 import {inspectGaugeProfile} from './gauge-interference.js';
 import {resolveGaugeSetup} from './gauge-contact-solver.js';
+import {punchParkHeight} from './punch-clearance.js';
+import {gaugeRiskStatus,GAUGE_COLORS} from './gauge-risk-status.js';
 
 const mm=v=>Number.isFinite(+v)?+v:0;
 // LRU pequeño: el barrido es POR CONFIGURACIÓN/PLIEGUE, no cada frame.
@@ -254,11 +256,16 @@ export function technicalScene(piece,instant=0){
    {x:farthest+safetyFrame,y:target?.y??gaugeAnchor.y}],
   verified:false
  }:null;
+ // La altura del punzón se define una vez por transición de giro,
+ // no se recalcula según la silueta instantánea de la chapa.
+ const parkOperation=['Retorno','Reposicionamiento','Pieza terminada'].includes(st.phase)?
+  st.activeOperation:st.activeOperation-1;
+ const parkHeight=punchParkHeight(p,parkOperation,die.opening,die.depth);
  const kinematics=contactKinematics({
   points:presentation.points,activeBend:st.activeBend,
   angle:p.angles[st.activeBend]*st.fractions[st.activeBend],
   opening:die.opening,dieDepth:die.depth,thickness:t,
-  phase:st.phase,press:st.press,
+  phase:st.phase,press:st.press,parkHeight,
   insideRadius:development(p).radius,
   feedMirrored:feedMirror,
   repositionProgress:presentation.repositioning?presentation.progress:1,
@@ -366,32 +373,24 @@ export function drawTechnicalSection(ctx,w,h,piece,sim,view={}){
  const v85=getActiveMachineConfig(),dimensions=place.profile==='support'?v85.support:v85.stop;
  const gp=gaugeContourAtContact(place,dimensions).map(map);
  ctx.save();ctx.lineWidth=1.8;
- const gaugeIssue=!!place.gaugeInterference?.warning||place.setupValid===false;
- const nominalSeat=place.alignedToSheet&&!gaugeIssue;
- const cadUnverified=!!place.geometryUnavailable;
- // CAD no contrastado no equivale a choque, pero tampoco admite verde
- // de "validado" por el mero contacto nominal: usar ámbar en 2D y 3D.
- const gaugeFill=gaugeIssue?'#7b342c':
-  nominalSeat?(cadUnverified?'#736039':'#37865f'):'#485363';
- polygon(ctx,gp,gaugeFill,
-  gaugeIssue?'#ff8a71':nominalSeat?(cadUnverified?'#ffd48d':'#a1f4c7'):'#d1a96e',1.8);
+ const risk=gaugeRiskStatus(place),colors=GAUGE_COLORS[risk.level];
+  // La documentación CAD pendiente no equivale a una colisión 2D.
+  polygon(ctx,gp,colors.fill,colors.edge,1.8);
  // La sección técnica usa la misma CARA STOP / ESCALÓN SUPPORT
  // y la misma escala en mm que la vista de máquina.
  if(place.contact){
   const a=map(place.contact.from),b=map(place.contact.to);
-  ctx.lineWidth=3.2;ctx.strokeStyle=gaugeIssue?'#ff8673':
-   nominalSeat?(cadUnverified?'#ffe1ac':'#dbffe7'):'#ffca8d';
+  ctx.lineWidth=3.2;ctx.strokeStyle=colors.face;
   ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
   if(place.contact.surface==='horizontal-top'&&place.contact.frontFace){
    const u=map(place.contact.frontFace.from),v=map(place.contact.frontFace.to);
-   ctx.strokeStyle=gaugeIssue?'#ff8673':'#8dd9ff';
+   ctx.strokeStyle=colors.edge;
    ctx.beginPath();ctx.moveTo(u.x,u.y);ctx.lineTo(v.x,v.y);ctx.stroke();
   }
  }
  const nose=map(place.contact?.point||place.point);
  ctx.beginPath();ctx.arc(nose.x,nose.y,3.2,0,Math.PI*2);
- ctx.fillStyle=gaugeIssue?'#ff8673':
-  nominalSeat?(cadUnverified?'#ffe1ac':'#c7ffe7'):'#ffb567';ctx.fill();
+ ctx.fillStyle=colors.face;ctx.fill();
  ctx.restore();
   const pp=poly(result.punchPolygon),punchFill=gradient(ctx,pp[0].x,0,pp[1].x,0,
  [[0,'#435d6f'],[.17,'#d7ebf2'],[.4,'#809cac'],[.55,'#e7f5f9'],[.8,'#637f95'],[1,'#253f57']]);
