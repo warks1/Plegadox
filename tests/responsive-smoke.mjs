@@ -88,8 +88,25 @@ try{
  await page.setViewportSize({width:390,height:844});
  await page.waitForFunction(()=>document.documentElement.dataset.orientation==='portrait');
  await page.locator('#playBtn').click();
- await page.waitForTimeout(350);
- assert.ok(Number(await page.locator('#timeline').inputValue())>0,'La simulación debe seguir funcionando después del giro');
+ // La rotación reconstruye canvas y componentes: no asumir que un
+ // navegador móvil emulado dispone de 350 ms libres para la primera
+ // actualización RAF. Esperar progreso REAL y fallar si no arranca.
+ try{
+  await page.waitForFunction(()=>
+   Number(document.querySelector('#timeline')?.value)>0,null,
+   {timeout:5000,polling:100});
+ }catch(error){
+  const diagnostic=await page.evaluate(()=>({
+   time:document.querySelector('#timeline')?.value,
+   playTitle:document.querySelector('#playBtn')?.title,
+   phase:document.querySelector('#phaseText')?.textContent,
+   status:document.querySelector('#simStatus')?.textContent,
+   layout:document.documentElement.dataset.layout,
+   orientation:document.documentElement.dataset.orientation
+  }));
+  assert.fail('La simulación no avanza tras girar el móvil: '+
+   JSON.stringify(diagnostic)+' / '+String(error.message||error));
+ }
  await page.locator('#pauseBtn').click();
  await context.close();
  console.log('RESPONSIVE_OK '+JSON.stringify(visited));
