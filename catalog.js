@@ -19,6 +19,37 @@ export const CATALOG_SOURCES = {
 // verifiedSpecs significa que las dimensiones indicadas están respaldadas,
 // no que el perfil 2D/3D provisional esté validado.
 export const CATALOG_PUNCHES = [
+ // R47 · referencias reales WILA y Promecam con DXF OEM localizable.
+ // Hasta importar el CONTORNO se representan sólo de forma provisional.
+ {id:"wila-biu-021",manufacturer:"WILA",reference:"BIU-021/1",
+  name:"BIU-021 · 28° R1 · H útil 163",angle:28,tip:2,height:163,
+  nominalHeightType:"working",length:515,type:"recto",mount:"WILA",
+  maxTPerMetre:70,verifiedSpecs:true,profileAccuracy:"provisional",
+  cadStatus:"pendiente-de-importar-DXF-fabricante",
+  cadSourceUrl:"https://www.wilatooling.com/en-us/products/press-brake-tooling/new-standard-tooling/new-standard-premium/biu-021/",
+  source:"wilaBIU021"},
+ {id:"wila-biu-033",manufacturer:"WILA",reference:"BIU-033/1",
+  name:"BIU-033 · 86° R1 · H útil 200",angle:86,tip:2,height:200,
+  nominalHeightType:"working",length:515,type:"recto",mount:"WILA",
+  maxTPerMetre:50,verifiedSpecs:true,profileAccuracy:"provisional",
+  cadStatus:"pendiente-de-importar-DXF-fabricante",
+  cadSourceUrl:"https://www.wilatooling.com/en-us/products/press-brake-tooling/new-standard-tooling/new-standard-premium/biu-033/",
+  source:"wilaBIU033"},
+ {id:"wila-biu-053",manufacturer:"WILA",reference:"BIU-053/1",
+  name:"BIU-053 · 28° R1 · H útil 200",angle:28,tip:2,height:200,
+  nominalHeightType:"working",length:515,type:"recto",mount:"WILA",
+  maxTPerMetre:100,verifiedSpecs:true,profileAccuracy:"provisional",
+  cadStatus:"pendiente-de-importar-DXF-fabricante",
+  cadSourceUrl:"https://www.wilatooling.com/en-us/products/press-brake-tooling/new-standard-tooling/new-standard-premium/biu-053/",
+  source:"wilaBIU053"},
+ {id:"promecam-eurostamp-1193",manufacturer:"Eurostamp",reference:"1193/30°",
+  name:"Eurostamp 1193 · 30° R0,6 · H104",angle:30,tip:1.2,height:104,
+  length:835,type:"recto",mount:"Amada/Promecam",maxTPerMetre:100,
+  verifiedSpecs:true,profileAccuracy:"provisional",
+  cadStatus:"pendiente-de-importar-DXF-fabricante",
+  cadSourceUrl:"https://machinistsvault.com/products/1193-punch-30",
+  source:"eurostamp1193"},
+
  // CONIC fabrica utillaje *tipo Amada*, NO son artículos originales AMADA.
  // Ángulo, altura, radio y referencia están publicados; la silueta es provisional.
  {id:"conic-act-12-3006",manufacturer:"CONIC (tipo Amada)",reference:"ACT-12-3006",name:"Agudo 30° H120 · R0,6",angle:30,tip:1.2,height:120,length:835,type:"recto",mount:"Amada/Promecam",verifiedSpecs:true,profileAccuracy:"provisional",source:"conicAmadaType2022"},
@@ -44,6 +75,48 @@ export const CATALOG_PUNCHES = [
  {id:"bystronic-r-demo",manufacturer:"Bystronic",reference:"Beyeler R (ejemplo)",name:"Beyeler R · PROVISIONAL",angle:30,tip:.8,height:120,length:415,type:"cabra",mount:"Bystronic R",verifiedSpecs:false,source:"mecosTooling2022",profileAccuracy:"provisional"}
 ];
 export const CATALOG_DIES = [
+ // R47 · matrices reales documentadas. No usar como sólido OEM hasta
+ // descargar/importar su DXF de contorno con V activa identificada.
+ {id:"wila-ozu-012",manufacturer:"WILA",reference:"OZU-012/1",
+  name:"OZU-012 · V16/86° H55 R1,5",opening:16,angle:86,height:55,
+  shoulderRadius:1.5,length:515,mount:"WILA",
+  maxTPerMetre:120,verifiedSpecs:true,profileAccuracy:"provisional",
+  cadStatus:"pendiente-de-importar-DXF-fabricante",
+  cadSourceUrl:"https://www.wilatooling.com/en-us/products/press-brake-tooling/new-standard-tooling/new-standard-premium/ozu-012/",
+  source:"wilaOZU012"},
+ {id:"wila-ozu-045",manufacturer:"WILA",reference:"OZU-045/1",
+  name:"OZU-045 · V16/90° H55 R1,5",opening:16,angle:90,height:55,
+  shoulderRadius:1.5,length:515,mount:"WILA",
+  maxTPerMetre:120,verifiedSpecs:true,profileAccuracy:"provisional",
+  cadStatus:"pendiente-de-importar-DXF-fabricante",
+  cadSourceUrl:"https://www.wilatooling.com/products/press-brake-tooling/new-standard-tooling/new-standard-premium/ozu-045/",
+  source:"wilaOZU045"},
+ {id:"wila-ozu-312",manufacturer:"WILA",reference:"OZU-312/1",
+  name:"OZU-312 · V16/86° H100 R3,5",opening:16,angle:86,height:100,
+  shoulderRadius:3.5,length:515,mount:"WILA",
+  maxTPerMetre:120,verifiedSpecs:true,profileAccuracy:"provisional",
+  cadStatus:"pendiente-de-importar-DXF-fabricante",
+  cadSourceUrl:"https://www.wilatooling.com/en-us/products/press-brake-tooling/new-standard-tooling/new-standard-premium/ozu-312/",
+  source:"wilaOZU312"},
+ {id:"promecam-soclam-2012-88-v6",manufacturer:"SOCLAM (tipo Promecam)",
+  reference:"20.12/88° V6",name:"Matriz reversible · V6/88° (+V10)",
+  opening:6,angle:88,height:26,length:415,mount:"Amada/Promecam",
+  reversibleV:[6,10],activeV:6,requiresDieHolder:"40.06 o 40.07",
+  verifiedSpecs:true,profileAccuracy:"provisional",
+  cadStatus:"descarga-DXF-publica-importacion-pendiente",
+  cadDownloadUrl:"https://www.soclam.com/wp-content/uploads/2026/05/2012_88.dxf",
+  cadSourceUrl:"https://www.soclam.com/produit/matrice-amada-a-2-ves-a-88/",
+  source:"soclamPromecam2012"},
+ {id:"promecam-soclam-2015-88-v16",manufacturer:"SOCLAM (tipo Promecam)",
+  reference:"20.15/88° V16",name:"Matriz reversible · V16/88° (+V25)",
+  opening:16,angle:88,height:26,length:415,mount:"Amada/Promecam",
+  reversibleV:[16,25],activeV:16,requiresDieHolder:"40.06 o 40.07",
+  verifiedSpecs:true,profileAccuracy:"provisional",
+  cadStatus:"descarga-DXF-publica-importacion-pendiente",
+  cadDownloadUrl:"https://www.soclam.com/wp-content/uploads/2026/05/2015_88.dxf",
+  cadSourceUrl:"https://www.soclam.com/produit/matrice-amada-a-2-ves-a-88/",
+  source:"soclamPromecam2015"},
+
  // Ficha de fabricante Rolleri comprobada. NO significa compatibilidad con
  // el portamatriz de la Trumpf V85: sistema R2/R3 a verificar en taller.
  {id:"soclam-beyeler-m6-30",manufacturer:"SOCLAM (tipo Bystronic/Beyeler)",reference:"M6/30°",name:"M6 · V6/30° R0.75",opening:6,angle:30,height:55,shoulderRadius:0.75,mount:"Bystronic/Beyeler matriz tipo",verifiedSpecs:true,profileAccuracy:"provisional",source:"soclamBystronic2017"},
