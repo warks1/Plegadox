@@ -72,15 +72,15 @@ test('no descarta el orden físicamente viable por empate de puntuación de chap
 });
 test('splash R52 reacomoda marca y máquina sin recortes ni imagen duplicada',()=>{
  const html=readFileSync(new URL('../splash-foto-premium.html',import.meta.url),'utf8');
- assert.match(html,/id="hero"/);
- assert.match(html,/#screen\\{position:fixed;inset:0/);
- assert.match(html,/#screen::before/);
- assert.match(html,/object-fit:contain/);
- assert.match(html,/@media\\(orientation:portrait\\)/);
- assert.match(html,/src="\\.\\/splash-machine-assembly\\.svg"/);
- assert.doesNotMatch(html,/id="photo"/);
+ assert.ok(html.includes('id="hero"'));
+ assert.ok(html.includes('#screen{position:fixed;inset:0'));
+ assert.ok(html.includes('#screen::before'));
+ assert.ok(html.includes('object-fit:contain'));
+ assert.ok(html.includes('@media(orientation:portrait)'));
+ assert.ok(html.includes('src="./splash-machine-assembly.svg"'));
+ assert.ok(!html.includes('id="photo"'));
  assert.equal((html.match(/role="progressbar"/g)||[]).length,1);
- assert.match(html,/id="progress"/);
+ assert.ok(html.includes('id="progress"'));
 });
 test('UI incluye compensación individual y estado de medidas',()=>{
  const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
