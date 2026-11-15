@@ -183,9 +183,18 @@ function render(refreshFields=true){
  if($('machineSelectorInSettings'))$('machineSelectorInSettings').value=profile.id;
  const title=$('machinePanelTitle'),description=$('machinePanelDescription');
  if(title)title.textContent=profile.title+' · configuración de máquina';
- if(description)description.textContent=isTrumpf?
-  'Cotas de tus fotografías Cybelec: trancha, mesa, topes y fijaciones disponibles. Editables en milímetros.':
-  'Valores técnicos publicados para la familia de máquina. Los perfiles de trancha, amarres, mesa y dedos montados siguen SIN CAD verificado; no confundir un croquis con medidas reales.';
+ if(description){
+  description.textContent=isTrumpf?
+   'Cotas de tus fotografías Cybelec: trancha, mesa, topes y fijaciones disponibles. Editables en milímetros.':
+   'Valores técnicos publicados para la familia de máquina. Los perfiles de trancha, amarres, mesa y dedos montados siguen SIN CAD verificado; no confundir un croquis con medidas reales.';
+  if(isTrumpf&&profile.oemHistoricalReference){
+   const link=document.createElement('a');
+   link.href=profile.oemHistoricalReference.source;
+   link.target='_blank';link.rel='noopener noreferrer';
+   link.textContent='Ficha histórica TRUMPF V85 (no verificada en esta máquina)';
+   description.append(' · ',link);
+  }
+ }
  const grid=$('trumpfMachineFields'),details=$('bystronicMachineDetails');
  if(grid)grid.hidden=!isTrumpf;
  if(details){details.hidden=isTrumpf;if(!isTrumpf)renderBystronicDetails(details,profile);}
@@ -198,7 +207,13 @@ function render(refreshFields=true){
    ['Trancha / portaútil',locale(cfg.ramWidth)+' / '+locale(cfg.holderWidth)+' mm'],
    ['Trabajo punzón',locale(cfg.toolWorkingDistance)+' mm'],
    ['Stop / Support',locale(cfg.stop[0])+' / '+locale(cfg.support[0])+' mm'],
-   ['Distancia preferida',locale(cfg.preferredDistance)+' %']]:[
+   ['Distancia preferida',locale(cfg.preferredDistance)+' %'],
+   // Valores SOLO de catálogo: jamás usar para límites de mecanizado.
+   ['V85 histórica · longitud catálogo NO aplicada',
+    locale(profile.oemHistoricalReference.bendingLengthNominal)+' mm · tu configuración 2040 mm'],
+   ['V85 histórica · recorridos X/R NO calibrados',
+    locale(profile.oemHistoricalReference.xAxisTravelNominal)+' / '+
+    locale(profile.oemHistoricalReference.rAxisTravelNominal)+' mm · SOLO REFERENCIA']]:[
    ['Longitud nominal de plegado',locale(profile.bendingLength)+' mm'],
    ['Capacidad nominal',locale(profile.tonnage)+' t'],
    ['Trancha, amarre y mesa','Geometría no medida'],

@@ -4,12 +4,28 @@
  * de trancha, amarres, mesa y dedos a partir del tonelaje/longitud.
  */
 export const MACHINE_SELECTION_KEY='plegadox:active-machine:v1';
+// Ficha histórica de fabricante de la FAMILIA V85. Son opciones posibles
+// de máquina, NO medidas realizadas en la unidad del propietario.
+// Mantenerla fuera de getActiveMachineConfig y fuera de límites CNC.
+export const V85_OEM_HISTORICAL_REFERENCE=Object.freeze({
+ model:'TrumaBend V85 · catálogo TRUMPF V-Series',
+ provenance:'ficha-historica-fabricante-familia-no-verificada-en-unidad',
+ applicableToOwnerUnit:false,unit:'mm',
+ bendingLengthNominal:2050,betweenUprightsNominal:1750,throatNominal:410,
+ strokeStandard:215,strokeExtendedOptional:365,
+ effectiveOpenHeightStandard:385,effectiveOpenHeightExtendedOptional:535,
+ xAxisTravelNominal:600,maxXNominal:860,maxXExtendedOptional:1000,
+ rAxisTravelNominal:250,
+ z1z2Optional:true,
+ source:'https://cdn.vantomachines.com/brands/TRUMPF/TrumaBend-V-Series_TRUMPF_Brochure.pdf'
+});
 export const MACHINE_PROFILES=Object.freeze({
  'trumpf-v85':Object.freeze({
   id:'trumpf-v85',manufacturer:'Trumpf',model:'TruBend V85',
   title:'Trumpf V85 · 85 t / 2040 mm',year:2006,
   tonnage:85,bendingLength:2040,betweenUprights:null,throat:null,
   openHeight:null,stroke:null,tableHeight:null,outer:null,
+  oemHistoricalReference:V85_OEM_HISTORICAL_REFERENCE,
   provenience:'Fotografías Cybelec facilitadas por el propietario',
   source:null,dimensionsVerified:'fotografias-configuracion',
   clamping:'Datos de fijación CAD no aportados'
