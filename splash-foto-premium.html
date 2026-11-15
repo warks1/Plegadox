@@ -13,7 +13,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#030b16;col
  background:repeating-linear-gradient(90deg,transparent 0 37px,#71cfff13 38px 39px),
  repeating-linear-gradient(0deg,transparent 0 37px,#71cfff11 38px 39px)}
 #hero{flex:1 1 auto;min-height:0;min-width:0;display:grid;grid-template-columns:minmax(0,.91fr) minmax(0,1.09fr);
- align-items:center;gap:clamp(4px,1.6vw,24px);padding:clamp(10px,2.5vw,35px);overflow:hidden}
+ align-items:center;grid-template-rows:minmax(0,1fr);gap:clamp(4px,1.6vw,24px);padding:clamp(10px,2.5vw,35px);overflow:hidden}
 #brand{min-width:0;display:flex;flex-direction:column;justify-content:center;gap:clamp(7px,1.55vh,17px)}
 #symbolRow{display:flex;align-items:center;gap:clamp(10px,1.6vw,23px)}
 #symbol{flex:0 0 auto;width:clamp(58px,9vw,128px);aspect-ratio:1;object-fit:contain;
@@ -38,8 +38,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#030b16;col
  stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 3px #08b7ff86)}
 .feature span{font-weight:730;font-size:clamp(9px,.78vw,13px);line-height:1.18;color:#dfebf5}
 #machine{position:relative;min-width:0;min-height:0;display:flex;justify-content:center;align-items:center;
- max-height:100%;overflow:hidden}
-#machineArt{display:block;width:100%;max-width:950px;height:auto;max-height:100%;object-fit:contain;
+ height:100%;max-height:100%;overflow:hidden}
+#machineArt{display:block;width:100%;max-width:950px;height:100%;min-height:0;max-height:100%;object-fit:contain;
  filter:drop-shadow(0 22px 24px #000a)}
 #machineCaption{position:absolute;left:3%;bottom:4%;padding:7px 12px;background:#041522d9;
  color:#8bd7fb;border:1px solid #22749f;border-radius:5px;font:700 clamp(9px,.88vw,13px)/1.2 Inter,system-ui,sans-serif;
@@ -75,7 +75,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#030b16;col
  .feature{min-height:clamp(43px,8vh,70px);padding:5px 2px;border-radius:7px;gap:3px}
  .feature svg{width:clamp(14px,4vw,24px);height:clamp(14px,4vw,24px)}
  .feature span{font-size:clamp(8px,1.8vw,11px)}
- #machine{flex:1 1 auto;width:100%;align-items:center}
+ #machine{flex:1 1 0;width:100%;height:auto;min-height:0;align-items:center}
  #machineArt{width:100%;height:100%;max-width:550px}
  #machineCaption{font-size:8px;bottom:2%;padding:3px 6px}
  #dock{padding:7px 14px max(12px,env(safe-area-inset-bottom,0px))}
@@ -83,7 +83,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#030b16;col
  #progress{height:clamp(35px,8vw,52px)}#legal{font-size:9px}
 }
 @media(orientation:landscape) and (max-height:530px){
- #hero{padding:3px 10px;gap:5px;grid-template-columns:minmax(0,.87fr) minmax(0,1.13fr)}
+ #hero{padding:3px 10px;gap:5px;grid-template-columns:minmax(0,.87fr) minmax(0,1.13fr);grid-template-rows:minmax(0,1fr)}
  #brand{gap:5px}#symbol{width:clamp(39px,7vw,65px)}
  #brand h1{font-size:clamp(27px,5vw,45px)}#subtitle{font-size:8px;letter-spacing:.14em}
  #company{font-size:8px}
