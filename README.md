@@ -1315,3 +1315,25 @@ Se renueva SW a `plegadox-static-0.9.24-custom-tool-icon-fullscreen-r48` para qu
 **Límites:** el botón instala las revisiones que se publiquen efectivamente en el mismo sitio web; no escribe nuevas funcionalidades por sí mismo ni controla una tienda de aplicaciones. El aviso técnico sobre las simulaciones sigue disponible dentro de Acerca de y en los controles de seguridad, aunque ya no aparezca en el pie común.
 
 Tests de política: `tests/software-update-policy.test.mjs`. Build `PLEGADOX-20261115-R49`, versión `0.9.25`, caché `plegadox-static-0.9.25-about-updater-responsive-r49`.
+
+
+## R50 · Revisión de grabaciones iPhone 02:41 y 02:44 · icono premium, carga íntegra y tope (15-11-2026)
+
+**Evidencia visual aportada por el usuario:**
+- Captura del icono de PlegadoX en la pantalla de inicio de iPhone: símbolo sencillo anterior no aceptado.
+- `ScreenRecording_11-15-2026 02-41-29_1.mp4`: la imagen aprobada se mostraba tan ampliada que quedaban recortados el logotipo y el frontal de la plegadora. La barra de progreso se veía aparte.
+- `ScreenRecording_11-15-2026 02-44-41_1.mp4`: varios pliegues con tope trasero avisando interferencia y referencias de ala/contacto que no resultaban físicamente coherentes.
+
+**Corrección de splash:** `splash-foto-premium.html` deja de forzar `object-fit:cover`. Se reutiliza **una sola** instancia de la imagen elegida `plegadox-premium-selected.png` sin agrandarla ni estirarla. Se muestra la parte superior original completa (hasta aproximadamente el 76% de la altura de la imagen) dentro de un marco con proporción constante; el 24% inferior, que contiene un indicador de carga ya pintado en la fotografía, se excluye, y se construye **una sola** barra de progreso real en una zona separada. Se usa CSS `dvh` y adaptación vertical/horizontal sin segunda imagen de fondo ni superposición de la antigua chapa animada. Una imagen panorámica no puede simultáneamente ocupar una pantalla 9:19 completa y conservar todo su contenido sin franjas o remaquetación: en vertical se prioriza **no cortar** la imagen y se rellena el resto con fondo técnico, barra y copyright.
+
+**Icono de inicio:** `favicon.svg` rehace la marca con una P cromada, arco eléctrico azul y prensa/matriz V en un marco de acero. Se añaden iconos PNG originales industriales `icon-premium-180.png`, `icon-premium-192.png` e `icon-premium-512.png`, con URL nuevas, para Safari/iOS y manifest Android/PWA; `sw.js` precarga dichos archivos y el index ya apunta al nuevo `apple-touch-icon`. Un icono de pantalla de inicio ya instalado puede quedar congelado por iOS hasta borrar ese acceso y añadirlo de nuevo.
+
+**Tope trasero:**
+- La referencia automática ya no se limita a un ala corta interior; `gauge-contact-solver.js` contrasta los **dos extremos libres** de la pieza contra la cara frontal vertical del dedo y comprueba con el espesor nominal si la chapa invade el contorno **antes del pliegue**.
+- Si un usuario ha elegido manualmente lado/ala/punto, la selección manual no se cambia sin su intervención.
+- Se añade botón **«Corregir apoyo del tope · buscar cara frontal libre»**, que puede aplicar expresamente una opción automática con un extremo accesible, preservando ángulos, orden de plegado y elección de herramienta.
+- Si **no existe un apoyo inicial válido** en este cribado 2D, se mantiene el aviso y se **bloquea el retroceso como falsa solución**. La retirada condicional se calcula sólo **tras encontrar apoyo válido** y detectar interferencia posterior del dedo fijo con la chapa durante el plegado.
+- La fase temporal se llama «Sujeción», no «Sujeción · retroceso tope» si no es necesario. La referencia prevista para el golpe siguiente utiliza el mismo extremo libre del solucionador y no el antiguo segmento local, para evitar saltos visuales del tope.
+- Se mantienen diferenciadas las comprobaciones nominales 2D y la validación física 3D. **Sin CAD real de topes/amarres, origen X/R/Z, movimientos y geometrías de chapa, no se declara colisión certificada ni se controla CNC.**
+
+Pruebas añadidas en `tests/gauge-contact-solver.test.mjs`. Build `PLEGADOX-20261115-R50`, versión `0.9.26`, caché PWA `plegadox-static-0.9.26-gauge-contact-icon-splash-r50`. Revisar el vídeo original y las pruebas de interfaz tras instalar la versión y actualizar el acceso directo del iPhone.
