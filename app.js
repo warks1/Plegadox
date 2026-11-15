@@ -1762,7 +1762,20 @@ function renderSimulationText(){
  contactInput.max=String(ref.totalLength);
  $('activeGaugeDistanceHelp').textContent='Máximo '+numbers(ref.totalLength,1)+
   ' mm desde el pliegue · vacío = extremo del ala';
- const chosenGauge=gaugePlacement(technicalScene(piece,sim.time),gauge.value);
+ const currentGaugeScene=technicalScene(piece,sim.time);
+ const chosenGauge=gaugePlacement(currentGaugeScene,gauge.value);
+ // La retirada previa es una decisión por golpe basada en secciones 2D;
+ // NO equivale al traslado X/R del dedo al siguiente pliegue.
+ const plan=currentGaugeScene.gaugePlan;
+ const retractState=plan?.setupValid===false?'corregir-apoyo':
+  plan?.known!==true?'sin-datos':
+  plan.enabled?'retirar':'mantener';
+ const retractionNote={
+  'corregir-apoyo':' · ⚠ RETIRADA NO AUTORIZADA: corregir apoyo inicial',
+  'sin-datos':' · ⚠ RETIRADA SIN EVALUAR: faltan secciones 2D',
+  'retirar':' · retirada previa: SÍ, recomendación por interferencia 2D',
+  'mantener':' · retirada previa: NO prevista según sección 2D'
+ }[retractState];
  $('activeGaugeReference').textContent=ref.label+' · '+numbers(ref.distance,1)+
   ' mm sobre el ala elegida · '+(gauge.value===2?
     'chapa sobre primer escalón SUPPORT 2, contra su cara frontal':
@@ -1780,9 +1793,10 @@ function renderSimulationText(){
   (chosenGauge.gaugeInterference?.warning?
    ' · ⚠ POSIBLE INTERFERENCIA 2D DEL TOPE CON LA CHAPA: revisar apoyo y retirada':
    !chosenGauge.contactEngaged?' · sin contacto confirmado en esta fase':' · contacto nominal 2D')+
-  ' · sin ejes X/R/Z calibrados';
+  retractionNote+' · sin ejes X/R/Z calibrados';
  $('activeGaugeReference').dataset.interference=String(
   !!chosenGauge.gaugeInterference?.warning);
+ $('activeGaugeReference').dataset.retraction=retractState;
  for(const mode of ['auto','before','after']){
   const suffix=mode==='auto'?'Auto':mode==='before'?'Before':'After';
   const btn=$('chooseSide'+suffix),active=!ref.segmentManual&&gauge.reference.choice===mode;

@@ -33,13 +33,23 @@ try{
      const place=gaugePlacement(st,n);
      const label=document.querySelector('#activeGaugeReference');
      return {issue:place.gaugeInterference.warning,
-      green:place.alignedToSheet,
+      retraction:label.dataset.retraction,plan:st.gaugePlan,
+      statusText:label.textContent,green:place.alignedToSheet,
       warningShown:label.textContent.includes('POSIBLE INTERFERENCIA 2D'),
       dataset:label.dataset.interference,
       stop:place.stopNumber,phase:st.stage.phase,
       reference:place.nominalDistance};
     },n);
     assert.equal(check.stop,n);
+    const expected=check.plan.setupValid===false?'corregir-apoyo':
+     check.plan.known!==true?'sin-datos':
+     check.plan.enabled?'retirar':'mantener';
+    assert.equal(check.retraction,expected,
+     'El aviso debe coincidir con la decisión real del motor 2D');
+    assert.match(check.statusText,expected==='corregir-apoyo'?
+     /RETIRADA NO AUTORIZADA/:expected==='sin-datos'?
+     /RETIRADA SIN EVALUAR/:expected==='retirar'?
+     /retirada previa: SÍ/:/retirada previa: NO prevista/);
     assert.equal(check.warningShown,check.issue,
      'La UI debe reflejar el aviso del perfil del tope '+JSON.stringify(check));
     assert.equal(check.dataset,String(check.issue));
