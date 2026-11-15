@@ -202,7 +202,7 @@
 </details>
 <details class="card px-dxf-import" id="toolDxfPanel">
  <summary>Importar contorno de punzón o matriz desde DXF (mm)</summary>
- <p class="hint">DXF ASCII con un contorno cerrado: LWPOLYLINE (se admiten arcos bulge) o líneas LINE consecutivas, aunque estén desordenadas. Sin STEP, splines, bloques ni agujeros. El dibujo debe estar en perfil lateral, con base abajo (Y=0 al importar). No incorpora amarre ni verificación de seguridad.</p>
+ <p class="hint">DXF ASCII con un contorno cerrado: LWPOLYLINE (se admiten arcos bulge) o líneas LINE consecutivas, aunque estén desordenadas. Sin STEP, splines, bloques ni agujeros. El dibujo debe estar en perfil lateral, con base abajo (Y=0 al importar). Declara el sistema de amarre por separado; un DXF no demuestra por sí solo que el útil encaje ni que soporte la carga.</p>
  <section class="px-oem-cad-sources" aria-label="Fuentes oficiales CAD WILA y Promecam">
   <h3>DXF de fabricante · WILA / PROMECAM</h3>
   <p class="hint">Selecciona una referencia para preparar el formulario, descarga su DXF desde el fabricante y adjúntalo aquí. WILA puede exigir registro. Hasta importar el contorno sigue siendo una vista paramétrica, no CAD verificado.</p>
@@ -211,6 +211,13 @@
  <div class="px-dxf-grid">
   <label>Archivo DXF ASCII<input type="file" id="toolDxfFile" accept=".dxf,application/dxf" aria-label="Archivo de contorno de herramienta DXF"></label>
   <label>Tipo de herramienta<select id="toolDxfKind"><option value="punch">Punzón</option><option value="die">Matriz</option></select></label>
+  <label>Sistema de amarre / fijación<select id="toolDxfMount">
+    <option value="Desconocido">Sin identificar · comprobar en taller</option>
+    <option value="WILA">WILA (superior)</option>
+    <option value="Amada/Promecam">Amada / Promecam</option>
+    <option value="TRUMPF">TRUMPF</option>
+    <option value="Bystronic/Beyeler R">Bystronic / Beyeler R</option>
+   </select></label>
   <label>Referencia / nombre<input id="toolDxfName" maxlength="65" placeholder="Ref. del fabricante"></label>
   <label>Ángulo nominal (°)<input id="toolDxfAngle" type="number" min="15" max="120" step="1" value="88"></label>
   <label>Longitud de segmento (mm)<input id="toolDxfLength" type="number" min="10" max="6000" value="415"></label>
