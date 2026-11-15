@@ -17,6 +17,11 @@ test('R28: build, version y caché coherentes para actualización PWA',()=>{
  assert.ok(html.includes('PLEGADOX v'+info.version));
  assert.ok(html.includes("import('./'+path+'?build='+encodeURIComponent(BUILD))"));
  assert.ok(sw.includes("const CACHE='"+info.cache+"'"));
+ const updater=load('software-about.js');
+ assert.ok(updater.includes("const BUILD='"+info.build+"'"),
+  'La pantalla de actualización conserva un BUILD obsoleto');
+ assert.ok(updater.includes("const VERSION='"+info.version+"'"),
+  'La pantalla de actualización conserva una versión obsoleta');
  assert.ok(info.cache.includes(info.version));
  assert.ok(info.cache.includes(info.build.match(/R\d+$/)[0].toLowerCase()));
 });
