@@ -65,6 +65,28 @@ export function setupToolDxfImporter({add}){
     const direct=document.createElement('a');
     direct.href=tool.cadDownloadUrl;direct.target='_blank';direct.rel='noopener noreferrer';
     direct.textContent='Archivo DXF directo';actions.append(direct);
+    const tryImport=document.createElement('button');
+    tryImport.type='button';tryImport.textContent='Cargar DXF desde web';
+    tryImport.addEventListener('click',async()=>{
+     try{
+      preset.click();tryImport.disabled=true;
+      say('Consultando DXF del fabricante…');
+      const response=await fetch(tool.cadDownloadUrl,{mode:'cors',credentials:'omit'});
+      if(!response.ok)throw Error('HTTP '+response.status);
+      const advertised=Number(response.headers.get('content-length')||0);
+      if(advertised>1024*1024)throw Error('DXF superior a 1 MB');
+      const source=await response.text();
+      const model=parseToolDxf(source);
+      parsed=model;save.disabled=false;preview.hidden=false;
+      drawPreview(preview,model);
+      say('DXF del fabricante analizado: '+model.points.length+
+       ' vértices. Confirma la V activa, orientación, escala y fijación antes de guardar.');
+     }catch(error){
+      say('No se pudo cargar el DXF directamente: '+error.message+
+       '. Descárgalo desde la ficha y selecciona el archivo en el campo superior.',true);
+     }finally{tryImport.disabled=false;}
+    });
+    actions.append(tryImport);
    }
    card.append(title,details,actions);return card;
   });
