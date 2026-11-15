@@ -131,6 +131,44 @@ export function gaugePerspectiveContours(polygon,scale,perspective=false){
  return {near,far,depthX:perspective?23*scale:0,
   depthY:perspective?-13*scale:0};
 }
+/**
+ * Señala el extremo DELANTERO del Stop cuando apoya lateralmente una
+ * pestaña preplegada. Es una superposición técnica: la matriz puede
+ * ocultar parte del labio en perspectiva 2.5D, aunque el contacto
+ * físico se calcule sobre el mismo punto de la chapa.
+ * Jamás altera el tope, la referencia X/R ni el detector de choques.
+ */
+export function gaugeFrontNosePolygon(placement,dimensions){
+ const contour=gaugeContourAtContact(placement,dimensions);
+ if(contour.length!==6)return null;
+ // Perfil real del labio frontal del croquis editable: 0-4-5.
+ return [contour[0],
+  {x:contour[4].x,y:contour[0].y},
+  contour[4],contour[5]].map(p=>({...p}));
+}
+function drawHiddenGaugeNoseGuide(ctx,scene,cx,cy,scale,placement,perspective){
+ if(!perspective||!placement?.foldedWingContact||!placement.alignedToSheet)return;
+ const cfg=getActiveMachineConfig();
+ const values=placement.profile==='support'?cfg.support:cfg.stop;
+ const polyWorld=gaugeFrontNosePolygon(placement,values);
+ if(!polyWorld)return;
+ const polyScreen=polyWorld.map(p=>[cx+p.x*scale,cy-p.y*scale]);
+ const colors=GAUGE_COLORS[gaugeRiskStatus(placement).level];
+ ctx.save();
+ // Representación traslúcida del labio oculto por la extrusión de la
+ // matriz, no un sólido adicional ni una segunda posición del tope.
+ ctx.globalAlpha=.32;
+ poly(ctx,polyScreen,colors.fill,colors.edge,Math.max(1,scale*1.5));
+ ctx.globalAlpha=.95;
+ ctx.strokeStyle=colors.face;
+ ctx.lineWidth=Math.max(1.8,scale*2.2);
+ ctx.setLineDash([Math.max(3,scale*4),Math.max(2,scale*2)]);
+ ctx.beginPath();
+ ctx.moveTo(...polyScreen[3]);
+ ctx.lineTo(...polyScreen[2]);
+ ctx.stroke();
+ ctx.restore();
+}
 function rearMachine(ctx,w,h,cx,cy,scale,placement,perspective=false){
  ctx.save();
  // Horizontal steel rails across the background
@@ -350,6 +388,10 @@ function stageScene(ctx,w,h,piece,sim,machineView){
  const transformed=machineSheetProjection(scene,cx,baseY,scale,Boolean(machineView?.perspective));
  sheetDepth(ctx,transformed,{cx,cy:baseY,s:scale},t,Boolean(machineView?.perspective));
  drawSheet(ctx,transformed,t,scale,st.press>.4);
+ // Mostrar en 3D el labio real del STOP oculto por el relieve de la
+ // matriz, sólo si la pestaña YA plegada tiene apoyo lateral 2D válido.
+ drawHiddenGaugeNoseGuide(ctx,scene,cx,baseY,scale,placement,
+  Boolean(machineView?.perspective));
  // Punzón en primer plano: el cuerpo de la herramienta NUNCA debe
  // desaparecer detrás de la chapa o de la textura de la máquina.
  drawPunchForeground(ctx,scene,cx,baseY,scale,Boolean(machineView?.transparent));
