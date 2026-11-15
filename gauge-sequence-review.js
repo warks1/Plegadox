@@ -138,3 +138,16 @@ export function scanGaugeSequence(piece,{samplesPerOperation=18,inspect}={}){
   samplesPerOperation,verified:false,
   limitations:'Muestras discretas de sección 2D, incluidas transiciones del dedo; NO evalúa volumen, ejes reales, velocidad CNC, trayectoria continua ni distancias certificadas de seguridad.'};
 }
+
+/** Posición exacta a la que debe saltar la revisión al pulsar un aviso.
+ * Si el tope penetra DURANTE su traslado, mostrar ese instante y no
+ * un contacto estático más temprano de la misma operación.
+ */
+export function gaugeReviewTargetTime(operation){
+ if(!operation||!Number.isInteger(operation.operation)||operation.operation<0)
+  throw Error('Operación de tope no válida');
+ if(operation.movementInterference&&Number.isFinite(operation.movementFirstTime))
+  return operation.movementFirstTime;
+ if(Number.isFinite(operation.example?.time))return operation.example.time;
+ return operation.operation*5+.5;
+}

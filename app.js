@@ -21,6 +21,7 @@ import {migrateLegacyOmegaGauge} from './sample-gauge-migration.js';
 import {sectionPunch,sectionDie} from './tool-profiles.js';
 import {getActiveMachineConfig,updateV85} from './machine-config.js';
 import {gaugePlacement} from './backgauge-placement.js';
+import {gaugeReviewTargetTime} from './gauge-sequence-review.js';
 import {technicalScene} from './technical-section.js';
 import {recommendTooling} from './tooling-advisor.js';
 import {optimizeBendPlan,applyBendPlan} from './integrated-bend-planner.js';
@@ -889,7 +890,7 @@ function renderGaugeReview(scan){
   const warning=op.findings.length>0;
   button.dataset.warning=String(warning);
   button.dataset.operation=String(op.operation);
-  const to=op.example?.time??op.operation*5+.5;
+  const to=gaugeReviewTargetTime(op);
   button.dataset.time=String(to);
   const top=document.createElement('strong');
   top.textContent='G'+(op.operation+1)+' · P'+(op.bend+1)+' · '+
@@ -897,10 +898,14 @@ function renderGaugeReview(scan){
   const summary=document.createElement('small');
   // Diferenciar preparación del traslado: un apoyo nominal 2D puede
   // ser correcto y, aun así, atravesar la chapa durante la retirada.
+  const reviewFindings=op.movementInterference?
+   [...op.movementFindings,
+    ...op.findings.filter(f=>!op.movementFindings.some(m=>m.kind===f.kind))]:
+   op.findings;
   summary.textContent=warning?
    '⚠ '+(op.movementInterference?
     'INTERFERENCIA AL MOVER EL TOPE ('+op.movementWarnings+' muestras 2D) · ':'')+
-    op.findings.map(x=>x.reason).join(' · ')+
+    reviewFindings.map(x=>x.reason).join(' · ')+
     ' · muestra '+to.toFixed(2)+' s':
    'Sin interferencia detectada en '+op.samples+
     ' muestras 2D (NO verifica el tope real) · muestra '+to.toFixed(2)+' s';
