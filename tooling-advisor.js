@@ -39,7 +39,7 @@ function pairData(p,die,punch,minimumInterior,minimumFlange,requiresClearance){
  const activeMachine=getActiveMachineConfig();
  // Cabezal superior y portamatriz inferior son interfaces DISTINTAS.
  // No comparar mount de punzón y mount de matriz entre sí para Bystronic.
- const mount=activeMachine.profileId==='bystronic-2006-100-3100'?
+ const mount=['bystronic-2006-100-3100','bystronic-xpert-pro-100-3100'].includes(activeMachine.profileId)?
   checkMachineToolMounting(activeMachine,punch,die):
   selectionCompatibility(punch,die);
  if(mount.compatible===false)return null;
@@ -68,7 +68,7 @@ function pairData(p,die,punch,minimumInterior,minimumFlange,requiresClearance){
  if(requiresClearance)warnings.push('Alas cerradas o signos alternos: verificar cuello del punzón y colisiones 3D');
  if(mount.compatible!==true)warnings.push(mount.reason);
  if(die.mount||punch.mount)
-  warnings.push(activeMachine.profileId==='bystronic-2006-100-3100'?
+  warnings.push(['bystronic-2006-100-3100','bystronic-xpert-pro-100-3100'].includes(activeMachine.profileId)?
    'Verificar cabezal WILA, regleta adaptadora Promecam, asiento y altura montada antes de plegar':
    'Confirmar adaptación de los amarres a '+(activeMachine.name||'la plegadora activa'));
  if(!finitePositive(die.length)||!finitePositive(punch.length))
