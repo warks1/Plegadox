@@ -1,5 +1,5 @@
 // PlegadoX · caché offline estática. Se versiona para no arrastrar JS obsoleto.
-const CACHE='plegadox-static-0.9.24-custom-tool-icon-fullscreen-r48';
+const CACHE='plegadox-static-0.9.25-about-updater-responsive-r49';
 const APP_FILES=[
  "./",
  "./app.js",
@@ -45,6 +45,7 @@ const APP_FILES=[
  "./pwa.js",
  "./render-enhancements.js",
  "./responsive.js",
+ "./software-about.js",
  "./sequence-advisor.js",
  "./integrated-bend-planner.js",
  "./volume-engine.js",
