@@ -54,6 +54,9 @@ try{
   assert.equal(during.unverified,true);
   assert.equal(during.movement,'retirado-durante-plegado');
   assert.equal(during.setupValid,false,'No falsear el apoyo manual');
+  assert.match(await page.locator('#activeGaugeReference').textContent(),
+   /RETIRADA 2D REPRESENTADA.*APOYO INICIAL SIN VALIDACIÓN/,
+   'No anunciar una retirada segura al no estar validado el apoyo');
   const afterPixels=await screenshot.evaluate(c=>c.toDataURL());
   assert.notEqual(afterPixels,beforePixels,
    'La vista 3D debe mostrar desplazamiento durante el plegado');
