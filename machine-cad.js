@@ -16,10 +16,15 @@ export function machineConfigurationKey(cfg){
  if(!cfg||typeof cfg!=='object')throw Error('Configuración de máquina ausente');
  const data=JSON.stringify([cfg.ram,cfg.bed,cfg.stop,cfg.support,
   cfg.ramOrigin,cfg.holderOrigin,cfg.ramWidth,cfg.holderWidth,
-  cfg.toolWorkingDistance]);
+  cfg.toolWorkingDistance,
+  // La misma longitud de mesa NO convierte PR100, EP II y AFM EP
+  // en máquinas intercambiables; las fijaciones y el montaje mandan.
+  ...(cfg.profileId?[cfg.profileId,cfg.upperClampingSystem,cfg.lowerDieSystem,
+   cfg.daylightMeasured,cfg.upperAssemblyProjection,
+   cfg.lowerAdapterHeight,cfg.lowerDieProjection]:[])]);
  let hash=2166136261;
  for(let i=0;i<data.length;i++)hash=Math.imul(hash^data.charCodeAt(i),16777619)>>>0;
- return 'v85-'+hash.toString(16).padStart(8,'0');
+ return (cfg.profileId?'machine-':'v85-')+hash.toString(16).padStart(8,'0');
 }
 const MAX_WIDTH=4000,MAX_HEIGHT=4000;
 const finite=(n,min,max,label)=>{
