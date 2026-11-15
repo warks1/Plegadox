@@ -122,9 +122,13 @@ export function gaugePerspectiveContours(polygon,scale,perspective=false){
  if(!Array.isArray(polygon)||polygon.some(p=>!Array.isArray(p)||p.length!==2||
   !p.every(Number.isFinite))||!Number.isFinite(scale)||scale<=0)
   throw Error('Contorno del tope inválido para perspectiva');
- const near=perspective?polygon.map(([x,y])=>[x-23*scale,y+13*scale]):
+ // La chapa se dibuja sobre su sección métrica y el volumen se
+ // proyecta HACIA ATRÁS (+X/-Y). La cara frontal del dedo debe
+ // compartir EXACTAMENTE ese plano, sin desplazar su contacto.
+ const near=polygon.map(p=>[...p]);
+ const far=perspective?polygon.map(([x,y])=>[x+23*scale,y-13*scale]):
   polygon.map(p=>[...p]);
- return {near,far:polygon.map(p=>[...p]),depthX:perspective?23*scale:0,
+ return {near,far,depthX:perspective?23*scale:0,
   depthY:perspective?-13*scale:0};
 }
 function rearMachine(ctx,w,h,cx,cy,scale,placement,perspective=false){
@@ -168,21 +172,20 @@ function rearMachine(ctx,w,h,cx,cy,scale,placement,perspective=false){
    red:[[0,'#ffb8a4'],[.28,'#e56a58'],[.76,'#8c382c'],[1,'#4b2528']]
   };
   if(perspective){
-   // Caras del dedo en el MISMO plano visual que la chapa extruida.
-   // El contorno físico de referencia sigue siendo gg, sin traslaciones.
-   for(let i=0;i<gg.length;i++){
-    const j=(i+1)%gg.length;
-    poly(ctx,[gg[i],gg[j],front[j],front[i]],
+   // Extrusión al fondo; el contorno delantero NO se mueve. Antes
+   // se desplazaba la cara de apoyo respecto de la chapa.
+   for(let i=0;i<front.length;i++){
+    const j=(i+1)%front.length;
+    poly(ctx,[front[i],front[j],projection.far[j],projection.far[i]],
      colors.fill,colors.edge,Math.max(.6,.75*scale));
    }
   }
-  poly(ctx,front,gradient(ctx,ox-projection.depthX,oy,rodEnd,oy,
+  poly(ctx,front,gradient(ctx,ox,oy,rodEnd,oy,
    gradients[risk.level]),colors.edge,Math.max(1.2,1.9*scale));
  // Resaltar la cara real del dedo: STOP frontal o escalón SUPPORT.
  // Un vértice interior de la chapa no constituye un apoyo fiable.
  const contact=placement.contact;
- const screen=pt=>[cx+pt.x*scale-projection.depthX,
-  cy-pt.y*scale-projection.depthY];
+ const screen=pt=>[cx+pt.x*scale,cy-pt.y*scale];
  if(contact){
   const a=screen(contact.from),b=screen(contact.to);
   ctx.save();ctx.lineWidth=Math.max(3,3.6*scale);
