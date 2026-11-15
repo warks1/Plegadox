@@ -1,29 +1,45 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="PlegadoX · icono industrial">
- <defs>
-  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#233f58"/><stop offset=".35" stop-color="#081927"/><stop offset="1" stop-color="#02070f"/></linearGradient>
-  <linearGradient id="steel" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#f4faff"/><stop offset=".22" stop-color="#8c9cad"/><stop offset=".43" stop-color="#d7e2ef"/><stop offset=".7" stop-color="#40576e"/><stop offset="1" stop-color="#c8d6e6"/></linearGradient>
-  <linearGradient id="cyan" x1="0" x2="1" y1="0" y2="0"><stop stop-color="#116aaf"/><stop offset=".5" stop-color="#52e6ff"/><stop offset="1" stop-color="#00a2e6"/></linearGradient>
-  <linearGradient id="tool" x1=".1" x2=".9" y1="0" y2="1"><stop stop-color="#dcefff"/><stop offset=".5" stop-color="#5a7188"/><stop offset="1" stop-color="#c5e4ff"/></linearGradient>
- </defs>
- <rect width="512" height="512" rx="102" fill="url(#bg)"/>
- <rect x="22" y="22" width="468" height="468" rx="81" fill="none" stroke="#2d5875" stroke-width="5"/>
- <path d="M73 81H439" stroke="#15c5fc" stroke-width="7" stroke-linecap="round" opacity=".9"/>
- <path d="M78 94H434" stroke="#bddff5" stroke-width="2" opacity=".5"/>
- <!-- Light industrial upper beam and machine columns -->
- <rect x="99" y="123" width="314" height="51" rx="8" fill="url(#steel)" stroke="#b5d6ea" stroke-width="3"/>
- <rect x="102" y="172" width="25" height="150" rx="5" fill="#57728b"/>
- <rect x="385" y="172" width="25" height="150" rx="5" fill="#57728b"/>
- <rect x="133" y="174" width="246" height="19" rx="3" fill="#263d54" stroke="#6f9cb8" stroke-width="3"/>
- <!-- Punch descending towards V -->
- <path d="M196 193H316L301 244L256 307L211 244Z" fill="url(#tool)" stroke="#caedfc" stroke-width="3"/>
- <path d="M249 211V274" stroke="#9eb7ca" stroke-width="3" opacity=".7"/>
- <!-- Bent sheet, bright cyan with central V -->
- <path d="M116 284L256 360L396 284" fill="none" stroke="#09517f" stroke-width="26" stroke-linejoin="round"/>
- <path d="M116 277L256 353L396 277" fill="none" stroke="url(#cyan)" stroke-width="13" stroke-linejoin="round" stroke-linecap="round"/>
- <path d="M118 272L256 346L392 272" fill="none" stroke="#dcfdff" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
- <!-- Lower die, industrial base -->
- <path d="M133 353L184 353L256 416L328 353L379 353V422H133Z" fill="#405e76" stroke="#96c5df" stroke-width="3"/>
- <path d="M184 353L256 416L328 353" fill="none" stroke="#071927" stroke-width="14" stroke-linejoin="round"/>
- <path d="M138 428H374" stroke="#13b9e9" stroke-width="6" stroke-linecap="round"/>
- <path d="M139 450H373" stroke="#526c83" stroke-width="3" opacity=".65"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="PlegadoX Industrial Premium">
+<defs>
+ <linearGradient id="dark" x1=".05" y1="0" x2=".95" y2="1"><stop stop-color="#102e47"/><stop offset=".3" stop-color="#020914"/><stop offset=".78" stop-color="#081a29"/><stop offset="1" stop-color="#06101a"/></linearGradient>
+ <linearGradient id="rim" x1="0" y1="0" x2=".85" y2="1"><stop stop-color="#d7f4ff"/><stop offset=".15" stop-color="#3c8cb9"/><stop offset=".38" stop-color="#1c3652"/><stop offset=".67" stop-color="#77bdde"/><stop offset=".84" stop-color="#18324f"/><stop offset="1" stop-color="#91e6ff"/></linearGradient>
+ <linearGradient id="metal" x1=".06" y1=".15" x2=".85" y2=".98"><stop stop-color="#f6ffff"/><stop offset=".1" stop-color="#b4d4eb"/><stop offset=".21" stop-color="#566e87"/><stop offset=".29" stop-color="#e2eef9"/><stop offset=".43" stop-color="#8da5bb"/><stop offset=".55" stop-color="#ecf6ff"/><stop offset=".73" stop-color="#5d7893"/><stop offset="1" stop-color="#203d58"/></linearGradient>
+ <linearGradient id="punch" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e6f5ff"/><stop offset=".28" stop-color="#526f88"/><stop offset=".48" stop-color="#b6d6e8"/><stop offset=".7" stop-color="#30536f"/><stop offset="1" stop-color="#e3f8ff"/></linearGradient>
+ <linearGradient id="v" x1=".2" y1="0" x2=".8" y2="1"><stop stop-color="#3fe3ff"/><stop offset=".48" stop-color="#117ae1"/><stop offset=".72" stop-color="#89faff"/><stop offset="1" stop-color="#0094d9"/></linearGradient>
+ <radialGradient id="blueHalo"><stop stop-color="#10bdff" stop-opacity=".9"/><stop offset=".45" stop-color="#05568b" stop-opacity=".35"/><stop offset="1" stop-color="#024475" stop-opacity="0"/></radialGradient>
+ <linearGradient id="dark3d" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#243d54"/><stop offset=".48" stop-color="#0b1b2e"/><stop offset="1" stop-color="#06111d"/></linearGradient>
+ <filter id="glow" x="-50%" y="-70%" width="200%" height="240%"><feGaussianBlur stdDeviation="8"/></filter>
+ <filter id="shadow" x="-30%" y="-30%" width="170%" height="180%"><feGaussianBlur stdDeviation="12"/></filter>
+ <pattern id="carbon" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(-30)"><rect width="16" height="16" fill="none"/><path d="M0 0L16 0M0 8L16 8" stroke="#90d6ff" stroke-opacity=".06" stroke-width="2"/></pattern>
+</defs>
+<!-- Molded industrial enclosure with beveled metallic rim -->
+<rect x="9" y="9" width="494" height="494" rx="116" fill="#030c17"/>
+<rect x="18" y="18" width="476" height="476" rx="109" fill="url(#rim)"/>
+<rect x="26" y="26" width="460" height="460" rx="103" fill="url(#dark)"/>
+<rect x="28" y="28" width="456" height="456" rx="100" fill="url(#carbon)"/>
+<rect x="31" y="31" width="450" height="450" rx="99" fill="none" stroke="#82d9ff" stroke-opacity=".44" stroke-width="2"/>
+<path d="M75 76Q256 29 437 76" stroke="#9beaff" stroke-opacity=".53" stroke-width="7" fill="none"/>
+<path d="M58 384Q256 466 453 384" stroke="#0a8cd6" stroke-opacity=".5" stroke-width="6" fill="none"/>
+<!-- Diagonal electric arc and illuminated punch geometry -->
+<ellipse cx="265" cy="315" rx="209" ry="146" fill="url(#blueHalo)" opacity=".55"/>
+<path d="M93 342Q250 406 424 294" fill="none" stroke="#16bdf7" stroke-opacity=".52" stroke-width="16" filter="url(#glow)"/>
+<path d="M75 340L166 328L258 387L350 328L437 339" stroke="#041a32" stroke-width="30" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M75 334L166 320L258 378L350 320L437 333" stroke="#23ddff" stroke-width="15" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M76 327L166 313L258 371L350 313L436 326" stroke="#b0faff" stroke-width="3" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<!-- Oversized chrome P signature with engraved recess -->
+<path d="M124 123H292Q390 123 391 206Q388 294 296 297H230L211 335H125L209 191H288Q313 191 313 209Q313 231 286 231H254L240 255H292Q358 255 358 205Q358 152 289 152H158Z" fill="#010a15" stroke="#06253e" stroke-width="16" transform="translate(8,9)" opacity=".75" filter="url(#shadow)"/>
+<path d="M124 123H292Q390 123 391 206Q388 294 296 297H230L211 335H125L209 191H288Q313 191 313 209Q313 231 286 231H254L240 255H292Q358 255 358 205Q358 152 289 152H158Z" fill="url(#metal)" stroke="#d6f4ff" stroke-width="4" stroke-linejoin="round"/>
+<path d="M149 135H291Q370 135 377 199" fill="none" stroke="#fff" stroke-opacity=".65" stroke-width="3" stroke-linecap="round"/>
+<path d="M134 323L214 184H290" fill="none" stroke="#051e36" stroke-opacity=".55" stroke-width="7" stroke-linecap="round"/>
+<!-- Wraparound blue premium swoosh -->
+<path d="M73 223Q154 78 300 88Q417 88 426 175Q431 215 397 246" fill="none" stroke="#005cbe" stroke-width="18" stroke-linecap="round" filter="url(#glow)" opacity=".95"/>
+<path d="M73 223Q154 78 300 88Q417 88 426 175Q431 215 397 246" fill="none" stroke="url(#v)" stroke-width="9" stroke-linecap="round"/>
+<path d="M75 218Q178 77 314 96" fill="none" stroke="#bbfaff" stroke-width="2.5" stroke-linecap="round" opacity=".8"/>
+<!-- V-die under bend -->
+<path d="M143 391H205L259 438L314 391H376V458H143Z" fill="url(#punch)" stroke="#9ccce3" stroke-width="3"/>
+<path d="M205 390L259 438L314 390" fill="none" stroke="#031525" stroke-width="19" stroke-linecap="square" stroke-linejoin="miter"/>
+<path d="M149 458H370" stroke="#1ec3ff" stroke-width="5" stroke-linecap="round"/>
+<path d="M142 468H377" stroke="#567c98" stroke-opacity=".8" stroke-width="2"/>
+<!-- Steel screws and specular reflections -->
+<g fill="#061b2b" stroke="#6d91a8" stroke-width="3"><circle cx="77" cy="88" r="7"/><circle cx="435" cy="88" r="7"/><circle cx="78" cy="428" r="7"/><circle cx="434" cy="428" r="7"/></g>
+<g stroke="#5dcfff" stroke-width="2" stroke-linecap="round" opacity=".6"><path d="M74 88H80"/><path d="M432 88H438"/><path d="M75 428H81"/><path d="M431 428H437"/></g>
 </svg>
