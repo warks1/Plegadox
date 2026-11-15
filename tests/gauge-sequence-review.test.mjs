@@ -110,3 +110,19 @@ test('muestra la retirada con mayor densidad para detectar movimientos breves',(
   'La última muestra no debe atribuirse al golpe siguiente');
  assert.equal(result.withdrawalObserved,true);
 });
+
+test('un apoyo inicial inválido se muestra aunque no exista penetración 2D',()=>{
+ const inspect=(p,time)=>({
+  scene:{stage:{phase:'Posicionamiento',activeOperation:0,activeBend:0},
+   gaugeTransition:null},
+  place:{stopNumber:1,setupValid:false,
+   setupReason:'Canto sin cara frontal accesible',
+   freeEdge:true,sheetInFront:true,seat:{seated:true},
+   contactEngaged:false,gaugeInterference:{warning:false}}
+ });
+ const r=inspectGaugeOperation(EXAMPLE,0,{samples:8,inspect});
+ assert.ok(r.findings.some(f=>f.kind==='apoyo-invalido'));
+ assert.match(r.findings[0].reason,/Canto sin cara frontal accesible/);
+ assert.equal(r.contactObserved,false);
+ assert.equal(r.verified,false);
+});
