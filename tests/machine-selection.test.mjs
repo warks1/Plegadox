@@ -31,7 +31,8 @@ test('la máquina de la foto de 2006 usa referencia AFM EP provisional, no cotas
  selectMachine('bystronic-2006-100-3100');
  const cfg=getActiveMachineConfig();
  const profile=getActiveMachineProfile();
- assert.equal(profile.year,2006);
+ assert.equal(profile.year,null);
+ assert.deepEqual(profile.productionPeriod,{start:2006,end:2009});
  assert.equal(profile.tonnage,100);
  assert.equal(cfg.bendingLength,3100);
  assert.equal(cfg.stroke,200);
