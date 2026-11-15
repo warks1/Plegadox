@@ -10,8 +10,9 @@ import {normalized,stage,presentedAtStage,presentedForMachine,gaugeReference,gau
 import {sectionPunch,sectionDie,sectionBounds} from './tool-profiles.js';
 import {contactKinematics,roundedCorner} from './bend-contact.js';
 import {gaugePlacement,gaugeContourAtContact} from './backgauge-placement.js';
-import {getActiveMachineConfig,gaugeOutline} from './machine-config.js';
-import {gaugeRetractionPath} from './gauge-retract-motion.js';
+import {getActiveMachineConfig,gaugeOutline,gaugeContactFeature} from './machine-config.js';
+import {gaugeRetractionPath,planGaugeRetraction} from './gauge-retract-motion.js';
+import {inspectGaugeProfile} from './gauge-interference.js';
 
 const mm=v=>Number.isFinite(+v)?+v:0;
 const mPoint=(x,y)=>({x:mm(x),y:mm(y)});
@@ -107,19 +108,43 @@ export function technicalScene(piece,instant=0){
   x:(feedMirror?-1:1)*fixedGaugePoint.x,
   y:fixedGaugePoint.y+p.thickness/2
  };
- // Un tope físico se retira después de sujetar y ANTES de deformar el ala.
- // Para la vista se calcula un aparcamiento ilustrativo fuera de la proyección
- // de la chapa durante el golpe, nunca desde un valor X CNC inventado.
+ // El tope permanece apoyado hasta sujetar. Sólo se retira si un
+ // barrido 2D prevé interferencia durante el plegado, no en todos los golpes.
  const stopNumber=p.stopByBend[st.activeBend]===2?2:1;
  const machine=getActiveMachineConfig();
  const finger=stopNumber===2?machine.support:machine.stop;
- const fingerReach=Math.max(0,...gaugeOutline(finger,stopNumber).map(q=>q.x));
- const samples=[.35,.40,.44,.50,.56,.62,.68,.74,.80,.83];
- const maxSheetX=Math.max(gaugeAnchor.x,...samples.flatMap(relative=>{
+ const feature=gaugeContactFeature(finger,stopNumber);
+ const fingerShape=gaugeOutline(finger,stopNumber);
+ const fingerReach=Math.max(0,...fingerShape.map(q=>q.x));
+ const anchorOrigin={x:gaugeAnchor.x-feature.point.x,y:gaugeAnchor.y-feature.point.y};
+ const fixedFingerPolygon=fingerShape.map(q=>({
+  x:q.x+anchorOrigin.x,y:q.y+anchorOrigin.y
+ }));
+ const fractionsForBend=[.44,.48,.52,.56,.60,.64,.68,.72,.76,.8,.83];
+ const nominalRadius=development(p).radius;
+ const sheetSamples=fractionsForBend.map(relative=>{
   const next=stage(p,st.activeOperation*5+5*relative);
   const projected=presentedAtStage(p,next);
-  return projected.points.map(q=>(feedMirror?-1:1)*q.x);
- }));
+  const points=projected.points.map(pt=>({...pt,x:(feedMirror?-1:1)*pt.x}));
+  const modeled=contactKinematics({
+   points,activeBend:st.activeBend,
+   angle:p.angles[st.activeBend]*next.fractions[st.activeBend],
+   opening:die.opening,dieDepth:die.depth,thickness:t,
+   phase:next.phase,press:next.press,insideRadius:nominalRadius,
+   feedMirrored:feedMirror,
+   repositionProgress:projected.repositioning?projected.progress:1,
+   presentationLift:projected.clearanceLift??0
+  });
+  return {at:relative,sheet:modeled.sheet};
+ });
+ const gaugePlan=planGaugeRetraction({
+  sheetSamples,polygon:fixedFingerPolygon,thickness:t,contact:gaugeAnchor,
+  geometryDocumented:machine.gaugeGeometryDocumented!==false,
+  inspect:(sample,polygon,thickness,contact)=>
+   inspectGaugeProfile(sample.sheet,polygon,thickness,contact)
+ });
+ const maxSheetX=Math.max(gaugeAnchor.x,...sheetSamples.flatMap(
+  sample=>sample.sheet.map(q=>q.x)));
  let target=null;
  if(st.activeOperation<p.order.length-1){
   const nextReference=gaugeReference(p,nextBend);
@@ -130,12 +155,9 @@ export function technicalScene(piece,instant=0){
    y:nextPoint.y+p.thickness/2};
  }
  const sub=st.completed?1:(st.time/5)%1;
- // Retroceso visible .36→.44, plegado real solo después de .44.
- // El dedo permanece aparcado hasta reorientar y se recoloca antes
- // de presentar la siguiente pieza; no existe teletransporte X/R.
  const gaugeTransition=gaugeRetractionPath({
   anchor:gaugeAnchor,target,maxSheetX,fingerReach,
-  opening:die.opening,sub
+  opening:die.opening,sub,enabled:gaugePlan.enabled
  });
  const kinematics=contactKinematics({
   points:presentation.points,activeBend:st.activeBend,
@@ -166,10 +188,10 @@ export function technicalScene(piece,instant=0){
  // Include the selected punch, the V and all sheet wings in view bounds.
  const world=technicalWorldBounds({
   piece:p,stage:st,sheet,sheetDisplay,diePolygon,punchPolygon,die,
-  gaugeReference:reference,gaugeAnchor,gaugeTransition,feedMirrored:feedMirror
+  gaugeReference:reference,gaugeAnchor,gaugeTransition,gaugePlan,feedMirrored:feedMirror
  });
  return {piece:p,stage:st,presentation,sheet,sheetDisplay,kinematics,diePolygon,punchPolygon,die,punch,
-         gaugeReference:reference,gaugeAnchor,gaugeTransition,feedMirrored:feedMirror,
+         gaugeReference:reference,gaugeAnchor,gaugeTransition,gaugePlan,feedMirrored:feedMirror,
          dimensions:{opening:die.opening,dieAngle:die.angle,depth:die.depth,
            punchAngle:punch.angle,punchHeight:punch.height,
            punchTipDiameter:tooling.punch.tip,thickness:t,engagement},
