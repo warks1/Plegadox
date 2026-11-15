@@ -1,7 +1,7 @@
 {
-  "build": "PLEGADOX-20261115-R57",
-  "version": "0.9.33",
+  "build": "PLEGADOX-20261115-R58",
+  "version": "0.9.34",
   "machine": "bystronic-2006-2009-wila-promecam-gauge-conditional",
-  "ui": "consistent-2d-gauge-cad-warning-premium-pwa-icons-safe-update",
-  "cache": "plegadox-static-0.9.33-cad-status-icon-update-r57"
+  "ui": "gauge-setup-diagnostics-and-parallel-browser-ci",
+  "cache": "plegadox-static-0.9.34-gauge-diagnostics-browser-shards-r58"
 }
