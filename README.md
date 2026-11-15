@@ -1224,3 +1224,15 @@ Revisión publicada en código: `PLEGADOX-20261115-R40` / `0.9.16` (caché indep
 **Datos confirmados por el propietario:** fabricante Bystronic, año 2006, capacidad nominal 100 toneladas, longitud nominal de plegado 3100 mm. Estos datos NO establecen el modelo exacto; siguen como opciones comparativas PR100/3100 y EP II 31-100, ambas documentadas en unidades usadas del mismo año, pero no se asignan sus distancias entre montantes, carreras de trancha, amarres ni geometrías a la máquina del propietario por coincidencia de año.
 
 Se añade el perfil seleccionable `bystronic-2006-100-3100` en el panel Programa y Máquina. Comparte exclusivamente los tres datos confirmados; los demás valores siguen en `null` o se identifican como croquis sin CAD, y el diagnóstico NO debe presentar seguridad verificada. Si se consigue el modelo de placa/serie y las fotos de los amarres, se podrá afinar el perfil sin alterar las piezas guardadas.
+
+
+## R44 · Medidas atribuidas por petición expresa a la Bystronic de 2006
+
+Para el perfil «Bystronic 2006 · 100 toneladas · 3100 mm», se incorporan **como referencia de trabajo** las cotas oficiales del modelo Bystronic Beyeler PR100/3100: fuerza 1000 kN, plegado 3100 mm, distancia entre montantes 2750 mm, escote 400 mm, apertura 500 mm, carrera de trancha 215 mm, campo de tope 1040 mm, recorrido X 590 mm, recorrido R 250 mm, dimensiones externas 4100 × 2050 × 2600 mm, masa nominal 9 t, potencia principal 7,5 kW y depósito hidráulico 205 l. Se muestran en el panel «Máquina», exportación JSON y configuración efectiva para fuerza y longitud de plegado.
+
+Fuente primaria: «Dati tecnici PR Beyeler», edición 0503, tabla PR100/3100, páginas 1 y 2:
+https://www.politesi.polimi.it/bitstream/10589/7642/4/Data%20Sheet_Beyeler%20PR150_Bystronic.pdf
+
+Evidencia adicional de existencia del modelo en el mismo año: anuncio usado «2006 Bystronic PR100-3100», https://activemachinery.com/equipment/7849674-bystronic-pr100-3100-brakes-press ; **el anuncio no demuestra que sea la misma unidad**.
+
+**Alcance de la atribución:** estos datos son válidos como referencia de la familia PR100/3100; no prueban que la unidad concreta del propietario sea una PR100 ni su equipamiento exacto. Mantener `tableHeight:null`, cotas CAD de trancha, fijación/agarres, portamatriz, mesa y geometría del dedo como no documentadas, para no validar falsamente una colisión o un recorrido CNC. Si la placa confirma EP II, cambiar a ese perfil (montantes 2550 mm, carrera 200 mm). Las piezas guardadas y las cotas de la Trumpf se conservan sin alteración.
