@@ -48,7 +48,11 @@ export function gaugeRetractionPath({anchor,target=null,maxSheetX,fingerReach=0,
   (GAUGE_REPOSITION_FINISH-GAUGE_REPOSITION_START));
  return {phase:'regreso-a-siguiente-referencia',
   point:{x:lerp(park.x,target.x,k),y:lerp(park.y,target.y,k)},
-  from:park,to:target,parkPoint:park,progress:k,moving:k>0&&k<1,
+  // "from" identifica SIEMPRE la cota original del dedo, no el punto
+  // temporal de aparcamiento. Es una referencia X/R invariable durante
+  // el giro de la chapa; el inicio de este TRAMO es movementStart.
+  from:anchor,to:target,movementStart:park,
+  parkPoint:park,progress:k,moving:k>0&&k<1,
   withdrawn:k<1,plannedRetraction:park.x-anchor.x,verified:false};
 }
 
