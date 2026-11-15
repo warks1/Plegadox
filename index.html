@@ -300,14 +300,15 @@ const finishSplash=async()=>{
  SPLASH?.classList.add('is-complete');
  setTimeout(()=>{if(SPLASH)SPLASH.hidden=true;},420);
 };
-const serverBuild=async()=>{
+const serverBuildId=async()=>{
  try{
   const r=await fetch(new URL('build-info.json?check='+encodeURIComponent(BUILD),BASE),{
    cache:'no-store'
   });
-  return r.ok&&(await r.json()).build===BUILD;
- }catch{return false;}
+  return r.ok?String((await r.json()).build||''):null;
+ }catch{return null;}
 };
+const serverBuild=async()=>await serverBuildId()===BUILD;
 const clearOldCode=async()=>{
  if(!('caches' in window))return;
  const names=await caches.keys();
@@ -339,7 +340,7 @@ try{
   if(!navigator.onLine){show('Sin conexión · no se puede actualizar');return;}
   refresh.disabled=true;
   show('Comprobando versión…');
-  if(!await serverBuild()){
+  if(!await serverBuildId()){
    show('No se pudo comprobar el servidor');
    refresh.disabled=false;
    return;
