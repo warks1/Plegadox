@@ -15,7 +15,7 @@ function lowerPromecam(tool){
  const f=family(tool);
  if(!f)return null;
  if(/PROMECAM|AMADA/.test(f))return true;
- if(/TRUMPF|BYSTRONIC|BEYELER|ROLLERI R2/.test(f))return false;
+ if(/WILA|TRUMPF|BYSTRONIC|BEYELER|ROLLERI R2/.test(f))return false;
  return null;
 }
 export function checkMachineToolMounting(machine,punch,die){
