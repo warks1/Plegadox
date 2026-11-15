@@ -86,8 +86,8 @@ export function getActiveMachineConfig(){
  if(profile.id==='trumpf-v85')return getV85();
  const preview=[40,65,8,18,0,0]; // CROQUIS NO ACOTADO, NO dato Bystronic.
  let fit=null;
- if(profile.id==='bystronic-2006-100-3100'){
-  try{fit=readBystronicFit();}catch{fit=normalizeBystronicFit();}
+ if(['bystronic-2006-100-3100','bystronic-xpert-pro-100-3100'].includes(profile.id)){
+  try{fit=readBystronicFit(undefined,profile.id);}catch{fit=normalizeBystronicFit();}
  }
  return {
   name:profile.manufacturer+' '+profile.model,
@@ -101,6 +101,7 @@ export function getActiveMachineConfig(){
   stopOx:0,stopOz:0,supportOx:0,supportOz:0,
   preferredDistance:80,toolWorkingDistance:0,
   betweenUprights:profile.betweenUprights,throat:profile.throat,
+  tableWidth:profile.tableWidth??null,
   openHeight:fit?.daylightMeasured??profile.openHeight,
   openHeightProvenance:fit?.daylightMeasured!=null?'medicion-declarada-operador':'sin-medir',
   daylightReference:profile.daylightReference??null,
@@ -115,6 +116,7 @@ export function getActiveMachineConfig(){
   stroke:profile.stroke,tableHeight:profile.tableHeight,
   outer:profile.outer,clamping:profile.clamping,
   xRange:profile.xRange??null,xTravel:profile.xTravel??null,rTravel:profile.rTravel??null,
+  zTravel:profile.zTravel??null,
   xSpeed:profile.xSpeed??null,rSpeed:profile.rSpeed??null,zSpeed:profile.zSpeed??null,
   ramApproachSpeed:profile.ramApproachSpeed??null,ramReturnSpeed:profile.ramReturnSpeed??null,
   nominalMotorPower:profile.nominalMotorPower??null,
