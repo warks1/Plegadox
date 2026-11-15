@@ -354,6 +354,7 @@ export function drawTechnicalSection(ctx,w,h,piece,sim,view={}){
  const gp=gaugeContourAtContact(place,dimensions).map(map);
  ctx.save();ctx.lineWidth=1.8;
  const risk=gaugeRiskStatus(place),colors=GAUGE_COLORS[risk.level];
+ const stopBadgeColor={green:'#176445db',amber:'#735620dd',red:'#852f2edd'}[risk.level];
   // La documentación CAD pendiente no equivale a una colisión 2D.
   polygon(ctx,gp,colors.fill,colors.edge,1.8);
  // La sección técnica usa la misma CARA STOP / ESCALÓN SUPPORT
@@ -410,12 +411,12 @@ export function drawTechnicalSection(ctx,w,h,piece,sim,view={}){
   badge('P '+d.punchAngle+'°',9,17,'#315878de');
   badge('V'+d.opening+'/'+d.dieAngle+'°',9,39,'#1a5a69db');
   badge('e '+d.thickness+' mm',9,61,'#7c531cdb');
-  badge('TOPE '+stopNumber,9,83,'#176445db');
+  badge('TOPE '+stopNumber,9,83,stopBadgeColor);
  }else{
   badge('PUNZÓN '+d.punchAngle+'°',9,22,'#315878de');
   badge('MATRIZ V'+d.opening+' / '+d.dieAngle+'°',9,49,'#1a5a69db');
   badge('CHAPA '+d.thickness+' mm',9,76,'#7c531cdb');
-  badge('TOPE '+stopNumber+' · REFERENCIA',9,103,'#176445db');
+  badge('TOPE '+stopNumber+' · REFERENCIA',9,103,stopBadgeColor);
  }
  drawLabel(ctx,st.phase+' · pliegue '+(st.activeBend+1),w-11,18,'#d6eefb',11,'right');
  // En móvil se reserva una banda inferior para los mandos táctiles:
