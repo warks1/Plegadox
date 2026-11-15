@@ -105,6 +105,10 @@ export function gaugePlacement(scene,stopNumber=1){
   const contour=gaugeContourAtContact(placement,dimensions);
   const result=inspectGaugeProfile(scene?.sheetDisplay||scene?.sheet,contour,
    thickness,placement.point);
+  if(getActiveMachineConfig().gaugeGeometryDocumented===false)
+   return {...placement,alignedToSheet:false,contactEngaged:false,
+    geometryUnavailable:true,gaugeInterference:result,
+    state:'⚠ TOPE SIN PERFIL CAD BYSTRONIC: croquis provisional; verificar dedo, R/X/Z y amarre',verified:false};
   if(!result.warning)return {...placement,gaugeInterference:result,
    verified:false};
   return {...placement,alignedToSheet:false,contactEngaged:false,
