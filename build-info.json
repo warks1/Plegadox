@@ -1,6 +1,6 @@
 {
-  "build": "PLEGADOX-20261115-R43",
-  "version": "0.9.19",
-  "gauge": "bystronic-2006-owner-confirmed-r43",
-  "cache": "plegadox-static-0.9.19-owner-machine-r43"
+  "build": "PLEGADOX-20261115-R44",
+  "version": "0.9.20",
+  "gauge": "bystronic-pr100-reference-dimensions-r44",
+  "cache": "plegadox-static-0.9.20-bystronic-pr100-r44"
 }
