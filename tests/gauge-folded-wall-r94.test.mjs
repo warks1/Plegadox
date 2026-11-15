@@ -49,3 +49,36 @@ test('R94: no clasificar un vértice NO plegado como apoyo lateral',()=>{
  assert.equal(foldedStopFaceCandidate(positions,ref,{fractions:[0,0]},feature,2,true),null);
  assert.equal(foldedStopFaceCandidate(positions,ref,{fractions:[1,0]},feature,2,false),null);
 });
+
+test('R94: auditar los cuatro golpes con referencias manuales del vídeo sin inventar apoyo',()=>{
+ selectMachine('trumpf-v85');
+ const p=normalized({...EXAMPLE,flanges:[50,30,50,30,20],
+  punch:'goose',die:'v16',
+  gaugeSideByBend:['auto','before','before','auto']});
+ const snapshot=JSON.stringify(p),report=[];
+ for(let operation=0;operation<4;operation++){
+  const scene=technicalScene(p,5*(operation+.25));
+  const place=gaugePlacement(scene,1);
+  const bend=scene.stage.activeBend;
+  report.push({G:operation+1,P:bend+1,
+   side:scene.gaugeReference.side,ref:scene.gaugeReference.distance,
+   manual:scene.gaugeSetup.manual,
+   foldedWall:scene.gaugeSetup.foldedWingContact===true,
+   support:scene.gaugeSetup.valid,
+   reason:scene.gaugeSetup.reason,
+   contact:place.contactEngaged,
+   interference:place.gaugeInterference.kind,
+   penetrationCount:scene.gaugePlan.penetrationCount,
+   retreat:scene.gaugePlan.enabled,
+   status:gaugeRiskStatus(place).level});
+  if(scene.gaugeSetup.valid){
+   assert.equal(scene.gaugeSetup.interference.warning,false);
+   assert.equal(scene.gaugeSetup.verified,false);
+  }
+ }
+ assert.deepEqual(report.map(x=>x.P),[1,2,4,3]);
+ assert.equal(report[1].foldedWall,true);
+ assert.equal(report[1].support,true);
+ assert.equal(JSON.stringify(p),snapshot);
+ console.log('R94_MANUAL_SEQUENCE_REPORT='+JSON.stringify(report));
+});
