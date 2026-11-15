@@ -23,8 +23,9 @@ export function evaluateGaugeSetup(piece,st,ref,config,stopNumber=1){
   warning:true,polygon:[],point:null,ref,geometryVerified:false};
  if(!point||!validNumber(point.x)||!validNumber(point.y))
   return {...clearInvalid,reason:'punto de referencia no válido'};
+ const surfaceY=point.y-(feature.surface==='horizontal-top'?p.thickness/2:0);
  const poly=gaugeOutline(finger,stopNumber).map(q=>({
-  x:point.x-feature.point.x+q.x,y:point.y-feature.point.y+q.y
+  x:point.x-feature.point.x+q.x,y:surfaceY-feature.point.y+q.y
  }));
  const neighbourIndex=ref.sourceIndex===0?1:
   ref.sourceIndex===positions.length-1?positions.length-2:null;
@@ -32,16 +33,24 @@ export function evaluateGaugeSetup(piece,st,ref,config,stopNumber=1){
  const margin=Math.max(.12,Math.min(.5,p.thickness*.12));
  const fullContact=!!(ref.freeEdge&&neighbour&&
   neighbour.x<=point.x-margin&&point.x>0);
- const surface=feature.from&&feature.to&&feature.usable&&
-  Math.abs(feature.from.x-feature.to.x)<1e-6;
+ const wall=feature.surface==='horizontal-top'?feature.frontFace:feature;
+ const surface=!!wall?.from&&!!wall?.to&&feature.usable&&
+  Math.abs(wall.from.x-wall.to.x)<1e-6;
+ // Support 2 apoya POR DEBAJO de la chapa en la repisa y su canto
+ // coincide con pared ascendente, nunca encima del bloque trasero.
+ const shelfSeat=feature.surface!=='horizontal-top'||(
+  !!neighbour&&(point.x-neighbour.x)>Math.max(.7,Math.min(2,p.thickness))&&
+  Math.abs(point.y-neighbour.y)<=Math.max(.35,p.thickness*.22)
+ );
  const collision=inspectGaugeProfile(positions,poly,p.thickness,point);
- const valid=fullContact&&surface&&!collision.warning;
+ const valid=fullContact&&surface&&shelfSeat&&!collision.warning;
  return {valid,ref,stopNumber,point,polygon:poly,warning:collision.warning,
   interference:collision,freeEdge:ref.freeEdge,faceAccessible:fullContact,
   geometryVerified:config.gaugeGeometryDocumented===true,
   verified:false,reason:!ref.freeEdge?'Referencia sobre vértice interior sin canto libre':
    !fullContact?'El borde no llega por delante de la cara frontal del tope':
    !surface?'La cara del dedo no puede detener el canto':
+   !shelfSeat?'Support 2: la chapa inclinada no se apoya correctamente sobre la repisa inferior':
    collision.warning?'La chapa invade o roza el sólido del dedo ANTES del plegado':
    'Canto libre contra cara frontal sin interferencia 2D en preparación'};
 }
