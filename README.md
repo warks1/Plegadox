@@ -1343,3 +1343,27 @@ Pruebas añadidas en `tests/gauge-contact-solver.test.mjs`. Build `PLEGADOX-2026
 La inspección de ejecución de `EXAMPLE` detectó que sus `gaugeSideByBend` originales estaban fijadas a `['before','before','before','after']`: en los golpes 2 y 4 de Omega 1-2-4-3 referían vértices **interiores**, no un borde libre. Esto impedía corregir el apoyo pese a disponer de nuevo solucionador automático. Se cambia la Omega de ejemplo y la referencia Cybelec a `['auto','auto','auto','auto']`. Prueba lógica ejecutada con las funciones del proyecto: en los cuatro golpes se obtuvo `valid:true`, `freeEdge:true`, y sin interferencia 2D en la presentación inicial para Trumpf V85; **esto no demuestra una solución certificada en la máquina real**.
 
 El módulo `sample-gauge-migration.js` sólo migra referencias almacenadas que coincidan EXACTAMENTE con la antigua muestra Omega (nombre, alas, signos, orden, cuatro banderas antiguas y ningún segmento/punto manual personalizado). No modifica piezas del cliente ni muestras editadas. La selección manual sigue prevaleciendo. Nuevos tests `tests/sample-gauge-migration.test.mjs`.
+
+
+## R52 · Carga industrial con punzón y matriz MONTADOS y revisión de apoyo (15-11-2026)
+
+La captura facilitada por el propietario confirmó un fallo visual grave de la pantalla anterior: el punzón figuraba desplazado lateralmente y la matriz aparecía delante de la mesa, como si fuese un bloque flotante. **No basta con acercar ambos dibujos; sus amarres también deben estar representados y los elementos movibles conectados a la máquina.**
+
+**Nueva escena adaptativa** `splash-machine-assembly.svg`:
+- Marco de máquina y montantes laterales estáticos; conjunto superior `#upperMachine` que integra **trancha, amarre WILA, vástago y punzón**, animados en la misma transformación vertical.
+- Mesa inferior, bombeo conceptual, regleta adaptadora **PROMECAM** y matriz V16 fijos, apilados en ese orden (el grupo inferior no se mueve con la trancha).
+- Eje geométrico compartido **X=459 unidades SVG** entre punzón y ranura V16; chapa azul animada desde estado plano a perfil doblado durante el acercamiento del punzón y retorno. La escala vectorial es ARTÍSTICA y no está calibrada contra un conjunto WILA específico.
+- `splash-foto-premium.html` ahora es interfaz responsive, con marca PlegadoX y seis fichas de funciones a la izquierda / arriba según orientación, **una única barra de progreso real HTML** y pie con derechos de autor. Ya no reproduce imágenes fotográficas con punzón fuera de su amarre ni porcentajes pregrabados.
+- En móvil vertical el contenido se apila y en horizontal la máquina ocupa una columna; no se usa `object-fit:cover` ni una fotografía recortada del 78 %. Se conserva `titanium-loading-original.html` como activo histórico de referencia.
+- Se añaden comprobaciones de pantalla, montaje y progreso en `tests/titanium-selected-splash-r32-smoke.mjs` y `tests/splash-viewport-r35-smoke.mjs`, y se migran las pruebas antiguas que presuponían el PNG estático.
+
+**Tope trasero:**
+- `gauge-contact-solver.js` examina los extremos libres, se niega a declarar apoyo válido sobre un vértice interior y distingue referencia manual de automática.
+- En `technical-section.js` se valida el contacto ANTES de la sujeción; solo se programa retroceso del dedo cuando el punto de apoyo inicial es correcto y un muestreo posterior detecta posible interferencia 2D.
+- El botón «Corregir apoyo del tope» prueba primero el dedo/ala seleccionado y, SOLO tras clic del usuario, puede probar el otro dedo. Conserva el orden de plegado y los ángulos.
+- `backgauge-placement.js` y `machine-visual.js` distinguen **rojo = apoyo incorrecto/interferencia detectada**, **ámbar = contacto 2D posible pero CAD pendiente** y **verde = contacto modelado con geometría documentada**. El color no certifica máquina real.
+- `gauge-sequence-review.js` ya no suma «faltan planos CAD» como si fuese una colisión física. Quedan separadas las dudas documentales de la detección 2D.
+
+**Herramientas:** ampliación de fuentes WILA/Promecam y corrección de un error físico de dibujo de V32/30° H55, cuyo perfil 30° no debe alargar automáticamente la altura de la matriz: las profundidades de garganta de herramientas de 30° pueden diferir del triángulo ideal (en catálogo Bystronic comparable se publica D=33,6 mm para V32/30° H55). Las cotas usadas para un perfil SOCLAM siguen marcadas como referenciales y pendiente el DXF del fabricante.
+
+**No certificado:** no se han obtenido los sólidos CAD completos de la unidad de 2006–2009 ni los perfiles exactos del dedo, trancha, base, regleta, cabezal, fijaciones y útiles montados. Las simulaciones actuales no certifican ni garantizan la ausencia de colisiones físicas; validar en el CNC y con personal autorizado antes de realizar cualquier operación.
