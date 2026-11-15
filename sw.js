@@ -46,6 +46,7 @@ const APP_FILES=[
  "./render-enhancements.js",
  "./responsive.js",
  "./software-about.js",
+ "./software-update-policy.js",
  "./sequence-advisor.js",
  "./integrated-bend-planner.js",
  "./volume-engine.js",
