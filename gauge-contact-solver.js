@@ -73,11 +73,14 @@ export function resolveGaugeSetup(piece,st,config){
  // Sólo aceptar selección automática si hay contacto FRONTAL sin invasión.
  // Si ninguno pasa, preservar referencia y mostrar ERROR (no un verde falso).
  const possible=candidates.filter(x=>x.valid);
- possible.sort((a,b)=>{
+ // La referencia automática original representa la primera opción de
+ // presentación, definida por extremo libre y orden del programa.
+ // NO cambiar de cara si ya es válida: el selector anterior ordenaba por
+ // segmento 0 en caso de empate y volteaba G3->P4 de la Omega sin razón.
+ const best=first.valid?first:possible.sort((a,b)=>{
   const aDistance=a.ref.distance,bDistance=b.ref.distance;
   return aDistance-bDistance||a.ref.segmentIndex-b.ref.segmentIndex;
- });
- const best=possible[0]??first;
+ })[0]??first;
  return {...best,manual:false,candidates,autoSelected:best!==first,
   noSafeContact:possible.length===0};
 }
