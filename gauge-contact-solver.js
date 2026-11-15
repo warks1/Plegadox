@@ -10,6 +10,34 @@ import {normalized,gaugeReference,gaugePointOnProfile,presentedForMachine} from 
 import {gaugeOutline,gaugeContactFeature} from './machine-config.js';
 import {inspectGaugeProfile} from './gauge-interference.js';
 const validNumber=x=>Number.isFinite(x);
+/**
+ * Apoyo lateral de una pestaña YA PLEGADA. Un vértice interior también
+ * puede presentar una cara vertical física delante del Stop 1.
+ * Sólo se admite en la sección 2D si el ala seleccionada llega desde
+ * la izquierda, la pestaña adyacente es vertical y la pared del dedo
+ * solapa una longitud real de esa pestaña. NO certifica contacto 3D.
+ */
+export function nominalFoldedWingSeat(positions,ref,feature,thickness=2){
+ const index=ref?.sourceIndex,pivotIndex=ref?.pivotIndex;
+ if(ref?.freeEdge||ref?.atEnd!==true||feature?.surface!=='vertical-front'||
+    !Number.isInteger(index)||index<=0||index>=positions?.length-1||
+    !Number.isInteger(pivotIndex))return false;
+ const end=positions[index],pivot=positions[pivotIndex];
+ if(!end||!pivot||pivot.x>end.x-Math.max(.12,thickness*.12))return false;
+ const tolerance=Math.max(.08,Math.min(.3,thickness*.1));
+ const candidates=[index-1,index+1].filter(i=>i!==pivotIndex);
+ for(const i of candidates){
+  const leg=positions[i];
+  if(!leg||Math.abs(leg.x-end.x)>tolerance||
+     Math.abs(leg.y-end.y)<Math.max(2,thickness*2))continue;
+  const faceLo=end.y+Math.min(feature.from.y,feature.to.y)-feature.point.y;
+  const faceHi=end.y+Math.max(feature.from.y,feature.to.y)-feature.point.y;
+  const overlap=Math.max(0,Math.min(faceHi,Math.max(end.y,leg.y))-
+   Math.max(faceLo,Math.min(end.y,leg.y)));
+  if(overlap>=Math.max(.35,thickness*.25))return true;
+ }
+ return false;
+}
 export function evaluateGaugeSetup(piece,st,ref,config,stopNumber=1){
  const p=normalized(piece);
  const finger=stopNumber===2?config.support:config.stop;
@@ -18,7 +46,13 @@ export function evaluateGaugeSetup(piece,st,ref,config,stopNumber=1){
  const setup=presentedForMachine(p,base,st.activeBend);
  const mirror=ref.side==='before'?-1:1;
  const positions=setup.points.map(q=>({x:q.x*mirror,y:q.y+p.thickness/2}));
- const point=gaugePointOnProfile(positions,ref);
+ const nominalPoint=gaugePointOnProfile(positions,ref);
+ const foldedWingContact=nominalPoint&&
+  nominalFoldedWingSeat(positions,ref,feature,p.thickness);
+ // La cara real de la pestaña ya plegada está e/2 a la derecha
+ // de la fibra media. Sin este desfase el dedo invadía la chapa.
+ const point=foldedWingContact?
+  {x:nominalPoint.x+p.thickness/2,y:nominalPoint.y}:nominalPoint;
  const clearInvalid={valid:false,verified:false,reason:'sin cara frontal accesible',
   warning:true,polygon:[],point:null,ref,geometryVerified:false};
  if(!point||!validNumber(point.x)||!validNumber(point.y))
@@ -31,8 +65,9 @@ export function evaluateGaugeSetup(piece,st,ref,config,stopNumber=1){
   ref.sourceIndex===positions.length-1?positions.length-2:null;
  const neighbour=neighbourIndex==null?null:positions[neighbourIndex];
  const margin=Math.max(.12,Math.min(.5,p.thickness*.12));
- const fullContact=!!(ref.freeEdge&&neighbour&&
-  neighbour.x<=point.x-margin&&point.x>0);
+ const fullContact=!!((ref.freeEdge&&neighbour&&
+  neighbour.x<=point.x-margin&&point.x>0)||
+  (foldedWingContact&&point.x>0));
  const wall=feature.surface==='horizontal-top'?feature.frontFace:feature;
  const surface=!!wall?.from&&!!wall?.to&&feature.usable&&
   Math.abs(wall.from.x-wall.to.x)<1e-6;
@@ -50,13 +85,18 @@ export function evaluateGaugeSetup(piece,st,ref,config,stopNumber=1){
  });
  const valid=fullContact&&surface&&shelfSeat&&!collision.warning;
  return {valid,ref,stopNumber,point,polygon:poly,warning:collision.warning,
-  interference:collision,freeEdge:ref.freeEdge,faceAccessible:fullContact,
+  interference:collision,freeEdge:ref.freeEdge,
+  foldedWingContact:!!foldedWingContact,
+  contactMode:foldedWingContact?'pestana-plegada-lateral':'canto-libre',
+  faceAccessible:fullContact,
   geometryVerified:config.gaugeGeometryDocumented===true,
-  verified:false,reason:!ref.freeEdge?'Referencia sobre vértice interior sin canto libre':
+  verified:false,reason:!ref.freeEdge&&!foldedWingContact?
+    'Referencia interior sin cara vertical de pestaña accesible':
    !fullContact?'El borde no llega por delante de la cara frontal del tope':
    !surface?'La cara del dedo no puede detener el canto':
    !shelfSeat?'Support 2: la chapa inclinada no se apoya correctamente sobre la repisa inferior':
    collision.warning?'La chapa invade o roza el sólido del dedo ANTES del plegado':
+   foldedWingContact?'Cara lateral de pestaña plegada contra Stop 1 · sección 2D provisional':
    'Canto libre contra cara frontal sin interferencia 2D en preparación'};
 }
 export function resolveGaugeSetup(piece,st,config){
