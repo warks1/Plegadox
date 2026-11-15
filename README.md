@@ -1452,3 +1452,14 @@ El importador de contornos DXF de «Herramientas» incorpora ahora el selector *
 Los 16 perfiles SOCLAM de R59 enlazan DXF oficiales, pero **su contenido todavía necesita importación real** para sustituir las formas provisionales. WILA puede exigir registro para descargar sus contornos.
 
 Build `PLEGADOX-20261115-R60`, versión `0.9.36`, caché `plegadox-static-0.9.36-dxf-mount-r60`. El motor conserva sin modificación las piezas y herramientas locales ya guardadas; en herramientas importadas antiguas sin `mount`, el sistema no presume conocerlo.
+
+## R61 · Exportación de DXF paramétrico y copias completas de herramientas (15-11-2026)
+
+- El constructor por cotas de punzones rectos, de pata de cabra y matrices V permite **Descargar DXF 2D (mm)**. La salida es un archivo CAD ASCII con `$INSUNITS=4` y una polilínea 2D cerrada que se puede volver a importar. Las unidades y dimensiones del contorno se contrastan en pruebas de ida/vuelta mediante el propio importador.
+- El nombre descargado incluye el sufijo **`NO-CERTIFICADO.dxf`**. La geometría es paramétrica y no debe confundirse con un plano CAD suministrado por WILA/Promecam, ni con una representación volumétrica de sus amarres ni con un programa CNC.
+- `project-backup.js` conserva ya `customProfile`, `customDimensions`, `profilePoints`, tipo de amarre nominal, longitud y referencia. Las copias admiten **hasta 50 perfiles** en total, alineadas con el límite real del editor y el almacenamiento local; las copias DXF históricas siguen siendo compatibles.
+- La restauración rechaza dimensiones desconocidas, contornos inválidos y conflictos de ID **sin reescribir parcialmente la pieza ni perder los datos locales anteriores**. `verifiedSpecs` siempre queda en `false` al importar un dibujo por cotas desde una copia.
+- El panel de copias ahora menciona expresamente los útiles DXF **y los creados por cotas**, y el formulario de herramientas muestra la opción de descarga junto al botón de guardar.
+- Pruebas añadidas: `tests/project-backup-custom-tools.test.mjs` y `tests/tool-dxf-export.test.mjs`. Además, `tests/custom-tool-export-browser-smoke.mjs` verifica la descarga/guardado en PC y móvil a través del grupo de pruebas visuales «datos».
+
+Versionado: `PLEGADOX-20261115-R61`, `0.9.37`, caché `plegadox-static-0.9.37-custom-backup-dxf-r61`. La salida DXF no elimina ningún parámetro de la pieza ni modifica la secuencia manual.
