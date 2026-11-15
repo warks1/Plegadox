@@ -42,6 +42,9 @@ try{
   const before=await frame(.25);
   assert.equal(before.setupValid,true);
   assert.equal(before.setupNeedsCorrection,false);
+  const initialLabel=await page.locator('#activeGaugeReference').textContent();
+  assert.match(initialLabel,/apoyo lateral de pestaña YA plegada/);
+  assert.doesNotMatch(initialLabel,/⚠ vértice interior/);
   assert.ok(before.predictedPenetration>0);
   assert.equal(before.retractionEnabled,true);
   assert.equal(before.movement,'quieto');
