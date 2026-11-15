@@ -146,7 +146,9 @@ export function technicalScene(piece,instant=0){
  const feature=gaugeContactFeature(finger,stopNumber);
  const fingerShape=gaugeOutline(finger,stopNumber);
  const fingerReach=Math.max(0,...fingerShape.map(q=>q.x));
- const anchorOrigin={x:gaugeAnchor.x-feature.point.x,y:gaugeAnchor.y-feature.point.y};
+ const gaugeSeatOffset=feature.surface==='horizontal-top'?p.thickness/2:0;
+ const anchorOrigin={x:gaugeAnchor.x-feature.point.x,
+  y:gaugeAnchor.y-gaugeSeatOffset-feature.point.y};
  const fixedFingerPolygon=fingerShape.map(q=>({
   x:q.x+anchorOrigin.x,y:q.y+anchorOrigin.y
  }));
