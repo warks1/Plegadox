@@ -17,7 +17,7 @@ test('golpe 1 usa ala de 50 mm en lugar del extremo global de 250 mm',()=>{
  assert.equal(stop.freeEdge,true);
  assert.equal(stop.verified,false);
 });
-test('golpe 3 de 1-2-4-3 permite presentar la chapa desde el lado contrario',()=>{
+test('golpe 3 de 1-2-4-3 busca apoyo frontal real incluso si cambia de ala',()=>{
  const p=normalized(EXAMPLE),st=stage(p,10.4);
  assert.equal(st.activeOperation,2);
  assert.equal(st.activeBend,3);
@@ -25,8 +25,10 @@ test('golpe 3 de 1-2-4-3 permite presentar la chapa desde el lado contrario',()=
  assert.equal(r.side,'after');
  assert.equal(r.distance,50);
  const scene=technicalScene(p,st),stop=gaugePlacement(scene,2);
- assert.equal(scene.feedMirrored,false);
- assert.equal(stop.referenceSide,'after');
+ assert.equal(scene.gaugeReference.freeEdge,true);
+ assert.equal(scene.gaugeSetup.valid,true);
+ assert.equal(scene.feedMirrored,scene.gaugeReference.side==='before');
+ assert.equal(stop.referenceSide,scene.gaugeReference.side);
  assert.equal(stop.nominalDistance,50);
  assert.equal(stop.stopNumber,2);
  assert.equal(stop.verified,false);
@@ -42,12 +44,16 @@ test('cambiar ala de apoyo invierte presentación sin modificar orden ni grados'
  assert.equal(gaugePlacement(after,1).nominalDistance,50);
  assert.deepEqual(p,ref);
 });
-test('el tope conserva su ancla durante la bajada de un mismo golpe',()=>{
+test('la referencia original del tope es fija; movimiento condicional no cambia la cota del ala',()=>{
  const p=normalized(EXAMPLE);
  const atStart=gaugePlacement(technicalScene(p,.7),1);
  const atPress=gaugePlacement(technicalScene(p,2.9),1);
- assert.deepEqual(atStart.point,atPress.point);
+ assert.equal(atStart.nominalDistance,50);
  assert.equal(atPress.nominalDistance,50);
+ const scene1=technicalScene(p,.7),scene2=technicalScene(p,2.9);
+ assert.deepEqual(scene1.gaugeAnchor,scene2.gaugeAnchor);
+ // Si hay colisión futura el dedo se retira, no se congela falsamente.
+ if(scene2.gaugePlan.enabled)assert.ok(scene2.gaugeTransition?.plannedRetraction>0);
 });
 test('longitudes 20 y 180 mm: automático coge 20, manual selecciona 180',()=>{
  const p=normalized({flanges:[20,180],angles:[90],order:[0],stopByBend:[1]});
@@ -73,8 +79,9 @@ test('al reordenar golpes se mantiene el lado seleccionado por pliegue físico',
  assert.deepEqual(alt.angles,p.angles);
 });
 
-test('no anuncia contacto verificado al apoyar en un vértice interior',()=>{
- const p=normalized(EXAMPLE);
+test('no anuncia contacto verificado si el operador fuerza un vértice interior',()=>{
+ const p=normalized({...EXAMPLE,
+  gaugeSideByBend:['auto','before','auto','auto']});
  const scene=technicalScene(p,5.2);
  const placement=gaugePlacement(scene,1);
  assert.equal(placement.sourceIndex,1);
