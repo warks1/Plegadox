@@ -14,14 +14,13 @@ test('R93: Stop 1 y chapa comparten plano frontal de perspectiva, sin cambiar X 
  assert.deepEqual(flat.far,contour);
  assert.equal(flat.depthX,0);assert.equal(flat.depthY,0);
  const perspective=gaugePerspectiveContours(contour,2,true);
- assert.deepEqual(perspective.far,contour,
-  'La posición métrica del dedo no se modifica');
+ assert.deepEqual(perspective.near,contour,
+  'La cara de contacto del dedo NO se desplaza del plano métrico');
  assert.equal(perspective.depthX,46);
  assert.equal(perspective.depthY,-26);
- assert.deepEqual(perspective.near[0],[54,446]);
- assert.deepEqual(perspective.near[3],[54,506]);
- // Es la misma profundidad visual que sheetDepth (23*s, -13*s),
- // pero adelantando el frente del dedo para coincidir en pantalla.
+ assert.deepEqual(perspective.far[0],[146,394]);
+ assert.deepEqual(perspective.far[3],[146,454]);
+ // La profundidad se añade DETRÁS del frente, como sheetDepth.
  assert.equal(perspective.far[0][0]-perspective.near[0][0],46);
 });
 
