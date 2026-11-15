@@ -38,7 +38,7 @@ try{
    input.value='550';input.dispatchEvent(new Event('input',{bubbles:true}));
   });
   assert.match(await page.locator('#activeGaugeReference').textContent(),/Ala siguiente · 50,0 mm/);
-  assert.equal(await page.locator('#chooseSideAfter').getAttribute('aria-pressed'),'true');
+  assert.equal(await page.locator('#chooseSideAuto').getAttribute('aria-pressed'),'true');
   await page.locator('#chooseSideBefore').click();
   assert.match(await page.locator('#activeGaugeReference').textContent(),/Ala anterior · 50,0 mm/);
   const newData=await page.evaluate(()=>window.PLEGADOX_STATE().piece);

@@ -7,6 +7,8 @@
 import {normalized} from './engine.js';
 import {technicalScene} from './technical-section.js';
 import {gaugePlacement} from './backgauge-placement.js';
+import {GAUGE_RETRACT_START,GAUGE_RETRACT_FINISH,
+ GAUGE_REPOSITION_START} from './gauge-retract-motion.js';
 
 const RANK={penetracion:4,holgura:3,'chapa-detras':3,
  'apoyo-invalido':3,'sin-asiento':2,'referencia-interior':1};
@@ -44,12 +46,22 @@ export function inspectGaugeOperation(piece,operation,{
  // Incluir el instante inicial, los extremos y la retirada final;
  // evitar tomar justo t=5,10,15 como si fuese el golpe anterior.
  const split=Math.floor(samples/2);
+ // Separar los dos movimientos físicos de la vista: retirada preventiva
+ // en 36-44 % y traslado a la siguiente referencia desde 84 %.
+ // La segunda mitad de las muestras sigue cubriendo densamente el
+ // final del golpe y se conserva el número de muestras contratado.
+ const early=[0,.20,.34,GAUGE_RETRACT_START,.38,.40,.42,
+  GAUGE_RETRACT_FINISH,.65,GAUGE_REPOSITION_START];
+ const earlyAt=k=>{
+  const f=Math.min(early.length-1,Math.max(0,k*(early.length-1)));
+  const lo=Math.floor(f),hi=Math.min(lo+1,early.length-1);
+  return early[lo]+(early[hi]-early[lo])*(f-lo);
+ };
  for(let i=0;i<=samples;i++){
-  // Muestreo reforzado de la retirada: el dedo comienza a retroceder
-  // al 84% del golpe. Un muestreo uniforme omitía transiciones breves.
-  const relative=i<=split?
-   4.2*i/split:
-   4.2+.8*(i-split)/(samples-split);
+  const relative=5*(i<=split?
+   earlyAt(i/split):
+   GAUGE_REPOSITION_START+(1-GAUGE_REPOSITION_START)*
+    (i-split)/(samples-split));
   const time=start+(i===samples?5-1e-6:relative);
   const {scene,place}=inspect(p,time);
   if(!scene||!place||!scene.stage||scene.stage.activeOperation!==operation)

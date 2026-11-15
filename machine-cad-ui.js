@@ -2,11 +2,14 @@
 import {machineCadFromDXF,loadMachineCad,saveMachineCad,removeMachineCad,
  MACHINE_CAD_KINDS,machineConfigurationKey} from './machine-cad.js';
 import {getActiveMachineConfig} from './machine-config.js';
+import {getActiveMachineProfile} from './machine-selection.js';
 import {MOTION_AXES,normalizeAxisMotion,motionPieceKey,
  assessAxisMotion,saveAxisMotion,loadAxisMotion} from './machine-axis-motion.js';
 import {loadAxisMapping,saveAxisMapping,scanAxisCADMovement} from './machine-axis-geometry.js';
 
 const $=id=>document.getElementById(id);
+const profileForTemplate=()=>getActiveMachineProfile();
+const filePrefix=()=>('PlegadoX-'+profileForTemplate().id).replace(/[^a-z0-9-]/gi,'-');
 const say=(id,value,error=false)=>{
  const el=$(id);
  if(el){el.textContent=value;el.dataset.error=String(error);}
@@ -90,10 +93,12 @@ function installer(){
   if(!p){say('machineAxisStatus','No hay pieza activa',true);return;}
   const limits=Object.fromEntries(MOTION_AXES.map(axis=>[axis,
    {min:null,max:null,maxSpeed:null}]));
-  download('PlegadoX-V85-plantilla-ejes.json',JSON.stringify({
+  download(filePrefix()+'-plantilla-ejes.json',JSON.stringify({
    unit:'mm',timeUnit:'s',source:'programmed',
    sourceDescription:'Completar con datos documentados de la máquina y el CNC',
-   machineId:'V85 · identificar configuración real',
+   machineId:profileForTemplate().id,
+   machineName:profileForTemplate().title,
+   machineVerification:'Confirmar placa, amarre y calibración CNC antes de usar',
    pieceKey:motionPieceKey(p),
    limits,poses:[],
    instructions:'Introducir al menos dos poses; time en segundos; axes {Y1,Y2,X,R,Z1,Z2}; sceneTime opcional = tiempo de la animación (0-5 por golpe). Para barrido CAD sólo sirven fases en las que DOS poses tienen el mismo sceneTime: chapa inmóvil. Los ejes deben estar medidos, nunca inferidos del catálogo.'
@@ -114,7 +119,7 @@ function installer(){
   event.target.value='';
  });
  $('machineAxisMappingTemplate')?.addEventListener('click',()=>{
-  download('PlegadoX-V85-plantilla-datum-CAD.json',JSON.stringify({
+  download(filePrefix()+'-plantilla-datum-CAD.json',JSON.stringify({
    version:1,unit:'mm',
    signs:{Y:null,X:null,R:null,Z1:null,Z2:null},
    activeFinger:null,referenceSceneTime:null,ramTiltTolerance:null,
@@ -126,7 +131,7 @@ function installer(){
  $('machineAxisMappingImport')?.addEventListener('change',async event=>{
   const file=event.target.files?.[0];if(!file)return;
   try{
-   if(file.size>100*1024||!/\\.json$/i.test(file.name))
+   if(file.size>100*1024||!/\.json$/i.test(file.name))
     throw Error('Selecciona JSON de calibración inferior a 100 KB');
    const parsed=JSON.parse(await file.text());
    if(parsed.machineConfigKey!==machineConfigurationKey(getActiveMachineConfig()))

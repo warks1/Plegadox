@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {EXAMPLE} from '../engine.js';
-import {V85_FACTORY} from '../machine-config.js';
+import {V85_FACTORY,normalizeV85} from '../machine-config.js';
 import {technicalScene} from '../technical-section.js';
 import {machineConfigurationKey} from '../machine-cad.js';
 import {motionPieceKey} from '../machine-axis-motion.js';
@@ -38,6 +38,13 @@ test('CAD+ejes: datum de ejes normaliza de forma estable tras guardar y recupera
  const first=normalizeAxisMapping(mapping());
  assert.equal(first.activeFinger,'Z1');
  assert.deepEqual(normalizeAxisMapping(first),first);
+});
+test('CAD+ejes: acepta datum asociado al modelo real de plegadora sin mezclar máquinas',()=>{
+ const key=machineConfigurationKey(normalizeV85(V85_FACTORY));
+ assert.match(key,/^machine-[0-9a-f]{8}$/);
+ assert.equal(normalizeAxisMapping({...mapping(),machineConfigKey:key}).machineConfigKey,key);
+ assert.throws(()=>normalizeAxisMapping({...mapping(),machineConfigKey:'other-12345678'}),
+  /configuración de plegadora/);
 });
 test('CAD+ejes: geometría ilustrativa se anuncia como provisional',()=>{
  const partial={...fixture()};delete partial.bed;

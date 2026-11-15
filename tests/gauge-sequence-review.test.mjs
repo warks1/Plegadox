@@ -109,6 +109,11 @@ test('muestra la retirada con mayor densidad para detectar movimientos breves',(
  assert.ok(checked.at(-1)>4.999&&checked.at(-1)<5,
   'La última muestra no debe atribuirse al golpe siguiente');
  assert.equal(result.withdrawalObserved,true);
+ for(const phase of [.36,.38,.40,.42,.44,.84]){
+  assert.ok(checked.some(t=>Math.abs(t-phase*5)<.00001),
+   'No se comprobó el instante crítico '+phase+' del ciclo');
+ }
+ assert.ok(checked.some(t=>t>4.5&&t<4.7),'Falta barrido del regreso');
 });
 
 test('un apoyo inicial inválido se muestra aunque no exista penetración 2D',()=>{

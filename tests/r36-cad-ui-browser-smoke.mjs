@@ -63,7 +63,21 @@ try{
  const map=JSON.parse(readFileSync(await (await downloadMapping).path(),'utf8'));
  assert.equal(map.signs.X,null,'no suponer signo de X');
  assert.equal(map.activeFinger,null,'no suponer dedo CNC activo');
- assert.match(map.machineConfigKey,/^v85-/);
+ assert.match(map.machineConfigKey,/^machine-[0-9a-f]{8}$/);
+ const completed={...map,signs:{Y:1,X:1,R:1,Z1:1,Z2:1},
+  activeFinger:'Z1',referenceSceneTime:0,ramTiltTolerance:.5,
+  source:'Ensayo de referencia y sentidos de ejes de prueba'};
+ await page.locator('#machineAxisMappingImport').setInputFiles({
+  name:'datum-ensayo.json',mimeType:'application/json',
+  buffer:Buffer.from(JSON.stringify(completed))});
+ await page.waitForFunction(()=>{
+  const data=localStorage.getItem('plegadox:axis-cad-mapping:v1');
+  return data&&JSON.parse(data).machineConfigKey.startsWith('machine-');
+ });
+ const imported=await page.evaluate(()=>JSON.parse(
+  localStorage.getItem('plegadox:axis-cad-mapping:v1')));
+ assert.equal(imported.machineConfigKey,map.machineConfigKey);
+ assert.equal(imported.certified,false);
  await page.locator('#machineCadDelete').click();
  const remaining=await page.evaluate(()=>JSON.parse(
   localStorage.getItem('plegadox:machine-cad:v1')));

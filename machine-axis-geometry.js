@@ -45,8 +45,8 @@ export function normalizeAxisMapping(raw){
  if(source.length<4||source.length>160)
   throw Error('Indicar documento u origen de la calibración CNC');
  const key=String(raw.machineConfigKey||'');
- if(!/^v85-[0-9a-f]{8}$/.test(key))
-  throw Error('La calibración debe estar asociada a la configuración V85');
+ if(!/^(?:v85|machine)-[0-9a-f]{8}$/.test(key))
+  throw Error('La calibración debe estar asociada a una configuración de plegadora');
  return {version:1,unit:'mm',signs,activeFinger:finger,referenceSceneTime:sceneTime,
   ramTiltTolerance,source,machineConfigKey:key,
   certified:false,cncValidated:false};
@@ -79,7 +79,7 @@ export function scanAxisCADMovement(input,options={}){
  if(program.pieceKey!==motionPieceKey(piece))
   return unknown('TRAZA_DE_OTRA_PIEZA','La traza no corresponde a geometría, orden y útiles actuales');
  if(mapping.machineConfigKey!==machineConfigurationKey(machine))
-  return unknown('DATUM_DE_OTRA_MAQUINA','Las cotas de la V85 cambiaron tras calibrar los ejes');
+  return unknown('DATUM_DE_OTRA_MAQUINA','La configuración de plegadora cambió tras calibrar los ejes');
  const initial=program.poses[0];
  if(initial.sceneTime==null||
     Math.abs(initial.sceneTime-mapping.referenceSceneTime)>1e-7)
