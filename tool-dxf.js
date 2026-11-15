@@ -305,7 +305,7 @@ export function loadImportedTools(storage){
  try{
   const data=JSON.parse(storage?.getItem(TOOL_DXF_STORAGE_KEY)||'[]');
   if(!Array.isArray(data))return [];
-  return data.slice(0,30).filter(t=>{
+  return data.slice(0,50).filter(t=>{
    try{
     const imported=t?.importedDxf===true&&/^user-dxf-(punch|die)-[a-z0-9-]+$/.test(t.id);
     const custom=t?.customProfile===true&&t.importedDxf===false&&
