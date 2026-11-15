@@ -48,7 +48,9 @@ function nearestSegment(a,b,c,d){
  }
  return best;
 }
-export function inspectGaugeProfile(sheet,polygon,thickness=2,contact=null){
+export function inspectGaugeProfile(sheet,polygon,thickness=2,contact=null,{
+ supportShelf=null
+}={}){
  if(!Array.isArray(sheet)||sheet.length<2||
     !Array.isArray(polygon)||polygon.length<3||
     !sheet.every(p=>Number.isFinite(p.x)&&Number.isFinite(p.y))||
@@ -59,6 +61,26 @@ export function inspectGaugeProfile(sheet,polygon,thickness=2,contact=null){
  // No exime el resto de un ala que penetra más allá de ese extremo.
  const allowedNearContact=Math.max(0.6,allowance+.15);
  const exempt=p=>contact&&dist(p,contact)<=allowedNearContact;
+ // La cara INFERIOR de una chapa horizontal puede reposar sobre la
+ // repisa BAJA del Support. Eso NO es una colisión: la distancia del
+ // eje de chapa al plano de repisa es exactamente espesor/2.
+ // Exención estricta por superficie, sólo si hay asiento y el perfil
+ // coincide físicamente. No exime la pared ascendente ni penetraciones.
+ const isPermittedShelf=(a,b,c,d,nearestPoint)=>{
+  if(!supportShelf?.seated||!supportShelf.from||!supportShelf.to||
+     ![a,b,c,d,supportShelf.from,supportShelf.to].every(
+       p=>Number.isFinite(p?.x)&&Number.isFinite(p?.y)))return false;
+  const u=supportShelf.from,v=supportShelf.to;
+  const sameEdge=(dist(c,u)<1e-5&&dist(d,v)<1e-5)||
+                 (dist(c,v)<1e-5&&dist(d,u)<1e-5);
+  if(!sameEdge)return false;
+  const tolerance=Math.max(.10,Math.min(.35,thickness*.10));
+  const targetY=u.y+allowance;
+  return Math.abs(a.y-targetY)<=tolerance&&
+    Math.abs(b.y-targetY)<=tolerance&&
+    nearestPoint.x>=Math.min(u.x,v.x)-1e-5&&
+    nearestPoint.x<=Math.max(u.x,v.x)+1e-5;
+ };
  for(let i=0;i<sheet.length-1;i++){
   const a=sheet[i],b=sheet[i+1],cuts=[0,1];
   for(let j=0;j<polygon.length;j++){
@@ -80,7 +102,8 @@ export function inspectGaugeProfile(sheet,polygon,thickness=2,contact=null){
   // no es el apoyo programado, aunque no haya cruce de la fibra media.
   if(allowance>.18)for(let j=0;j<polygon.length;j++){
    const near=nearestSegment(a,b,polygon[j],polygon[(j+1)%polygon.length]);
-   if(near.distance<allowance-.18&&!exempt(near.point))
+   if(near.distance<allowance-.18&&!exempt(near.point)&&
+      !isPermittedShelf(a,b,polygon[j],polygon[(j+1)%polygon.length],near.point))
     return {warning:true,kind:'holgura',point:near.point,segment:i};
   }
  }
