@@ -4,7 +4,7 @@
  * La selección de datos de máquina y útiles es explícita y comprobable.
  */
 import {normalized,getTooling,estimateAirBendForce,MACHINE} from './engine.js';
-import {getV85} from './machine-config.js';
+import {getActiveMachineConfig} from './machine-config.js';
 import {selectionCompatibility} from './catalog.js';
 import {inspectSequenceTools} from './tool-collision.js';
 import {scanSheetSequence} from './sheet-interference.js';
@@ -20,7 +20,7 @@ function item(code,level,message,bend=null){
 export function auditForWorkshop(input,options={}){
  const p=normalized(input);
  const {punch,die}=getTooling(p);
- const cfg=options.machine||getV85();
+ const cfg=options.machine||getActiveMachineConfig();
  const force=estimateAirBendForce(p);
  const issues=[],push=(code,level,message,bend=null)=>issues.push(item(code,level,message,bend));
  const maxWidth=Math.min(Number(cfg.ramWidth)||MACHINE.workingWidth,
@@ -127,7 +127,7 @@ export function auditForWorkshop(input,options={}){
   dieOpening:die.opening,tipAngle:punch.angle},piece:{
   material:p.material,thickness:p.thickness,width:p.width,
   flanges:[...p.flanges],angles:[...p.angles],order:[...p.order]},
-  machine:{name:cfg.name||MACHINE.name,width:maxWidth,nominalTonnage:MACHINE.tonnage},
+  machine:{name:cfg.name||MACHINE.name,width:maxWidth,nominalTonnage:cfg.tonnage||MACHINE.tonnage},
   force:{estimated:force.estimated,tonnes:force.estimated?round(force.tonneForce):null,
    loadPercent:force.estimated?round(force.loadPercent):null},
   issues,summary:{blocks:block.length,missing:missing.length,reviews:review.length,
