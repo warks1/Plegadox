@@ -41,6 +41,14 @@ export function normalized(input){
  // Elección de apoyo trasero por pliegue: 1 Stop o 2 Support.
  const stopByBend=Array.from({length:n},(_,i)=>String(input?.stopByBend?.[i])==='2'?2:1);
  const gaugeSideByBend=Array.from({length:n},(_,i)=>['before','after'].includes(input?.gaugeSideByBend?.[i])?input.gaugeSideByBend[i]:'auto');
+ // Cota manual desde la línea del pliegue hasta el punto de referencia de tope.
+ // Null conserva el borde del ala. No convierte un contacto interior en seguro.
+ const gaugePointByBend=Array.from({length:n},(_,i)=>{
+  const value=input?.gaugePointByBend?.[i];
+  if(value==null||value==='')return null;
+  const number=Number(value);
+  return Number.isFinite(number)&&number>=.1?clamp(number,.1,10000):null;
+ });
  const order=[...new Set(requested.filter(i=>Number.isInteger(i)&&i>=0&&i<n))];
  for(let i=0;i<n;i++)if(!order.includes(i))order.push(i);
  const id= MATERIALS.some(m=>m.id===input?.material)?input.material:'s235';
@@ -52,7 +60,7 @@ export function normalized(input){
   const v=Number(raw);
   return Number.isFinite(v)&&v>=0&&v<=1000?v:null;
  });
- return {name:String(input?.name||'Nueva pieza').slice(0,80),material:id,thickness:clamp(finite(input?.thickness,2),0.2,30),width:clamp(finite(input?.width,500),1,10000),die:DIES.some(d=>d.id===input?.die)?input.die:'v16',punch:PUNCHES.some(p=>p.id===input?.punch)?input.punch:'straight88',punchOrientation:input?.punchOrientation==='reversed'?'reversed':'normal',flanges:f,angles:a,order,stopByBend,gaugeSideByBend,bendDeductionByBend,kFactor:input?.kFactor==null?null:clamp(finite(input.kFactor,.36),.15,.6),radius:input?.radius==null?null:clamp(finite(input.radius,2),.1,100),rmMPa:input?.rmMPa==null||input.rmMPa===''?null:clamp(finite(input.rmMPa,450),50,1800),datum:input?.datum==='neutral'?'neutral':'outside'};
+ return {name:String(input?.name||'Nueva pieza').slice(0,80),material:id,thickness:clamp(finite(input?.thickness,2),0.2,30),width:clamp(finite(input?.width,500),1,10000),die:DIES.some(d=>d.id===input?.die)?input.die:'v16',punch:PUNCHES.some(p=>p.id===input?.punch)?input.punch:'straight88',punchOrientation:input?.punchOrientation==='reversed'?'reversed':'normal',flanges:f,angles:a,order,stopByBend,gaugeSideByBend,gaugePointByBend,bendDeductionByBend,kFactor:input?.kFactor==null?null:clamp(finite(input.kFactor,.36),.15,.6),radius:input?.radius==null?null:clamp(finite(input.radius,2),.1,100),rmMPa:input?.rmMPa==null||input.rmMPa===''?null:clamp(finite(input.rmMPa,450),50,1800),datum:input?.datum==='neutral'?'neutral':'outside'};
 }
 /** Todos los pliegues parten de una chapa recta. +90 y -90 giran en sentidos contrarios. */
 export function profile(piece,fractions=[]){
@@ -166,9 +174,24 @@ export function gaugeReference(piece,bend){
  const shorter=p.flanges[b]<=p.flanges[b+1]?'before':'after';
  const side=choice!=='auto'?choice:
    beforeFree!==afterFree?(beforeFree?'before':'after'):shorter;
- return {bend:b,choice,side,distance:p.flanges[b+(side==='after'?1:0)],
-  sourceIndex:side==='before'?b:b+2,
+ const totalLength=p.flanges[b+(side==='after'?1:0)];
+ const manual=p.gaugePointByBend[b]!==null;
+ const distance=manual?Math.min(totalLength,p.gaugePointByBend[b]):totalLength;
+ const sourceIndex=side==='before'?b:b+2;
+ const atEnd=Math.abs(totalLength-distance)<1e-6;
+ return {bend:b,choice,side,distance,totalLength,manual,atEnd,
+  fraction:totalLength>0?distance/totalLength:1,
+  segmentIndex:side==='before'?b:b+1,sourceIndex,
+  freeEdge:atEnd&&(sourceIndex===0||sourceIndex===p.flanges.length),
   label:side==='before'?'Ala anterior':'Ala siguiente',verified:false};
+}
+/** Punto de apoyo propuesto sobre el tramo, en coordenadas del perfil actual. */
+export function gaugePointOnProfile(points,reference){
+ const pivot=points?.[reference?.bend+1];
+ const end=points?.[reference?.sourceIndex];
+ if(!pivot||!end)return null;
+ const t=clamp(Number(reference.fraction)||0,0,1);
+ return {x:pivot.x+(end.x-pivot.x)*t,y:pivot.y+(end.y-pivot.y)*t};
 }
 /** Tope actual por golpe; contorno ilustrativo, no posición X de CNC. */
 export function stopAtStage(piece,time){
