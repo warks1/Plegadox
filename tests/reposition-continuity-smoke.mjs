@@ -53,8 +53,23 @@ try{
     'El origen se desplaza al girar la chapa: salto '+i);
    assert.ok(transfer.every(x=>Math.abs(x.source-transfer[0].source)<1e-7),
     'La retirada del tope cambia su referencia X durante el golpe '+i);
-   assert.ok(transfer.slice(1,6).every(x=>Math.abs(x.x-transfer[1].x)<1e-7),
-    'El dedo no se mantiene retirado mientras gira la chapa '+i);
+   // R75: durante 84-99% hay REGRESO REAL a la siguiente cota.
+   // Antes esta prueba exigía x constante mientras pedía moving=true:
+   // castigaba precisamente el traslado continuo que debe mostrar.
+   // Tanto si viene del aparcamiento como de la referencia anterior,
+   // debe avanzar monótonamente, sin invertir sentido ni saltar.
+   const first=transfer[0].x,last=transfer.at(-1).x;
+   const sign=Math.sign(last-first);
+   for(let j=1;j<transfer.length;j++){
+    const dx=transfer[j].x-transfer[j-1].x;
+    assert.ok(sign===0?Math.abs(dx)<1e-5:sign*dx>=-1e-5,
+     'Tope invierte dirección X durante la reubicación de golpe '+i+
+      ': '+JSON.stringify(transfer.map(x=>x.x)));
+   }
+   const maxJump=Math.max(...transfer.slice(1).map((x,j)=>
+    Math.abs(x.x-transfer[j].x)));
+   assert.ok(maxJump<=Math.max(.1,Math.abs(last-first)*.65),
+    'Salto discontinuo del dedo entre muestras: golpe '+i);
   }
   assert.ok(checked.every(x=>x.same),'Cabina distinta de la sección');
   assert.deepEqual(checked[0].order,[0,1,3,2]);
