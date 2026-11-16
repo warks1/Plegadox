@@ -284,10 +284,16 @@
  <div class="machine-profile-preview"><canvas id="machineSupportProfile" aria-label="Esquema acotado del tope Support"></canvas></div></article>
 </div>
 <article class="card" id="machineCadPanel">
-<div class="cardhead"><h2>Geometría CAD 2D de la V85 · trancha, mesa y dedos</h2><span class="smalllabel">DXF ASCII MILIMÉTRICO · SIN CERTIFICACIÓN</span></div>
-<p class="hint">Importa el contorno cerrado de cada componente, con origen X/Y de montaje y límites Z de ocupación reales. Ram/trancha: referencia relativa a la punta del punzón. Mesa: origen respecto al plano superior de la matriz. Stop/Support: origen del dedo. El archivo define geometría; no demuestra que esté montado en esa posición. Los perfiles guardados sustituyen las envolventes ilustrativas del cálculo 2,5D.</p>
+<div class="cardhead"><h2>CAD de máquina · trancha, mesa, amarres, adaptadores y topes</h2><span class="smalllabel">DXF ASCII MILIMÉTRICO · SIN CERTIFICACIÓN</span></div>
+<p class="hint">Importa el contorno cerrado de cada componente, con origen X/Y de montaje y límites Z reales. Trancha/amarre superior: referencia relativa a punta de punzón. Mesa/amarre inferior: origen respecto al plano superior de la matriz. Stop/Support: origen propio del dedo. No se mezclan cotas de distintos modelos de máquina ni se reconstruyen amarres sin sus referencias de montaje.</p>
+<details class="px-tech-details" id="machineCadEvidencePanel" open>
+<summary>Inventario CAD contrastado · referencias descargables y piezas pendientes</summary>
+<p id="machineCadCoverage" class="hint" role="status" aria-live="polite">Comprobando cobertura de componentes y archivos CAD disponibles.</p>
+<div id="machineCadSourceInventory" class="px-oem-cad-grid" aria-label="Fuentes técnicas de CAD por fabricante"></div>
+<p class="warn">Los enlaces de descarga no significan que los archivos estén instalados. Un DXF sólo pasa al cálculo de colisiones cuando se importa, se comprueban unidades, referencia exacta, amarre, ejes y cotas Z. La validación industrial seguirá pendiente.</p>
+</details>
 <div class="formgrid">
-<label>Componente<select id="machineCadKind"><option value="ram">Trancha/portapunzón</option><option value="bed">Mesa/portamatriz</option><option value="stop">Dedo tope Stop 1</option><option value="support">Dedo tope Support 2</option></select></label>
+<label>Componente<select id="machineCadKind"><option value="ram">Trancha/portapunzón</option><option value="bed">Mesa/portamatriz</option><option value="stop">Dedo tope Stop 1</option><option value="support">Dedo tope Support 2</option><option value="upperClamp">Mordaza / amarre superior</option><option value="lowerClamp">Mordaza / amarre inferior</option><option value="upperAdapter">Adaptador superior</option><option value="lowerAdapter">Adaptador inferior / regleta Promecam</option><option value="frontSupport">Soporte delantero de chapa</option></select></label>
 <label>Perfil DXF cerrado en mm<input type="file" id="machineCadFile" accept=".dxf" aria-label="Archivo DXF ASCII de contorno de máquina"></label>
 <label>Desplazamiento X (mm)<input id="machineCadOffsetX" type="number" step=".001" placeholder="Origen documentado"></label>
 <label>Desplazamiento Y (mm)<input id="machineCadOffsetY" type="number" step=".001" placeholder="Origen documentado"></label>
