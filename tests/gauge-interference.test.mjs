@@ -33,10 +33,12 @@ test('un contacto válido vuelve a ser evaluable con Stop y Support sin cambiar 
  for(const gauge of [a,b]){
   const profile=gaugeContourAtContact(gauge,gauge.stopNumber===2?getV85().support:getV85().stop);
   assert.ok(profile.length>=4);
-  if(gauge.gaugeInterference.warning){
+  if(gauge.gaugeInterference.kind==='penetracion'){
    assert.equal(gauge.alignedToSheet,false);
    assert.equal(gauge.contactEngaged,false);
   }
+  // La holgura puede coexistir con un contacto nominal evaluable;
+  // no debe transformarse automáticamente en falta de contacto.
  }
 });
 test('tope conserva la cota X/R nominal; sólo se aparta tras detectar colisión',()=>{
@@ -53,7 +55,7 @@ test('tope conserva la cota X/R nominal; sólo se aparta tras detectar colisión
    assert.deepEqual(scene.gaugeTransition.from,anchor,
     'La retirada nunca reubica su origen con la chapa');
   }
-  if(place.gaugeInterference.warning){
+  if(place.gaugeInterference.kind==='penetracion'){
    assert.equal(place.contactEngaged,false);
    assert.equal(place.alignedToSheet,false);
   }
