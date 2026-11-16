@@ -43,7 +43,7 @@ function nearestSegment(a,b,c,d){
  ];
  let best=null;
  for(const o of options){
-  const m={distance:dist(o.p,o.q),point:o.p};
+  const m={distance:dist(o.p,o.q),point:o.p,fingerPoint:o.q};
   if(!best||m.distance<best.distance)best=m;
  }
  return best;
@@ -81,9 +81,11 @@ export function inspectGaugeProfile(sheet,polygon,thickness=2,contact=null,{
     nearestPoint.x>=Math.min(u.x,v.x)-1e-5&&
     nearestPoint.x<=Math.max(u.x,v.x)+1e-5;
  };
- // Conservar la primera falta de holgura para notificarla al final,
- // pero NUNCA permitir que oculte una penetración en un ala posterior.
- let firstClearance=null;
+ // Informar el hueco mínimo realmente medido entre eje de chapa y
+ // contorno del dedo, SIN usar la distancia al anclaje de referencia
+ // (esa distancia no mide la holgura contra el cuerpo).
+ // Nunca permitir que la holgura oculte una penetración posterior.
+ let closestClearance=null;
  for(let i=0;i<sheet.length-1;i++){
   const a=sheet[i],b=sheet[i+1],cuts=[0,1];
   for(let j=0;j<polygon.length;j++){
@@ -106,11 +108,18 @@ export function inspectGaugeProfile(sheet,polygon,thickness=2,contact=null,{
   if(allowance>.18)for(let j=0;j<polygon.length;j++){
    const near=nearestSegment(a,b,polygon[j],polygon[(j+1)%polygon.length]);
    if(near.distance<allowance-.18&&!exempt(near.point)&&
-      !isPermittedShelf(a,b,polygon[j],polygon[(j+1)%polygon.length],near.point))
-    {if(firstClearance===null)
-      firstClearance={warning:true,kind:'holgura',point:near.point,segment:i};
-     break;}
+      !isPermittedShelf(a,b,polygon[j],polygon[(j+1)%polygon.length],near.point)){
+     // R107: comparar TODAS las aristas. El primer roce no siempre es
+     // el más próximo. Mantener la distancia exacta, en mm, para que
+     // pueda auditarse el naranja sin esconder riesgos reales.
+     if(!closestClearance||near.distance<closestClearance.distanceMm){
+      closestClearance={warning:true,kind:'holgura',point:near.point,
+       closestFingerPoint:near.fingerPoint,segment:i,fingerEdge:j,
+       distanceMm:near.distance,requiredMm:allowance,
+       deficitMm:Math.max(0,allowance-near.distance),verified:false};
+     }
+    }
   }
  }
- return firstClearance||{warning:false,kind:'sin-interferencia-detectada',point:null};
+ return closestClearance||{warning:false,kind:'sin-interferencia-detectada',point:null};
 }
