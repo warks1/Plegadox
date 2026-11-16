@@ -93,13 +93,24 @@ export function reconcileVolumeEvidence(report){
   verified:false
  };
 }
-export function reconcileGaugeEvidence(report){
+export function reconcileGaugeEvidence(report,expectedOperations=null){
  if(!report||typeof report!=='object')
   throw Error('Inspección del tope no disponible');
  const ops=Array.isArray(report.operations)?report.operations:[];
- const observedAbsent=ops.filter(op=>op.contactObserved===false).length;
+ const observedAbsent=ops.filter(op=>op?.contactObserved===false).length;
+ const expected=Number.isInteger(expectedOperations)&&expectedOperations>=1?
+  expectedOperations:null;
+ // Un contador en cero NO permite inferir contactos verificados si
+ // faltan golpes, operaciones o un resultado booleano de contacto.
+ // No llamar colisión a esta incertidumbre.
+ const missingOperationCount=expected===null?0:Math.max(0,expected-ops.length);
+ const unexplainedOperations=ops.filter(op=>op?.contactObserved!==true&&
+  op?.contactObserved!==false).length;
+ const surplusOperations=expected===null?0:Math.max(0,ops.length-expected);
  return {contactNotObserved:Math.max(count(report.contactNotObserved),observedAbsent),
-  incompleteContactData:ops.some(op=>op.contactObserved!==true&&op.contactObserved!==false)};
+  missingOperationCount,unexplainedOperations,surplusOperations,
+  incompleteContactData:missingOperationCount>0||unexplainedOperations>0||
+   surplusOperations>0};
 }
 /** Diagnóstico para el OPERARIO. No convierte un modelo sin advertencias
  * en una máquina comprobada ni llama COLISIÓN a una falta de contacto.
@@ -116,6 +127,8 @@ export function summarizePhysicalEvidence(plan,{volumeExpected=true}={}){
  if(plan.gaugeInvalidReferences>0)supportProblems.push('Cara de referencia de tope inválida');
  if(plan.gaugeContactNotObserved>0)supportProblems.push('No se ha observado contacto con el tope');
  if(!plan.gaugeChecked)unknown.push('Contacto de tope sin evaluar');
+ if(plan.gaugeContactUnknown===true)
+  unknown.push('Contacto de tope sin datos completos en todos los golpes');
  if(!plan.toolCriticalChecked)unknown.push('Fases críticas punzón/matriz sin evaluar');
  if(volumeExpected&&!plan.volumeChecked)unknown.push('Barrido volumétrico sin evaluar');
  if(!plan.axisChecked)unknown.push('Sin recorrido CNC comprobado de ejes');
