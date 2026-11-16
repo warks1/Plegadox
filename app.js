@@ -1557,13 +1557,43 @@ function toolCardPreview(tool,kind){
  svg.setAttribute('viewBox',[minX-padX,-maxY-padY,maxX-minX+padX*2,maxY-minY+padY*2].join(' '));
  svg.setAttribute('preserveAspectRatio','xMidYMid meet');
  svg.setAttribute('aria-hidden','true');
- const path=document.createElementNS('http://www.w3.org/2000/svg','path');
- path.setAttribute('d',pts.map(([x,y],i)=>(i?'L':'M')+x.toFixed(3)+' '+(-y).toFixed(3)).join(' ')+' Z');
- path.setAttribute('fill',kind==='punch'?'#86b6d1':'#688fa8');
- path.setAttribute('stroke','#e4f7ff');
+ // Acero fresado con reflejos en las fichas. Solo cambia la pintura:
+ // el contorno (incluidos escotes y V múltiples) sigue siendo el perfil
+ // utilizado por el inspector y la simulación, nunca una silueta genérica.
+ const ns='http://www.w3.org/2000/svg';
+ const gradientId='px-steel-'+String(tool.id||'catalogo')
+  .replace(/[^a-zA-Z0-9_-]/g,'-')+'-'+kind;
+ const defs=document.createElementNS(ns,'defs');
+ const steel=document.createElementNS(ns,'linearGradient');
+ steel.setAttribute('id',gradientId);
+ steel.setAttribute('x1','0%');steel.setAttribute('x2','100%');
+ const colors=kind==='punch'?
+  ['#294456','#e8f2f7','#6a889c','#fbfdff','#36596e']:
+  ['#182d40','#b5ccd9','#537086','#e5eff4','#2b4659'];
+ for(const [i,color] of colors.entries()){
+  const stop=document.createElementNS(ns,'stop');
+  stop.setAttribute('offset',(i*25)+'%');
+  stop.setAttribute('stop-color',color);steel.append(stop);
+ }
+ defs.append(steel);svg.append(defs);
+ const path=document.createElementNS(ns,'path');
+ const contour=pts.map(([x,y],i)=>(i?'L':'M')+
+  x.toFixed(3)+' '+(-y).toFixed(3)).join(' ')+' Z';
+ path.setAttribute('d',contour);
+ path.setAttribute('fill','url(#'+gradientId+')');
+ path.setAttribute('stroke','#b7d7e8');
  path.setAttribute('stroke-width',String(Math.max(.4,Math.min(1.5,(maxX-minX)/55))));
  path.setAttribute('stroke-linejoin','round');
  svg.append(path);
+ // Un segundo perfil tenue sirve de filo pulido; no añade ni
+ // modifica metal en 2D o volumen 3D.
+ const edge=document.createElementNS(ns,'path');
+ edge.setAttribute('d',contour);
+ edge.setAttribute('fill','none');
+ edge.setAttribute('stroke','#e8f8ff');
+ edge.setAttribute('stroke-opacity','.36');
+ edge.setAttribute('stroke-width',String(Math.max(.2,(maxX-minX)/125)));
+ svg.append(edge);
  return svg;
 }
 function toolCard(tool,kind){
