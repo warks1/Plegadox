@@ -9,7 +9,7 @@ import {mkdir,writeFile,appendFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {inflateRawSync} from 'node:zlib';
 import {CAD_EVIDENCE_SOURCES} from '../cad-evidence.js';
-import {extractDxfFromZip} from '../cad-zip-reader.js';
+import {extractDxfFromZip,listDxfZipEntries} from '../cad-zip-reader.js';
 import {parseToolDxf} from '../tool-dxf.js';
 import {auditImportedCadDimensions} from '../tool-cad-oem-audit.js';
 const MAX=8*1024*1024;
@@ -72,20 +72,47 @@ async function audit(item){
   record.bytes=file.length;
   record.sha256=createHash('sha256').update(file).digest('hex');
   const zipped=/\.zip$/i.test(new URL(item.cadUrl).pathname);
-  const content=zipped?
-   (await extractDxfFromZip(file,{inflate:raw=>
-    new Uint8Array(inflateRawSync(raw))})).content:
-   new TextDecoder('utf-8',{fatal:true}).decode(file);
-  const parsed=parseToolDxf(content);
-  const review=measured(item,parsed);
-  record.status=review.canRegister?
-   'PERFIL_DXF_LEIDO_COTAS_NOMINALES_NO_CERTIFICADO':
-   'DXF_LEIDO_DISCREPANCIA_COTAS';
-  record.points=parsed.points.length;record.widthMm=parsed.width;
-  record.heightMm=parsed.height;
-  record.unitsAssumed=parsed.unitsAssumed;
-  record.conflicts=review.conflicts;
-  record.missing=review.missing;
+  const entries=zipped?await listDxfZipEntries(file):
+   [{name:new URL(item.cadUrl).pathname.split('/').at(-1)}];
+  record.archiveDxfEntries=entries.length;
+  record.variants=[];
+  // Ni siquiera en CI se mezclan distintas secciones o segmentos Z:
+  // examinar individualmente cada fichero y NO escoger uno arbitrario.
+  for(const entry of entries.slice(0,60)){
+   const variant={name:entry.name,status:'SIN_ANALIZAR'};
+   try{
+    const content=zipped?
+     (await extractDxfFromZip(file,{selectName:entry.name,
+      inflate:raw=>new Uint8Array(inflateRawSync(raw))})).content:
+     new TextDecoder('utf-8',{fatal:true}).decode(file);
+    const parsed=parseToolDxf(content);
+    const review=measured(item,parsed);
+    variant.status=review.canRegister?
+     'DXF_LEIDO_COTAS_NOMINALES_COINCIDENTES':
+     'DXF_LEIDO_DISCREPANCIA_COTAS';
+    variant.points=parsed.points.length;variant.widthMm=parsed.width;
+    variant.heightMm=parsed.height;variant.unitsAssumed=parsed.unitsAssumed;
+    variant.conflicts=review.conflicts;
+    variant.missing=review.missing;
+   }catch(error){
+    variant.status='DXF_NO_PARSABLE';
+    variant.problem=String(error?.message||error).slice(0,180);
+   }
+   record.variants.push(variant);
+  }
+  const good=record.variants.filter(x=>
+   x.status==='DXF_LEIDO_COTAS_NOMINALES_COINCIDENTES');
+  const differs=record.variants.filter(x=>
+   x.status==='DXF_LEIDO_DISCREPANCIA_COTAS');
+  record.status=entries.length>1?
+   good.length?'ZIP_VARIANTES_LEIDAS_REQUIEREN_ELECCION':
+    'ZIP_MULTIPLE_DXF_SIN_PERFIL_IDENTIFICADO':
+   good.length?'PERFIL_DXF_LEIDO_COTAS_NOMINALES_NO_CERTIFICADO':
+   differs.length?'DXF_LEIDO_DISCREPANCIA_COTAS':
+   'SIN_PERFIL_VALIDADO';
+  record.parsedVariants=good.length+differs.length;
+  record.nominalCandidates=good.length;
+  record.conflictingVariants=differs.length;
  }catch(error){
   record.status='SIN_PERFIL_VALIDADO';
   record.problem=String(error?.message||error).slice(0,260);
@@ -110,8 +137,10 @@ await Promise.all(Array.from({length:workers},async()=>{
 const metrics={
  total:results.length,
  read:results.filter(x=>x.status==='PERFIL_DXF_LEIDO_COTAS_NOMINALES_NO_CERTIFICADO').length,
+ multiWithCandidates:results.filter(x=>x.status==='ZIP_VARIANTES_LEIDAS_REQUIEREN_ELECCION').length,
+ nominalCandidates:results.reduce((n,x)=>n+(x.nominalCandidates||0),0),
  mismatched:results.filter(x=>x.status==='DXF_LEIDO_DISCREPANCIA_COTAS').length,
- unavailable:results.filter(x=>x.status==='SIN_PERFIL_VALIDADO').length,
+ unavailable:results.filter(x=>!x.nominalCandidates).length,
  mounted:0,certified:0
 };
 await writeFile(OUTPUT,JSON.stringify({
@@ -122,9 +151,9 @@ await writeFile(OUTPUT,JSON.stringify({
 const summary=[
  '## PlegadoX · rastreo remoto CAD OEM',
  '',
- '| Enlaces | DXF leídos con cotas nominales sin certificar | Con discrepancias | No disponibles/no analizables | Montados verificados |',
+ '| Enlaces | ZIP con variantes evaluadas | Perfiles nominales candidatos | No verificados | Montados verificados |',
  '|---:|---:|---:|---:|---:|',
- `| ${metrics.total} | ${metrics.read} | ${metrics.mismatched} | ${metrics.unavailable} | 0 |`,
+ `| ${metrics.total} | ${metrics.multiWithCandidates} | ${metrics.nominalCandidates} | ${metrics.unavailable} | 0 |`,
  '',
  'Los perfiles no se copian al repositorio ni se marcan como CAD industrial verificado.',
  'Un perfil DXF leído pero con geometría compleja puede requerir tratamiento CAD manual.',
