@@ -17,8 +17,9 @@ test('R101: no hay contacto nominal en ninguna alternativa: diagnóstico explíc
  const report=optimizeBendPlan(p,{...options,
   toolEvaluator:part=>({operations:part.order.map(()=>({
    possibleToolIntrusion:false,possibleToolInterference:false}))}),
-  gaugeEvaluator:()=>({warningCount:0,contactNotObserved:1,
-   operations:[{contactObserved:false,findings:[]}]})
+  gaugeEvaluator:part=>({warningCount:0,contactNotObserved:1,
+   operations:part.order.map((bend,operation)=>({bend,operation,
+    contactObserved:operation!==0,findings:[]}))})
  });
  assert.equal(report.best,null);
  assert.equal(report.status,'SIN_APOYO_NOMINAL_2D_VIABLE');
@@ -30,8 +31,9 @@ test('R101: apoyo presente y punzón incompatible: no llamarlo ausencia de tope'
  const report=optimizeBendPlan(EXAMPLE,{...options,
   toolEvaluator:part=>({operations:part.order.map(()=>({
    possibleToolIntrusion:true,possibleToolInterference:true}))}),
-  gaugeEvaluator:()=>({warningCount:0,contactNotObserved:0,
-   operations:[{contactObserved:true,findings:[]}]})
+  gaugeEvaluator:part=>({warningCount:0,contactNotObserved:0,
+   operations:part.order.map((bend,operation)=>({bend,operation,
+    contactObserved:true,findings:[]}))})
  });
  assert.equal(report.best,null);
  assert.equal(report.status,'SIN_PLAN_SIN_PENETRACIONES_MODELADAS');
@@ -42,8 +44,10 @@ test('R101: referencia interior inválida explica rechazo sin inventar penetraci
  const report=optimizeBendPlan(EXAMPLE,{...options,
   toolEvaluator:part=>({operations:part.order.map(()=>({
    possibleToolIntrusion:false,possibleToolInterference:false}))}),
-  gaugeEvaluator:()=>({warningCount:1,contactNotObserved:0,
-   operations:[{contactObserved:true,findings:[{kind:'referencia-interior'}]}]})
+  gaugeEvaluator:part=>({warningCount:1,contactNotObserved:0,
+   operations:part.order.map((bend,operation)=>({bend,operation,
+    contactObserved:true,findings:operation===0?
+     [{kind:'referencia-interior'}]:[]}))})
  });
  assert.equal(report.best,null);
  assert.equal(report.status,'SIN_APOYO_NOMINAL_2D_VIABLE');
