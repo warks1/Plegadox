@@ -143,6 +143,8 @@ export function scanVolumeTrajectory(input,options={}){
    // Conservar todas las incertidumbres del golpe incluso si otra
    // muestra del MISMO cuerpo presenta después una penetración.
    unresolvedFindingsCount:events.filter(e=>uncertainSeverities.has(e.severity)).length,
+   provisionalKinds:[...new Set(events.filter(e=>provisionalSeverities.has(e.severity))
+    .map(e=>e.kind))],
    possibleInterference:events.length>0,
    modelPenetration:events.some(e=>
     machineKinds.includes(e.kind)&&
@@ -182,10 +184,11 @@ export function scanVolumeTrajectory(input,options={}){
  let unresolvedGeometryFindings=0;
  for(const row of ops){
   unresolvedGeometryFindings+=row.unresolvedFindingsCount;
+  // La primera incidencia más grave puede reemplazar la provisional
+  // del mismo cuerpo. Conservar ambas evidencias por operación.
+  for(const kind of row.provisionalKinds)
+   if(provisionalByKind[kind]!==undefined)provisionalByKind[kind]++;
   for(const f of row.findings){
-   if(provisionalByKind[f.kind]!==undefined&&
-      provisionalSeverities.has(f.severity))
-    provisionalByKind[f.kind]++;
    // Una envolvente sin Z real no demuestra penetración de máquina.
    // El contacto habitual con el radio del útil se cuenta por separado.
    if(modeledSeverities.has(f.severity)||
