@@ -84,7 +84,8 @@ export function reconcileVolumeEvidence(report){
  return {
   modeledMachineWarnings:Math.max(count(report.modeledMachineWarnings),detected),
   ramWarnings,bedWarnings,gaugeWarnings,ramEvidence,
-  uncertainSweptIntervals:Math.max(count(report.uncertainSweptIntervals),uncertain),
+  uncertainSweptIntervals:Math.max(count(report.uncertainSweptIntervals),
+   count(report.unresolvedGeometryFindings),uncertain),
   axisViolations:Math.max(count(report.axisViolationCount),
    Array.isArray(report.axisReport?.violations)?report.axisReport.violations.length:0),
   axisModeledCollisions:Math.max(count(report.axisModeledCollisions),
