@@ -51,8 +51,26 @@ export function gaugeRiskStatus(placement){
   return {level:'amber',code:'comprobacion-incompleta',message:'COMPROBACIÓN 2D INCOMPLETA',verified:false};
  // El pronóstico supone un dedo de tope inmóvil, pero la pose del
  // simulador puede mostrar el dedo retirado. No confundir ambos riesgos.
- if(hit.warning===true)
-  return {level:'amber',code:hit.kind==='holgura'?'holgura-actual':'interferencia-actual',message:'HOLGURA O INTERFERENCIA EN POSICIÓN 2D ACTUAL',verified:false};
+ if(hit.warning===true){
+  // La holgura no es una penetración comprobada. Mostrar la distancia
+  // realmente medida al contorno del dedo (no al tope nominal), con
+  // umbral e/2; son cifras geométricas 2D, no medidas físicas OEM.
+  if(hit.kind==='holgura'){
+   const hasGap=Number.isFinite(hit.distanceMm)&&
+    Number.isFinite(hit.requiredMm);
+   const measured=hasGap?Math.max(0,hit.distanceMm):null;
+   const required=hasGap?Math.max(0,hit.requiredMm):null;
+   return {level:'amber',code:'holgura-actual',message:hasGap?
+    'HOLGURA 2D '+measured.toFixed(2)+' mm · MÍN. '+
+     required.toFixed(2)+' mm · REVISAR':
+    'HOLGURA 2D INSUFICIENTE · REVISAR ESPESOR Y DEDO',
+    ...(hasGap?{clearanceMm:measured,requiredMm:required,
+     deficitMm:Math.max(0,required-measured)}:{}),
+    verified:false};
+  }
+  return {level:'amber',code:'interferencia-actual',
+   message:'INTERFERENCIA 2D ACTUAL · REVISAR',verified:false};
+ }
  if(plan?.withdrawalUnverified===true||plan?.initialPenetration===true||
     ((Number(plan?.penetrationCount)||0)>0&&plan?.enabled!==true))
   return {level:'amber',code:'retirada-no-fiable',message:'INTERFERENCIA FUTURA SIN RETIRADA FIABLE',verified:false};
