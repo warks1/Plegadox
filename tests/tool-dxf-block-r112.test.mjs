@@ -112,3 +112,31 @@ test('R112: sigue rechazando unidades distintas de milímetros',()=>{
   "9\n$INSUNITS\n70\n1");
  assert.throws(()=>parseToolDxf(wrong),/no milimétricas/);
 });
+
+test('R112: aristas WILA cerradas de DOS puntos reconstruyen una sola sección',()=>{
+ const edge=(a,b)=>['0','LWPOLYLINE','90','2','70','1',
+  '10',String(a[0]),'20',String(a[1]),
+  '10',String(b[0]),'20',String(b[1])];
+ const cad=base([
+  ...edge([-20,90],[20,90]),
+  ...edge([20,0],[-20,0]),
+  ...edge([20,90],[20,0]),
+  ...edge([-20,0],[-20,90])
+ ]);
+ const model=parseToolDxf(cad);
+ assert.equal(model.width,40);
+ assert.equal(model.height,90);
+ assert.equal(model.points.length,4);
+});
+
+test('R112: una única arista WILA aislada nunca es un contorno de útil',()=>{
+ const one=base(['0','LWPOLYLINE','90','2','70','1',
+  '10','-20','20','0','10','20','20','0']);
+ assert.throws(()=>parseToolDxf(one),/al menos dos segmentos/);
+});
+
+test('R112: dos vértices con bulge NO son un simple segmento recto',()=>{
+ const malformed=base(['0','LWPOLYLINE','90','2','70','1',
+  '10','-20','20','0','42','.5','10','20','20','0']);
+ assert.throws(()=>parseToolDxf(malformed),/dos vértices con arco/);
+});
