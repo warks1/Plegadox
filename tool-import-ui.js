@@ -1,6 +1,6 @@
 /** Interfaz de importación DXF de utillaje, completamente local. */
 import {parseToolDxf,importedTool} from './tool-dxf.js';
-import {extractDxfFromZip} from './cad-zip-reader.js';
+import {extractDxfFromZip,listDxfZipEntries} from './cad-zip-reader.js';
 import {auditImportedCadDimensions,catalogCadAuditReference} from './tool-cad-oem-audit.js';
 import {inspectPunchWorkingAxis,inspectDieWorkingAxis} from './tool-cad-datum.js';
 import {listCadImportSources,suggestedMountFamily} from './cad-import-sources.js';
@@ -60,6 +60,13 @@ export function setupToolDxfImporter({add}){
  const axisReview=parsed=>parsed?(kind.value==='die'?
   inspectDieWorkingAxis(parsed.points):inspectPunchWorkingAxis(parsed.points)):null;
  const mount=$('toolDxfMount');
+ // Los ZIP OEM suelen traer VARIOS DXF (longitudes y variantes).
+ // Ninguna se elige automáticamente sin decir cuál es el archivo.
+ const zipChoice=document.createElement('select');
+ zipChoice.className='px-oem-zip-choice';
+ zipChoice.setAttribute('aria-label','Seleccionar contorno DXF del ZIP OEM');
+ zipChoice.hidden=true;input.insertAdjacentElement('afterend',zipChoice);
+ let zipBytes=null,zipLabel='';
  let parsed=null,preparedSource=null;
  const say=(message,error=false)=>{
   status.textContent=message;status.dataset.error=String(error);
@@ -186,31 +193,69 @@ export function setupToolDxfImporter({add}){
   });
   cadSources.replaceChildren(...display);
  }
+ const acceptCad=(model,cad,fileName)=>{
+  parsed=model;
+  if(!name.value.trim())
+   name.value=fileName.replace(/(?:\\.dxf)?\\.(?:dxf|zip)$/i,'').slice(0,65);
+  preview.hidden=false;
+  drawPreview(preview,model,axisReview(model),axisInput?.value||null);
+  const audit=axisReview(model);
+  say((cad?'ZIP comprobado (CRC correcto), DXF '+cad.name+'. ':'')+
+   'Contorno leído: '+model.points.length+' vértices · '+
+   model.width.toFixed(2)+' × '+model.height.toFixed(2)+' mm · '+
+   (audit.datumEstablished?'Eje de trabajo X '+audit.axisX.toFixed(3)+
+    ' mm inferido; ':audit.status+'; introduce la X de la punta/V; ')+
+   (model.unitsAssumed?'El archivo no declara mm: revisa la escala. ':'')+
+   'Comprueba orientación (punta abajo, V arriba), ángulo, '+
+   'apertura, longitud Z y amarre ANTES de guardar.');
+  reviewCad();
+ };
+ zipChoice.addEventListener('change',async()=>{
+  parsed=null;save.disabled=true;preview.hidden=true;
+  if(!zipChoice.value||!zipBytes)return;
+  try{
+   const cad=await extractDxfFromZip(zipBytes,{selectName:zipChoice.value});
+   const model=parseToolDxf(cad.content);
+   acceptCad(model,cad,zipLabel);
+  }catch(error){say('DXF del ZIP no utilizable: '+error.message,true);}
+ });
  input.addEventListener('change',async()=>{
   parsed=null;save.disabled=true;preview.hidden=true;
+  zipBytes=null;zipChoice.hidden=true;zipChoice.replaceChildren();
   const file=input.files?.[0];
   if(!file){say('Selecciona un .DXF ASCII o .DXF.ZIP del fabricante.');return;}
   try{
-   if(!/\.(dxf|zip)$/i.test(file.name))
+   if(!/\\.(dxf|zip)$/i.test(file.name))
     throw Error('Selecciona un archivo .DXF o .DXF.ZIP');
-   const zipped=/\.zip$/i.test(file.name);
+   const zipped=/\\.zip$/i.test(file.name);
    if(file.size>(zipped?8:1)*1024*1024)
     throw Error('DXF o ZIP fuera de tamaño permitido');
-   const cad=zipped?await extractDxfFromZip(await file.arrayBuffer()):null;
-   const model=parseToolDxf(cad?cad.content:await file.text());
-   parsed=model;
-   if(!name.value.trim())name.value=file.name.replace(/(?:\.dxf)?\.(?:dxf|zip)$/i,'').slice(0,65);
-   preview.hidden=false;
-   drawPreview(preview,model,axisReview(model),axisInput?.value||null);
-   const audit=axisReview(model);
-   say((cad?'ZIP comprobado (CRC correcto), DXF '+cad.name+'. ':'')+
-    'Contorno leído: '+model.points.length+' vértices · '+
-    model.width.toFixed(2)+' × '+model.height.toFixed(2)+' mm · '+
-    (audit.datumEstablished?'Eje de trabajo X '+audit.axisX.toFixed(3)+
-     ' mm inferido; ':audit.status+'; introduce la X de la punta/V; ')+
-    (model.unitsAssumed?'El archivo no declara mm: revisa la escala. ':'')+
-    'Comprueba la orientación (punta del punzón abajo, V de la matriz arriba), ángulo, apertura, longitud y amarre antes de guardar.');
-   reviewCad();
+   if(!zipped){
+    acceptCad(parseToolDxf(await file.text()),null,file.name);
+    return;
+   }
+   const bytes=await file.arrayBuffer();
+   const entries=await listDxfZipEntries(bytes);
+   if(entries.length>1){
+    zipBytes=bytes;zipLabel=file.name;
+    const placeholder=document.createElement('option');
+    placeholder.value='';placeholder.textContent=
+     'Elegir DXF exacto del ZIP ('+entries.length+' perfiles)';
+    zipChoice.append(placeholder);
+    for(const item of entries){
+     const option=document.createElement('option');
+     option.value=item.name;
+     option.textContent=item.name+' · '+item.uncompressedBytes+' bytes';
+     zipChoice.append(option);
+    }
+    zipChoice.hidden=false;zipChoice.value='';
+    say('El ZIP contiene '+entries.length+
+     ' archivos DXF: selecciona el perfil EXACTO de tu referencia.'+
+     ' No unir geometrías de distintas longitudes, variantes o amarres.');
+    return;
+   }
+   const cad=await extractDxfFromZip(bytes,{selectName:entries[0].name});
+   acceptCad(parseToolDxf(cad.content),cad,file.name);
   }catch(e){say('No se puede importar: '+e.message,true);}
  });
  save.addEventListener('click',()=>{
