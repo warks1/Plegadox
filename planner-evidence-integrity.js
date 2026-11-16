@@ -13,6 +13,8 @@ const MACHINE_KINDS=new Set(['ram','bed','gauge','upperClamp',
 const PHYSICAL_HITS=new Set(['interferencia-envolvente',
  'penetracion-barrido-lineal-modelado']);
 const UNCERTAIN_HITS=new Set(['intervalo-barrido-no-resuelto','geometria-invalida']);
+const PROVISIONAL_HITS=new Set(['solape-envolvente-provisional',
+ 'solape-barrido-provisional']);
 const findings=op=>Array.isArray(op?.findings)?op.findings:[];
 export function reconcileCriticalToolEvidence(report,operationsExpected){
  if(!report||!Array.isArray(report.operations)||
@@ -57,16 +59,21 @@ export function reconcileVolumeEvidence(report){
  if(!report||typeof report!=='object')
   throw Error('Resultado volumétrico de máquina no disponible');
  const operations=Array.isArray(report.operations)?report.operations:[];
- const hits={};
+ const hits={},provisionalHits={};
  let uncertain=0;
  for(const op of operations){
-  const each=new Set();
+  const each=new Set(),maybe=new Set();
   for(const f of findings(op)){
    if(UNCERTAIN_HITS.has(f.severity))uncertain++;
    if(MACHINE_KINDS.has(f.kind)&&PHYSICAL_HITS.has(f.severity))
     each.add(f.kind);
+   if(MACHINE_KINDS.has(f.kind)&&PROVISIONAL_HITS.has(f.severity))
+    maybe.add(f.kind);
   }
+  for(const kind of op.provisionalKinds||[])
+   if(MACHINE_KINDS.has(kind))maybe.add(kind);
   for(const kind of each)hits[kind]=(hits[kind]||0)+1;
+  for(const kind of maybe)provisionalHits[kind]=(provisionalHits[kind]||0)+1;
  }
  const get=(kind,declared=0)=>Math.max(count(hits[kind]),
   count(report.byKind?.[kind]),count(declared));
@@ -77,6 +84,12 @@ export function reconcileVolumeEvidence(report){
  const detected=allKinds.reduce((n,kind)=>n+get(kind,
   kind==='ram'?report.ramWarnings:kind==='bed'?report.bedWarnings:
    kind==='gauge'?report.gaugeWarnings:0),0);
+ const provisional=(kind,declared=0)=>Math.max(count(provisionalHits[kind]),
+  count(report.provisionalByKind?.[kind]),count(declared));
+ const provisionalDetected=allKinds.reduce((n,kind)=>n+provisional(kind,
+  kind==='ram'?report.provisionalRamWarnings:
+   kind==='bed'?report.provisionalBedWarnings:
+   kind==='gauge'?report.provisionalGaugeWarnings:0),0);
  const ramEvidence=Array.isArray(report.ramEvidence)&&report.ramEvidence.length?
   report.ramEvidence:operations.flatMap(op=>findings(op)
    .filter(f=>f.kind==='ram'&&PHYSICAL_HITS.has(f.severity))
@@ -84,6 +97,11 @@ export function reconcileVolumeEvidence(report){
  return {
   modeledMachineWarnings:Math.max(count(report.modeledMachineWarnings),detected),
   ramWarnings,bedWarnings,gaugeWarnings,ramEvidence,
+  provisionalMachineWarnings:Math.max(count(report.provisionalMachineWarnings),
+   provisionalDetected),
+  provisionalRamWarnings:provisional('ram',report.provisionalRamWarnings),
+  provisionalBedWarnings:provisional('bed',report.provisionalBedWarnings),
+  provisionalGaugeWarnings:provisional('gauge',report.provisionalGaugeWarnings),
   uncertainSweptIntervals:Math.max(count(report.uncertainSweptIntervals),
    count(report.unresolvedGeometryFindings),uncertain),
   axisViolations:Math.max(count(report.axisViolationCount),
@@ -145,6 +163,9 @@ export function summarizePhysicalEvidence(plan,{volumeExpected=true}={}){
  if(!plan.axisGeometryChecked)unknown.push('CAD de máquina sin cotejo con trayectoria de ejes');
  if(plan.axisGeometryUnresolved>0)unknown.push('Intervalos CNC sin resolver');
  if(plan.volumeSweptSuspects>0)unknown.push('Barridos geométricos sin resolver');
+ if(plan.volumeProvisionalWarnings>0)unknown.push(
+  'Solape con envolvente provisional sin CAD OEM: '+plan.volumeProvisionalWarnings+
+  ' golpes/cuerpos; revisar geometría y posición Z, NO equivale a colisión demostrada');
  if(plan.cadImportError)unknown.push('Error de importación CAD de máquina');
  const kinds=Array.isArray(plan.cadMissing)?[...new Set(plan.cadMissing.filter(x=>typeof x==='string'))]:[];
  if(kinds.length)unknown.push('Faltan perfiles CAD de máquina: '+kinds.join(', '));
