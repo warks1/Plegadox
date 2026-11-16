@@ -213,11 +213,11 @@
  <p class="hint">DXF ASCII con un contorno cerrado: LWPOLYLINE (se admiten arcos bulge) o líneas LINE consecutivas, aunque estén desordenadas. Sin STEP, splines, bloques ni agujeros. El dibujo debe estar en perfil lateral, con base abajo (Y=0 al importar). Declara el sistema de amarre por separado; un DXF no demuestra por sí solo que el útil encaje ni que soporte la carga.</p>
  <section class="px-oem-cad-sources" aria-label="Fuentes oficiales CAD WILA y Promecam">
   <h3>DXF de fabricante · WILA / PROMECAM</h3>
-  <p class="hint">Selecciona una referencia para preparar el formulario, descarga su DXF desde el fabricante y adjúntalo aquí. WILA puede exigir registro. Hasta importar el contorno sigue siendo una vista paramétrica, no CAD verificado.</p>
+  <p class="hint">Selecciona la referencia exacta y adjunta su DXF ASCII o ZIP oficial. El ZIP se comprueba mediante CRC y se acepta sólo si contiene un perfil DXF único; si trae varias variantes, extráelas y selecciona la correcta. WILA puede exigir registro. El montaje físico sigue sin certificar.</p>
   <div id="toolCadSources" class="px-oem-cad-grid"></div>
  </section>
  <div class="px-dxf-grid">
-  <label>Archivo DXF ASCII<input type="file" id="toolDxfFile" accept=".dxf,application/dxf" aria-label="Archivo de contorno de herramienta DXF"></label>
+  <label>Archivo CAD (.DXF o .DXF.ZIP)<input type="file" id="toolDxfFile" accept=".dxf,.zip,application/dxf,application/zip" aria-label="Archivo CAD DXF o ZIP de fabricante"></label>
   <label>Tipo de herramienta<select id="toolDxfKind"><option value="punch">Punzón</option><option value="die">Matriz</option></select></label>
   <label>Sistema de amarre / fijación<select id="toolDxfMount">
     <option value="Desconocido">Sin identificar · comprobar en taller</option>
