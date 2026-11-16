@@ -68,8 +68,8 @@ test('un arco ARC OCS inclinado o sin ángulos no se importa como sección plana
 });
 test('punch y matriz importados comparten el contorno DXF con la sección técnica (no CAD certificado)',()=>{
  const d=parseToolDxf(rectangle());
- const punch=importedTool(d,{kind:'punch',name:'Punzón DXF',angle:88,length:415,tip:.8});
- const die=importedTool(d,{kind:'die',name:'Matriz DXF',angle:88,length:415,opening:16});
+ const punch=importedTool(d,{kind:'punch',name:'Punzón DXF',angle:88,length:415,tip:.8,axisX:0});
+ const die=importedTool(d,{kind:'die',name:'Matriz DXF',angle:88,length:415,opening:16,axisX:0});
  assert.equal(punch.verifiedSpecs,false);assert.equal(die.verifiedSpecs,false);
  assert.equal(punch.profileAccuracy,'provisional');
  assert.deepEqual(sectionPunch(punch).points,d.points);
@@ -86,7 +86,7 @@ test('importación persistente y rehidratación de una biblioteca personalizada'
  const memory=new Map();
  const storage={getItem:k=>memory.get(k)||null,setItem:(k,v)=>memory.set(k,v)};
  const tool=importedTool(parseToolDxf(rectangle()),
-  {kind:'die',name:'Matriz guardada',angle:88,length:500,opening:16});
+  {kind:'die',name:'Matriz guardada',angle:88,length:500,opening:16,axisX:0});
  assert.equal(persistImportedTool(storage,tool),1);
  assert.ok(memory.get(TOOL_DXF_STORAGE_KEY));
  const loaded=loadImportedTools(storage);
@@ -98,16 +98,16 @@ test('importación persistente y rehidratación de una biblioteca personalizada'
 test('DXF declara WILA o Promecam sin afirmar homologación del amarre',()=>{
  const contour=parseToolDxf(rectangle());
  const wila=importedTool(contour,{kind:'punch',name:'BIU OEM importado',
-  angle:88,length:415,tip:1,mount:'WILA'});
+  angle:88,length:415,tip:1,mount:'WILA',axisX:0});
  const promecam=importedTool(contour,{kind:'die',name:'Matriz Promecam importada',
-  angle:88,length:415,opening:16,mount:'Amada/Promecam'});
+  angle:88,length:415,opening:16,mount:'Amada/Promecam',axisX:0});
  assert.equal(wila.mount,'WILA');
  assert.equal(promecam.mount,'Amada/Promecam');
  assert.equal(wila.mountVerified,false);
  assert.equal(promecam.mountVerified,false);
  assert.equal(wila.verifiedSpecs,false);
  const undecided=importedTool(contour,{kind:'punch',name:'Sin identificar',
-  angle:88,length:415,tip:1});
+  angle:88,length:415,tip:1,axisX:0});
  assert.equal(undecided.mount,'');
  assert.throws(()=>importedTool(contour,{kind:'punch',name:'Amarre falso',
   angle:88,length:415,tip:1,mount:'Certificado OEM'}),/Tipo de amarre no admitido/);
