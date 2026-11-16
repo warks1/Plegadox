@@ -831,7 +831,7 @@ function scheduleIntegratedAdvisor(){
     status.dataset.state='none';
     status.textContent=report.candidatePairs>0?
      'Cotejadas '+report.planVariantsChecked+' variantes de '+report.pairsScreened+
-     ' parejas de útiles, pero ninguna supera todos los filtros de penetración modelada '+
+     ' parejas de útiles, pero ninguna garantiza un apoyo frontal válido del tope ni supera todos los filtros de penetración modelada '+
      '(chapa, punzón, matriz, tope, trancha o mesa). No se recomienda aplicar '+
      'automáticamente un orden potencialmente conflictivo. El orden manual sigue disponible. '+
      'La revisión de envolventes 3D es preliminar y no equivale a certificar ausencia de colisiones.':
@@ -847,6 +847,9 @@ function scheduleIntegratedAdvisor(){
     ' · avisos chapa/útiles/topes (2D): '+plan.sheetWarnings+' / '+
     plan.toolWarnings+' / '+(plan.gaugeChecked?plan.gaugeWarnings:'sin comprobar')+
     ' · penetraciones posibles de útil: '+plan.toolPenetrations+
+    ' · apoyos de tope sin contacto: '+(plan.gaugeContactNotObserved||0)+
+    ' · referencias de tope inválidas: '+(plan.gaugeInvalidReferences||0)+
+    ' · holguras de tope: '+(plan.gaugeClearanceWarnings||0)
     ' · envolventes 3D trancha/mesa/topes: '+
     (plan.volumeChecked?plan.volumeMachineWarnings+' avisos':'SIN COMPROBAR')+
     ' · barridos pendientes: '+plan.volumeSweptSuspects+
