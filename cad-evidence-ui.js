@@ -3,7 +3,8 @@
  * Mostrar ENLACES no equivale a instalar archivos ni verificar montaje.
  */
 import {CAD_EVIDENCE_SOURCES,cadCoverage} from './cad-evidence.js';
-import {loadMachineCad} from './machine-cad.js';
+import {loadMachineCad,machineConfigurationKey} from './machine-cad.js';
+import {getActiveMachineConfig} from './machine-config.js';
 import {loadImportedTools} from './tool-dxf.js';
 import {getActiveMachineProfile} from './machine-selection.js';
 
@@ -22,7 +23,12 @@ export function renderCadEvidence(){
  if(!host||!status)return;
  const model=getActiveMachineProfile().id;
  let local={};
- try{local=loadMachineCad(localStorage);}catch(error){
+ try{
+  const key=machineConfigurationKey(getActiveMachineConfig());
+  // CAD importados para otra configuración NO cuentan como disponibles.
+  local=Object.fromEntries(Object.entries(loadMachineCad(localStorage))
+   .filter(([,record])=>record.machineConfigKey===key));
+ }catch(error){
   status.textContent='Biblioteca CAD no legible: '+error.message;
   status.dataset.error='true';return;
  }
@@ -32,14 +38,18 @@ export function renderCadEvidence(){
  const tools=loadImportedTools(localStorage).filter(t=>t.importedDxf===true);
  if(tools.some(t=>t.opening==null))local.punch={points:[[0,0]]};
  if(tools.some(t=>t.opening!=null))local.die={points:[[0,0]]};
- const coverage=cadCoverage(model,local);
+ let coverage=null;
+ try{coverage=cadCoverage(model,local);}catch(error){
+  status.textContent='No hay inventario CAD de esta familia: '+error.message;
+  status.dataset.error='true';
+ }
  const count=CAD_EVIDENCE_SOURCES.filter(s=>s.cadUrl).length;
- status.dataset.error='false';
+ if(coverage){status.dataset.error='false';
  status.textContent='Cobertura CAD registrada: '+coverage.importedCount+'/'+
   coverage.requiredCount+' categorías con algún perfil importado. '+
   (coverage.missing.length?'Faltan: '+coverage.missing.map(k=>ALL_LABELS[k]||k).join(', ')+'. ':'')+
   count+' descargas directas confirmadas en fabricantes; '+ 
-  'NO instaladas automáticamente. Los CAD de familias de máquina no sirven para certificar una unidad.';
+  'NO instaladas automáticamente. Los CAD de familias de máquina no sirven para certificar una unidad.';}
  const fragment=document.createDocumentFragment();
  for(const item of CAD_EVIDENCE_SOURCES){
   const card=document.createElement('article');
