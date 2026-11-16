@@ -377,13 +377,12 @@ function drawDie(ctx,scene,cx,cy,scale){
   angle:die.angle,contour:pts,profileSource:die.importedDxf?'DXF':'provisional'};
 }
 function drawRam(ctx,cx,cy,scale,tipY,punch,scene,view={}){
- if(view.showRam!==false){
- // R108: la barra y el resalte lateral de la TRANCHA deben coincidir
- // con el mismo contorno 2,5D examinado por el motor de colisiones.
- // Se respeta la geometría OEM si existe en la revisión volumétrica.
+ // La barra y el resalte de TRANCHA conservan el contorno usado por
+ // el motor; esconderla es SOLO una opción de pintura.
  const ramShape=machineRamEnvelope(scene,getActiveMachineConfig());
  const top=cy-ramShape.toolTop*scale;
  const ramW=ramShape.width*scale;
+ if(view.showRam!==false){
  steelRect(ctx,cx-ramW*.48,top-65*scale,ramW,75*scale,false);
  poly(ctx,[[cx+ramW*.52,top-65*scale],[cx+ramW*.66,top-76*scale],
        [cx+ramW*.66,top+5*scale],[cx+ramW*.52,top+10*scale]],
