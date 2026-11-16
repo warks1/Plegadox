@@ -130,8 +130,16 @@ await Promise.all(Array.from({length:workers},async()=>{
  while(index<eligible.length){
   const i=index++;
   results[i]=await audit(eligible[i]);
+  const sample=(results[i].variants||[]).slice(0,3).map(v=>
+   v.name+' '+v.status+
+   (v.problem?' ('+v.problem+')':'')+
+   (v.heightMm!=null?' H='+v.heightMm+'mm':'')+
+   (v.conflicts?.length?' conflictos='+
+    v.conflicts.map(x=>x.field+':'+x.actual+'/'+x.expected).join(','):'')
+  ).join(' | ');
   process.stdout.write(results[i].id+' '+results[i].status+
-   (results[i].problem?' ('+results[i].problem+')':'')+'\n');
+   (results[i].problem?' ('+results[i].problem+')':'')+
+   (sample?' :: '+sample:'')+'\n');
  }
 }));
 const metrics={
