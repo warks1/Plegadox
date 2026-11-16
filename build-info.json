@@ -1,8 +1,8 @@
 {
-  "build": "PLEGADOX-20261116-R122",
-  "version": "0.9.96",
+  "build": "PLEGADOX-20261116-R123",
+  "version": "0.9.97",
   "machine": "bystronic-2006-2009-wila-promecam-gauge-conditional",
   "ui": "safe-service-worker-update-without-reloading-in-progress-work",
-  "cache": "plegadox-static-0.9.96-safe-sw-r122",
+  "cache": "plegadox-static-0.9.97-safe-sw-r123",
   "tooling": "wila-promecam-custom-profile-dxf-mm-backup50"
 }
