@@ -119,6 +119,37 @@ function seek(operation,fraction){
   if(status)status.textContent='No está disponible el salto de fase en esta compilación.';
  }
 }
+function fullscreenFrame(){return $('machineCanvas')?.closest('.cp-machine-frame');}
+function syncFullscreen(){
+ const frame=fullscreenFrame(),button=$('machineFullscreen');
+ const active=Boolean(frame&&(document.fullscreenElement===frame||
+  frame.classList.contains('px-view-immersive')));
+ if(button){
+  button.setAttribute('aria-pressed',String(active));
+  button.title=active?'Cerrar pantalla completa':'Ampliar simulación a pantalla completa';
+ }
+}
+async function toggleFullscreen(){
+ const frame=fullscreenFrame();if(!frame)return;
+ if(document.fullscreenElement===frame){
+  try{await document.exitFullscreen();}catch{}
+ }else if(frame.classList.contains('px-view-immersive')){
+  frame.classList.remove('px-view-immersive');
+  document.body.classList.remove('px-immersive-open');
+ }else{
+  try{
+   if(typeof frame.requestFullscreen!=='function')
+    throw Error('Fullscreen API no admitida');
+   await frame.requestFullscreen();
+  }catch{
+   // iPhone Safari no ofrece Fullscreen API en elementos arbitrarios.
+   frame.classList.add('px-view-immersive');
+   document.body.classList.add('px-immersive-open');
+  }
+ }
+ syncFullscreen();
+ requestAnimationFrame(()=>window.PLEGADOX_REDRAW_MACHINE?.());
+}
 function capturePNG(){
  const canvas=$('machineCanvas');if(!canvas)return;
  try{
@@ -203,6 +234,19 @@ function init(){
   Object.assign(view,VIEW_DEFAULTS);paint();
  });
  bindButton('machineCapture',capturePNG);
+ bindButton('machineFullscreen',toggleFullscreen);
+ document.addEventListener('fullscreenchange',()=>{
+  syncFullscreen();
+  requestAnimationFrame(()=>window.PLEGADOX_REDRAW_MACHINE?.());
+ });
+ document.addEventListener('keydown',event=>{
+  if(event.key==='Escape'&&fullscreenFrame()?.classList.contains('px-view-immersive')){
+   fullscreenFrame().classList.remove('px-view-immersive');
+   document.body.classList.remove('px-immersive-open');
+   syncFullscreen();
+   window.PLEGADOX_REDRAW_MACHINE?.();
+  }
+ });
  bindButton('machinePrevFold',()=>{
   const state=window.PLEGADOX_STATE?.();if(!state)return;
   const op=Math.floor(state.sim.time/5);
@@ -241,6 +285,6 @@ function init(){
  }
  // Semáforo visible independientemente de las preferencias gráficas.
  if(!displayOptions(view).safetyWarningsVisible)throw Error('Avisos desactivados');
- syncControls();window.PLEGADOX_REDRAW_MACHINE?.();
+ syncControls();syncFullscreen();window.PLEGADOX_REDRAW_MACHINE?.();
 }
 init();
