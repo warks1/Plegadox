@@ -57,6 +57,7 @@ const APP_FILES=[
  "./machine-axis-geometry.js",
  "./swept-volume.js",
  "./machine-visual.js",
+ "./machine-view-options.js",
  "./industrial-tool-finish.js",
  "./manifest.webmanifest",
  "./pwa.js",
