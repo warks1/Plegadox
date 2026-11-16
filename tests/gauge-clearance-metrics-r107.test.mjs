@@ -38,7 +38,7 @@ test('R107: holgura reporta mm reales, mitad del espesor y déficit',()=>{
 });
 
 test('R107: seleccionar la holgura más estrecha, no la primera arista encontrada',()=>{
- const sheet=[{x:0,y:6},{x:25,y:6},{x:50,y:5.4}];
+ const sheet=[{x:0,y:6},{x:25,y:6},{x:40,y:5.4}];
  const hit=inspectGaugeProfile(sheet,rectangle,4,contact);
  assert.equal(hit.kind,'holgura');
  assert.ok(Math.abs(hit.distanceMm-.4)<1e-7,
