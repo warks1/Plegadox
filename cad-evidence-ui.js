@@ -63,7 +63,9 @@ export function renderCadEvidence(){
   details.textContent=item.maker+' / '+item.reference+
    ' · '+item.status+' · '+values;
   const text=document.createElement('p');text.className='hint';
-  text.textContent=item.note;
+  text.textContent=item.note+
+   (item.format==='DXF_ZIP'?
+    ' Extraer el archivo .DXF del ZIP antes de importarlo en PlegadoX.':'');
   const links=document.createElement('div');links.className='px-oem-cad-actions';
   const ficha=document.createElement('a');ficha.href=item.sourceUrl;
   ficha.target='_blank';ficha.rel='noopener noreferrer';
