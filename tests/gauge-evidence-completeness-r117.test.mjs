@@ -49,10 +49,20 @@ test('R117: referencia de tope AUSENTE impide recomendar, sin inventar choque',(
  assert.equal(report.rejectionSummary.gaugeContactIncomplete,1);
  assert.equal(report.rejectionSummary.gaugePenetration,0);
  assert.equal(report.rejectionSummary.noGaugeContact,0);
- assert.equal(report.status,'SIN_APOYO_NOMINAL_2D_VIABLE');
+ assert.equal(report.status,'DATOS_CONTACTO_TOPE_INCOMPLETOS');
  assert.equal(report.manual.gaugeContactUnknown,true);
  assert.equal(report.manual.physicalReview.status,'MODELO_FISICO_INCOMPLETO');
  assert.ok(report.manual.physicalReview.unknown.some(x=>x.includes('Contacto de tope')));
+});
+test('R117: sin datos de apoyo no afirmar que el tope colisiona o que el asiento es imposible',()=>{
+ const report=optimizeBendPlan(part,{...common,gaugeEvaluator:()=>({
+  contactNotObserved:0,warningCount:0,operations:[]})});
+ assert.equal(report.status,'DATOS_CONTACTO_TOPE_INCOMPLETOS');
+ assert.equal(report.rejectionSummary.noGaugeContact,0);
+ assert.equal(report.rejectionSummary.gaugePenetration,0);
+ assert.equal(report.manual.physicalReview.collisions.length,0);
+ assert.equal(report.manual.physicalReview.supportProblems.length,0);
+ assert.ok(report.manual.physicalReview.unknown.length>0);
 });
 test('R117: un contacto frontal explícito permite comparar alternativas sin autorizar CNC',()=>{
  const report=optimizeBendPlan(part,{...common,gaugeEvaluator:nominal});
