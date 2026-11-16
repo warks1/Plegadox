@@ -841,7 +841,13 @@ function scheduleIntegratedAdvisor(){
    if(epoch!==integratedPlannerEpoch)return;
    if(!report.best){
     status.dataset.state='none';
-    status.textContent=report.status==='SIN_APOYO_NOMINAL_2D_VIABLE'?
+    status.textContent=report.status==='DATOS_CONTACTO_TOPE_INCOMPLETOS'?
+     'No se dispone de un informe de contacto frontal completo para todos los pliegues. '+
+     'Variantes con datos de tope incompletos: '+
+     report.rejectionSummary.gaugeContactIncomplete+'. '+
+     'No significa colisión ni ausencia física de apoyo: hay que comprobar cada golpe. '+
+     'Se conserva el orden MANUAL y no se ofrece una recomendación sin evidencia suficiente.':
+     report.status==='SIN_APOYO_NOMINAL_2D_VIABLE'?
      'Ninguna de las '+report.planVariantsChecked+' variantes comprobadas ha mostrado apoyo nominal 2D válido en todos los pliegues. '+
      'Variantes sin contacto: '+report.rejectionSummary.noGaugeContact+
      '; con referencia inválida: '+report.rejectionSummary.invalidGaugeReference+
