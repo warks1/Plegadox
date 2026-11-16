@@ -1,5 +1,14 @@
 # Plegadox — control y simulador de plegado
 
+## Estado actual · R110 (v0.9.84) · 16 de noviembre de 2026
+
+- **Búsqueda ampliada al montaje completo:** 17 referencias de procedencia, incluidos **11 enlaces directos a archivos DXF/ZIP oficiales** y fichas de soporte/amarre sin descarga libre. Se incorporaron UKB 22.010, 50.430 y 22.308, SOCLAM 40.06/34 y WILA TSU-024; ninguno se supone montado en una máquina hasta identificarlo físicamente.
+- **Importación asistida sin mezcla de referencias:** las fichas del inventario permiten preparar el importador de punzones/matrices o el de componentes de máquina. Se descarta el DXF anterior y se reinicia el amarre desconocido en vez de heredar el de otra herramienta. Descargar el archivo original y verificar datum, escala y Z sigue siendo obligatorio.
+- **Origen 3D de Bystronic:** la documentación de BySoft CAM identifica modelos de máquina, topes, útiles y VrModels 3D en sus datos de sistema, una posible vía autorizada para el CAD de unidad. Los modelos propietarios NO se han extraído ni instalado.
+- **Pruebas focalizadas:** 9 verificaciones de conciliación/identidad/amarres superadas tras incorporar las nuevas fuentes; las 33 verificaciones sintéticas de integración volumétrica de R109 se mantienen. No se ha confirmado todavía `npm test` completo ni ensayos en el navegador.
+- **Estado pendiente:** faltan perfiles OEM descargados de las máquinas exactas, datums X/Y/Z de instalación, recorridos físicos y validación CAD de ambos conjuntos. Ni el inventario ni las equivalencias autorizan un programa CNC de producción.
+- **Build** `PLEGADOX-20261116-R110` · versión `0.9.84`. Documento: [R110_CAD_COMPONENTES_Y_ACCESO_OEM.md](./R110_CAD_COMPONENTES_Y_ACCESO_OEM.md).
+
 ## Estado actual · R109 (v0.9.83) · 16 de noviembre de 2026
 
 - **Inventario de CAD contrastado:** once enlaces directos de descarga DXF/ZIP y dieciséis fuentes OEM documentadas de **Eurostamp, UKB, Mate y SOCLAM** con referencia, altura/ángulo/V/radio cuando hay cotas publicadas, soporte y procedencia; fuentes adicionales sobre MECOS, TRUMPF V85 y Bystronic AFM. En el editor aparece qué puede descargarse y qué falta para cada unidad, sin confundir un enlace con un perfil instalado.
