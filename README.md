@@ -1,5 +1,15 @@
 # Plegadox — control y simulador de plegado
 
+## Estado actual · R112 (v0.9.86) · 16 de noviembre de 2026
+
+- **Formatos DXF OEM ampliados:** admite un contorno de `BLOCK/INSERT` con transformación 2D (base, traslado, giro y escala uniforme), así como aristas LWPOLYLINE de dos puntos que deben ensamblarse en un único perfil. Se rechazan reflujos, INSERT múltiple, objetos 3D y contornos no inequívocos.
+- **ZIP DXF UKB directamente en el importador:** carga local de archivos `.DXF.ZIP` sin extraerlos previamente. Valida directorio, nombre local, CRC32, límite de 8 MB comprimidos / 1 MB DXF y un único perfil. Deflate requiere compatibilidad del navegador; el operador podrá extraer manualmente si no está disponible.
+- **Dos matrices UKB verificadas en fichas oficiales:** 25.500 V5/30° H100 y 25.621 V6/84° H150. Inventario actualizado a **27 fuentes y 21 enlaces DXF/ZIP directos**; siguen pendientes sus binarios reales y comprobación de compatibilidad de amarre.
+- **Pruebas focalizadas ejecutadas:** 13/13 para DXF BLOCK/INSERT y aristas, 8/8 del lector ZIP sintético y 10/10 de procedencia de CAD. Pruebas de integridad y geometría, **no** tests industriales con un conjunto OEM real.
+- **Nueva verificación automática:** `.github/workflows/ci.yml` ejecuta `npm test` con Node 22 en GitHub Actions para cambios futuros. Todavía no hay resultado completo confirmado de esa suite.
+- **Límites:** un ZIP con CRC correcto no acredita la autenticidad del fabricante; la geometría sigue sin declarar ausencia física de colisiones. Persisten faltas de CAD STEP/ensamblaje en máquina Trumpf y Bystronic, datums y recorridos X/R/Z/Y1/Y2.
+- **Build:** `PLEGADOX-20261116-R112` · `0.9.86`. Informe: [R112_IMPORTACION_OEM_DXF_ZIP_Y_VALIDACION.md](./R112_IMPORTACION_OEM_DXF_ZIP_Y_VALIDACION.md).
+
 ## Estado actual · R111 (v0.9.85) · 16 de noviembre de 2026
 
 - **CAD de útiles investigado:** 25 fuentes de procedencia y **19 enlaces DXF/ZIP oficiales** entre Eurostamp, UKB, Mate y SOCLAM. Ocho nuevas fichas UKB: punzones 85° 11.151/11.200/10.170 y matrices V30° 25.406/29.351/29.353/25.501/29.552, cada una con su referencia, ángulo, altura, radio y montaje. Los binarios OEM no están descargados ni certificados en esta versión.
