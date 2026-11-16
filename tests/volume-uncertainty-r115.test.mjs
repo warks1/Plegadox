@@ -15,7 +15,8 @@ test('R115: barrido desconocido no se presenta como colisión de trancha',()=>{
  assert.equal(r.modeledMachineWarnings,0);
  assert.equal(r.ramWarnings,0);
  assert.equal(r.byKind.ram,0);
- assert.equal(r.unresolvedGeometryFindings,1);
+ assert.equal(r.unresolvedGeometryFindings,r.framesChecked,
+  'Cada pose no resuelta debe conservarse, no esconderse en el primer diagnóstico');
  const e=reconcileVolumeEvidence(r);
  assert.equal(e.modeledMachineWarnings,0);
  assert.ok(e.uncertainSweptIntervals>0);
@@ -27,7 +28,8 @@ test('R115: geometría inválida queda pendiente sin falsa penetración',()=>{
  });
  assert.equal(r.modeledMachineWarnings,0);
  assert.equal(r.byKind.upperClamp,0);
- assert.equal(r.unresolvedGeometryFindings,1);
+ assert.equal(r.unresolvedGeometryFindings,r.framesChecked,
+  'Cada pose no resuelta debe conservarse, no esconderse en el primer diagnóstico');
 });
 test('R115: penetración posterior sustituye el primer diagnóstico incompleto',()=>{
  let frame=0;
