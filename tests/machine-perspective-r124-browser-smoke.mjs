@@ -73,6 +73,20 @@ try{
   assert.match(download.suggestedFilename(),/\.png$/);
   await page.locator('#machineCanvas').screenshot({
    path:'test-results/r124-perspective-'+target.id+'-capas.png'});
+  await page.locator('#machineFullscreen').click();
+  await page.waitForFunction(()=>{
+   const f=document.querySelector('.cp-machine-frame');
+   return document.fullscreenElement===f||f?.classList.contains('px-view-immersive');
+  },null,{timeout:7000});
+  assert.equal(await page.locator('#machineFullscreen').getAttribute('aria-pressed'),'true');
+  await page.locator('#machineCanvas').screenshot({
+   path:'test-results/r124-perspective-'+target.id+'-inmersiva.png'});
+  await page.locator('#machineFullscreen').click();
+  await page.waitForFunction(()=>{
+   const f=document.querySelector('.cp-machine-frame');
+   return document.fullscreenElement!==f&&!f?.classList.contains('px-view-immersive');
+  },null,{timeout:7000});
+  assert.equal(await page.locator('#machineFullscreen').getAttribute('aria-pressed'),'false');
   const after=await page.evaluate(()=>JSON.stringify(window.PLEGADOX_STATE().piece));
   assert.equal(after,initial.piece,
    'Las opciones de Perspectiva NO modifican útiles, pieza ni secuencia');
