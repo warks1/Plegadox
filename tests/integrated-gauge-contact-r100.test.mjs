@@ -23,14 +23,21 @@ const criticalMock=piece=>({
 const params={criticalToolEvaluator:criticalMock,toolingAdvice,sheetEvaluator,toolEvaluator,volumeEvaluator,
  maxPairs:2,maxOrders:1,maxFinalists:4};
 const report=(gaugeEvaluator)=>optimizeBendPlan(EXAMPLE,{...params,gaugeEvaluator});
+// El caso sintético describe un solo apoyo problemático. Los otros
+// golpes también deben declarar expresamente su contacto válido.
+const mockedGauge=(piece,{firstContact=true,kind=null}={})=>({
+ warningCount:kind||!firstContact?1:0,
+ contactNotObserved:firstContact?0:1,
+ operations:piece.order.map((bend,operation)=>({
+  operation,bend,contactObserved:operation===0?firstContact:true,
+  findings:operation===0&&kind?[{kind}]:[]
+ }))
+});
 
 test('R100: descartar tope SIN contacto aunque sus muestras no tengan choque',()=>{
  const original=JSON.stringify(EXAMPLE);
- const result=report(piece=>piece.die==='v16'?
-  {warningCount:0,contactNotObserved:1,
-   operations:[{contactObserved:false,findings:[]}]}:
-  {warningCount:0,contactNotObserved:0,
-   operations:[{contactObserved:true,findings:[]}]});
+ const result=report(piece=>mockedGauge(piece,{
+  firstContact:piece.die!=='v16'}));
  assert.ok(result.best,'Existe una alternativa con apoyo observado');
  assert.equal(result.best.dieId,'v12');
  assert.equal(result.best.gaugeContactNotObserved,0);
@@ -39,27 +46,22 @@ test('R100: descartar tope SIN contacto aunque sus muestras no tengan choque',()
  assert.equal(JSON.stringify(EXAMPLE),original);
 });
 test('R100: referencia interior inválida NO gana por tener cero penetraciones',()=>{
- const r=report(piece=>piece.die==='v16'?
-  {warningCount:1,operations:[{contactObserved:true,
-   findings:[{kind:'referencia-interior'}]}]}:
-  {warningCount:0,operations:[{contactObserved:true,findings:[]}]});
+ const r=report(piece=>mockedGauge(piece,{
+  kind:piece.die==='v16'?'referencia-interior':null}));
  assert.equal(r.best.dieId,'v12');
  assert.equal(r.manual.gaugeInvalidReferences,1);
  assert.equal(r.manual.gaugePenetrations,0);
 });
 test('R100: holgura NO se falsifica como penetración del tope',()=>{
- const r=report(piece=>piece.die==='v16'?
-  {warningCount:1,operations:[{contactObserved:true,
-   findings:[{kind:'holgura'}]}]}:
-  {warningCount:0,operations:[{contactObserved:true,findings:[]}]});
+ const r=report(piece=>mockedGauge(piece,{
+  kind:piece.die==='v16'?'holgura':null}));
  assert.equal(r.manual.gaugeClearanceWarnings,1);
  assert.equal(r.manual.gaugePenetrations,0);
  assert.equal(r.manual.gaugeInvalidReferences,0);
  assert.equal(r.best.dieId,'v12');
 });
 test('R100: sin ningún apoyo aceptable, no inventar plan automático seguro',()=>{
- const r=report(()=>({warningCount:0,contactNotObserved:1,
-  operations:[{contactObserved:false,findings:[]}]}));
+ const r=report(piece=>mockedGauge(piece,{firstContact:false}));
  assert.equal(r.best,null);
  assert.ok(r.manual);
  assert.equal(r.manual.gaugeContactNotObserved,1);
