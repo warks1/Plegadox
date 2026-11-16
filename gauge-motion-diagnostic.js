@@ -45,6 +45,10 @@ function sampleStage(piece,operation,sub,machine){
    reason:scene.gaugeSetup.reason,
    manual:scene.gaugeSetup.manual,
    foldedWingContact:scene.gaugeSetup.foldedWingContact===true,
+   autoSupportKind:scene.gaugeSetup.autoSupportKind||null,
+   autoSelected:scene.gaugeSetup.autoSelected===true,
+   needsFoldedFaceReview:scene.gaugeSetup.needsFoldedFaceReview===true,
+   candidateCount:scene.gaugeSetup.candidates?.length??0,
    verified:scene.gaugeSetup.verified===true
   },
   anchor:coordinate(scene.gaugeAnchor),
