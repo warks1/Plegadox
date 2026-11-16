@@ -221,7 +221,8 @@ export function optimizeBendPlan(input,options={}){
   plan.possibleInterference=widthExceeded||plan.toolPenetrations>0||
    plan.sheetCross>0||plan.sheetOverlap>0||plan.gaugePenetrations>0||
    plan.gaugeInvalidReferences>0||plan.gaugeContactNotObserved>0||
-   plan.toolWarnings>0||plan.gaugeWarnings>0||!plan.gaugeChecked;
+   plan.gaugeClearanceWarnings>0||plan.toolWarnings>0||
+   plan.gaugeWarnings>0||!plan.gaugeChecked;
  }
  finalists.sort((a,b)=>{
   if(a.gaugeChecked!==b.gaugeChecked)return a.gaugeChecked?-1:1;
