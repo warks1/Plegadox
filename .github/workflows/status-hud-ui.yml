@@ -1,0 +1,35 @@
+name: PlegadoX · visibilidad de matriz y avisos R121
+on:
+  push:
+    paths:
+      - 'machine-visual.js'
+      - 'industrial-tool-finish.js'
+      - 'tests/status-hud-r121-browser-smoke.mjs'
+      - '.github/workflows/status-hud-ui.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  visual:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Preparar iconos y navegador
+        run: |
+          python3 tools/generate-pwa-icons.py
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Comprobar matriz sin etiquetas delante en 2D/3D
+        run: node tests/status-hud-r121-browser-smoke.mjs
+      - name: Guardar pantallas iPhone, tablet y PC
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: plegadox-r121-visibilidad-herramientas
+          path: test-results/r121-hud-*.png
+          if-no-files-found: warn
+          retention-days: 30
