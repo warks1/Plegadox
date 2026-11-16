@@ -11,6 +11,7 @@ import {getActiveMachineConfig,gaugeOutline} from './machine-config.js';
 import {gaugePlacement} from './backgauge-placement.js';
 import {sheetSolidMesh} from './sheet-solid.js';
 import {loadMachineCad,positionMachineCad} from './machine-cad.js';
+import {machineRamEnvelope} from './machine-ram-envelope.js';
 const EPS=1e-8;
 const v=(x,y)=>({x,y});
 const isFinitePoint=p=>p&&Number.isFinite(p.x)&&Number.isFinite(p.y);
@@ -150,17 +151,14 @@ export function buildVolumeScene(scene,{machine=getActiveMachineConfig(),machine
   registered.punch?.profileAccuracy==='verified'?'perfil-acotado':'perfil-provisional');
  const diePrism=makePrism('matriz',scene.diePolygon,-dSpan/2,dSpan/2,
   registered.die?.profileAccuracy==='verified'?'perfil-acotado':'perfil-provisional');
- // La punta está a tipHeight y el perfil del punzón crece en +Y.
- // Restar H colocaba la trancha BAJO el punzón (falso sólido de colisión).
- const top=scene.kinematics.tipHeight+scene.punch.height;
- // ALZADO PROVISIONAL: alturas relativas proceden del dibujo actual del
- // portaherramientas, NO se deducen de L1=1340 mm como si fuese carrera.
- // Una L* sin referencia de caras no define por sí sola un sólido CAD.
- const ramHalf=(Number(machine.ram?.[6])||125)/2;
+ // Contorno compartido con el dibujo 2,5D: antes la envolvente RAM
+ // estaba desplazada respecto a la barra y omitía el resalte lateral.
+ // Un perfil CAD importado continúa teniendo prioridad sobre ella.
+ const ramShape=machineRamEnvelope(scene,machine);
  const ram=cadPrism('ram','trancha-CAD',{x:0,y:scene.kinematics.tipHeight})||
-  makePrism('trancha-envolvente',rect(-ramHalf,top,
-   ramHalf,top+75),-(machine.ramWidth||2040)/2,(machine.ramWidth||2040)/2,
-   'envolvente-ilustrativa-sin-CAD');
+  makePrism('trancha-envolvente',ramShape.polygon,
+   -(machine.ramWidth||2040)/2,(machine.ramWidth||2040)/2,
+   ramShape.provenance);
  const bedHalf=(Number(machine.bed?.[1])||80)/2;
  const bottom=-scene.die.height;
  const bed=cadPrism('bed','mesa-CAD',{x:0,y:0})||
