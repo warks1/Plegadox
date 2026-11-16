@@ -97,8 +97,15 @@ export function planGaugeRetraction({sheetSamples,polygon,thickness=2,contact,
  // el cuerpo del dedo. Sin penetración geométrica prevista, no ordenamos
  // apartar el tope ni convertimos una alerta en un movimiento CNC.
  const penetrations=issues.filter(item=>item.kind==='penetracion');
+ const measuredClearances=issues.filter(item=>item.kind==='holgura'&&
+  Number.isFinite(item.distanceMm)&&Number.isFinite(item.deficitMm));
+ const minClearanceMm=measuredClearances.length?
+  Math.min(...measuredClearances.map(x=>x.distanceMm)):null;
+ const maxDeficitMm=measuredClearances.length?
+  Math.max(...measuredClearances.map(x=>x.deficitMm)):null;
  const enabled=penetrations.length>0;
  return {enabled,known:true,geometryDocumented,verified:false,issues,
+  minClearanceMm,maxDeficitMm,
   penetrationCount:penetrations.length,clearanceWarnings:issues.length-penetrations.length,
   reason:enabled?'Retroceso sugerido: penetración 2D prevista contra el dedo inmóvil':
    issues.length?'Holgura 2D advertida, pero SIN penetración: mantener el tope en el golpe':
