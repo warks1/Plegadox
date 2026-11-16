@@ -250,6 +250,8 @@ export function technicalScene(piece,instant=0){
   withdrawalUnverified:!resolvedGauge.valid&&gaugePlan.enabled&&!initialPenetration,
   initialPenetration,
   autoSelected:resolvedGauge.autoSelected,
+  autoSupportKind:resolvedGauge.autoSupportKind||null,
+  needsFoldedFaceReview:resolvedGauge.needsFoldedFaceReview===true,
   referenceSegment:reference.segmentIndex};
  let target=null;
  if(st.activeOperation<p.order.length-1&&
