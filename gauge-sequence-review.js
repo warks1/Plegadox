@@ -10,8 +10,11 @@ import {gaugePlacement} from './backgauge-placement.js';
 import {GAUGE_RETRACT_START,GAUGE_RETRACT_FINISH,
  GAUGE_REPOSITION_START} from './gauge-retract-motion.js';
 
-const RANK={penetracion:4,holgura:3,'chapa-detras':3,
- 'apoyo-invalido':3,'sin-asiento':2,'referencia-interior':1};
+// Primero las penetraciones, después los apoyos físicamente inválidos.
+// La holgura SIN penetración es secundaria y nunca debe ocultar un
+// error de cara frontal, asiento o referencia interior del mismo golpe.
+const RANK={penetracion:5,'chapa-detras':4,'apoyo-invalido':4,
+ 'sin-asiento':4,'referencia-interior':4,holgura:2};
 const make=(kind,time,scene,place)=>{
  const transition=scene.gaugeTransition;
  const movingFinger=transition?.moving===true;
@@ -89,29 +92,28 @@ export function inspectGaugeOperation(piece,operation,{
   ))withdrawn=true;
   const issue=place.gaugeInterference;
   if(place.geometryUnavailable)cadPending=true;
-  let kind=null;
+  const frameKinds=[];
   if(issue?.warning&&['penetracion','holgura'].includes(issue.kind))
-   kind=issue.kind;
-  else if(approaching&&!transitioning&&place.setupValid===false)
-   kind='apoyo-invalido';
-  else if(approaching&&!transitioning&&place.freeEdge&&place.sheetInFront===false)
-   kind='chapa-detras';
-  else if(approaching&&!transitioning&&place.freeEdge&&place.seat?.seated===false)
-   kind='sin-asiento';
-  // La referencia puede ser una pestaña ya plegada con cara de
-  // apoyo 2D comprobada. No informar "vértice interior inválido"
-  // cuando ese mismo contacto ya fue aceptado por el solver.
-  else if(approaching&&!transitioning&&place.freeEdge===false&&
-    place.foldedWingContact!==true)
-   kind='referencia-interior';
+   frameKinds.push(issue.kind);
+  // Las causas del apoyo y de la holgura son independientes. Antes,
+  // un único if/else descartaba "chapa detrás" o "sin asiento" cuando
+  // coincidían con holgura en la misma muestra.
+  if(approaching&&!transitioning){
+   if(place.setupValid===false)frameKinds.push('apoyo-invalido');
+   if(place.freeEdge&&place.sheetInFront===false)
+    frameKinds.push('chapa-detras');
+   if(place.freeEdge&&place.seat?.seated===false)
+    frameKinds.push('sin-asiento');
+   // Admitir una pestaña ya plegada SOLO si su cara exterior fue
+   // reconocida explícitamente como apoyo por el solver 2D.
+   if(place.freeEdge===false&&place.foldedWingContact!==true)
+    frameKinds.push('referencia-interior');
+  }
   times.push(time);
-  if(kind){
+  for(const kind of new Set(frameKinds)){
    const found=make(kind,time,scene,place);
    all.push(found);
    if(!kinds.has(kind))kinds.set(kind,found);
-   // Los golpes 2 y 4 pueden mostrar contacto correcto al preparar,
-   // pero colisionar AL DESPLAZARSE el dedo entre referencias.
-   // No diluir esa interferencia bajo un aviso de apoyo estático.
    if(found.movingFinger&&['penetracion','holgura'].includes(kind)){
     movementWarnings++;
     if(movementFirstTime===null)movementFirstTime=time;
