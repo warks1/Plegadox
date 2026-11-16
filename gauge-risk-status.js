@@ -15,18 +15,25 @@ export function gaugeRiskStatus(placement){
  const preparing=['Posicionamiento','Aproximación'].includes(placement?.phase);
  // El apoyo manual puede ser una cara de pestaña ya plegada, pero
  // solo cuando el solver ha verificado el asiento 2D de esa cara.
- const invalidReference=(placement?.freeEdge===false&&
-    placement?.foldedWingContact!==true)||
-  placement?.sheetEdgeFound===false||
-  placement?.contact?.usable===false||
-  placement?.setupValid===false||
-  plan?.needsSetupCorrection===true;
- const invalidSeat=preparing&&
-  (placement?.sheetInFront===false||placement?.seat?.seated===false);
- if(invalidReference||invalidSeat)
-  return {level:'amber',code:'apoyo-invalido',message:plan?.withdrawalUnverified?
+ // En vez de pintar todo de naranja como "posible colisión",
+ // identificar la causa REAL del naranja en la sección actual.
+ // Estos defectos de apoyo se señalan aunque no haya penetración.
+ const amber=(code,message)=>({level:'amber',code,message,verified:false});
+ if(placement?.freeEdge===false&&placement?.foldedWingContact!==true)
+  return amber('referencia-interior',
+   'REFERENCIA INTERIOR SIN CARA EXTERIOR DE APOYO 2D');
+ if(placement?.sheetEdgeFound===false)
+  return amber('sin-borde-libre','NO HAY BORDE DE APOYO ACCESIBLE EN 2D');
+ if(placement?.contact?.usable===false)
+  return amber('cara-tope-invalida','CARA DE PARADA DEL TOPE NO DEFINIDA');
+ if(preparing&&placement?.sheetInFront===false)
+  return amber('chapa-detras','CHAPA POR DETRÁS DE LA CARA FRONTAL DEL TOPE');
+ if(preparing&&placement?.seat?.seated===false)
+  return amber('sin-asiento','CHAPA SIN ASIENTO FRONTAL SOBRE EL TOPE');
+ if(placement?.setupValid===false||plan?.needsSetupCorrection===true)
+  return amber('apoyo-invalido',plan?.withdrawalUnverified?
    'APOYO NO VÁLIDO · RETIRADA 2D SIN VALIDACIÓN FÍSICA':
-   'APOYO NO VÁLIDO · REVISAR PRESENTACIÓN 2D',verified:false};
+   'APOYO NO VÁLIDO · REVISAR PRESENTACIÓN 2D');
  // warning:false significa también "no pude evaluar", según el detector.
  // Sólo se concede verde con kind explícito de ausencia de interferencia.
  if(!hit||hit.kind==='sin-geometria'||hit.kind!=='sin-interferencia-detectada'&&hit.warning===false)
