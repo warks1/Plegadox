@@ -88,12 +88,19 @@ function polyline(entity){
   else if((p.code===40||p.code===41)&&Number(p.value)>0)
    throw Error('Polilínea DXF con anchura de trazo; exporta sólo el contorno');
  }
- if(verts.length<3||verts.some(p=>p.y===null))
-  throw Error('La polilínea no tiene al menos tres vértices XY');
+ // R112: algunos DXF OEM (WILA) exportan cada ARISTA como
+ // LWPOLYLINE cerrada de DOS puntos. Es una sola línea, no un
+ // contorno cerrado con área. Requiere más aristas para cerrar la forma.
+ if(verts.length<2||verts.some(p=>p.y===null))
+  throw Error('La polilínea no tiene suficientes vértices XY');
+ if(verts.length===2&&verts.some(p=>Math.abs(p.bulge)>1e-10))
+  throw Error('LWPOLYLINE de dos vértices con arco: exporta LINE/ARC');
  if(declaredCount!==null&&
     (!Number.isInteger(Number(declaredCount))||Number(declaredCount)!==verts.length))
   throw Error('Número de vértices DXF (90) no coincide con las coordenadas');
  if(verts.length>MAX_POINTS)throw Error('Demasiados vértices DXF');
+ if(verts.length===2)return [[verts[0].x,verts[0].y],
+  [verts[1].x,verts[1].y]];
  const result=[[verts[0].x,verts[0].y]];
  for(let i=0;i<verts.length;i++){
   const a=verts[i],b=verts[(i+1)%verts.length];
@@ -191,9 +198,14 @@ const componentGeometry=(items)=>{
  let poly=null,edges=[];
  for(const {type,body} of items){
   if(type==='LWPOLYLINE'){
+   const parsed=polyline(body);
+   if(parsed.length===2){
+    if(poly)throw Error('Elige un único contorno sin aristas extra');
+    edges.push(parsed);continue;
+   }
    if(poly||edges.length)
     throw Error('El bloque contiene varios contornos o geometría adicional');
-   poly=polyline(body);
+   poly=parsed;
   }else if(type==='LINE'||type==='ARC'){
    if(poly)throw Error('No mezclar contorno cerrado y aristas sueltas');
    edges.push(type==='LINE'?line(body):arcEntity(body));
