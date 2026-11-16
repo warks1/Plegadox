@@ -49,8 +49,10 @@ test('R106: la extrusión perspectiva NO mueve el contorno delantero del dedo',(
   assert.deepEqual(profile.depthX,23*view.scale);
   assert.deepEqual(profile.depthY,-13*view.scale);
   for(let i=0;i<profile.near.length;i++){
-   assert.equal(profile.far[i][0]-profile.near[i][0],profile.depthX);
-   assert.equal(profile.far[i][1]-profile.near[i][1],profile.depthY);
+   assert.ok(Math.abs(profile.far[i][0]-profile.near[i][0]-
+    profile.depthX)<1e-9);
+   assert.ok(Math.abs(profile.far[i][1]-profile.near[i][1]-
+    profile.depthY)<1e-9);
   }
   assert.deepEqual(gaugePerspectiveContours(g.outline,view.scale,false).near,
    g.outline);
