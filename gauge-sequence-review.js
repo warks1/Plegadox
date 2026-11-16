@@ -13,7 +13,8 @@ import {GAUGE_RETRACT_START,GAUGE_RETRACT_FINISH,
 // Primero las penetraciones, después los apoyos físicamente inválidos.
 // La holgura SIN penetración es secundaria y nunca debe ocultar un
 // error de cara frontal, asiento o referencia interior del mismo golpe.
-const RANK={penetracion:5,'chapa-detras':4,'apoyo-invalido':4,
+const RANK={penetracion:5,'ruta-ejes-no-segura-2d':4,
+ 'chapa-detras':4,'apoyo-invalido':4,
  'sin-asiento':4,'referencia-interior':4,holgura:2};
 const make=(kind,time,scene,place)=>{
  const transition=scene.gaugeTransition;
@@ -41,6 +42,8 @@ const make=(kind,time,scene,place)=>{
      place.gaugeInterference.distanceMm.toFixed(2)+' mm / mín. '+
       place.gaugeInterference.requiredMm.toFixed(2)+' mm':
      'distancia no disponible')+movingLabel:
+   kind==='ruta-ejes-no-segura-2d'?
+    'Ambos órdenes de ejes X/R muestran penetración 2D en el retorno':
    kind==='chapa-detras'?'Chapa por detrás de la cara frontal del tope':
    kind==='apoyo-invalido'?'Apoyo inicial inválido: '+
     (place.setupReason||'la pieza no puede asentarse contra la cara de parada'):
@@ -113,6 +116,8 @@ export function inspectGaugeOperation(piece,operation,{
   const frameKinds=[];
   if(issue?.warning&&['penetracion','holgura'].includes(issue.kind))
    frameKinds.push(issue.kind);
+  if(scene.gaugePlan?.movementCollisionUnresolved===true)
+   frameKinds.push('ruta-ejes-no-segura-2d');
   // Las causas del apoyo y de la holgura son independientes. Antes,
   // un único if/else descartaba "chapa detrás" o "sin asiento" cuando
   // coincidían con holgura en la misma muestra.
