@@ -114,7 +114,7 @@ async function audit(item){
      // por LINE/ARC originales. Retirar ramas abiertas nunca crea
      // segmentos ficticios; el operador debe ELEGIR el ciclo correcto.
      if(!options.length){
-      const cycles=[];
+      const cycles=[],uniqueShapes=new Set();
       for(const layer of [null,...inventory.layers.map(x=>x.name)]){
        let found;
        try{found=inspectToolDxfContours(content,{entityLayer:layer});}
@@ -128,10 +128,16 @@ async function audit(item){
          });
          review=measured(item,parsedCycle);
         }catch{continue;}
+        const fingerprint=createHash('sha256')
+         .update(JSON.stringify(parsedCycle.points)).digest('hex');
+        if(uniqueShapes.has(fingerprint))continue;
+        uniqueShapes.add(fingerprint);
         cycles.push({layer:layer??'TODAS',index:candidate.index,
          heightMm:parsedCycle.height,widthMm:parsedCycle.width,
-         segments:candidate.segments,
-         nominalMatch:review.canRegister,conflicts:review.conflicts});
+         segments:candidate.segments,geometrySha256:fingerprint,
+         nominalMatch:review.canRegister,conflicts:review.conflicts,
+         heightDifferenceMm:item.dimensions?.heightMm!=null?
+          Number((parsedCycle.height-item.dimensions.heightMm).toFixed(4)):null});
        }
       }
       variant.closedCycles=cycles.slice(0,24);
@@ -203,10 +209,11 @@ await Promise.all(Array.from({length:workers},async()=>{
    (v.layers?.length?' capas='+v.layers.map(x=>x.name+
     '['+x.total+']').slice(0,6).join(','):'')+
    (v.candidateLayers?.length?' capas validas='+v.candidateLayers.length:'')+
-   (v.closedCycles?.length?' ciclos='+v.closedCycles.length+
+   (v.closedCycles?.length?' ciclos únicos='+v.closedCycles.length+
     ' '+v.closedCycles.slice(0,3).map(x=>
      x.layer+':'+x.widthMm.toFixed(1)+'x'+x.heightMm.toFixed(1)+
-     (x.nominalMatch?' OK':'')).join(','):'')
+     (x.nominalMatch?' H coincidente':x.heightDifferenceMm!=null?
+      ' ΔH='+x.heightDifferenceMm.toFixed(1):'')).join(','):'')
   ).join(' | ');
   process.stdout.write(results[i].id+' '+results[i].status+
    (results[i].problem?' ('+results[i].problem+')':'')+
@@ -219,6 +226,9 @@ const metrics={
  multiWithCandidates:results.filter(x=>x.status==='CAPAS_OEM_DETECTADAS_REQUIEREN_SELECCION').length,
  layerCandidates:results.reduce((n,x)=>n+(x.layerCandidates||0),0),
  cycleCandidates:results.reduce((n,x)=>n+(x.closedCycles||0),0),
+ nominalCycleCandidates:results.reduce((n,x)=>n+
+  (x.variants||[]).reduce((m,v)=>m+
+   (v.closedCycles||[]).filter(c=>c.nominalMatch).length,0),0),
  nominalCandidates:results.reduce((n,x)=>n+(x.nominalCandidates||0),0),
  mismatched:results.filter(x=>x.status==='DXF_LEIDO_DISCREPANCIA_COTAS').length,
  unavailable:results.filter(x=>!x.nominalCandidates).length,
@@ -232,9 +242,9 @@ await writeFile(OUTPUT,JSON.stringify({
 const summary=[
  '## PlegadoX · rastreo remoto CAD OEM',
  '',
- '| Enlaces | Capas seleccionables | Ciclos originales encontrados | Perfiles nominales aceptados sin certificar | Montados verificados |',
+ '| Enlaces | Capas seleccionables | Ciclos originales distintos | Ciclos con H nominal coincidente | CAD montados comprobados |',
  '|---:|---:|---:|---:|---:|',
- `| ${metrics.total} | ${metrics.layerCandidates} | ${metrics.cycleCandidates} | ${metrics.nominalCandidates} | 0 |`,
+ `| ${metrics.total} | ${metrics.layerCandidates} | ${metrics.cycleCandidates} | ${metrics.nominalCycleCandidates} | 0 |`,
  '',
  'Los perfiles no se copian al repositorio ni se marcan como CAD industrial verificado.',
  'Un perfil DXF leído pero con geometría compleja puede requerir tratamiento CAD manual.',
