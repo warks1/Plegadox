@@ -12,7 +12,9 @@ const pair=(d='v16',p='straight88')=>({
  punchName:PUNCHES.find(x=>x.id===p).name,score:0
 });
 const sheet=(_p,order)=>({order,score:0,counts:{cross:0,overlap:0,touch:0,close:0}});
-const gauge=()=>({warningCount:0,operations:[]});
+const gauge=piece=>({warningCount:0,contactNotObserved:0,
+ operations:piece.order.map((bend,operation)=>({
+  bend,operation,contactObserved:true,findings:[]}))});
 const volume=()=>({modeledMachineWarnings:0,uncertainSweptIntervals:0,framesChecked:10});
 
 const criticalMock=part=>({
