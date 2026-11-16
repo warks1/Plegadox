@@ -1,5 +1,15 @@
 # Plegadox — control y simulador de plegado
 
+## Estado actual · R109 (v0.9.83) · 16 de noviembre de 2026
+
+- **Inventario de CAD contrastado:** ocho enlaces de descarga DXF/ZIP de **Eurostamp, UKB, Mate y SOCLAM** con referencia, altura/ángulo/V/radio cuando hay cotas publicadas, soporte y procedencia; fuentes adicionales sobre MECOS, TRUMPF V85 y Bystronic AFM. En el editor aparece qué puede descargarse y qué falta para cada unidad, sin confundir un enlace con un perfil instalado.
+- **Biblioteca de máquina ampliada:** `machine-cad.js` admite nueve componentes: trancha, mesa, Stop, Support, mordaza superior/inferior, adaptador superior/inferior y soporte delantero. Estos cinco nuevos componentes se añaden al motor volumétrico y al barrido de ejes **sólo al importar su DXF con coordenadas y ocupación Z**.
+- **Completar cotas sin mezclar útiles:** `cad-evidence.js` coteja únicamente la misma referencia/fabricante/variante/amarre; conserva las fuentes por cota y registra conflictos en vez de promediar o inventar. Los perfiles OEM parciales o de otra máquina **no se declaran certificados**.
+- **Cobertura ligada a máquina y herramienta:** los CAD guardados para una revisión de máquina distinta no cuentan. El DXF de punzón/matriz sólo cuenta en la cobertura activa cuando coincide con el ID seleccionado, no con cualquier útil importado.
+- **Comprobaciones:** 6 pruebas focalizadas de fuentes/conciliación y 33 verificaciones del motor volumétrico con cuerpos sintéticos, sin discrepancias. Nuevas regresiones `tests/cad-evidence-r109.test.mjs` y `tests/machine-extended-cad-r109.test.mjs`.
+- **Limitaciones:** todavía **NO** están descargados e instalados por defecto los DXF de esas ocho referencias ni existe un conjunto CAD OEM completo de la Trumpf V85 o de la Bystronic concreta. Faltan planos por número de serie, datums, amarres, posición real de topes y trayectorias CNC. No hay validación física ni certificación de ausencia de colisiones.
+- **Build:** `PLEGADOX-20261116-R109` · `v0.9.83`. Informe de fuentes, geometrías pendientes y trazabilidad: [R109_INVENTARIO_Y_RECONCILIACION_CAD.md](./R109_INVENTARIO_Y_RECONCILIACION_CAD.md).
+
 ## Estado actual · R108 (v0.9.82) · 16 de noviembre de 2026
 
 - **Retorno X/R inteligente:** el programa ya no impone un retorno diagonal ni un orden de ejes fijo. Compara recorridos ilustrativos **R→X** y **X→R** sobre **61 poses 2D por alternativa** y elige la ruta con menos penetraciones de chapa/dedo, después geometría incompleta y avisos de holgura; si empatan mantiene R→X.
