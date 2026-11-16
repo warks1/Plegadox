@@ -14,7 +14,10 @@ test('automático no declara apoyo físico si utiliza un vértice interior',()=>
  assert.equal(selected.manual,false);
  assert.ok(Array.isArray(selected.candidates));
  if(selected.valid){
-  assert.equal(selected.ref.freeEdge,true);
+  assert.ok(selected.ref.freeEdge===true||
+   (selected.foldedWingContact===true&&
+    selected.autoSupportKind==='CARA_EXTERIOR_PREPLEGADA_2D'),
+   'Solo canto libre o cara exterior preplegada validada en 2D');
   assert.equal(selected.faceAccessible,true);
   assert.ok(!selected.warning||selected.interference.kind==='holgura',
    'Una holgura no equivale a ausencia de asiento nominal');
@@ -70,6 +73,8 @@ test('mismo punto de dibujo de dedo y punto de contacto inicial',()=>{
   assert.ok(setup.polygon.every(q=>Number.isFinite(q.x)&&Number.isFinite(q.y)));
   const reference=setup.ref;
   assert.ok(reference.sourceIndex===0||
-   reference.sourceIndex===p.flanges.length||!setup.valid);
+   reference.sourceIndex===p.flanges.length||
+   (setup.valid&&setup.foldedWingContact===true)||!setup.valid,
+   'No validar una referencia interior sin cara preplegada');
  }
 });
