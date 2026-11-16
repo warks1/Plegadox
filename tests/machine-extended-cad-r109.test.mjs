@@ -65,10 +65,13 @@ test('R109: invasión de un amarre se clasifica por CUERPO y volumen real',()=>{
  const machine=getActiveMachineConfig(),scene=technicalScene(EXAMPLE,2.5);
  const model=buildVolumeScene(scene,{machine,machineCAD:{upperClamp:cad('upperClamp')}});
  const upper=model.objects.upperClamp;
- const x=upper.polygon[0].x,y=upper.polygon[0].y;
+ // El primer vértice está en la ARISTA SUPERIOR; desplazar en Y+2
+ // colocaba la chapa de prueba FUERA del cuerpo, no dentro de él.
+ const x=(upper.polygon[0].x+upper.polygon[2].x)/2;
+ const y=(upper.polygon[0].y+upper.polygon[2].y)/2;
  const penetrant=makePrism('chapa-prueba',
-  [{x:x+2,y:y+2},{x:x+4,y:y+2},
-   {x:x+4,y:y+4},{x:x+2,y:y+4}],-5,5);
+  [{x:x-1,y:y-1},{x:x+1,y:y-1},
+   {x:x+1,y:y+1},{x:x-1,y:y+1}],-5,5);
  const hit=prismOverlap(upper,penetrant);
  assert.equal(hit.intersects,true);
  assert.ok(hit.volume>0);
