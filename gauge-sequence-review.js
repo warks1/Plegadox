@@ -23,6 +23,12 @@ const make=(kind,time,scene,place)=>{
  return {
   kind,time,phase:scene.stage.phase,stopNumber:place.stopNumber,
   point:place.gaugeInterference?.warning?place.gaugeInterference.point:null,
+  distanceMm:kind==='holgura'?
+   place.gaugeInterference?.distanceMm??null:null,
+  requiredMm:kind==='holgura'?
+   place.gaugeInterference?.requiredMm??null:null,
+  deficitMm:kind==='holgura'?
+   place.gaugeInterference?.deficitMm??null:null,
   bend:scene.stage.activeBend,operation:scene.stage.activeOperation,
   movingFinger,motionPhase,verified:false,
   reason:kind==='penetracion'?'Posible penetración 2D chapa/tope'+movingLabel:
