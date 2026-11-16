@@ -133,6 +133,7 @@ export function setupToolDxfImporter({add}){
    preset.addEventListener('click',()=>{
     preparedSource=catalogCadAuditReference(tool,toolKind);
     parsed=null;input.value='';save.disabled=true;preview.hidden=true;
+    zipBytes=null;zipLabel='';zipChoice.hidden=true;zipChoice.replaceChildren();
     if(axisInput)axisInput.value='';
     kind.value=toolKind;toggle();name.value=tool.reference||tool.name;
     // Las familias de amarre se proponen desde catálogo, pero la
@@ -169,19 +170,20 @@ export function setupToolDxfImporter({add}){
       if(fileBytes.byteLength>8*1024*1024)
        throw Error('Archivo CAD superior a 8 MB');
       const isZip=/\.zip(?:$|[?#])/i.test(tool.cadDownloadUrl);
-      const source=isZip?
-       (await extractDxfFromZip(fileBytes)).content:
-       new TextDecoder('utf-8',{fatal:true}).decode(fileBytes);
-      const model=parseToolDxf(source);
-      parsed=model;preview.hidden=false;
-      drawPreview(preview,model,axisReview(model),axisInput?.value||null);
-      const audit=axisReview(model);
-      say('DXF del fabricante: '+model.points.length+' vértices. '+
-       'Eje X '+(audit.datumEstablished?
-        audit.axisX.toFixed(3)+' mm (inferido)':
-        'AMBIGUO: indica X de la punta/V seleccionada')+'. '+
-       'Confirma orientación, escala y sistema de amarre antes de guardar.');
-      reviewCad();
+      if(!isZip){
+       const content=new TextDecoder('utf-8',{fatal:true}).decode(fileBytes);
+       acceptCad(parseToolDxf(content),null,tool.reference+'.dxf');
+      }else{
+       const entries=await listDxfZipEntries(fileBytes);
+       if(entries.length>1){
+        // Exactamente igual que al subir un ZIP local: elegir la
+        // variante OEM antes de analizar o guardar el contorno.
+        showZipChoices(fileBytes,tool.reference+'.zip',entries);
+       }else{
+        const cad=await extractDxfFromZip(fileBytes,{selectName:entries[0].name});
+        acceptCad(parseToolDxf(cad.content),cad,tool.reference+'.zip');
+       }
+      }
      }catch(error){
       say('No se pudo cargar el DXF directamente: '+error.message+
        '. Descárgalo desde la ficha y selecciona el archivo en el campo superior.',true);
@@ -193,6 +195,24 @@ export function setupToolDxfImporter({add}){
   });
   cadSources.replaceChildren(...display);
  }
+ const showZipChoices=(bytes,label,entries)=>{
+  zipBytes=bytes;zipLabel=label;parsed=null;
+  preview.hidden=true;save.disabled=true;
+  const placeholder=document.createElement('option');
+  placeholder.value='';placeholder.textContent=
+   'Elegir DXF exacto del ZIP ('+entries.length+' perfiles)';
+  zipChoice.replaceChildren(placeholder);
+  for(const item of entries){
+   const option=document.createElement('option');
+   option.value=item.name;
+   option.textContent=item.name+' · '+item.uncompressedBytes+' bytes';
+   zipChoice.append(option);
+  }
+  zipChoice.hidden=false;zipChoice.value='';
+  say('El ZIP OEM contiene '+entries.length+
+   ' DXF. Selecciona la sección exacta de tu referencia y longitud; '+
+   'ninguna variante se importa automáticamente ni se certifica.');
+ };
  const acceptCad=(model,cad,fileName)=>{
   parsed=model;
   if(!name.value.trim())
@@ -237,21 +257,7 @@ export function setupToolDxfImporter({add}){
    const bytes=await file.arrayBuffer();
    const entries=await listDxfZipEntries(bytes);
    if(entries.length>1){
-    zipBytes=bytes;zipLabel=file.name;
-    const placeholder=document.createElement('option');
-    placeholder.value='';placeholder.textContent=
-     'Elegir DXF exacto del ZIP ('+entries.length+' perfiles)';
-    zipChoice.append(placeholder);
-    for(const item of entries){
-     const option=document.createElement('option');
-     option.value=item.name;
-     option.textContent=item.name+' · '+item.uncompressedBytes+' bytes';
-     zipChoice.append(option);
-    }
-    zipChoice.hidden=false;zipChoice.value='';
-    say('El ZIP contiene '+entries.length+
-     ' archivos DXF: selecciona el perfil EXACTO de tu referencia.'+
-     ' No unir geometrías de distintas longitudes, variantes o amarres.');
+    showZipChoices(bytes,file.name,entries);
     return;
    }
    const cad=await extractDxfFromZip(bytes,{selectName:entries[0].name});
