@@ -7,7 +7,7 @@
 export function gaugeRiskStatus(placement){
  const hit=placement?.gaugeInterference,plan=placement?.gaugeDecision;
  if(hit?.kind==='penetracion')
-  return {level:'red',message:'PENETRACIÓN DETECTADA EN 2D',verified:false};
+  return {level:'red',code:'penetracion-actual',message:'PENETRACIÓN DETECTADA EN 2D',verified:false};
  // Una referencia interior o un dedo sin superficie de apoyo NO pueden
  // recibir verde sólo porque el detector no haya informado penetración.
  // El asiento frontal se exige durante la preparación, no cuando la chapa
@@ -24,20 +24,20 @@ export function gaugeRiskStatus(placement){
  const invalidSeat=preparing&&
   (placement?.sheetInFront===false||placement?.seat?.seated===false);
  if(invalidReference||invalidSeat)
-  return {level:'amber',message:plan?.withdrawalUnverified?
+  return {level:'amber',code:'apoyo-invalido',message:plan?.withdrawalUnverified?
    'APOYO NO VÁLIDO · RETIRADA 2D SIN VALIDACIÓN FÍSICA':
    'APOYO NO VÁLIDO · REVISAR PRESENTACIÓN 2D',verified:false};
  // warning:false significa también "no pude evaluar", según el detector.
  // Sólo se concede verde con kind explícito de ausencia de interferencia.
  if(!hit||hit.kind==='sin-geometria'||hit.kind!=='sin-interferencia-detectada'&&hit.warning===false)
-  return {level:'amber',message:'COMPROBACIÓN 2D INCOMPLETA',verified:false};
+  return {level:'amber',code:'comprobacion-incompleta',message:'COMPROBACIÓN 2D INCOMPLETA',verified:false};
  // El pronóstico supone un dedo de tope inmóvil, pero la pose del
  // simulador puede mostrar el dedo retirado. No confundir ambos riesgos.
  if(hit.warning===true)
-  return {level:'amber',message:'HOLGURA O INTERFERENCIA EN POSICIÓN 2D ACTUAL',verified:false};
+  return {level:'amber',code:hit.kind==='holgura'?'holgura-actual':'interferencia-actual',message:'HOLGURA O INTERFERENCIA EN POSICIÓN 2D ACTUAL',verified:false};
  if(plan?.withdrawalUnverified===true||plan?.initialPenetration===true||
     ((Number(plan?.penetrationCount)||0)>0&&plan?.enabled!==true))
-  return {level:'amber',message:'INTERFERENCIA FUTURA SIN RETIRADA FIABLE',verified:false};
+  return {level:'amber',code:'retirada-no-fiable',message:'INTERFERENCIA FUTURA SIN RETIRADA FIABLE',verified:false};
  if(hit.kind==='sin-interferencia-detectada'&&hit.warning===false&&plan?.known===true){
   const forecast=plan?.enabled===true?'retirada-prevista':
    (Number(plan?.clearanceWarnings)||0)>0?'holgura-futura':null;
@@ -47,7 +47,7 @@ export function gaugeRiskStatus(placement){
    'SIN CHOQUE EN POSE 2D · HOLGURA FUTURA A REVISAR':
    'SIN INTERFERENCIA DETECTADA EN 2D',forecast,verified:false};
  }
- return {level:'amber',message:'COMPROBACIÓN 2D INCOMPLETA',verified:false};
+ return {level:'amber',code:'comprobacion-incompleta',message:'COMPROBACIÓN 2D INCOMPLETA',verified:false};
 }
 export const GAUGE_COLORS=Object.freeze({
  green:Object.freeze({fill:'#276b4a',edge:'#80ffc5',face:'#bfffe1',label:'#baffd8',glow:'#34dd91'}),
