@@ -19,7 +19,10 @@ const make=(kind,time,scene,place)=>{
  const transition=scene.gaugeTransition;
  const movingFinger=transition?.moving===true;
  const motionPhase=transition?.phase||null;
- const movingLabel=movingFinger?' DURANTE el desplazamiento completo del tope':'';
+ const activeAxis=transition?.axisPhase==='R'?'R':
+  transition?.axisPhase==='X'?'X':null;
+ const movingLabel=movingFinger?
+  ' DURANTE movimiento del tope'+(activeAxis?' en eje '+activeAxis:''):'';
  return {
   kind,time,phase:scene.stage.phase,stopNumber:place.stopNumber,
   point:place.gaugeInterference?.warning?place.gaugeInterference.point:null,
@@ -30,7 +33,7 @@ const make=(kind,time,scene,place)=>{
   deficitMm:kind==='holgura'?
    place.gaugeInterference?.deficitMm??null:null,
   bend:scene.stage.activeBend,operation:scene.stage.activeOperation,
-  movingFinger,motionPhase,verified:false,
+  movingFinger,motionPhase,axisPhase:activeAxis,verified:false,
   reason:kind==='penetracion'?'Posible penetración 2D chapa/tope'+movingLabel:
    kind==='holgura'?'Holgura 2D medida: '+(
     Number.isFinite(place.gaugeInterference?.distanceMm)&&
