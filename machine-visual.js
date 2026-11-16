@@ -177,7 +177,7 @@ export function gaugeFrontNosePolygon(placement,dimensions){
  * de estado; aquí solo mostramos el nivel y la acción requerida.
  * Es geometría de interfaz, NO movimiento de máquina.
  */
-export function gaugeStatusCardLayout(width,height,faceX,faceY,stopNumber,level,scale=1,movementPhase=null,forecast=null,reasonCode=null){
+export function gaugeStatusCardLayout(width,height,faceX,faceY,stopNumber,level,scale=1,movementPhase=null,forecast=null,reasonCode=null,clearanceMm=null,requiredMm=null){
  if(![width,height,faceX,faceY,scale].every(Number.isFinite)||
   width<=0||height<=0||scale<=0||![1,2].includes(stopNumber)||
   !['green','amber','red'].includes(level))
@@ -215,9 +215,14 @@ export function gaugeStatusCardLayout(width,height,faceX,faceY,stopNumber,level,
   'interferencia-actual':'INTERFERENCIA ACTUAL',
   'retirada-no-fiable':'RETIRADA NO FIABLE · REVISAR'
  }[reasonCode]??null;
+ // R107: mostrar solo la holgura medida cuando está disponible;
+ // no inventar distancias y no llamar colisión a una mera proximidad.
+ const measuredLine=level==='amber'&&reasonCode==='holgura-actual'&&
+  Number.isFinite(clearanceMm)&&Number.isFinite(requiredMm)?
+  'HOLGURA '+clearanceMm.toFixed(2)+' / MÍN '+requiredMm.toFixed(2)+' mm':null;
  // Priorizar la incidencia real sobre el movimiento del dedo.
  const subline=level==='red'?'PENETRACIÓN 2D · REVISAR':
-  (level==='amber'&&issueText) ? issueText :
+  measuredLine||(level==='amber'&&issueText) ? (measuredLine||issueText) :
   motionText||(level==='amber'?'REVISAR APOYO / HOLGURA':
    forecast==='retirada-prevista'?'RETIRADA PREVISTA · 2D':
    forecast==='holgura-futura'?'HOLGURA FUTURA · REVISAR':
@@ -501,7 +506,8 @@ function stageScene(ctx,w,h,piece,sim,machineView){
   const [faceX,faceY]=machineGaugeProjection(placement,cx,baseY,scale).point;
   const layout=gaugeStatusCardLayout(w,h,faceX,
    faceY,placement.stopNumber,level,scale,
-   placement.gaugeTransition?.phase??null,gaugeRisk.forecast??null,gaugeRisk.code??null);
+   placement.gaugeTransition?.phase??null,gaugeRisk.forecast??null,gaugeRisk.code??null,
+   gaugeRisk.clearanceMm??null,gaugeRisk.requiredMm??null);
   drawGaugeStatusCard(ctx,layout,level,GAUGE_COLORS[level]);
  }
  // Workpiece shadow and hot contact glow along the working tool tip
