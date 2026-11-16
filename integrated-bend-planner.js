@@ -49,7 +49,7 @@ const toolProfileEvidence=tool=>{
   return 'FICHA_ACOTADA_MONTAJE_NO_VERIFICADO';
  return 'CONTORNO_PARAMETRICO_PROVISIONAL';
 };
-const stopProblems=scan=>{
+const stopProblems=(scan,expectedOperations)=>{
  const operations=Array.isArray(scan?.operations)?scan.operations:[];
  let penetrations=0,invalidReferences=0,clearanceWarnings=0;
  // R103: el inspector ya enumera SIMULTÁNEAMENTE varias causas por
@@ -65,11 +65,13 @@ const stopProblems=scan=>{
  }
  // El análisis completo aporta contactNotObserved; un evaluador
  // simplificado puede aportar sólo contactObserved por operación.
- const integrity=reconcileGaugeEvidence(scan);
+ const integrity=reconcileGaugeEvidence(scan,expectedOperations);
  return {warnings:Number(scan?.warningCount)||0,penetrations,
   invalidReferences,clearanceWarnings,
   contactNotObserved:integrity.contactNotObserved,
-  incompleteContactData:integrity.incompleteContactData};
+  incompleteContactData:integrity.incompleteContactData,
+  missingOperationCount:integrity.missingOperationCount,
+  unexplainedOperations:integrity.unexplainedOperations};
 };
 export function optimizeBendPlan(input,options={}){
  const p=normalized(input);
@@ -162,7 +164,8 @@ export function optimizeBendPlan(input,options={}){
    toolCriticalFindings:[],
    gaugeWarnings:0,gaugePenetrations:0,gaugeClearanceWarnings:0,
    gaugeInvalidReferences:0,gaugeContactNotObserved:0,
-   gaugeContactUnknown:false,gaugeChecked:false,gaugeError:null,
+   gaugeContactUnknown:false,gaugeMissingOperations:0,
+   gaugeUnexplainedOperations:0,gaugeChecked:false,gaugeError:null,
    volumeChecked:false,volumeMachineWarnings:0,volumeSweptSuspects:0,
    volumeRamWarnings:0,volumeBedWarnings:0,volumeGaugeWarnings:0,
    volumeRamEvidence:[],
@@ -230,13 +233,15 @@ export function optimizeBendPlan(input,options={}){
   const candidate={...p,die:plan.dieId,punch:plan.punchId,
    order:plan.order,punchOrientation:plan.orientation};
   try{
-   const gauge=stopProblems(gaugeEvaluator(candidate));
+   const gauge=stopProblems(gaugeEvaluator(candidate),candidate.order.length);
    plan.gaugeWarnings=gauge.warnings;
    plan.gaugePenetrations=gauge.penetrations;
    plan.gaugeClearanceWarnings=gauge.clearanceWarnings;
    plan.gaugeInvalidReferences=gauge.invalidReferences;
    plan.gaugeContactNotObserved=gauge.contactNotObserved;
    plan.gaugeContactUnknown=gauge.incompleteContactData;
+   plan.gaugeMissingOperations=gauge.missingOperationCount;
+   plan.gaugeUnexplainedOperations=gauge.unexplainedOperations;
    plan.gaugeChecked=true;
   }catch(error){
    plan.gaugeError=error instanceof Error?error.message:String(error);
@@ -247,7 +252,7 @@ export function optimizeBendPlan(input,options={}){
    plan.sheetCross>0||plan.sheetOverlap>0||plan.gaugePenetrations>0||
    plan.gaugeInvalidReferences>0||plan.gaugeContactNotObserved>0||
    plan.gaugeClearanceWarnings>0||plan.toolWarnings>0||
-   plan.gaugeWarnings>0||!plan.gaugeChecked;
+   plan.gaugeWarnings>0||!plan.gaugeChecked||plan.gaugeContactUnknown;
  }
  finalists.sort((a,b)=>{
   if(a.gaugeChecked!==b.gaugeChecked)return a.gaugeChecked?-1:1;
@@ -344,7 +349,7 @@ export function optimizeBendPlan(input,options={}){
   plan.toolPenetrations>0||!plan.toolCriticalChecked||
   plan.gaugePenetrations>0||
   plan.gaugeInvalidReferences>0||plan.gaugeContactNotObserved>0||
-  !plan.gaugeChecked||
+  !plan.gaugeChecked||plan.gaugeContactUnknown||
   plan.axisViolations>0||plan.axisModeledCollisions>0||
   (volumeEvaluator&&(!plan.volumeChecked||plan.volumeMachineWarnings>0));
  const best=finalists.find(plan=>plan.source==='automatico'&&
@@ -354,6 +359,7 @@ export function optimizeBendPlan(input,options={}){
  const rejectionSummary={
   noGaugeContact:automaticPlans.filter(plan=>plan.gaugeChecked&&
    plan.gaugeContactNotObserved>0).length,
+  gaugeContactIncomplete:automaticPlans.filter(plan=>plan.gaugeContactUnknown).length,
   invalidGaugeReference:automaticPlans.filter(plan=>plan.gaugeChecked&&
    plan.gaugeInvalidReferences>0).length,
   gaugePenetration:automaticPlans.filter(plan=>plan.gaugeChecked&&
@@ -368,7 +374,8 @@ export function optimizeBendPlan(input,options={}){
    !plan.toolCriticalChecked).length
  };
  const hasNominalGaugeSupport=automaticPlans.some(plan=>plan.gaugeChecked&&
-  plan.gaugeContactNotObserved===0&&plan.gaugeInvalidReferences===0);
+  plan.gaugeContactNotObserved===0&&plan.gaugeInvalidReferences===0&&
+  !plan.gaugeContactUnknown);
  return {
   best,manual,rejectionSummary,
   physicalReview:best?.physicalReview||null,
