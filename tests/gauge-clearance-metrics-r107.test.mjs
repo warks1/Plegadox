@@ -4,6 +4,7 @@ import {inspectGaugeProfile} from '../gauge-interference.js';
 import {gaugeRiskStatus} from '../gauge-risk-status.js';
 import {gaugeStatusCardLayout} from '../machine-visual.js';
 import {planGaugeRetraction} from '../gauge-retract-motion.js';
+import {inspectGaugeOperation,scanGaugeSequence} from '../gauge-sequence-review.js';
 import {EXAMPLE,normalized} from '../engine.js';
 import {technicalScene} from '../technical-section.js';
 import {gaugePlacement} from '../backgauge-placement.js';
@@ -105,4 +106,41 @@ test('R107: Omega conserva mismas mediciones en visor y diagnóstico JSON',()=>{
   }
  }
  assert.equal(report.canApproveForMachine,false);
+});
+
+test('R107: el escáner comprueba .46 y .48 sin perder la retirada final',()=>{
+ const piece=normalized(EXAMPLE),checked=[];
+ const result=inspectGaugeOperation(piece,1,{samples:18,inspect:(p,time)=>{
+  checked.push((time/5)-1);
+  const scene=technicalScene(p,time);
+  const stop=p.stopByBend[scene.stage.activeBend];
+  return {scene,place:gaugePlacement(scene,stop)};
+ }});
+ assert.equal(result.samples,19,'No multiplicar el coste del barrido habitual');
+ for(const point of [.36,.38,.40,.42,.44,.46,.48,.84]){
+  assert.ok(checked.some(t=>Math.abs(t-point)<1e-9),
+   'Se perdió el instante crítico '+point);
+ }
+ assert.ok(checked.filter(t=>t>=.84-1e-9).length>=10,
+  'No perder densidad de muestreo durante la reubicación del dedo');
+ assert.ok(result.findings.some(x=>x.kind==='holgura'),
+  'El escáner debe reconocer la advertencia que el visor muestra a .46');
+});
+
+test('R107: pronóstico y barrido ven la misma holgura breve G2/G4',()=>{
+ const piece=normalized(EXAMPLE);
+ const scanner=scanGaugeSequence(piece,{samplesPerOperation:18});
+ for(const op of [1,3]){
+  const scene=technicalScene(piece,5*(op+.46));
+  const stop=piece.stopByBend[scene.stage.activeBend];
+  const hit=gaugePlacement(scene,stop).gaugeInterference;
+  assert.equal(hit.kind,'holgura','Caso de regresión con la Omega');
+  assert.ok(scene.gaugePlan.clearanceWarnings>0,
+   'La predicción no debe omitir un aviso visible a .46');
+  assert.ok(Number.isFinite(scene.gaugePlan.minClearanceMm));
+  assert.ok(Number.isFinite(scene.gaugePlan.maxDeficitMm));
+  assert.ok(scanner.operations[op].findings.some(f=>f.kind==='holgura'));
+  assert.equal(scene.gaugePlan.penetrationCount,0,
+   'Holgura sin fibra media dentro no se debe llamar penetración');
+ }
 });
