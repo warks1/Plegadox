@@ -282,8 +282,20 @@ export function optimizeBendPlan(input,options={}){
   (volumeEvaluator&&(!plan.volumeChecked||plan.volumeMachineWarnings>0));
  const best=finalists.find(plan=>plan.source==='automatico'&&
   !modeledBlockingRisk(plan))||null;
+ // Separar causas de rechazo: no hallar contacto no es una penetración.
+ const rejectionSummary={
+  noGaugeContact:finalists.filter(plan=>plan.gaugeChecked&&
+   plan.gaugeContactNotObserved>0).length,
+  invalidGaugeReference:finalists.filter(plan=>plan.gaugeChecked&&
+   plan.gaugeInvalidReferences>0).length,
+  gaugePenetration:finalists.filter(plan=>plan.gaugeChecked&&
+   plan.gaugePenetrations>0).length,
+  toolPenetration:finalists.filter(plan=>plan.toolPenetrations>0).length
+ };
+ const hasNominalGaugeSupport=finalists.some(plan=>plan.gaugeChecked&&
+  plan.gaugeContactNotObserved===0&&plan.gaugeInvalidReferences===0);
  return {
-  best,manual,
+  best,manual,rejectionSummary,
   alternatives:finalists.filter(plan=>plan.source==='automatico'&&plan!==best&&
    (!volumeEvaluator||plan.volumeChecked)).slice(0,3),
   candidatePairs:candidates.length,
@@ -296,6 +308,7 @@ export function optimizeBendPlan(input,options={}){
   volumeSamplesPerOperation:volumeSamples,
   machineWidthExceeded:widthExceeded,
   status:!candidates.length?'SIN_PAREJA_PRESELECCIONADA':
+   !best&&!hasNominalGaugeSupport?'SIN_APOYO_NOMINAL_2D_VIABLE':
    !best?'SIN_PLAN_SIN_PENETRACIONES_MODELADAS':
    best.possibleInterference?'RIESGOS_2D_3D_PROVISIONALES':
    'SIN_AVISOS_EN_MUESTRAS_NO_CERTIFICA_SEGURIDAD',
