@@ -98,12 +98,20 @@ export function scanAxisCADMovement(input,options={}){
   const r=(pose.axes.R-ref.R)*mapping.signs.R;
   const z=(pose.axes[mapping.activeFinger]-ref[mapping.activeFinger])*
    mapping.signs[mapping.activeFinger];
+  // Amarres y adaptadores móviles siguen Y; inferiores y apoyos fijos.
+  // CAD ausente significa SIN RESOLVER, nunca "ausencia de colisión".
+  const extra={};
+  for(const kind of ['upperClamp','upperAdapter'])
+   if(base.objects[kind]?.valid)
+    extra[kind]=translatePrism(base.objects[kind],0,y);
+  for(const kind of ['lowerClamp','lowerAdapter','frontSupport'])
+   if(base.objects[kind]?.valid)extra[kind]=base.objects[kind];
   return {
    ram:translatePrism(base.objects.ram,0,y),
    punch:translatePrism(base.objects.punch,0,y),
    gauge:translatePrism(base.objects.gauge,x,r,z),
    bed:base.objects.bed,die:base.objects.die,
-   sheet:base.sheet
+   ...extra,sheet:base.sheet
   };
  };
  const events=[],unknowns=[],maxIntervals=Math.max(1,Math.min(250,
@@ -114,7 +122,15 @@ export function scanAxisCADMovement(input,options={}){
  const pairs=[
   ['ram','bed'],['ram','die'],['ram','gauge'],
   ['punch','bed'],['punch','die'],['punch','gauge'],
-  ['gauge','die'],['gauge','bed']
+  ['gauge','die'],['gauge','bed'],
+  ['upperClamp','bed'],['upperClamp','die'],
+  ['upperClamp','gauge'],['upperClamp','lowerClamp'],
+  ['upperClamp','lowerAdapter'],['upperAdapter','die'],
+  ['upperAdapter','lowerClamp'],['upperAdapter','lowerAdapter'],
+  ['gauge','upperClamp'],['gauge','upperAdapter'],
+  ['gauge','lowerClamp'],['gauge','lowerAdapter'],
+  ['gauge','frontSupport'],['punch','lowerClamp'],
+  ['punch','lowerAdapter'],['ram','frontSupport']
  ];
  const recordEvent=(sweep,kind,object,from,to)=>{
   if(events.length>=120)return;
@@ -148,11 +164,15 @@ export function scanAxisCADMovement(input,options={}){
   catch(error){unresolved++;unknowns.push(String(error.message||error));continue;}
   intervalsChecked++;framesChecked+=2;
   for(const [moving,against] of pairs){
+   if(!a[moving]?.valid||!b[moving]?.valid||
+    !a[against]?.valid||!b[against]?.valid)continue;
    const sweep=sweptPrismPair(a[moving],b[moving],a[against],b[against]);
    if(sweep.intersects)recordEvent(sweep,moving,against,before,after);
    else if(sweep.unknown)unresolved++;
   }
-  for(const moving of ['ram','gauge']){
+  for(const moving of ['ram','gauge','upperClamp','upperAdapter',
+   'lowerClamp','lowerAdapter','frontSupport']){
+   if(!a[moving]?.valid||!b[moving]?.valid)continue;
    for(let n=0;n<a.sheet.length;n++){
     const sweep=sweptPrismPair(a[moving],b[moving],a.sheet[n],b.sheet[n]);
     if(sweep.intersects)recordEvent(sweep,moving,'chapa-'+(n+1),before,after);
@@ -161,12 +181,13 @@ export function scanAxisCADMovement(input,options={}){
   }
  }
  const needed=['ram','bed',piece.stopByBend[
-  technicalScene(piece,mapping.referenceSceneTime).stage.activeBend]===2?'support':'stop'];
+  technicalScene(piece,mapping.referenceSceneTime).stage.activeBend]===2?'support':'stop',
+  'upperClamp','lowerClamp','upperAdapter','lowerAdapter','frontSupport'];
  const missing=needed.filter(k=>!base.cadProfilesUsed.includes(k));
  if(missing.length)unknowns.push('CAD de máquina sin perfil referenciado: '+missing.join(', '));
  if(program.poses.length-1>intervalsChecked)unknowns.push(
   'Hay fases sin chapa inmóvil o sin correspondencia con la animación');
- unknowns.push('No se ha modelado el segundo dedo Z1/Z2, inclinación continua Y1/Y2, agarres, volteos ni deformación de chapa');
+ unknowns.push('No se ha modelado el segundo dedo Z1/Z2, inclinación continua Y1/Y2, volteos ni deformación de chapa. Los amarres/adaptadores se inspeccionan sólo cuando existe su CAD registrado.');
  if(!base.objects.punch.provenance.includes('perfil-acotado'))
   unknowns.push('Perfil de punzón no acreditado con CAD OEM');
  if(!base.objects.die.provenance.includes('perfil-acotado'))
