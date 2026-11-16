@@ -14,6 +14,7 @@ import {recommendTooling} from './tooling-advisor.js';
 import {scoreBendOrder,scoreToolOrder,sequenceCandidates} from './sequence-advisor.js';
 import {scanGaugeSequence} from './gauge-sequence-review.js';
 import {scanVolumeTrajectory} from './volume-trajectory-review.js';
+import {scanToolCriticalPhases} from './tool-collision.js';
 
 const integer=(value,fallback,min,max)=>{
  const n=Number(value);
@@ -79,6 +80,14 @@ export function optimizeBendPlan(input,options={}){
  const gaugeSamples=integer(options.gaugeSamples,8,8,50);
  const volumeSamples=integer(options.volumeSamples,4,4,24);
  const maxVolumeCandidates=integer(options.maxVolumeCandidates,8,1,20);
+ // Límite explícito: evitar un cálculo síncrono ilimitado en móvil.
+ // Se analizan las variantes preseleccionadas, siempre incluyendo la
+ // manual; ninguna variante no examinada puede ganar por puntuación.
+ const maxToolCriticalCandidates=integer(options.maxToolCriticalCandidates,8,1,20);
+ const criticalToolEvaluator=options.criticalToolEvaluator||
+  (candidate=>scanToolCriticalPhases(candidate,{
+   phases:[.34,.40,.44,.46,.48,.52,.60,.68,.84,.92]
+  }));
  const volumeEvaluator=options.volumeEvaluator===undefined?
   part=>scanVolumeTrajectory(part,{machine:options.machine,samplesPerOperation:volumeSamples}):
   options.volumeEvaluator;
@@ -145,10 +154,17 @@ export function optimizeBendPlan(input,options={}){
    toolPenetrations:checked.penetrationOperations,
    toolWarnings:checked.warningOperations,
    toolSamples:checked.sampledPositions,
+   // El cribado rápido NO cubre todos los movimientos del punzón.
+   toolCriticalChecked:false,toolCriticalError:null,
+   toolCriticalFrames:0,toolCriticalPenetrations:0,
+   toolCriticalWarnings:0,toolCriticalByKind:null,
+   toolCriticalFindings:[],
    gaugeWarnings:0,gaugePenetrations:0,gaugeClearanceWarnings:0,
    gaugeInvalidReferences:0,gaugeContactNotObserved:0,
    gaugeChecked:false,gaugeError:null,
    volumeChecked:false,volumeMachineWarnings:0,volumeSweptSuspects:0,
+   volumeRamWarnings:0,volumeBedWarnings:0,volumeGaugeWarnings:0,
+   volumeRamEvidence:[],
    axisChecked:false,axisViolations:0,axisStatus:'EJES_SIN_PROGRAMA_FISICO',
    axisGeometryChecked:false,axisModeledCollisions:0,
    axisGeometryStatus:'EJES_SIN_DATUM_CAD',axisGeometryUnresolved:0,
@@ -235,7 +251,42 @@ export function optimizeBendPlan(input,options={}){
   if(a.gaugeChecked!==b.gaugeChecked)return a.gaugeChecked?-1:1;
   return compare(a,b);
  });
+ // R108: repetir las verificaciones del punzón y la matriz justo al
+ // cerrar/sujetar/deformar, antes de llamar "mejor" a un orden.
+ // Una intrusión en estas poses prevalece sobre la heurística previa.
  const manual=current;
+ const critical=finalists.filter(plan=>plan.source==='automatico')
+  .slice(0,maxToolCriticalCandidates);
+ if(manual&&!critical.includes(manual))critical.push(manual);
+ for(const plan of critical){
+  const candidate={...p,die:plan.dieId,punch:plan.punchId,
+   order:plan.order,punchOrientation:plan.orientation};
+  try{
+   const check=criticalToolEvaluator(candidate);
+   if(!check||!Array.isArray(check.operations)||
+    check.operations.length!==candidate.order.length)
+    throw Error('Barrido crítico de punzón/matriz incompleto');
+   plan.toolCriticalChecked=true;
+   plan.toolCriticalFrames=Number(check.framesChecked)||0;
+   plan.toolCriticalPenetrations=Number(check.penetrationOperations)||0;
+   plan.toolCriticalWarnings=Number(check.warningOperations)||0;
+   plan.toolCriticalByKind=check.byKind||null;
+   plan.toolCriticalFindings=check.operations.flatMap(op=>
+    (op.findings||[]).map(f=>({...f,operation:op.operation,
+     bend:op.bend}))).slice(0,16);
+   plan.toolPenetrations=Math.max(plan.toolPenetrations,
+    plan.toolCriticalPenetrations);
+   plan.toolWarnings=Math.max(plan.toolWarnings,
+    plan.toolCriticalWarnings);
+   plan.possibleInterference ||=plan.toolCriticalPenetrations>0||
+    plan.toolCriticalWarnings>0;
+  }catch(error){
+   plan.toolCriticalError=error instanceof Error?error.message:String(error);
+   plan.possibleInterference=true;
+  }
+  plan.score=weight(plan);
+ }
+
  // Un cálculo volumétrico de las variantes finalistas, separado del
  // cribado rápido. Siempre incluir el programa manual aunque no cumpla
  // la preselección de utillaje. El muestreo NO acredita seguridad.
@@ -249,6 +300,10 @@ export function optimizeBendPlan(input,options={}){
    try{
     const scanned=volumeEvaluator(candidate);
     plan.volumeMachineWarnings=Number(scanned.modeledMachineWarnings)||0;
+    plan.volumeRamWarnings=Number(scanned.ramWarnings??scanned.byKind?.ram)||0;
+    plan.volumeBedWarnings=Number(scanned.bedWarnings??scanned.byKind?.bed)||0;
+    plan.volumeGaugeWarnings=Number(scanned.gaugeWarnings??scanned.byKind?.gauge)||0;
+    plan.volumeRamEvidence=scanned.ramEvidence||[];
     plan.volumeSweptSuspects=Number(scanned.uncertainSweptIntervals)||0;
     plan.volumeFramesChecked=Number(scanned.framesChecked)||0;
     plan.volumeStatus=scanned.status||'MODELO_PRELIMINAR';
@@ -282,7 +337,8 @@ export function optimizeBendPlan(input,options={}){
  // Los avisos de proximidad siguen visibles: NO hay autorización CNC.
  const modeledBlockingRisk=plan=>plan.machineWidthExceeded||
   plan.sheetCross>0||plan.sheetOverlap>0||
-  plan.toolPenetrations>0||plan.gaugePenetrations>0||
+  plan.toolPenetrations>0||!plan.toolCriticalChecked||
+  plan.gaugePenetrations>0||
   plan.gaugeInvalidReferences>0||plan.gaugeContactNotObserved>0||
   !plan.gaugeChecked||
   plan.axisViolations>0||plan.axisModeledCollisions>0||
@@ -298,7 +354,14 @@ export function optimizeBendPlan(input,options={}){
    plan.gaugeInvalidReferences>0).length,
   gaugePenetration:automaticPlans.filter(plan=>plan.gaugeChecked&&
    plan.gaugePenetrations>0).length,
-  toolPenetration:automaticPlans.filter(plan=>plan.toolPenetrations>0).length
+  toolPenetration:automaticPlans.filter(plan=>plan.toolPenetrations>0).length,
+  punchPenetration:automaticPlans.filter(plan=>
+   (plan.toolCriticalByKind?.punch?.penetrations||0)>0).length,
+  diePenetration:automaticPlans.filter(plan=>
+   (plan.toolCriticalByKind?.die?.penetrations||0)>0).length,
+  ramInterference:automaticPlans.filter(plan=>plan.volumeRamWarnings>0).length,
+  toolCriticalUnresolved:automaticPlans.filter(plan=>
+   !plan.toolCriticalChecked).length
  };
  const hasNominalGaugeSupport=automaticPlans.some(plan=>plan.gaugeChecked&&
   plan.gaugeContactNotObserved===0&&plan.gaugeInvalidReferences===0);
@@ -312,6 +375,7 @@ export function optimizeBendPlan(input,options={}){
   ordersScreened:selectedOrders.length,
   planVariantsChecked:plans.length,
   finalistsGaugeChecked:finalists.filter(plan=>plan.gaugeChecked).length,
+  finalistsToolCriticalChecked:finalists.filter(plan=>plan.toolCriticalChecked).length,
   finalistsVolumeChecked:finalists.filter(plan=>plan.volumeChecked).length,
   volumeSamplesPerOperation:volumeSamples,
   machineWidthExceeded:widthExceeded,
