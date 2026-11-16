@@ -149,7 +149,7 @@ export function gaugeFrontNosePolygon(placement,dimensions){
  * de estado; aquí solo mostramos el nivel y la acción requerida.
  * Es geometría de interfaz, NO movimiento de máquina.
  */
-export function gaugeStatusCardLayout(width,height,faceX,faceY,stopNumber,level,scale=1,movementPhase=null){
+export function gaugeStatusCardLayout(width,height,faceX,faceY,stopNumber,level,scale=1,movementPhase=null,forecast=null){
  if(![width,height,faceX,faceY,scale].every(Number.isFinite)||
   width<=0||height<=0||scale<=0||![1,2].includes(stopNumber)||
   !['green','amber','red'].includes(level))
@@ -175,7 +175,7 @@ export function gaugeStatusCardLayout(width,height,faceX,faceY,stopNumber,level,
   'reubicacion-siguiente-golpe':'CAMBIO DE COTA · NO RETROCESO'
  }[movementPhase]??null;
  const subline=level==='red'?'PENETRACIÓN 2D · REVISAR':
-  motionText||(level==='amber'?'REVISAR APOYO / HOLGURA':'COMPROBACIÓN 2D');
+  motionText||(level==='amber'?'REVISAR APOYO / HOLGURA':forecast==='retirada-prevista'?'RETIRADA PREVISTA · 2D':forecast==='holgura-futura'?'HOLGURA FUTURA · REVISAR':'COMPROBACIÓN 2D');
  return {x,y,width:boxW,height:boxH,headline,subline,below,
   reservedLeft:left,reservedRight:right};
 }
@@ -453,7 +453,7 @@ function stageScene(ctx,w,h,piece,sim,machineView){
   const level=gaugeRiskStatus(placement).level;
   const layout=gaugeStatusCardLayout(w,h,cx+placement.point.x*scale,
    baseY-placement.point.y*scale,placement.stopNumber,level,scale,
-   placement.gaugeTransition?.phase??null);
+   placement.gaugeTransition?.phase??null,gaugeRiskStatus(placement).forecast??null);
   drawGaugeStatusCard(ctx,layout,level,GAUGE_COLORS[level]);
  }
  // Workpiece shadow and hot contact glow along the working tool tip
