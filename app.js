@@ -881,7 +881,7 @@ function scheduleIntegratedAdvisor(){
     ' · muestras adicionales de útiles: '+plan.toolCriticalFrames+
     ' · apoyos de tope sin contacto: '+(plan.gaugeContactNotObserved||0)+
     ' · referencias de tope inválidas: '+(plan.gaugeInvalidReferences||0)+
-    ' · holguras de tope: '+(plan.gaugeClearanceWarnings||0)
+    ' · holguras de tope: '+(plan.gaugeClearanceWarnings||0)+
     ' · envolventes 3D trancha/mesa/topes: '+
     (plan.volumeChecked?plan.volumeMachineWarnings+' avisos':'SIN COMPROBAR')+
     ' · barridos pendientes: '+plan.volumeSweptSuspects+
