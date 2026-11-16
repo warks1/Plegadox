@@ -71,6 +71,16 @@ export function gaugeRiskStatus(placement){
   return {level:'amber',code:'interferencia-actual',
    message:'INTERFERENCIA 2D ACTUAL · REVISAR',verified:false};
  }
+ // Si ambas rutas X/R atraviesan el perfil 2D, no declarar verde
+ // sólo porque el dedo esté inmóvil en el fotograma actual.
+ if(plan?.movementCollisionUnresolved===true)
+  return {level:'amber',code:'ruta-ejes-no-segura-2d',
+   message:'TRASLADO X/R CON PENETRACIÓN PREVISTA EN 2D · REVISAR',
+   verified:false};
+ if(plan?.movementGeometryIncomplete===true)
+  return {level:'amber',code:'ruta-ejes-incompleta',
+   message:'TRASLADO X/R SIN GEOMETRÍA SUFICIENTE · REVISAR',
+   verified:false};
  if(plan?.withdrawalUnverified===true||plan?.initialPenetration===true||
     ((Number(plan?.penetrationCount)||0)>0&&plan?.enabled!==true))
   return {level:'amber',code:'retirada-no-fiable',message:'INTERFERENCIA FUTURA SIN RETIRADA FIABLE',verified:false};
