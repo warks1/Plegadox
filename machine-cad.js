@@ -9,7 +9,13 @@
 import {parseToolDxf,validateContour} from './tool-dxf.js';
 
 export const MACHINE_CAD_KEY='plegadox:machine-cad:v1';
-export const MACHINE_CAD_KINDS=Object.freeze(['ram','bed','stop','support']);
+// R109: todos los cuerpos que pueden interferir con chapa, útiles o
+// dedos. Un componente ausente queda PENDIENTE; nunca se sintetiza como
+// "certificado" a partir de otro fabricante o de cotas de familia.
+export const MACHINE_CAD_KINDS=Object.freeze([
+ 'ram','bed','stop','support','upperClamp','lowerClamp',
+ 'upperAdapter','lowerAdapter','frontSupport'
+]);
 /** Clave local de revisión de configuración: invalida un montaje CAD
  * cuando el operario modifica las cotas Cybelec a las que fue asociado. */
 export function machineConfigurationKey(cfg){
@@ -42,6 +48,12 @@ export function machineCadDatum(kind){
  if(kind==='ram')return 'punta del punzón (se mueve con Y)';
  if(kind==='bed')return 'superficie nominal superior de la V (fija)';
  if(kind==='stop'||kind==='support')return 'origen del dedo de tope (se mueve con X/R)';
+ if(kind==='upperClamp'||kind==='upperAdapter')
+  return 'referencia local de punta del punzón (se mueve con Y1/Y2)';
+ if(kind==='lowerClamp'||kind==='lowerAdapter')
+  return 'referencia nominal de superficie superior de V (mesa fija)';
+ if(kind==='frontSupport')
+  return 'referencia de plano superior de mesa (soporte delantero)';
  throw Error('Componente no identificado');
 }
 export function machineCadFromDXF(dxf,options){
