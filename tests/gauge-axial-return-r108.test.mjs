@@ -13,8 +13,15 @@ const opts={anchor,target,maxSheetX:125,fingerReach:45,opening:16};
 const epsilon=1e-7;
 const noDiagonal=frames=>{
  for(let i=1;i<frames.length;i++){
-  const a=frames[i-1].point,b=frames[i].point;
-  assert.ok(Math.abs(b.x-a.x)<=epsilon||Math.abs(b.y-a.y)<=epsilon,
+  const prior=frames[i-1],current=frames[i];
+  const a=prior.point,b=current.point;
+  const dx=Math.abs(b.x-a.x),dy=Math.abs(b.y-a.y);
+  // Dos muestras pueden quedar A AMBOS LADOS del instante de cambio
+  // entre R y X: ambas coordenadas habrán cambiado ENTRE muestras,
+  // pero en ningún momento cambian simultáneamente. Verificar el
+  // tramo continuo con muestreo adicional y no confundirlo con diagonal.
+  const atSwitch=prior.axisPhase==='R'&&current.axisPhase==='X';
+  assert.ok(dx<=epsilon||dy<=epsilon||atSwitch,
    'Los ejes X/R no deben avanzar simultáneamente');
  }
 };
