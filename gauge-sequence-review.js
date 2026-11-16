@@ -116,7 +116,9 @@ export function inspectGaugeOperation(piece,operation,{
   const frameKinds=[];
   if(issue?.warning&&['penetracion','holgura'].includes(issue.kind))
    frameKinds.push(issue.kind);
-  if(scene.gaugePlan?.movementCollisionUnresolved===true)
+  // Riesgo de trayectoria completa: notificar UNA vez por golpe,
+  // no 19 veces como si fueran colisiones de cada fotograma.
+  if(scene.gaugePlan?.movementCollisionUnresolved===true&&times.length===0)
    frameKinds.push('ruta-ejes-no-segura-2d');
   // Las causas del apoyo y de la holgura son independientes. Antes,
   // un único if/else descartaba "chapa detrás" o "sin asiento" cuando
