@@ -85,18 +85,26 @@ export function evaluateGaugeSetup(piece,st,ref,config,stopNumber=1){
   supportShelf:feature.surface==='horizontal-top'?
    {seated:shelfSeat,from:toWorld(feature.from),to:toWorld(feature.to)}:null
  });
- const valid=fullContact&&surface&&shelfSeat&&!collision.warning;
+ // Distinguir referencia nominal viable de separación insuficiente.
+ // La HOLGURA no elimina el contacto frontal: es una advertencia distinta.
+ // Una penetración o geometría inexistente sí impiden declarar apoyo 2D.
+ const nominalContact=collision.kind==='sin-interferencia-detectada'||
+  collision.kind==='holgura';
+ const valid=fullContact&&surface&&shelfSeat&&nominalContact;
  return {valid,ref,stopNumber,point,polygon:poly,warning:collision.warning,
   interference:collision,freeEdge:ref.freeEdge,
   foldedWingContact:!!foldedFace,foldedWingCandidate:foldedFace,
   faceAccessible:fullContact,
   geometryVerified:config.gaugeGeometryDocumented===true,
+  clearanceWarning:collision.kind==='holgura',
   verified:false,reason:!ref.freeEdge&&!foldedFace?
    'Referencia sobre vértice interior sin canto libre':
    !fullContact?'El borde no llega por delante de la cara frontal del tope':
    !surface?'La cara del dedo no puede detener el canto':
    !shelfSeat?'Support 2: la chapa inclinada no se apoya correctamente sobre la repisa inferior':
-   collision.warning?'La chapa invade o roza el sólido del dedo ANTES del plegado':
+   collision.kind==='penetracion'?'La chapa penetra el sólido del dedo ANTES del plegado':
+   collision.kind==='holgura'?'Apoyo frontal nominal 2D; falta holgura por espesor y debe revisarse':
+   collision.warning||collision.kind==='sin-geometria'?'No se pudo comprobar la geometría del dedo':
    foldedFace?'Cara lateral de pestaña preplegada · 2D provisional':
    'Canto libre contra cara frontal sin interferencia 2D en preparación'};
 }
