@@ -17,8 +17,14 @@ try{
  const buttons=review.locator('button.px-gauge-operation');
  assert.equal(await buttons.count(),4,'La muestra Omega debe revisar todos los golpes');
  assert.match(await page.locator('#workshopAuditStatus').textContent(),/envolvente 3D/);
- await page.waitForFunction(()=>document.querySelector('#integratedPlannerStatus')
-  ?.textContent.includes('envolventes 3D'),{timeout:35000});
+ // Tanto una alternativa propuesta como un descarte deben enseñar
+ // qué evaluación 3D se realizó. "Sin plan" no equivale a fallo de carga.
+ await page.waitForFunction(()=>{
+  const status=document.querySelector('#integratedPlannerStatus');
+  return status&&status.dataset.state!=='pending'&&
+   /envolventes 3D/i.test(status.textContent)&&
+   /CAD OEM/i.test(status.textContent);
+ },null,{timeout:45000});
  assert.deepEqual(await page.evaluate(()=>window.PLEGADOX_STATE().piece.order),[0,1,3,2],
   'Comparar nunca reordena la muestra por sí solo');
  await buttons.first().click();
