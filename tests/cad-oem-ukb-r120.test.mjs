@@ -38,3 +38,29 @@ test('R120: las referencias UKB nuevas se ofrecen para importación pero NO inst
   assert.equal(suggestedMountFamily(row.tool.mount),'Desconocido');
  }
 });
+
+test('R120: cinco punzones de 30 grados UKB con sección OEM y amarre específicos',()=>{
+ const punches={
+  '11.780':{H:135,R:.5,load:800,mount:'Amada/Promecam'},
+  '11.880':{H:150,R:.8,load:400,mount:'Amada/Promecam'},
+  '11.810':{H:200,R:1,load:500,mount:'Amada/Promecam'},
+  '14.153':{H:175,R:1,load:1000,
+   mount:'UKB BYSTRONIC (MONTAJE REAL PENDIENTE)'},
+  '14.169':{H:250,R:3,load:1000,
+   mount:'UKB BYSTRONIC (MONTAJE REAL PENDIENTE)'}
+ };
+ for(const [ref,params] of Object.entries(punches)){
+  const found=CAD_EVIDENCE_SOURCES.filter(x=>
+   x.maker==='UKB'&&x.kind==='punch'&&x.reference===ref);
+  assert.equal(found.length,1,ref);
+  const tool=found[0];
+  assert.equal(tool.dimensions.heightMm,params.H);
+  assert.equal(tool.dimensions.angleDeg,30);
+  assert.equal(tool.dimensions.tipRadiusMm,params.R);
+  assert.equal(tool.dimensions.maxLoadKNPerMetre,params.load);
+  assert.equal(tool.mount,params.mount);
+  assert.equal(tool.status,'ENLACE_CONFIRMADO_NO_IMPORTADO');
+  assert.equal(tool.datum,'OEM_REFERENCE_UNCONFIRMED');
+  assert.match(tool.cadUrl,/^https:\/\/daten\.ukb-gmbh\.de\/dxf\/zip\/\d+\.DXF\.zip$/);
+ }
+});
