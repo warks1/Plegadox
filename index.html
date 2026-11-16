@@ -229,6 +229,8 @@
   <label>Referencia / nombre<input id="toolDxfName" maxlength="65" placeholder="Ref. del fabricante"></label>
   <label>Ángulo nominal (°)<input id="toolDxfAngle" type="number" min="15" max="120" step="1" value="88"></label>
   <label>Longitud de segmento (mm)<input id="toolDxfLength" type="number" min="10" max="6000" value="415"></label>
+  <label>Eje de trabajo X en DXF (mm, opcional)<input id="toolDxfAxisX" type="number" step=".001" placeholder="Detectar punta/V automáticamente" aria-describedby="toolDxfAxisHelp"></label>
+  <p class="hint" id="toolDxfAxisHelp">Pata de cabra: usar la punta, no el centro exterior. Matriz reversible: indicar la X de la V elegida si el detector encuentra varias. La medida es local del DXF normalizado; la colocación física en máquina sigue pendiente.</p>
   <label id="toolDxfDieOptions" hidden>Apertura V nominal (mm)<input id="toolDxfOpening" type="number" min="2" max="200" step=".1" value="16"></label>
   <label id="toolDxfPunchOptions">Diámetro de punta Ø nominal (mm)<input id="toolDxfTip" type="number" min=".1" max="30" step=".1" value=".8"></label>
  </div>
