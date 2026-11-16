@@ -32,12 +32,14 @@ export function renderCadEvidence(){
   status.textContent='Biblioteca CAD no legible: '+error.message;
   status.dataset.error='true';return;
  }
- // Un perfil personalizado no certifica el útil de la pieza activa.
- // Se contabiliza sólo que exista ALGÚN DXF real guardado, nunca
- // como ficha exacta del punzón/matriz montado.
+ // No contabilizar un DXF cualquiera como si fuera el punzón
+ // realmente MONTADO en la pieza activa. La identidad de id importa.
+ const activePiece=window.PLEGADOX_STATE?.()?.piece||null;
  const tools=loadImportedTools(localStorage).filter(t=>t.importedDxf===true);
- if(tools.some(t=>t.opening==null))local.punch={points:[[0,0]]};
- if(tools.some(t=>t.opening!=null))local.die={points:[[0,0]]};
+ if(tools.some(t=>t.id===activePiece?.punch&&t.opening==null))
+  local.punch={points:[[0,0]]};
+ if(tools.some(t=>t.id===activePiece?.die&&t.opening!=null))
+  local.die={points:[[0,0]]};
  let coverage=null;
  try{coverage=cadCoverage(model,local);}catch(error){
   status.textContent='No hay inventario CAD de esta familia: '+error.message;
