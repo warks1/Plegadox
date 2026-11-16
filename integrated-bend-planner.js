@@ -376,6 +376,9 @@ export function optimizeBendPlan(input,options={}){
  const hasNominalGaugeSupport=automaticPlans.some(plan=>plan.gaugeChecked&&
   plan.gaugeContactNotObserved===0&&plan.gaugeInvalidReferences===0&&
   !plan.gaugeContactUnknown);
+ // Ausencia de INFORME no equivale a imposibilidad de asiento.
+ const allGaugeReportsIncomplete=automaticPlans.length>0&&
+  automaticPlans.every(plan=>!plan.gaugeChecked||plan.gaugeContactUnknown);
  return {
   best,manual,rejectionSummary,
   physicalReview:best?.physicalReview||null,
@@ -393,6 +396,7 @@ export function optimizeBendPlan(input,options={}){
   volumeSamplesPerOperation:volumeSamples,
   machineWidthExceeded:widthExceeded,
   status:!candidates.length?'SIN_PAREJA_PRESELECCIONADA':
+   !best&&allGaugeReportsIncomplete?'DATOS_CONTACTO_TOPE_INCOMPLETOS':
    !best&&!hasNominalGaugeSupport?'SIN_APOYO_NOMINAL_2D_VIABLE':
    !best?'SIN_PLAN_SIN_PENETRACIONES_MODELADAS':
    best.possibleInterference?'RIESGOS_2D_3D_PROVISIONALES':
