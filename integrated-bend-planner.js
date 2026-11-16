@@ -5,9 +5,9 @@
  * amarre), permutaciones de plegado, orientación del punzón y muestras de
  * interferencia chapa/útiles/topes. Mantiene el programa del operario intacto.
  *
- * AVISO: NO modela volúmenes CAD de trancha, mesa, amarres y topes; tampoco
- * CNC, recorrido real ni envolvente temporal continua. No certifica ausencia
- * de colisiones ni autoriza producción en máquina real.
+ * AVISO: modela volúmenes 2,5D provisionales y CAD importados cuando
+ * constan, NO un gemelo digital completo de trancha, mesa, topes y amarres.
+ * No valida CNC, giro/deformación continuos ni seguridad en máquina real.
  */
 import {normalized,DIES,PUNCHES,MACHINE} from './engine.js';
 import {recommendTooling} from './tooling-advisor.js';
@@ -28,6 +28,9 @@ const weight=plan=>
   (plan.axisViolations||0)*2000000+
   (plan.axisModeledCollisions||0)*2000000+
   (plan.volumeMachineWarnings||0)*300000+
+  // Los solapes contra siluetas SIN CAD real bloquean la sugerencia,
+  // pero no son penetraciones demostradas ni se anuncian en rojo.
+  (plan.volumeProvisionalWarnings||0)*120000+
   (plan.volumeSweptSuspects||0)*10000+
   plan.toolPenetrations*1000000+
   plan.sheetCross*100000+
@@ -167,6 +170,8 @@ export function optimizeBendPlan(input,options={}){
    gaugeContactUnknown:false,gaugeMissingOperations:0,
    gaugeUnexplainedOperations:0,gaugeChecked:false,gaugeError:null,
    volumeChecked:false,volumeMachineWarnings:0,volumeSweptSuspects:0,
+   volumeProvisionalWarnings:0,volumeProvisionalRamWarnings:0,
+   volumeProvisionalBedWarnings:0,volumeProvisionalGaugeWarnings:0,
    volumeRamWarnings:0,volumeBedWarnings:0,volumeGaugeWarnings:0,
    volumeRamEvidence:[],
    axisChecked:false,axisViolations:0,axisStatus:'EJES_SIN_PROGRAMA_FISICO',
@@ -307,6 +312,10 @@ export function optimizeBendPlan(input,options={}){
     plan.volumeRamWarnings=integrity.ramWarnings;
     plan.volumeBedWarnings=integrity.bedWarnings;
     plan.volumeGaugeWarnings=integrity.gaugeWarnings;
+    plan.volumeProvisionalWarnings=integrity.provisionalMachineWarnings;
+    plan.volumeProvisionalRamWarnings=integrity.provisionalRamWarnings;
+    plan.volumeProvisionalBedWarnings=integrity.provisionalBedWarnings;
+    plan.volumeProvisionalGaugeWarnings=integrity.provisionalGaugeWarnings;
     plan.volumeRamEvidence=integrity.ramEvidence;
     plan.volumeSweptSuspects=integrity.uncertainSweptIntervals;
     plan.volumeFramesChecked=Number(scanned.framesChecked)||0;
@@ -326,7 +335,7 @@ export function optimizeBendPlan(input,options={}){
     plan.volumeError=error instanceof Error?error.message:String(error);
    }
    plan.possibleInterference ||=plan.axisViolations>0||plan.axisModeledCollisions>0||
-    plan.volumeMachineWarnings>0||
+    plan.volumeMachineWarnings>0||plan.volumeProvisionalWarnings>0||
     plan.volumeSweptSuspects>0||!plan.volumeChecked;
    plan.score=weight(plan);
   }
@@ -351,7 +360,8 @@ export function optimizeBendPlan(input,options={}){
   plan.gaugeInvalidReferences>0||plan.gaugeContactNotObserved>0||
   !plan.gaugeChecked||plan.gaugeContactUnknown||
   plan.axisViolations>0||plan.axisModeledCollisions>0||
-  (volumeEvaluator&&(!plan.volumeChecked||plan.volumeMachineWarnings>0));
+  (volumeEvaluator&&(!plan.volumeChecked||plan.volumeMachineWarnings>0||
+   plan.volumeProvisionalWarnings>0));
  const best=finalists.find(plan=>plan.source==='automatico'&&
   !modeledBlockingRisk(plan))||null;
  // Separar causas de rechazo: no hallar contacto no es una penetración.
@@ -370,6 +380,12 @@ export function optimizeBendPlan(input,options={}){
   diePenetration:automaticPlans.filter(plan=>
    (plan.toolCriticalByKind?.die?.penetrations||0)>0).length,
   ramInterference:automaticPlans.filter(plan=>plan.volumeRamWarnings>0).length,
+  provisionalEnvelopeRisk:automaticPlans.filter(plan=>
+   plan.volumeProvisionalWarnings>0).length,
+  provisionalRamRisk:automaticPlans.filter(plan=>
+   plan.volumeProvisionalRamWarnings>0).length,
+  provisionalGaugeRisk:automaticPlans.filter(plan=>
+   plan.volumeProvisionalGaugeWarnings>0).length,
   toolCriticalUnresolved:automaticPlans.filter(plan=>
    !plan.toolCriticalChecked).length
  };
