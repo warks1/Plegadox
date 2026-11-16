@@ -175,6 +175,11 @@ export function gaugeStatusCardLayout(width,height,faceX,faceY,stopNumber,level,
   'reubicacion-siguiente-golpe':'CAMBIO DE COTA · NO RETROCESO'
  }[movementPhase]??null;
  const issueText={
+  'referencia-interior':'REFERENCIA INTERIOR · REVISAR',
+  'sin-borde-libre':'SIN BORDE LIBRE DE APOYO',
+  'cara-tope-invalida':'SIN CARA FRONTAL DE TOPE',
+  'chapa-detras':'CHAPA DETRÁS DEL TOPE',
+  'sin-asiento':'NO ASIENTA SOBRE EL TOPE',
   'apoyo-invalido':'APOYO NO VÁLIDO · REVISAR',
   'comprobacion-incompleta':'DATOS 2D INSUFICIENTES',
   'holgura-actual':'HOLGURA ACTUAL · REVISAR',
