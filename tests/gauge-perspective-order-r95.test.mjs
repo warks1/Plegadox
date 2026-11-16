@@ -13,14 +13,16 @@ test('R95: la matriz NO oculta el tope en el orden de dibujo 3D',()=>{
  const render=source.slice(source.indexOf('function stageScene('));
  const backdrop=render.indexOf('rearMachineBackdrop(ctx,w,h,cx,baseY,scale)');
  const die=render.indexOf('drawDie(ctx,scene,cx,baseY,scale)');
- const perspective=render.indexOf('if(perspective)rearMachine(ctx,w,h,cx,baseY,scale,placement,true)');
+ const perspective=render.indexOf('if(perspective&&options.showGauge)');
  const sheet=render.indexOf('drawSheet(ctx,transformed,t,scale,st.press>.4)');
  const ramForeground=render.indexOf('drawPunchForeground(ctx,scene');
  assert.ok(backdrop>=0&&die>=0&&perspective>=0&&sheet>=0&&ramForeground>=0);
  assert.ok(backdrop<die&&die<perspective&&perspective<sheet&&sheet<ramForeground,
   'En perspectiva: bancada → matriz → tope → chapa → punzón');
- assert.match(render,/if\(!perspective\)rearMachine\(ctx,w,h,cx,baseY,scale,placement,false\)/,
-  'El orden anterior se conserva para la vista lateral 2D');
+ assert.match(render,/if\(!perspective&&options\.showGauge\)/,
+  'El tope lateral 2D se dibuja antes de la matriz, salvo que el operador oculte la capa');
+ assert.match(render,/rearMachine\(ctx,w,h,cx,baseY,scale,placement,true,options\)/,
+  'La perspectiva avanzada conserva la misma cara frontal del dedo');
  assert.doesNotMatch(render,/drawHiddenGaugeNoseGuide/,
   'No pintar dedos fantasma ni depender del apoyo lateral para que se vean');
 });
