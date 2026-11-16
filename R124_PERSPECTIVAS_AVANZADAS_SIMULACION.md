@@ -23,6 +23,7 @@ Nueve selectores de visibilidad: chapa, punzón, matriz, trancha, dedo de tope, 
 - Selección directa de fase del ciclo: posicionar, aproximación, trabajo, retorno y cambio de golpe.
 - Avanzar / retroceder entre operaciones sin reordenar pliegues ni cambiar el signo. Cada salto pausa Play para evitar movimientos inesperados.
 - Captura PNG con la vista actual; sin enviar datos al servidor.
+- Botón **⛶ Pant.** en el propio visor: pantalla completa nativa donde esté disponible; en iPhone y dispositivos que no la ofrezcan, modo inmersivo CSS con salida desde el mismo botón o Escape. Mantiene controles dentro de pantalla y repinta la escena después de redimensionar.
 - El módulo nuevo se incluye en la caché offline del PWA para evitar pantalla en blanco cuando no hay conexión.
 
 ### Seguridad y límites
@@ -31,7 +32,7 @@ Los avisos de colisión de punzón, matriz y tope permanecen activos incluso con
 ## Pruebas
 - `tests/machine-perspective-options-r124.test.mjs`: presets, vectores de proyección, tolerancia de preferencias, ejes ilustrativos, controles y módulo offline.
 - `tests/machine-perspective-r124-browser-smoke.mjs`: ejecución Playwright en iPhone 390px, tablet 768px y PC 1440px. Comprueba que la perspectiva y las capas sí modifican los píxeles, que se generan PNG, que el salto de fase conserva la pieza y que no hay desbordamiento horizontal.
-- `.github/workflows/perspective-options-r124.yml`: genera capturas reproducibles y las adjunta como artefactos.
+- `.github/workflows/perspective-options-r124.yml`: genera capturas reproducibles de vistas profundas, capas e inmersivo y las adjunta como artefactos.
 
 **Prueba visual independiente confirmada:** https://github.com/warks1/Plegadox/actions/runs/43969455208
 
