@@ -18,7 +18,7 @@ const AXIS_EPS=1e-7;
  * No es una ruta anticolisión ni una orden CNC: las carreras físicas
  * y el espacio disponible aún requieren verificación volumétrica.
  */
-export function stagedGaugeAxes(from,to,progress){
+export function stagedGaugeAxes(from,to,progress,{order='R-then-X'}={}){
  if(!from||!to||![from.x,from.y,to.x,to.y].every(Number.isFinite))
   throw Error('Faltan coordenadas X/R de los topes');
  const t=clamp01(progress),dx=Math.abs(to.x-from.x),dy=Math.abs(to.y-from.y);
@@ -30,14 +30,24 @@ export function stagedGaugeAxes(from,to,progress){
  if(dy<AXIS_EPS)
   return {point:{x:lerp(from.x,to.x,smooth(t)),y:from.y},
    axisPhase:'X',progress:t,verified:false};
- const rFraction=.42;
- if(t<rFraction)
-  return {point:{x:from.x,y:lerp(from.y,to.y,smooth(t/rFraction))},
+ if(order!=='R-then-X'&&order!=='X-then-R')
+  throw Error('Orden de ejes de tope inválido');
+ const firstFraction=.42;
+ if(order==='X-then-R'){
+  if(t<firstFraction)
+   return {point:{x:lerp(from.x,to.x,smooth(t/firstFraction)),y:from.y},
+    axisPhase:'X',progress:t,verified:false};
+  return {point:{x:to.x,
+   y:lerp(from.y,to.y,smooth((t-firstFraction)/(1-firstFraction)))},
    axisPhase:'R',progress:t,verified:false};
- return {point:{x:lerp(from.x,to.x,smooth((t-rFraction)/(1-rFraction))),y:to.y},
+ }
+ if(t<firstFraction)
+  return {point:{x:from.x,y:lerp(from.y,to.y,smooth(t/firstFraction))},
+   axisPhase:'R',progress:t,verified:false};
+ return {point:{x:lerp(from.x,to.x,smooth((t-firstFraction)/(1-firstFraction))),y:to.y},
   axisPhase:'X',progress:t,verified:false};
 }
-export function gaugeRetractionPath({anchor,target=null,maxSheetX,fingerReach=0,opening=16,sub,enabled=true}){
+export function gaugeRetractionPath({anchor,target=null,maxSheetX,fingerReach=0,opening=16,sub,enabled=true,axisOrder='R-then-X'}){
  if(!enabled){
   if(!anchor||![anchor.x,anchor.y].every(Number.isFinite))
    throw new Error('Falta origen del dedo de tope');
@@ -49,7 +59,7 @@ export function gaugeRetractionPath({anchor,target=null,maxSheetX,fingerReach=0,
   if(t<GAUGE_REPOSITION_START)return null;
   const k=(t-GAUGE_REPOSITION_START)/
    (GAUGE_REPOSITION_FINISH-GAUGE_REPOSITION_START);
-  const moved=stagedGaugeAxes(anchor,target,k);
+  const moved=stagedGaugeAxes(anchor,target,k,{order:axisOrder});
   // Un cambio nominal de cota NO se llama retroceso preventivo.
   return {phase:'reubicacion-siguiente-golpe',
    point:moved.point,axisPhase:moved.axisPhase,
@@ -88,7 +98,7 @@ export function gaugeRetractionPath({anchor,target=null,maxSheetX,fingerReach=0,
  // Primero ajustar la cota R mientras el dedo está APARCADO detrás;
  // después regresar en X. La trayectoria diagonal anterior cruzaba
  // simultáneamente X/R y daba una representación engañosa del regreso.
- const moved=stagedGaugeAxes(park,target,k);
+ const moved=stagedGaugeAxes(park,target,k,{order:axisOrder});
  return {phase:'regreso-a-siguiente-referencia',
   point:moved.point,axisPhase:moved.axisPhase,
   // "from" identifica SIEMPRE la cota original del dedo, no el punto
