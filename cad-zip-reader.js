@@ -38,7 +38,9 @@ async function defaultInflate(compressed){
  for(const part of parts){merged.set(part,at);at+=part.byteLength;}
  return merged;
 }
-export async function extractDxfFromZip(data,{inflate=defaultInflate}={}){
+export async function extractDxfFromZip(data,{
+ inflate=defaultInflate,selectName=null,listOnly=false
+}={}){
  const bytes=data instanceof Uint8Array?data:
   data instanceof ArrayBuffer?new Uint8Array(data):null;
  if(!bytes||bytes.length<22||bytes.length>MAX_ZIP_BYTES)
@@ -59,7 +61,12 @@ export async function extractDxfFromZip(data,{inflate=defaultInflate}={}){
  if(count!==v.getUint16(end+8,true)||count===0||count>100||
   dirAt===0xffffffff||dirSize===0xffffffff)
   throw Error('Directorio ZIP no admitido o ZIP64');
- range(bytes,dirAt,dirSize);let pos=dirAt,selected=null;
+ range(bytes,dirAt,dirSize);
+ if(selectName!==null&&(typeof selectName!=='string'||!selectName||
+    selectName.length>240))
+  throw Error('Nombre de DXF solicitado no válido');
+ let pos=dirAt,selected=null;
+ const candidates=[];
  for(let i=0;i<count;i++){
   range(bytes,pos,46);
   if(v.getUint32(pos,true)!==0x02014b50)
@@ -79,18 +86,30 @@ export async function extractDxfFromZip(data,{inflate=defaultInflate}={}){
    !name.split('/').some(x=>x==='..'||x==='.');
   if(!safe)throw Error('Ruta peligrosa en archivo ZIP');
   if(/\.dxf$/i.test(name)){
-   if(selected)throw Error('ZIP contiene varios DXF: elige y extrae el perfil correcto manualmente');
    if(rawLen>MAX_DXF_BYTES||rawLen<20)
     throw Error('DXF dentro del ZIP fuera de tamaño permitido (1 MB)');
    if(method!==0&&method!==8)
     throw Error('Compresión ZIP distinta de STORE/Deflate no admitida');
-   selected={name,flags,method,expectedCrc,compressedLen,rawLen,localAt};
+   candidates.push({name,uncompressedBytes:rawLen,
+    compressedBytes:compressedLen,method});
+   // Sin elección explícita seguimos rechazando varios perfiles.
+   // Cuando el operario señala uno, no se mezcla con otras variantes.
+   if(!listOnly&&(selectName===null||name===selectName)){
+    if(selected)throw Error('ZIP contiene varios DXF: elige y extrae el perfil correcto manualmente');
+    selected={name,flags,method,expectedCrc,compressedLen,rawLen,localAt};
+   }
   }
   pos+=46+nameLen+extraLen+commentLen;
   if(pos>dirAt+dirSize)throw Error('Directorio ZIP con tamaños inconsistentes');
  }
- if(pos!==dirAt+dirSize||!selected)
-  throw Error('No existe un único DXF válido en el ZIP');
+ if(pos!==dirAt+dirSize)throw Error('Directorio ZIP con tamaños inconsistentes');
+ if(listOnly){
+  if(!candidates.length)throw Error('No existe un único DXF válido en el ZIP');
+  return {entries:candidates,verifiedContents:false,
+   note:'Listar nombres NO valida el CRC ni autentica el fabricante.'};
+ }
+ if(!selected)throw Error(selectName!==null?
+  'El DXF seleccionado no existe en el ZIP':'No existe un único DXF válido en el ZIP');
  const item=selected;range(bytes,item.localAt,30);
  if(v.getUint32(item.localAt,true)!==0x04034b50)
   throw Error('Cabecera local ZIP inválida');
@@ -116,4 +135,11 @@ export async function extractDxfFromZip(data,{inflate=defaultInflate}={}){
  if(content.includes('\0'))throw Error('DXF binario no admitido');
  return {name:item.name,content,bytes:raw.byteLength,
   verifiedCRC:true,manufacturerVerified:false};
+}
+/** Inventario sin descomprimir. Cada elección posterior valida su CRC
+ * independientemente y no toma cotas de otro fichero ZIP.
+ */
+export async function listDxfZipEntries(data){
+ const result=await extractDxfFromZip(data,{listOnly:true});
+ return result.entries;
 }
