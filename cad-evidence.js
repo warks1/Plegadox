@@ -86,6 +86,30 @@ export const CAD_EVIDENCE_SOURCES=Object.freeze([
   note:'La tabla Mate lo cruza con Amada 60.402 (R0,20/H66,90): son referencias EQUIVALENTES, NO idénticas. Verificar contorno DXF y datum.'
  }),
  freezeEntry({
+  id:'soclam-2012-88',kind:'die',maker:'SOCLAM',
+  reference:'2012_88',variant:'88deg-DOBLE-V6-V10',
+  mount:'Amada/Promecam',datum:'OEM_REFERENCE_UNCONFIRMED',
+  title:'SOCLAM 20.12 · matriz reversible V6/V10/88°',
+  sourceUrl:'https://www.soclam.com/produit/matrice-amada-a-2-ves-a-88/',
+  cadUrl:'https://www.soclam.com/wp-content/uploads/2026/05/2012_88.dxf',
+  format:'DXF',access:'OEM_PRODUCT_PAGE_WITH_DXF',
+  status:'ENLACE_FABRICANTE_NO_IMPORTADO',
+  dimensions:{heightMm:26,bodyWidthMm:55,angleDeg:88,vOpeningMm:6},
+  note:'Matriz reversible V6/V10. Necesita soporte SOCLAM 40.06 o 40.07; el DXF del perfil no define el soporte ni el montaje real.'
+ }),
+ freezeEntry({
+  id:'soclam-2015-88',kind:'die',maker:'SOCLAM',
+  reference:'2015_88',variant:'88deg-DOBLE-V16-V25',
+  mount:'Amada/Promecam',datum:'OEM_REFERENCE_UNCONFIRMED',
+  title:'SOCLAM 20.15 · matriz reversible V16/V25/88°',
+  sourceUrl:'https://www.soclam.com/produit/matrice-amada-a-2-ves-a-88/',
+  cadUrl:'https://www.soclam.com/wp-content/uploads/2026/05/2015_88.dxf',
+  format:'DXF',access:'OEM_PRODUCT_PAGE_WITH_DXF',
+  status:'ENLACE_FABRICANTE_NO_IMPORTADO',
+  dimensions:{heightMm:26,bodyWidthMm:55,angleDeg:88,vOpeningMm:16},
+  note:'Se puede orientar para V16 o V25, no equivale a una monovía. Requiere soporte 40.06/40.07 y eje/amarre verificado.'
+ }),
+ freezeEntry({
   id:'soclam-bystronic-m16-30',kind:'die',maker:'SOCLAM',
   reference:'M16/30°',variant:'BYSTRONIC_BEYELER',
   mount:'Bystronic/Beyeler R',datum:'CATALOGUE_UNSPECIFIED',
