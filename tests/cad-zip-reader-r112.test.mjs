@@ -74,3 +74,9 @@ test('R112 ZIP: descarta cabecera ZIP truncada o paquetes de más de 8 MB',async
  await assert.rejects(extractDxfFromZip(new Uint8Array(10)),/ZIP inválido/);
  await assert.rejects(extractDxfFromZip(new Uint8Array(8*1024*1024+1)),/8 MB/);
 });
+
+test('R112 ZIP: nombre de la cabecera local distinto de directorio se rechaza',async()=>{
+ const bytes=zip(),tampered=bytes.slice();
+ tampered[30]='X'.charCodeAt(0);
+ await assert.rejects(extractDxfFromZip(tampered),/Nombre DXF local no coincide/);
+});
