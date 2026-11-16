@@ -231,7 +231,10 @@ function insertedContour(record,blocks){
   const dx=(px-block.baseX)*sx,dy=(py-block.baseY)*sy;
   return [x+c*dx-t*dy,y+t*dx+c*dy];
  });
- return validateContour(mapped).points;
+ // Aplicar los límites del llamador (útil o pieza de máquina)
+ // una sola vez DESPUÉS de transformar el contorno en mm.
+ // Un componente de máquina puede superar el máximo de un punzón.
+ return mapped;
 }
 function resolveDxfGeometry(pairs){
  const records=dxfRecords(pairs);
