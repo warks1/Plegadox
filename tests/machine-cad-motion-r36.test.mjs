@@ -72,11 +72,15 @@ test('CAD: rechaza geometrías autointersecadas y Z imposible',()=>{
  assert.throws(()=>normalizeMachineCad({...src,points:[[0,0],[10,0],[10,30],[0,30]],
   zMax:-1}),/longitud Z positiva/);
 });
-test('CAD: la trancha provisional queda por encima de la cabeza del punzón',()=>{
+test('CAD: la trancha provisional conserva el resalte lateral conservador del visor',()=>{
  const scene=technicalScene(EXAMPLE,0);
  const model=buildVolumeScene(scene,{machineCAD:{}});
- assert.ok(model.objects.ram.polygon.every(p=>
-  p.y>=scene.kinematics.tipHeight+scene.punch.height-1e-9));
+ const upperTip=scene.kinematics.tipHeight+scene.punch.height;
+ assert.ok(model.objects.ram.polygon.some(p=>p.y<upperTip),
+  'El resalte lateral 2D desciende por debajo del extremo de cabeza del útil');
+ assert.ok(model.objects.ram.polygon.every(p=>p.y>=upperTip-10-1e-9));
+ assert.match(model.objects.ram.provenance,/sin-CAD/);
+ assert.equal(model.verified,false);
 });
 test('Ejes: trayecto lineal real interpolado y límites conservados',()=>{
  const p=path(),stored=normalizeAxisMotion(p);
