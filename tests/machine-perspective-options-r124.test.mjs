@@ -90,7 +90,7 @@ test('R124: panel de opciones, control de seguridad y captura deben estar presen
   'machineShowGauge','machineShowContact','machineShowGrid','machineShowAxes',
   'machineShowLabels','machineTheme','machinePhaseJump',
   'machinePrevFold','machineNextFold','machineCapture','machineResetOptions',
-  'machineOptionsButton']){
+  'machineOptionsButton','machineFullscreen']){
   assert.ok(html.includes('id="'+id+'"'),'Falta el control '+id);
   assert.ok(studio.includes("'"+id+"'")||studio.includes(id+':'),
    'El control debe estar cableado '+id);
