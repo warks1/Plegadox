@@ -35,12 +35,12 @@ export function suggestGaugeContact(input,time=0,options={}){
   const candidate=normalized({...p,gaugeSegmentByBend,stopByBend,gaugePointByBend});
   // No ensayar una esquina interior cualquiera: el mismo solver de
   // contacto debe confirmar una PESTAÑA PREPLEGADA sin penetración.
-  if(foldedOnly){
-   const setup=setupCheck(candidate);
-   if(!setup?.valid||setup.foldedWingContact!==true)return;
-  }
   const supportKind=foldedOnly?'CARA_EXTERIOR_PREPLEGADA_2D':'CANTO_LIBRE_2D';
   try{
+   if(foldedOnly){
+    const setup=setupCheck(candidate);
+    if(!setup?.valid||setup.foldedWingContact!==true)return;
+   }
    const gauge=gaugeCheck(candidate);
    const tool=toolCheck(candidate);
    const toolPenetrations=tool.filter(t=>t.hasPenetration).length;
