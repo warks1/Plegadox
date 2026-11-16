@@ -858,6 +858,11 @@ function scheduleIntegratedAdvisor(){
      'Los contornos CAD y recorridos CNC siguen SIN verificar.':
      'No se encontró ninguna pareja preseleccionada compatible. '+
      report.reasons.join(' ')+' Mantén o cambia tus herramientas manualmente; revisa sus límites.';
+    // Incluso sin alternativa válida hay un cotejo volumétrico
+    // que debe mostrarse. La falta de asiento no es una colisión.
+    status.textContent+=' Revisión de envolventes 3D (trancha, mesa, topes y amarres): '+
+     report.finalistsVolumeChecked+' programas examinados en 2,5D; '+
+     'CAD OEM y recorridos CNC SIN VERIFICAR.';
     return;
    }
    const best=report.best;
