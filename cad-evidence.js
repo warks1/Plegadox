@@ -109,6 +109,66 @@ export const CAD_EVIDENCE_SOURCES=Object.freeze([
   dimensions:{heightMm:26,bodyWidthMm:55,angleDeg:88,vOpeningMm:16},
   note:'Se puede orientar para V16 o V25, no equivale a una monovía. Requiere soporte 40.06/40.07 y eje/amarre verificado.'
  }),
+
+ freezeEntry({
+  id:'ukb-22010',kind:'lowerAdapter',maker:'UKB',reference:'22.010',
+  variant:'PORTAMATRIZ-1V-AMADA',mount:'Amada/Promecam',
+  datum:'OEM_REFERENCE_UNCONFIRMED',
+  title:'UKB 22.010 · portamatriz para una V',
+  sourceUrl:'https://www.ukb-gmbh.de/en/22010.html',
+  cadUrl:'https://daten.ukb-gmbh.de/dxf/zip/22010.DXF.zip',
+  format:'DXF_ZIP',access:'PUBLIC_DIRECT_ZIP',
+  status:'ENLACE_CONFIRMADO_NO_IMPORTADO',
+  dimensions:{heightMm:51.5,bodyWidthMm:60,maxLoadKNPerMetre:1000},
+  note:'Portamatriz que requiere montaje Amada. Incluye apriete; no sustituye al soporte SOCLAM 40.06/40.07.'
+ }),
+ freezeEntry({
+  id:'ukb-50430',kind:'upperAdapter',maker:'UKB',reference:'50.430',
+  variant:'AMADA-A-TRUMPF-WILA-LVD-1',mount:'ADAPTADOR_AMADA_A_TRUMPF_WILA_LVD_TIPO_I',
+  datum:'OEM_REFERENCE_UNCONFIRMED',
+  title:'UKB 50.430 · adaptador superior Amada a Trumpf/WILA/LVD I',
+  sourceUrl:'https://www.ukb-gmbh.de/en/50430.html',
+  cadUrl:'https://daten.ukb-gmbh.de/dxf/zip/50430.DXF.zip',
+  format:'DXF_ZIP',access:'PUBLIC_DIRECT_ZIP',
+  status:'ENLACE_CONFIRMADO_NO_IMPORTADO',
+  dimensions:{heightMm:67,maxLoadKNPerMetre:1000},
+  note:'La dirección de conversión del amarre importa. No asumir que encaja en la V85 ni en los cabezales WILA Bystronic.'
+ }),
+ freezeEntry({
+  id:'ukb-22308',kind:'die',maker:'UKB',reference:'22.308',
+  variant:'30deg-V8-H60',mount:'Amada/Promecam',
+  datum:'OEM_REFERENCE_UNCONFIRMED',
+  title:'UKB 22.308 · matriz V8/30° H60',
+  sourceUrl:'https://www.ukb-gmbh.de/en/22308.html',
+  cadUrl:'https://daten.ukb-gmbh.de/dxf/zip/22308.DXF.zip',
+  format:'DXF_ZIP',access:'PUBLIC_DIRECT_ZIP',
+  status:'ENLACE_CONFIRMADO_NO_IMPORTADO',
+  dimensions:{heightMm:60,angleDeg:30,vOpeningMm:8,
+   shoulderRadiusMm:.8,maxLoadKNPerMetre:350},
+  note:'Necesita portamatriz 22.010 y orientación correcta; no equivale a las matrices V8/30 de otro sistema.'
+ }),
+ freezeEntry({
+  id:'soclam-4006-34',kind:'lowerAdapter',maker:'SOCLAM',
+  reference:'40.06/34',variant:'H34-PORTAMATRIZ-DOBLE-V',
+  mount:'Amada/Promecam',datum:'OEM_REFERENCE_UNCONFIRMED',
+  title:'SOCLAM 40.06/34 · soporte de matrices reversibles',
+  sourceUrl:'https://www.soclam.com/produit/support-matrice-amada-ref-40-06/',
+  cadUrl:null,format:'DXF_EN_FICHA',access:'OEM_PRODUCT_PAGE_WITH_DXF',
+  status:'FICHA_DXF_REQUIERE_DESCARGA_MANUAL',
+  dimensions:{heightMm:34,maxTonnesPerMetre:100},
+  note:'Familia 40.06/40.07 con alturas 34, 39, 55, 75 mm. Esta entrada se limita a 40.06/34; no combinar alturas de otras variantes.'
+ }),
+ freezeEntry({
+  id:'wila-tsu-024',kind:'upperAdapter',maker:'WILA',reference:'TSU-024',
+  variant:'NEW-STANDARD-A-EUROPEAN-STYLE-I',
+  mount:'WILA_NEW_STANDARD',datum:'OEM_REFERENCE_UNCONFIRMED',
+  title:'WILA TSU-024 · adaptador New Standard a europeo I',
+  sourceUrl:'https://www.wilatooling.com/products/press-brake-tooling/tooling-options/tool-extenders-and-adapters/tsu-024/',
+  cadUrl:null,format:'DXF_CON_REGISTRO',access:'MYWILA_O_EMAIL',
+  status:'DXF_DISPONIBLE_REQUIERE_SOLICITUD',
+  dimensions:{heightMm:73,bodyWidthMm:49.5,maxTonnesPerMetre:100},
+  note:'Plano DXF de WILA disponible mediante correo o MyWILA. Se suministra con TK-031; comprobar todas las fijaciones reales.'
+ }),
  freezeEntry({
   id:'soclam-bystronic-m16-30',kind:'die',maker:'SOCLAM',
   reference:'M16/30°',variant:'BYSTRONIC_BEYELER',
@@ -157,7 +217,12 @@ const numericKeys=new Set([
  'strokeStandardMm','strokeExtendedOptionalMm','openStandardMm',
  'openExtendedOptionalMm','travelXMm','travelRMm'
 ]);
+const componentKeys=new Set(['heightMm','bodyWidthMm',
+ 'maxTonnesPerMetre','maxLoadKNPerMetre']);
 const allowedByKind={
+ lowerAdapter:componentKeys,upperAdapter:componentKeys,
+ upperClamp:componentKeys,lowerClamp:componentKeys,
+ frontSupport:componentKeys,
  punch:new Set(['heightMm','bodyWidthMm','angleDeg','tipRadiusMm',
   'maxTonnesPerMetre','maxLoadKNPerMetre']),
  die:new Set(['heightMm','bodyWidthMm','angleDeg','shoulderRadiusMm',
@@ -203,7 +268,8 @@ export function reconcileCadDimensions(entries,{toleranceMm=.05,required=[]}={})
   first.kind==='die'?
    ['heightMm','angleDeg','vOpeningMm']:
    first.kind==='machine'?
-    ['nominalBendingLengthMm','nominalTonnageKN','strokeStandardMm']:[];
+    ['nominalBendingLengthMm','nominalTonnageKN','strokeStandardMm']:
+   componentKeys===allowedByKind[first.kind]?['heightMm','bodyWidthMm']:[];
  const missing=minimum.filter(key=>!Object.prototype.hasOwnProperty.call(dims,key));
  const sameDatum=entries.every(x=>x.datum===first.datum&&
   x.datum&&x.datum!=='OEM_REFERENCE_UNCONFIRMED'&&
