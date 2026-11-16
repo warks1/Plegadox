@@ -1,5 +1,5 @@
 /** Interfaz de importación DXF de utillaje, completamente local. */
-import {parseToolDxf,importedTool} from './tool-dxf.js';
+import {parseToolDxf,importedTool,inspectToolDxfLayers} from './tool-dxf.js';
 import {extractDxfFromZip,listDxfZipEntries} from './cad-zip-reader.js';
 import {auditImportedCadDimensions,catalogCadAuditReference} from './tool-cad-oem-audit.js';
 import {inspectPunchWorkingAxis,inspectDieWorkingAxis} from './tool-cad-datum.js';
@@ -66,7 +66,12 @@ export function setupToolDxfImporter({add}){
  zipChoice.className='px-oem-zip-choice';
  zipChoice.setAttribute('aria-label','Seleccionar contorno DXF del ZIP OEM');
  zipChoice.hidden=true;input.insertAdjacentElement('afterend',zipChoice);
+ const layerChoice=document.createElement('select');
+ layerChoice.className='px-oem-layer-choice';
+ layerChoice.setAttribute('aria-label','Elegir capa del contorno DXF original');
+ layerChoice.hidden=true;zipChoice.insertAdjacentElement('afterend',layerChoice);
  let zipBytes=null,zipLabel='';
+ let layerContent=null,layerCad=null,layerLabel='';
  let parsed=null,preparedSource=null;
  const say=(message,error=false)=>{
   status.textContent=message;status.dataset.error=String(error);
@@ -134,6 +139,7 @@ export function setupToolDxfImporter({add}){
     preparedSource=catalogCadAuditReference(tool,toolKind);
     parsed=null;input.value='';save.disabled=true;preview.hidden=true;
     zipBytes=null;zipLabel='';zipChoice.hidden=true;zipChoice.replaceChildren();
+    layerContent=null;layerChoice.hidden=true;layerChoice.replaceChildren();
     if(axisInput)axisInput.value='';
     kind.value=toolKind;toggle();name.value=tool.reference||tool.name;
     // Las familias de amarre se proponen desde catálogo, pero la
@@ -172,7 +178,7 @@ export function setupToolDxfImporter({add}){
       const isZip=/\.zip(?:$|[?#])/i.test(tool.cadDownloadUrl);
       if(!isZip){
        const content=new TextDecoder('utf-8',{fatal:true}).decode(fileBytes);
-       acceptCad(parseToolDxf(content),null,tool.reference+'.dxf');
+       loadDxfContour(content,null,tool.reference+'.dxf');
       }else{
        const entries=await listDxfZipEntries(fileBytes);
        if(entries.length>1){
@@ -181,7 +187,7 @@ export function setupToolDxfImporter({add}){
         showZipChoices(fileBytes,tool.reference+'.zip',entries);
        }else{
         const cad=await extractDxfFromZip(fileBytes,{selectName:entries[0].name});
-        acceptCad(parseToolDxf(cad.content),cad,tool.reference+'.zip');
+        loadDxfContour(cad.content,cad,tool.reference+'.zip');
        }
       }
      }catch(error){
@@ -230,18 +236,57 @@ export function setupToolDxfImporter({add}){
    'apertura, longitud Z y amarre ANTES de guardar.');
   reviewCad();
  };
+ const loadDxfContour=(content,cad,fileName)=>{
+  layerContent=null;layerChoice.hidden=true;layerChoice.replaceChildren();
+  try{
+   acceptCad(parseToolDxf(content),cad,fileName);
+  }catch(error){
+   // Un DXF OEM puede tener perfiles y DIMENSIONES en capas separadas.
+   // El usuario debe elegir su capa: no se escoge la de mayor área
+   // ni se fusionan líneas de referencia con el contorno material.
+   const inventory=inspectToolDxfLayers(content);
+   if(inventory.layers.length<=1)throw error;
+   layerContent=content;layerCad=cad;layerLabel=fileName;
+   const placeholder=document.createElement('option');
+   placeholder.value='';placeholder.textContent=
+    'Selecciona la capa CAD del contorno ('+inventory.layers.length+')';
+   layerChoice.append(placeholder);
+   for(const item of inventory.layers){
+    const choice=document.createElement('option');
+    choice.value=item.name;
+    choice.textContent=item.name+' · '+item.total+' entidades';
+    layerChoice.append(choice);
+   }
+   layerChoice.hidden=false;layerChoice.value='';
+   say('El DXF contiene varias capas o anotaciones ('+
+    inventory.layers.map(x=>x.name).join(', ')+'). '+
+    'Selecciona explícitamente la capa del cuerpo cerrado OEM. '+
+    'Las cotas auxiliares NO son metal de la herramienta.');
+  }
+ };
+ layerChoice.addEventListener('change',()=>{
+  parsed=null;save.disabled=true;preview.hidden=true;
+  if(!layerChoice.value||!layerContent)return;
+  try{
+   const model=parseToolDxf(layerContent,{entityLayer:layerChoice.value});
+   acceptCad(model,layerCad,layerLabel);
+  }catch(error){
+   say('La capa '+layerChoice.value+' no es un contorno cerrado '+
+    'o tiene geometría adicional: '+error.message,true);
+  }
+ });
  zipChoice.addEventListener('change',async()=>{
   parsed=null;save.disabled=true;preview.hidden=true;
   if(!zipChoice.value||!zipBytes)return;
   try{
    const cad=await extractDxfFromZip(zipBytes,{selectName:zipChoice.value});
-   const model=parseToolDxf(cad.content);
-   acceptCad(model,cad,zipLabel);
+   loadDxfContour(cad.content,cad,zipLabel);
   }catch(error){say('DXF del ZIP no utilizable: '+error.message,true);}
  });
  input.addEventListener('change',async()=>{
   parsed=null;save.disabled=true;preview.hidden=true;
   zipBytes=null;zipChoice.hidden=true;zipChoice.replaceChildren();
+  layerContent=null;layerChoice.hidden=true;layerChoice.replaceChildren();
   const file=input.files?.[0];
   if(!file){say('Selecciona un .DXF ASCII o .DXF.ZIP del fabricante.');return;}
   try{
@@ -251,7 +296,7 @@ export function setupToolDxfImporter({add}){
    if(file.size>(zipped?8:1)*1024*1024)
     throw Error('DXF o ZIP fuera de tamaño permitido');
    if(!zipped){
-    acceptCad(parseToolDxf(await file.text()),null,file.name);
+    loadDxfContour(await file.text(),null,file.name);
     return;
    }
    const bytes=await file.arrayBuffer();
@@ -261,7 +306,7 @@ export function setupToolDxfImporter({add}){
     return;
    }
    const cad=await extractDxfFromZip(bytes,{selectName:entries[0].name});
-   acceptCad(parseToolDxf(cad.content),cad,file.name);
+   loadDxfContour(cad.content,cad,file.name);
   }catch(e){say('No se puede importar: '+e.message,true);}
  });
  save.addEventListener('click',()=>{
