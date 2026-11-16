@@ -1886,7 +1886,13 @@ function renderSimulationText(){
   (chosenGauge.gaugeInterference?.kind==='penetracion'?
    ' · ⛔ PENETRACIÓN GEOMÉTRICA 2D EN EL DEDO: revisar apoyo y retirada':
    chosenGauge.gaugeInterference?.kind==='holgura'?
-   ' · ⚠ HOLGURA INSUFICIENTE 2D (no es penetración demostrada): revisar espesor y perfil':
+   ' · ⚠ HOLGURA 2D'+(
+    Number.isFinite(chosenGauge.gaugeInterference.distanceMm)&&
+    Number.isFinite(chosenGauge.gaugeInterference.requiredMm)?
+     ': separación '+chosenGauge.gaugeInterference.distanceMm.toFixed(2).replace('.',',')+
+      ' mm / mínimo '+chosenGauge.gaugeInterference.requiredMm.toFixed(2).replace('.',',')+' mm':
+     ' insuficiente')+
+   ' (sin penetración detectada de la fibra media): revisar dedo y espesor':
    chosenGauge.gaugeInterference?.kind==='sin-geometria'?
    ' · ⚠ PERFIL 2D NO EVALUABLE: no se puede afirmar ausencia de colisión':
    !chosenGauge.contactEngaged?' · sin contacto confirmado en esta fase':' · contacto nominal 2D')+
