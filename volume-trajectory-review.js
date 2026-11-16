@@ -29,7 +29,12 @@ const crosses=(a,b,margin=.02)=>a&&b&&
  Math.min(a.maxY,b.maxY)-Math.max(a.minY,b.minY)>margin&&
  Math.min(a.maxZ,b.maxZ)-Math.max(a.minZ,b.minZ)>margin;
 const perOpTimes=(op,count)=>{
- const values=new Set([0,.16,.36,.68,.84,1-1e-7]);
+ // R108: también se inspeccionan las posiciones críticas del cierre
+ // contra punzón y TRANCHA. La antigua malla base (0,.16,.36,.68…)
+ // podía saltarse completamente el tramo .44-.52 de plegado.
+ // Conservar el barrido de intervalos como NO CERTIFICADO.
+ const values=new Set([0,.16,.34,.36,.40,.44,.45,.46,.47,.48,
+  .50,.52,.56,.60,.64,.68,.72,.84,.92,1-1e-7]);
  for(let i=0;i<=count;i++)values.add(Math.min(1-1e-7,i/count));
  return [...values].sort((a,b)=>a-b).map(t=>op*5+t*5);
 };
@@ -155,6 +160,13 @@ export function scanVolumeTrajectory(input,options={}){
   cadImportError,
   warningCount:ops.filter(o=>o.possibleInterference).length,
   modeledMachineWarnings:byKind.ram+byKind.bed+byKind.gauge,
+  // No confundir contacto normal de punzón/matriz con intrusión en
+  // trancha. La trancha se comprueba como cuerpo INDEPENDIENTE.
+  ramWarnings:byKind.ram,bedWarnings:byKind.bed,
+  gaugeWarnings:byKind.gauge,
+  punchVolumeContacts:byKind.punch,dieVolumeContacts:byKind.die,
+  ramEvidence:ops.flatMap(op=>op.findings.filter(f=>f.kind==='ram')
+   .map(f=>({...f,operation:op.operation,bend:op.bend}))).slice(0,12),
   uncertainSweptIntervals:uncheckedSwept,linearSweptPenetrations,
   linearSweptIntervalsEvaluated,axisReport,axisViolationCount:axisReport.violations.length,
   axisGeometry,axisModeledCollisions:axisGeometry.events.length,
