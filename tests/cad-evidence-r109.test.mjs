@@ -29,11 +29,11 @@ test('R109: dos fuentes parciales de la MISMA referencia complementan cotas sin 
   dimensions:{heightMm:60.01,toolBodyWidthMm:25}};
  // Cotas no declaradas en el esquema tipado se RECHAZAN.
  assert.throws(()=>reconcileCadDimensions([src,second]),/Cota no válida/);
- const valid={...second,dimensions:{heightMm:60.01,tipRadiusMm:1}};
+ const valid={...second,dimensions:{heightMm:60.01,bodyWidthMm:25}};
  const result=reconcileCadDimensions([src,valid]);
  assert.equal(result.status,'COTAS_RECOPILADAS_NO_CERTIFICADAS');
  assert.equal(result.dimensions.heightMm,60);
- assert.equal(result.dimensions.tipRadiusMm,1);
+ assert.equal(result.dimensions.bodyWidthMm,25);
  assert.equal(result.dimensions.vOpeningMm,16);
  assert.equal(result.conflicts.length,0);
  assert.equal(result.geometryMergeAllowed,false,
