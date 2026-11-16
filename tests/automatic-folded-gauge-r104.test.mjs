@@ -112,11 +112,11 @@ test('R104: cara vertical preplegada requiere fracción de golpe ejecutada',()=>
 });
 
 test('R105: cambia el canto original con HOLGURA si otro canto libre está limpio',()=>{
- const p=makePiece(),before=JSON.stringify(p),st=stage(p,5.1);
- const firstSegment=st.activeBend;
+ const p=makePiece(),before=JSON.stringify(p),st=stage(p,.1);
+ const firstSegment=0,cleanFreeSegment=p.flanges.length-1;
  const evaluate=(_piece,_st,ref)=>{
   const isFirst=ref.segmentIndex===firstSegment;
-  const otherFree=ref.segmentIndex===0;
+  const otherFree=ref.segmentIndex===cleanFreeSegment;
   return {valid:isFirst||otherFree,ref,
    foldedWingContact:false,faceAccessible:true,
    clearanceWarning:isFirst,verified:false};
@@ -124,7 +124,7 @@ test('R105: cambia el canto original con HOLGURA si otro canto libre está limpi
  const result=resolveGaugeSetup(p,st,{}, {evaluate});
  assert.equal(result.valid,true);
  assert.equal(result.ref.freeEdge,true);
- assert.equal(result.ref.segmentIndex,0);
+ assert.equal(result.ref.segmentIndex,cleanFreeSegment);
  assert.equal(result.clearanceWarning,false);
  assert.equal(result.autoSelected,true);
  assert.equal(JSON.stringify(p),before);
