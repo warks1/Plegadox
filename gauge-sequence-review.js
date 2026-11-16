@@ -32,7 +32,12 @@ const make=(kind,time,scene,place)=>{
   bend:scene.stage.activeBend,operation:scene.stage.activeOperation,
   movingFinger,motionPhase,verified:false,
   reason:kind==='penetracion'?'Posible penetración 2D chapa/tope'+movingLabel:
-   kind==='holgura'?'Posible holgura 2D menor que el espesor'+movingLabel:
+   kind==='holgura'?'Holgura 2D medida: '+(
+    Number.isFinite(place.gaugeInterference?.distanceMm)&&
+    Number.isFinite(place.gaugeInterference?.requiredMm)?
+     place.gaugeInterference.distanceMm.toFixed(2)+' mm / mín. '+
+      place.gaugeInterference.requiredMm.toFixed(2)+' mm':
+     'distancia no disponible')+movingLabel:
    kind==='chapa-detras'?'Chapa por detrás de la cara frontal del tope':
    kind==='apoyo-invalido'?'Apoyo inicial inválido: '+
     (place.setupReason||'la pieza no puede asentarse contra la cara de parada'):
