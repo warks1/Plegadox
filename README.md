@@ -1,5 +1,13 @@
 # Plegadox — control y simulador de plegado
 
+## Estado actual · R106 (v0.9.80) · 16 de noviembre de 2026
+
+- **Proyección compartida 2D/2,5D del dedo trasero:** una nueva función `machineGaugeProjection` transforma el mismo contorno del Stop/Support, su cara frontal, contrahuella y punto de contacto. El render de la cabina, el anillo de contacto y la tarjeta de estado utilizan esa misma proyección.
+- **Sin desplazamientos visuales de la cara de parada:** la extrusión decorativa de la perspectiva desplaza únicamente el fondo del cuerpo; la cara que toca la chapa se mantiene en el plano geométrico compartido con punzón, matriz y pieza.
+- **Regresiones:** `tests/gauge-2d-3d-projection-r106.test.mjs`. Se ejecutaron 205 verificaciones focalizadas sobre 24 poses de Omega con Stop/Support alternos, además de coordenadas de útiles y chapa, con 0 discrepancias en el modelo.
+- **Versión:** `PLEGADOX-20261116-R106`, `v0.9.80`; caché PWA actualizada. Detalles en [R106_PROYECCION_COMUN_TOPES_2D_3D.md](./R106_PROYECCION_COMUN_TOPES_2D_3D.md).
+- **Pendiente:** ejecución confirmada de toda la suite `npm test`, verificación visual en el navegador y móviles, CAD real de dedo/máquina y recorridos 3D X/R/Z. No se autoriza el plegado CNC con estos ensayos orientativos.
+
 ## Estado actual · R105 (v0.9.79) · 16 de noviembre de 2026
 
 - **Priorizar apoyo frontal sin avisos:** si el primer canto libre válido presenta holgura, el motor prueba el otro y prefiere el canto libre limpio. Con empate conserva el primero para no voltear innecesariamente la Omega.
