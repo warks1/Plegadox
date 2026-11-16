@@ -12,7 +12,12 @@ export function gaugeRiskStatus(placement){
  // recibir verde sólo porque el detector no haya informado penetración.
  // El asiento frontal se exige durante la preparación, no cuando la chapa
  // ya ha sido retirada de la V después de sujetar.
- const preparing=['Posicionamiento','Aproximación'].includes(placement?.phase);
+ // En sujeción aún se exige apoyo si el dedo sigue en posición.
+ // Si ha empezado la retirada PREVENTIVA, la ausencia de contacto es
+ // esperada: no convertir el retroceso legítimo en un aviso naranja.
+ const retracting=placement?.gaugeTransition?.phase==='retroceso-antes-plegado';
+ const preparing=['Posicionamiento','Aproximación'].includes(placement?.phase)||
+  (placement?.phase==='Sujeción'&&!retracting);
  // El apoyo manual puede ser una cara de pestaña ya plegada, pero
  // solo cuando el solver ha verificado el asiento 2D de esa cara.
  // En vez de pintar todo de naranja como "posible colisión",
