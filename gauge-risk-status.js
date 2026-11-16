@@ -34,6 +34,12 @@ export function gaugeRiskStatus(placement){
   return amber('apoyo-invalido',plan?.withdrawalUnverified?
    'APOYO NO VÁLIDO · RETIRADA 2D SIN VALIDACIÓN FÍSICA':
    'APOYO NO VÁLIDO · REVISAR PRESENTACIÓN 2D');
+ // Durante el posicionamiento, una sección sin choque NO implica que
+ // el borde esté realmente contra la cara frontal. Si el punto nominal
+ // queda separado, comunicarlo como falta de contacto, no "colisión".
+ if(preparing&&placement?.contactEngaged===false)
+  return amber('sin-contacto-actual',
+   'SIN CONTACTO FRONTAL EN PREPARACIÓN · COMPROBAR COTA Y REFERENCIA');
  // warning:false significa también "no pude evaluar", según el detector.
  // Sólo se concede verde con kind explícito de ausencia de interferencia.
  if(!hit||hit.kind==='sin-geometria'||hit.kind!=='sin-interferencia-detectada'&&hit.warning===false)
