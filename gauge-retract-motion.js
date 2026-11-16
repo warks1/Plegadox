@@ -47,6 +47,39 @@ export function stagedGaugeAxes(from,to,progress,{order='R-then-X'}={}){
  return {point:{x:lerp(from.x,to.x,smooth((t-firstFraction)/(1-firstFraction))),y:to.y},
   axisPhase:'X',progress:t,verified:false};
 }
+/**
+ * R108 · Comparar alternativas de retorno usando un barrido de la
+ * MISMA sección 2D que usa el visor. Evitar imponer R→X a todas las
+ * piezas: algunas alas plegadas sólo permiten X→R en la previsualización.
+ * No constituye autorización de eje real, CAD OEM ni CNC.
+ */
+export function chooseGaugeAxisOrder(inspect,{preferred='R-then-X'}={}){
+ if(typeof inspect!=='function'||!['R-then-X','X-then-R'].includes(preferred))
+  throw Error('Evaluador de rutas X/R no válido');
+ const candidates=['R-then-X','X-then-R'].map(order=>{
+  const value=inspect(order);
+  if(!value||typeof value!=='object')throw Error('Falta evaluación 2D de ruta');
+  const count=n=>Number.isInteger(n)&&n>=0?n:Infinity;
+  const penetrations=count(value.penetrations);
+  const clearances=count(value.clearances);
+  const incomplete=count(value.incomplete??0);
+  return {order,penetrations,clearances,incomplete,
+   checkedFrames:count(value.checkedFrames),verified:false};
+ });
+ candidates.sort((a,b)=>
+  a.penetrations-b.penetrations||
+  a.incomplete-b.incomplete||
+  a.clearances-b.clearances||
+  Number(b.order===preferred)-Number(a.order===preferred));
+ const best=candidates[0];
+ return {axisOrder:best.order,options:candidates,
+  selectedPenetrations:best.penetrations,
+  selectedClearances:best.clearances,
+  unresolvedPenetration:best.penetrations>0||!Number.isFinite(best.penetrations),
+  geometryIncomplete:best.incomplete>0,
+  verified:false,
+  limitations:'Comparación discreta 2D; sin ejes calibrados ni trayectoria física certificada'};
+}
 export function gaugeRetractionPath({anchor,target=null,maxSheetX,fingerReach=0,opening=16,sub,enabled=true,axisOrder='R-then-X'}){
  if(!enabled){
   if(!anchor||![anchor.x,anchor.y].every(Number.isFinite))
