@@ -15,6 +15,10 @@ const sheet=(_p,order)=>({order,score:0,counts:{cross:0,overlap:0,touch:0,close:
 const gauge=()=>({warningCount:0,operations:[]});
 const volume=()=>({modeledMachineWarnings:0,uncertainSweptIntervals:0,framesChecked:10});
 
+const criticalMock=part=>({
+ operations:part.order.map((bend,operation)=>({bend,operation,findings:[]})),
+ framesChecked:part.order.length*10,penetrationOperations:0,warningOperations:0
+});
 test('BD medida por pliegue modifica exactamente el largo de corte y marcas de DXF',()=>{
  const base=development(EXAMPLE);
  const input={...EXAMPLE,bendDeductionByBend:[3.5,null,4.2,null]};
@@ -46,7 +50,8 @@ test('las BD exteriores se ignoran con datum neutro, sin borrarlas',()=>{
 });
 test('el planificador no recomienda ninguna variante con penetración modelada',()=>{
  const r=optimizeBendPlan(EXAMPLE,{
-  toolingAdvice:{candidates:[pair()],reasons:[]},sheetEvaluator:sheet,
+  toolingAdvice:{candidates:[pair()],reasons:[]},criticalToolEvaluator:criticalMock,
+  sheetEvaluator:sheet,
   gaugeEvaluator:gauge,volumeEvaluator:volume,
   toolEvaluator:p=>({operations:p.order.map(()=>({
    samples:2,possibleToolIntrusion:true,possibleToolInterference:true
@@ -59,7 +64,8 @@ test('el planificador no recomienda ninguna variante con penetración modelada',
 });
 test('no descarta el orden físicamente viable por empate de puntuación de chapa',()=>{
  const r=optimizeBendPlan(EXAMPLE,{
-  toolingAdvice:{candidates:[pair()],reasons:[]},sheetEvaluator:sheet,
+  toolingAdvice:{candidates:[pair()],reasons:[]},criticalToolEvaluator:criticalMock,
+  sheetEvaluator:sheet,
   gaugeEvaluator:gauge,volumeEvaluator:volume,
   toolEvaluator:p=>({operations:p.order.map(()=>({
    samples:2,possibleToolIntrusion:p.order[0]!==2,
