@@ -24,6 +24,45 @@ const freezeEntry=x=>Object.freeze({...x,
  dimensions:Object.freeze({...x.dimensions})});
 export const CAD_EVIDENCE_SOURCES=Object.freeze([
  freezeEntry({
+  id:'ukb-25203',kind:'die',maker:'UKB',reference:'25.203',
+  variant:'84deg-V10-H100',mount:'UKB TRUMPF/WILA/BYSTRONIC',
+  datum:'OEM_REFERENCE_UNCONFIRMED',
+  title:'UKB 25.203 · matriz V10/84° H100',
+  sourceUrl:'https://www.ukb-gmbh.de/en/25203.html',
+  cadUrl:'https://daten.ukb-gmbh.de/dxf/zip/25203.DXF.zip',
+  format:'DXF_ZIP',access:'PUBLIC_DIRECT_ZIP',
+  status:'ENLACE_CONFIRMADO_NO_IMPORTADO',
+  dimensions:{heightMm:100,angleDeg:84,vOpeningMm:10,
+   shoulderRadiusMm:1,maxLoadKNPerMetre:1000},
+  note:'Ficha OEM con DXF ZIP publicado. No asimilar ángulo 84° a 85°/88°, ni montar en V85 sin verificar mordaza y longitud Z.'
+ }),
+ freezeEntry({
+  id:'ukb-25304',kind:'die',maker:'UKB',reference:'25.304',
+  variant:'84deg-V12-H100',mount:'UKB TRUMPF/WILA/BYSTRONIC',
+  datum:'OEM_REFERENCE_UNCONFIRMED',
+  title:'UKB 25.304 · matriz V12/84° H100',
+  sourceUrl:'https://www.ukb-gmbh.de/en/25304.html',
+  cadUrl:'https://daten.ukb-gmbh.de/dxf/zip/25304.DXF.zip',
+  format:'DXF_ZIP',access:'PUBLIC_DIRECT_ZIP',
+  status:'ENLACE_CONFIRMADO_NO_IMPORTADO',
+  dimensions:{heightMm:100,angleDeg:84,vOpeningMm:12,
+   shoulderRadiusMm:1,maxLoadKNPerMetre:400},
+  note:'Ficha OEM con DXF ZIP publicado. No asimilar ángulo 84° a 85°/88°, ni montar en V85 sin verificar mordaza y longitud Z.'
+ }),
+ freezeEntry({
+  id:'ukb-25205',kind:'die',maker:'UKB',reference:'25.205',
+  variant:'84deg-V16-H100',mount:'UKB TRUMPF/WILA/BYSTRONIC',
+  datum:'OEM_REFERENCE_UNCONFIRMED',
+  title:'UKB 25.205 · matriz V16/84° H100',
+  sourceUrl:'https://www.ukb-gmbh.de/en/25205.html',
+  cadUrl:'https://daten.ukb-gmbh.de/dxf/zip/25205.DXF.zip',
+  format:'DXF_ZIP',access:'PUBLIC_DIRECT_ZIP',
+  status:'ENLACE_CONFIRMADO_NO_IMPORTADO',
+  dimensions:{heightMm:100,angleDeg:84,vOpeningMm:16,
+   shoulderRadiusMm:1.6,maxLoadKNPerMetre:1000},
+  note:'Ficha OEM con DXF ZIP publicado. No asimilar ángulo 84° a 85°/88°, ni montar en V85 sin verificar mordaza y longitud Z.'
+ }),
+ freezeEntry({
   id:'ukb-11780',kind:'punch',maker:'UKB',reference:'11.780',
   variant:'30deg-R0.5-H135',
   mount:'Amada/Promecam',datum:'OEM_REFERENCE_UNCONFIRMED',
