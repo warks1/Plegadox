@@ -1,5 +1,15 @@
 # Plegadox — control y simulador de plegado
 
+## Estado actual · R108 (v0.9.82) · 16 de noviembre de 2026
+
+- **Retorno X/R inteligente:** el programa ya no impone un retorno diagonal ni un orden de ejes fijo. Compara recorridos ilustrativos **R→X** y **X→R** sobre **61 poses 2D por alternativa** y elige la ruta con menos penetraciones de chapa/dedo, después geometría incompleta y avisos de holgura; si empatan mantiene R→X.
+- **Omega real de regresión:** en la pieza 60/85/120/85/60 mm con Stop/Support alternos, el movimiento R→X introducía 6 muestras de penetración 2D entre G3 y G4; X→R produjo 0. En la Omega estándar se mantiene R→X. Orden de pliegues **1–2–4–3** intacto.
+- **Alarmas fiables:** si ninguna alternativa evita las penetraciones 2D, se señala **ámbar por trayectoria futura X/R no válida** una vez por operación; una penetración visible sigue **roja**. El modo manual, los ángulos y la selección de tope permanecen intactos.
+- **Visibilidad y auditoría:** la vista lateral y la tarjeta 2,5D identifican el eje que se está moviendo; el JSON incluye orden elegido y recuentos de problemas por alternativa. Cambiar de cota no se anuncia como retirada preventiva por choque.
+- **Regresiones:** 6 pruebas focalizadas en `tests/gauge-axial-return-r108.test.mjs`, 7 en `tests/gauge-axis-route-selection-r108.test.mjs` y 8 de R107 superadas con el código actualizado. Informe [R108_PLANIFICADOR_RECORRIDO_TOPES_XR.md](./R108_PLANIFICADOR_RECORRIDO_TOPES_XR.md).
+- **Build:** `PLEGADOX-20261116-R108`, `v0.9.82`.
+- **Límites:** sigue pendiente comprobar `npm test` completo, render real en dispositivos y geometría/recorridos **3D físicos** OEM X/R/Z. El cribado 2D no certifica ausencia de colisiones físicas ni autoriza un programa CNC.
+
 ## Estado actual · R107 (v0.9.81) · 16 de noviembre de 2026
 
 - **Holgura medida, no supuesta:** el detector 2D calcula la mínima separación entre la fibra media de la chapa y cada arista del tope, el umbral geométrico e/2 y el déficit resultante. El punto y segmento de chapa y la arista correspondiente del dedo quedan identificados.
