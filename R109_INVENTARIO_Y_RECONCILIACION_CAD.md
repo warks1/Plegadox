@@ -9,9 +9,11 @@ de máquina con el montaje del propietario.
 
 ## Descargas CAD directas localizadas
 Estos enlaces son páginas y archivos publicados por los respectivos
-fabricantes. Se han localizado **8 enlaces a ficheros CAD** y fichas técnicas,
-**PERO NINGÚN FICHERO DXF ESTÁ INTEGRADO POR DEFECTO NI CERTIFICADO PARA
-LAS DOS MÁQUINAS**. Los ZIP deben descomprimirse y los DXF necesitan
+fabricantes. La biblioteca registra ahora **11 enlaces directos a archivos CAD
+DXF/ZIP y 16 fuentes identificadas** (5 adicionales incluyen soportes,
+adaptadores, matrices y fichas que exigen acceso o descarga manual).
+**PERO NINGÚN DXF DE ESTOS ENLACES ESTÁ INTEGRADO POR DEFECTO NI
+CERTIFICADO PARA LAS DOS MÁQUINAS**. Los ZIP deben descomprimirse y los DXF necesitan
 revisión de escala, referencia, topología, posición Z y montaje.
 
 | Fabricante y referencia | Útil | Archivo o página CAD | Advertencia de compatibilidad |
@@ -25,9 +27,40 @@ revisión de escala, referencia, topología, posición Z y montaje.
 | SOCLAM 2012_88 | Matriz reversible V6/V10 | https://www.soclam.com/wp-content/uploads/2026/05/2012_88.dxf | Soporte 40.06/40.07 |
 | SOCLAM 2015_88 | Matriz reversible V16/V25 | https://www.soclam.com/wp-content/uploads/2026/05/2015_88.dxf | Soporte 40.06/40.07 |
 
-El fichero `cad-evidence.js` registra 11 fuentes (estas ocho descargas,
-el catálogo Bystronic/Beyeler SOCLAM y las fichas históricas de TRUMPF y
-Bystronic). La biblioteca `catalog.js` ya contiene **otras** referencias
+### Ampliación de referencias de adaptadores y soportes
+
+- **UKB 22.010** · portamatriz de 1-V, H51,5 mm y ancho 60 mm,
+  1000 kN/m; descarga del fabricante:
+  https://daten.ukb-gmbh.de/dxf/zip/22010.DXF.zip
+- **UKB 50.430** · adaptador superior tipo Amada hacia Trumpf/WILA/LVD I,
+  H67 mm, 1000 kN/m; descarga:
+  https://daten.ukb-gmbh.de/dxf/zip/50430.DXF.zip
+- **UKB 22.308** · matriz V8/30° H60, R0,8 y 350 kN/m; descarga:
+  https://daten.ukb-gmbh.de/dxf/zip/22308.DXF.zip
+- **SOCLAM 40.06/34** · soporte bajo reversible de 34 mm, 100 T/m,
+  DXF ofrecido desde https://www.soclam.com/produit/support-matrice-amada-ref-40-06/
+  (sin enlazar un archivo concreto cuya dirección no esté verificada)
+- **WILA TSU-024** · adaptador H73 y ancho 49,5 mm, hasta 100 t/m;
+  plano DXF solicitado por correo o en MyWILA:
+  https://www.wilatooling.com/products/press-brake-tooling/tooling-options/tool-extenders-and-adapters/tsu-024/
+
+Esta lista NO acredita que ninguno de esos adaptadores esté instalado
+en la Trumpf V85 o la Bystronic del taller. La existencia de un CAD OEM
+de otra variante sólo demuestra la geometría de ESA variante.
+
+### Vía de recuperación de modelos de máquina existentes
+
+La guía de BySoft CAM de Bystronic describe las carpetas de datos
+`BackStopModels`, `BendingMachineConfigs`, `BendingMachines`,
+`UpperTools`, `LowerTools` y `VrModels` (modelos 3D). Si existe una
+instalación de BySoft CAM con modelos licenciados de la máquina concreta,
+es preferible obtener de allí los datos autorizados antes que reconstruir
+la trancha y los topes desde cotas históricas. No se han obtenido estos
+ficheros internos, y los datos de terceros pueden estar sujetos a licencia.
+
+El fichero `cad-evidence.js` registra 16 fuentes: las 11 descargas
+directas, el catálogo Bystronic/Beyeler SOCLAM, dos fichas históricas
+de máquina y dos adaptadores/soportes que exigen paso manual. La biblioteca `catalog.js` ya contiene **otras** referencias
 WILA, SOCLAM, AMADA, MECOS, CONIC, etc.; se mantienen, sin inventar DXF
 no descargados. Algunas descargas WILA requieren acceso a MyWILA.
 
