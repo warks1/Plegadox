@@ -1,5 +1,14 @@
 # Plegadox — control y simulador de plegado
 
+## Estado actual · R105 (v0.9.79) · 16 de noviembre de 2026
+
+- **Priorizar apoyo frontal sin avisos:** si el primer canto libre válido presenta holgura, el motor prueba el otro y prefiere el canto libre limpio. Con empate conserva el primero para no voltear innecesariamente la Omega.
+- **Contacto conservado en Sujeción:** mientras no comience retirada, el dedo mantiene el contacto frontal. Un retroceso preventivo legítimo deja de exigir ese contacto y no se trata automáticamente como colisión.
+- **Omega completa 1→2→4→3:** prueba integrada de 16 módulos geométricos, con 110 comprobaciones focalizadas correctas y ninguna discrepancia detectada entre visor y diagnóstico de posición, colores, referencia y movimiento entre golpes. En las muestras 2D estándar G2 y G4 no penetran el dedo; G1 y G3 tienen una advertencia puntual de holgura, no de penetración.
+- **Pruebas nuevas:** `tests/gauge-seat-sujecion-r105.test.mjs`, `tests/omega-gauge-reconciliation-r105.test.mjs` y ampliación de `tests/automatic-folded-gauge-r104.test.mjs`.
+- **Build:** `PLEGADOX-20261116-R105` / `v0.9.79`; versión y service worker sincronizados. Informe técnico [R105_VALIDACION_OMEGA_Y_TOPES.md](./R105_VALIDACION_OMEGA_Y_TOPES.md).
+- **Límites:** queda pendiente la suite completa `npm test`, las pruebas reales de interfaz en navegador/teléfono y la validación CAD OEM / ejes X/R/Z. No hay certificación industrial ni validación CNC de colisiones físicas.
+
 ## Estado actual · R104 (v0.9.78) · 16 de noviembre de 2026
 
 - **Apoyo automático ampliado:** sólo si los cantos libres no permiten un apoyo nominal 2D válido, STOP 1 comprueba caras exteriores de pestañas **previamente plegadas**. Se exige plegado anterior terminado, cara frontal vertical, solape y ausencia de penetración 2D. **Support 2** no sustituye su repisa por una pared lateral.
