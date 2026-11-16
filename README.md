@@ -1,5 +1,15 @@
 # Plegadox — control y simulador de plegado
 
+## Estado actual · R111 (v0.9.85) · 16 de noviembre de 2026
+
+- **CAD de útiles investigado:** 25 fuentes de procedencia y **19 enlaces DXF/ZIP oficiales** entre Eurostamp, UKB, Mate y SOCLAM. Ocho nuevas fichas UKB: punzones 85° 11.151/11.200/10.170 y matrices V30° 25.406/29.351/29.353/25.501/29.552, cada una con su referencia, ángulo, altura, radio y montaje. Los binarios OEM no están descargados ni certificados en esta versión.
+- **Forma correcta de pata de cabra importada:** ahora el DXF se alinea con la punta real de trabajo, no con el centro de su caja exterior. El cambio se aplica a perfil de dibujo y a comprobaciones geométricas sin deformar contornos.
+- **Matrices reversibles y dobles V:** se detectan gargantas representadas en el perfil; si hay más de una, se exige elegir la V activa. Rechazo de matrices sin garganta. Vista previa con ejes de trabajo marcados y campo opcional X para declarar la referencia.
+- **Corrección de biblioteca:** se repararon vértices duplicados en CONIC GN6/GN9 y el ejemplo Beyeler R. **25 punzones + 43 matrices (68/68)** pasan validación 2D de contorno; siguen siendo perfiles provisionales si falta el DXF OEM.
+- **Compatibilidad con sesiones antiguas:** el eje de DXF anteriores se corrige sólo en memoria, sin modificar backups. Un útil cuyo eje no se puede inferir sigue visible pero queda excluido de la elección automática hasta recibir datum válido; se conserva la elección manual.
+- **Pruebas focalizadas:** 20 casos sobre importación y apariencia, 4 sobre migración de DXF anteriores y 10 sobre procedencia y referencias, más auditoría de 68 perfiles. No está confirmada la suite completa ni la verificación de CAD de la unidad física.
+- **Release:** `PLEGADOX-20261116-R111` · `0.9.85`. Informe [R111_CAD_Y_APARIENCIA_UTILES.md](./R111_CAD_Y_APARIENCIA_UTILES.md). Siguen pendientes conjuntos CAD por número de serie y recorridos reales de ejes; no hay certificación CNC.
+
 ## Estado actual · R110 (v0.9.84) · 16 de noviembre de 2026
 
 - **Búsqueda ampliada al montaje completo:** 17 referencias de procedencia, incluidos **11 enlaces directos a archivos DXF/ZIP oficiales** y fichas de soporte/amarre sin descarga libre. Se incorporaron UKB 22.010, 50.430 y 22.308, SOCLAM 40.06/34 y WILA TSU-024; ninguno se supone montado en una máquina hasta identificarlo físicamente.
