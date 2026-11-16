@@ -165,6 +165,110 @@ function assembleLines(edges){
  points.pop();
  return points;
 }
+/**
+ * R112 · DXF OEM con BLOCK/INSERT de AutoCAD.
+ * Soporta un bloque 2D insertado con transformación rígida/uniforme.
+ * Nunca ejecuta macros ni interpreta XREF, ACIS, cotas o anotaciones
+ * como sólidos. Un bloque debe resolver UN contorno cerrado.
+ */
+function dxfRecords(pairs){
+ const records=[];let section=null;
+ for(let i=0;i<pairs.length;i++){
+  const p=pairs[i];
+  if(p.code===0&&p.value==='SECTION'&&pairs[i+1]?.code===2){
+   section=pairs[++i].value;continue;
+  }
+  if(p.code===0&&p.value==='ENDSEC'){section=null;continue;}
+  if(!['ENTITIES','BLOCKS'].includes(section)||p.code!==0)continue;
+  const type=p.value,body=[];
+  for(i++;i<pairs.length&&pairs[i].code!==0;i++)body.push(pairs[i]);
+  i--;
+  if(!['EOF','ENDSEC'].includes(type))records.push({section,type,body});
+ }
+ return records;
+}
+const componentGeometry=(items)=>{
+ let poly=null,edges=[];
+ for(const {type,body} of items){
+  if(type==='LWPOLYLINE'){
+   if(poly||edges.length)
+    throw Error('El bloque contiene varios contornos o geometría adicional');
+   poly=polyline(body);
+  }else if(type==='LINE'||type==='ARC'){
+   if(poly)throw Error('No mezclar contorno cerrado y aristas sueltas');
+   edges.push(type==='LINE'?line(body):arcEntity(body));
+  }else if(!['TEXT','MTEXT','POINT'].includes(type)){
+   throw Error('Entidad DXF '+type+' no admitida en un perfil 2D');
+  }
+ }
+ return poly||assembleLines(edges);
+};
+function insertedContour(record,blocks){
+ const name=String(property(record.body,2,'')).trim();
+ if(!name||!blocks.has(name))throw Error('INSERT referencia bloque DXF inexistente: '+name);
+ const block=blocks.get(name);
+ const x=numeric(property(record.body,10,'0'),'X INSERT');
+ const y=numeric(property(record.body,20,'0'),'Y INSERT');
+ const z=numeric(property(record.body,30,'0'),'Z INSERT');
+ const sx=numeric(property(record.body,41,'1'),'Escala X INSERT');
+ const sy=numeric(property(record.body,42,'1'),'Escala Y INSERT');
+ const sz=numeric(property(record.body,43,'1'),'Escala Z INSERT');
+ const angle=numeric(property(record.body,50,'0'),'Rotación INSERT');
+ const nx=numeric(property(record.body,210,'0'),'Normal X INSERT'),
+  ny=numeric(property(record.body,220,'0'),'Normal Y INSERT'),
+  nz=numeric(property(record.body,230,'1'),'Normal Z INSERT');
+ const columns=numeric(property(record.body,70,'1'),'Columnas INSERT'),
+  rows=numeric(property(record.body,71,'1'),'Filas INSERT');
+ if(Math.abs(z)>EPS||Math.abs(nx)>1e-8||Math.abs(ny)>1e-8||
+  Math.abs(nz-1)>1e-8||sz!==1)
+  throw Error('INSERT 3D o con normal OCS no admitida');
+ if(columns!==1||rows!==1)throw Error('INSERT múltiple de matriz no admitido');
+ if(sx<=0||sy<=0||Math.abs(sx-sy)>1e-9||sx<.001||sx>100)
+  throw Error('INSERT con escalado no uniforme o reflejado; normaliza a mm');
+ const pts=componentGeometry(block.entities);
+ const a=angle*Math.PI/180,c=Math.cos(a),t=Math.sin(a);
+ const mapped=pts.map(([px,py])=>{
+  const dx=(px-block.baseX)*sx,dy=(py-block.baseY)*sy;
+  return [x+c*dx-t*dy,y+t*dx+c*dy];
+ });
+ return validateContour(mapped).points;
+}
+function resolveDxfGeometry(pairs){
+ const records=dxfRecords(pairs);
+ const allBlocks=records.filter(r=>r.section==='BLOCKS');
+ const blocks=new Map();
+ let current=null,found=false;
+ for(const r of allBlocks){
+  if(r.type==='BLOCK'){
+   if(current)throw Error('BLOCK anidado sin ENDBLK');
+   const name=String(property(r.body,2,'')).trim();
+   if(!name||blocks.has(name))throw Error('Nombre de BLOCK vacío o duplicado');
+   const baseX=numeric(property(r.body,10,'0'),'Base X BLOCK');
+   const baseY=numeric(property(r.body,20,'0'),'Base Y BLOCK');
+   const baseZ=numeric(property(r.body,30,'0'),'Base Z BLOCK');
+   if(Math.abs(baseZ)>EPS)throw Error('Base Z de bloque fuera del plano XY');
+   current={name,baseX,baseY,entities:[]};
+  }else if(r.type==='ENDBLK'){
+   if(!current)throw Error('ENDBLK sin BLOCK');
+   blocks.set(current.name,current);current=null;
+  }else if(current){
+   current.entities.push(r);
+  }else throw Error('Entidad fuera de BLOCK en sección BLOCKS');
+ }
+ if(current)throw Error('BLOCK sin cierre ENDBLK');
+ const entities=records.filter(r=>r.section==='ENTITIES');
+ found=records.some(r=>r.section==='ENTITIES');
+ if(!found)throw Error('Falta la sección ENTITIES del DXF ASCII');
+ const insertions=entities.filter(r=>r.type==='INSERT');
+ if(insertions.length){
+  const other=entities.filter(r=>r.type!=='INSERT'&&
+   !['TEXT','MTEXT','POINT'].includes(r.type));
+  if(insertions.length!==1||other.length)
+   throw Error('Elige un único INSERT CAD, sin otros cuerpos o contornos');
+  return insertedContour(insertions[0],blocks);
+ }
+ return componentGeometry(entities);
+}
 function signedArea(points){
  let s=0;for(let i=0;i<points.length;i++){
   const a=points[i],b=points[(i+1)%points.length];
@@ -239,33 +343,7 @@ export function parseToolDxf(text,options={}){
  }
  if(units!==null&&units!==0&&units!==4)
   throw Error('DXF con unidades no milimétricas ($INSUNITS='+units+'). Convierte a mm antes de importar');
- let inside=false,found=false,entities=[];
- for(let i=0;i<pairs.length;i++){
-  if(pairs[i].code===0&&pairs[i].value==='SECTION'&&pairs[i+1]?.code===2){
-   inside=pairs[i+1].value==='ENTITIES';found ||=inside;i++;continue;
-  }
-  if(pairs[i].code===0&&pairs[i].value==='ENDSEC'){inside=false;continue;}
-  if(inside&&pairs[i].code===0){
-   const type=pairs[i].value,body=[];
-   for(i++;i<pairs.length&&pairs[i].code!==0;i++)body.push(pairs[i]);
-   i--;
-   if(!['ENDSEC','EOF'].includes(type))entities.push({type,body});
-  }
- }
- if(!found)throw Error('Falta la sección ENTITIES del DXF ASCII');
- let poly=null,edges=[];
- for(const {type,body} of entities){
-  if(type==='LWPOLYLINE'){
-   if(poly||edges.length)throw Error('Elige un único contorno DXF, sin geometría adicional');
-   poly=polyline(body);
-  }else if(type==='LINE'||type==='ARC'){
-   if(poly)throw Error('Hay entidades fuera de la polilínea cerrada');
-   edges.push(type==='LINE'?line(body):arcEntity(body));
-  }else if(!['TEXT','MTEXT','POINT'].includes(type)){
-   throw Error('Entidad DXF '+type+' no admitida. Usa LINE, ARC o LWPOLYLINE cerrada');
-  }
- }
- const contour=validateContour(poly||assembleLines(edges),options);
+ const contour=validateContour(resolveDxfGeometry(pairs),options);
  const x0=Math.min(...contour.points.map(p=>p[0])),
        y0=Math.min(...contour.points.map(p=>p[1]));
  const normalized=contour.points.map(([x,y])=>[
