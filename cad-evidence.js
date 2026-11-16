@@ -251,6 +251,12 @@ export const CAD_EVIDENCE_SOURCES=Object.freeze([
   id:'ukb-25502',kind:'die',maker:'UKB',reference:'25.502',
   variant:'30deg-V8-H100',mount:'UKB TRUMPF/WILA/BYSTRONIC',
   datum:'OEM_REFERENCE_UNCONFIRMED',
+  heightEvidence:Object.freeze({
+   reference:'25.502',kind:'DIE_PROFILE_INCLUDING_MOUNTING_TANG',
+   nominalHeightMm:100,drawingOverallMm:120,mountingTangMm:20,
+   sourceUrl:'https://www.progtools.se/wp16/wp-content/uploads/2016/09/ukb-progtools-9.pdf',
+   note:'UKB catálogo técnico 2015, sección matrices Trumpf 30°: dibujo acotado H100, H total120, zanco20. El datum en la V85 concreta sigue pendiente.'
+  }),
   title:'UKB 25.502 · matriz V8/30° H100',
   sourceUrl:'https://www.ukb-gmbh.de/en/25502.html',
   cadUrl:'https://daten.ukb-gmbh.de/dxf/zip/25502.DXF.zip',
@@ -264,6 +270,12 @@ export const CAD_EVIDENCE_SOURCES=Object.freeze([
   id:'ukb-25403',kind:'die',maker:'UKB',reference:'25.403',
   variant:'30deg-V10-H100',mount:'UKB TRUMPF/WILA/BYSTRONIC',
   datum:'OEM_REFERENCE_UNCONFIRMED',
+  heightEvidence:Object.freeze({
+   reference:'25.403',kind:'DIE_PROFILE_INCLUDING_MOUNTING_TANG',
+   nominalHeightMm:100,drawingOverallMm:120,mountingTangMm:20,
+   sourceUrl:'https://www.progtools.se/wp16/wp-content/uploads/2016/09/ukb-progtools-9.pdf',
+   note:'UKB catálogo técnico 2015, sección matrices Trumpf 30°: dibujo acotado H100, H total120, zanco20. El datum en la V85 concreta sigue pendiente.'
+  }),
   title:'UKB 25.403 · matriz V10/30° H100',
   sourceUrl:'https://www.ukb-gmbh.de/en/25403.html',
   cadUrl:'https://daten.ukb-gmbh.de/dxf/zip/25403.DXF.zip',
@@ -277,6 +289,12 @@ export const CAD_EVIDENCE_SOURCES=Object.freeze([
   id:'ukb-25504',kind:'die',maker:'UKB',reference:'25.504',
   variant:'30deg-V12-H100',mount:'UKB TRUMPF/WILA/BYSTRONIC',
   datum:'OEM_REFERENCE_UNCONFIRMED',
+  heightEvidence:Object.freeze({
+   reference:'25.504',kind:'DIE_PROFILE_INCLUDING_MOUNTING_TANG',
+   nominalHeightMm:100,drawingOverallMm:120,mountingTangMm:20,
+   sourceUrl:'https://www.progtools.se/wp16/wp-content/uploads/2016/09/ukb-progtools-9.pdf',
+   note:'UKB catálogo técnico 2015, sección matrices Trumpf 30°: dibujo acotado H100, H total120, zanco20. El datum en la V85 concreta sigue pendiente.'
+  }),
   title:'UKB 25.504 · matriz V12/30° H100',
   sourceUrl:'https://www.ukb-gmbh.de/en/25504.html',
   cadUrl:'https://daten.ukb-gmbh.de/dxf/zip/25504.DXF.zip',
