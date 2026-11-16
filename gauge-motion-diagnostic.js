@@ -77,7 +77,8 @@ function sampleStage(piece,operation,sub,machine){
    initialPenetration:scene.gaugePlan.initialPenetration===true,
    needsSetupCorrection:scene.gaugePlan.needsSetupCorrection===true
   },
-  risk:{level:risk.level,message:risk.message,verified:false},
+  risk:{level:risk.level,code:risk.code??null,message:risk.message,
+   forecast:risk.forecast??null,verified:false},
   actualInterference:{
    kind:placement.gaugeInterference?.kind??'sin-geometria',
    warning:placement.gaugeInterference?.warning===true,
