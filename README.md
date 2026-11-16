@@ -1,5 +1,14 @@
 # Plegadox — control y simulador de plegado
 
+## Estado actual · R103 (v0.9.77) · 16 de noviembre de 2026
+
+- **Diagnóstico de tope sin confundir causas:** el escáner temporal conserva por separado los avisos simultáneos de penetración, holgura y geometría de apoyo incorrecta. Una holgura 2D sin penetración no se llama choque, y una penetración real de sección sigue siendo roja.
+- **Semáforo informativo en vista 3D:** el naranja diferencia `referencia-interior`, `sin-borde-libre`, `cara-tope-invalida`, `chapa-detras`, `sin-asiento`, `apoyo-invalido`, `holgura-actual`, `comprobacion-incompleta` y `retirada-no-fiable`. La tarjeta muestra una explicación breve específica.
+- **Planificador inteligente:** al evaluar una operación con varios motivos de apoyo inválido, no cuenta tres etiquetas como tres golpes. La prioridad sigue siendo evitar penetraciones y exigir apoyo nominal 2D. La edición manual del orden, V, punzón y referencias no se modifica.
+- **Pruebas focalizadas:** 12 verificaciones directas de las funciones actualizadas han pasado; se añaden regresiones R103 para causas concurrentes, nivel de riesgo, texto de vista y recuento. **Sigue pendiente confirmar la ejecución completa de `npm test` en GitHub Actions y probar visualmente en los dispositivos reales.**
+- **Versión y caché:** compilación `PLEGADOX-20261116-R103`, versión `0.9.77`, caché PWA propia, sin borrar proyectos guardados.
+- **Sin certificación industrial:** la geometría CAD OEM, datums de máquina, cinemática física X/R/Z y recorridos continuos no están validados. No emitir programas CNC ni afirmar ausencia de colisión real a partir de una pantalla verde.
+
 ## Estado actual · R102 (v0.9.76) · 16 de noviembre de 2026
 
 - **Separación de contacto y holgura:** una falta de holgura 2D ya no convierte por sí misma un asiento nominal contra la cara frontal del tope en «sin contacto». La advertencia de holgura permanece **naranja**; una penetración calculada permanece **roja**; un contacto modelado sin interferencias puede mostrarse **verde**. Ningún color certifica la máquina.
