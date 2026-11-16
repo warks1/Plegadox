@@ -177,10 +177,28 @@ export function buildVolumeScene(scene,{machine=getActiveMachineConfig(),machine
   'tope-CAD-'+stopNumber,origin)||
   makePrism('tope-'+stopNumber,gaugePolygon,-half,half,
    'Z-del-dedo-desconocida-envolvente-conservadora');
- return {sheet:segments,objects:{punch:punchPrism,die:diePrism,ram,bed,gauge},
+ // R109: los amarres, adaptadores y apoyos delanteros sólo se añaden
+ // si existe su perfil CAD y un datum X/Y/Z declarado. NUNCA sustituir
+ // un adaptador WILA por el contorno de otro sistema como si fuera OEM.
+ const extraComponents={
+  upperClamp:{x:0,y:scene.kinematics.tipHeight},
+  lowerClamp:{x:0,y:0},
+  upperAdapter:{x:0,y:scene.kinematics.tipHeight},
+  lowerAdapter:{x:0,y:0},
+  frontSupport:{x:0,y:0}
+ };
+ const extras={};
+ for(const [kind,localOrigin] of Object.entries(extraComponents)){
+  const prism=cadPrism(kind,kind+'-CAD',localOrigin);
+  if(prism?.valid)extras[kind]=prism;
+ }
+ const componentsRequired=['ram','bed','stop','support',
+  ...Object.keys(extraComponents)];
+ return {sheet:segments,objects:{punch:punchPrism,die:diePrism,
+   ram,bed,gauge,...extras},
   gaugePlacement:placement,
   cadProfilesUsed:usedCAD,cadImportError:cadError,
-  missingCadComponents:['ram','bed',stopNumber===2?'support':'stop']
+  missingCadComponents:componentsRequired
    .filter(k=>!usedCAD.includes(k)),
   geometryKnown:segments.every(s=>s.valid)&&punchPrism.valid&&diePrism.valid,
   provenance:{machineDimensions:machine.geometrySource||'cotas Cybelec del usuario 30-10-2026',
