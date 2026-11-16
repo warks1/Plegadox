@@ -127,12 +127,22 @@ export const CAD_EVIDENCE_SOURCES=Object.freeze([
 const ID=s=>String(s??'').normalize('NFKC').trim().toUpperCase().replace(/\s+/g,'');
 const components=['kind','maker','reference','variant','mount'];
 const numericKeys=new Set([
- 'heightMm','angleDeg','tipRadiusMm','shoulderRadiusMm','vOpeningMm',
+ 'heightMm','bodyWidthMm','angleDeg','tipRadiusMm','shoulderRadiusMm','vOpeningMm',
  'maxTonnesPerMetre','maxLoadKNPerMetre','nominalBendingLengthMm',
  'nominalTonnageKN','nominalBedWidthMm','nominalThroatMm',
  'strokeStandardMm','strokeExtendedOptionalMm','openStandardMm',
  'openExtendedOptionalMm','travelXMm','travelRMm'
 ]);
+const allowedByKind={
+ punch:new Set(['heightMm','bodyWidthMm','angleDeg','tipRadiusMm',
+  'maxTonnesPerMetre','maxLoadKNPerMetre']),
+ die:new Set(['heightMm','bodyWidthMm','angleDeg','shoulderRadiusMm',
+  'vOpeningMm','maxTonnesPerMetre','maxLoadKNPerMetre']),
+ machine:new Set(['nominalBendingLengthMm','nominalTonnageKN',
+  'nominalBedWidthMm','nominalThroatMm','strokeStandardMm',
+  'strokeExtendedOptionalMm','openStandardMm','openExtendedOptionalMm',
+  'travelXMm','travelRMm'])
+};
 /** Metadatos complementarios sin inventar un CONTORNO.
  * Sólo se unen cotas de EXACTAMENTE el mismo fabricante, referencia,
  * variante, sistema de amarre y clase de componente.
@@ -151,7 +161,8 @@ export function reconcileCadDimensions(entries,{toleranceMm=.05,required=[]}={})
    if(ID(source[key])!==ID(first[key]))
     throw Error('No se pueden mezclar referencias, variantes o amarres distintos: '+key);
   for(const [key,val] of Object.entries(source.dimensions||{})){
-   if(!numericKeys.has(key)||!Number.isFinite(val)||val<0)
+   if(!numericKeys.has(key)||!allowedByKind[source.kind]?.has(key)||
+    !Number.isFinite(val)||val<0)
     throw Error('Cota no válida o unidad desconocida: '+key);
    if(!(key in dims)){dims[key]=val;evidence[key]=[source.id||source.sourceUrl];}
    else if(Math.abs(dims[key]-val)>toleranceMm){
