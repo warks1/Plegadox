@@ -118,6 +118,14 @@ export function gaugePlacement(scene,stopNumber=1){
    state:unverified&&placement.alignedToSheet?
     'Contacto frontal 2D provisional · falta verificar CAD de dedo y ejes X/R':
     placement.state};
+  // La holgura por espesor es advertencia, pero NO demuestra que falte
+  // el asiento de la chapa en la cara frontal. Preservar contactEngaged
+  // para que el planificador no invente un golpe sin contacto.
+  // El semáforo continuará NARANJA por la holgura actual.
+  if(result.kind==='holgura')return {...placement,gaugeInterference:result,
+   geometryUnavailable:unverified,verified:false,
+   state:(placement.state||'Apoyo 2D no certificado')+
+    ' · ⚠ Holgura 2D inferior al espesor: comprobar dedo y recorrido físico'};
   return {...placement,alignedToSheet:false,contactEngaged:false,
    geometryUnavailable:unverified,gaugeInterference:result,
    state:(placement.state||'Apoyo sin verificar')+
