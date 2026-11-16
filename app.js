@@ -845,6 +845,7 @@ function scheduleIntegratedAdvisor(){
      'Ninguna de las '+report.planVariantsChecked+' variantes comprobadas ha mostrado apoyo nominal 2D válido en todos los pliegues. '+
      'Variantes sin contacto: '+report.rejectionSummary.noGaugeContact+
      '; con referencia inválida: '+report.rejectionSummary.invalidGaugeReference+
+     '; con datos de contacto incompletos: '+report.rejectionSummary.gaugeContactIncomplete+
      '. Revisa cara frontal, ala de referencia y tipo STOP/SUPPORT. '+
      'No se modifica el orden manual ni se afirma que exista colisión: falta demostrar el apoyo físico.':
      report.candidatePairs>0?
@@ -885,6 +886,7 @@ function scheduleIntegratedAdvisor(){
      plan.volumeRamWarnings+' interferencias':'SIN COMPROBAR')+
     ' · muestras adicionales de útiles: '+plan.toolCriticalFrames+
     ' · apoyos de tope sin contacto: '+(plan.gaugeContactNotObserved||0)+
+    ' · datos de contacto incompletos: '+(plan.gaugeContactUnknown?'SÍ':'NO')+
     ' · referencias de tope inválidas: '+(plan.gaugeInvalidReferences||0)+
     ' · holguras de tope: '+(plan.gaugeClearanceWarnings||0)+
     ' · envolventes 3D trancha/mesa/topes: '+
