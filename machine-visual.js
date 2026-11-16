@@ -438,49 +438,97 @@ function drawSheet(ctx,pts,thickness,scale,active){
  ctx.strokeStyle=active?'#23bdff':'#79c5f7';ctx.lineWidth=1.55*scale;ctx.shadowColor='#00a7ff';ctx.shadowBlur=9*scale;ctx.stroke();
  ctx.restore();
 }
+/**
+ * Rejilla de sección: referencias VISUALES en milímetros, no ceros CNC
+ * de X/R/Z. No participa en cálculo de fuerzas ni colisiones.
+ */
+export function drawMachineMetricGuides(ctx,w,h,cx,cy,scale,view={}){
+ if(![w,h,cx,cy,scale].every(Number.isFinite)||scale<=0)
+  throw Error('Cámara de referencia inválida');
+ if(!view.showGrid&&!view.showAxes)return;
+ const spacing=scale>=1?20:scale>=.45?50:100;
+ const px=spacing*scale;
+ ctx.save();
+ if(view.showGrid){
+  ctx.strokeStyle=view.theme==='contrast'?'#8fb3d555':'#51c6ff26';
+  ctx.lineWidth=.7;
+  for(let x=cx%px;x<w;x+=px){
+   ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();
+  }
+  for(let y=((cy%px)+px)%px;y<h;y+=px){
+   ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();
+  }
+ }
+ if(view.showAxes){
+  ctx.strokeStyle='#f5c66c9a';ctx.lineWidth=1.2;
+  ctx.setLineDash([6,5]);ctx.beginPath();
+  ctx.moveTo(cx,0);ctx.lineTo(cx,h);
+  ctx.moveTo(0,cy);ctx.lineTo(w,cy);ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.font='700 10px system-ui';ctx.textAlign='left';
+  ctx.fillStyle='#e5c783';ctx.fillText('0 V · datum ilustrativo',10,h-20,w-20);
+ }
+ ctx.restore();
+}
 function stageScene(ctx,w,h,piece,sim,machineView){
  const st=stage(piece,sim.time),{punch,die}=getTooling(piece),t=piece.thickness;
+ const options=normalizeMachineView(machineView);
  const scene=technicalScene(piece,st);
- const scale=Math.min(w/740,h/510)* (machineView?.zoom||1);
- const cx=w*.48+(machineView?.panX||0),baseY=h*.665+(machineView?.panY||0);
+ const scale=Math.min(w/740,h/510)*options.zoom;
+ const cx=w*.48+options.panX,baseY=h*.665+options.panY;
  const opening=die.opening||16;
- backdrop(ctx,w,h);
- sceneAtmosphere(ctx,w,h,{cx,cy:baseY,s:scale});
+ if(options.theme==='industrial'){
+  backdrop(ctx,w,h);
+  sceneAtmosphere(ctx,w,h,{cx,cy:baseY,s:scale});
+ }else{
+  ctx.save();ctx.fillStyle=options.theme==='contrast'?'#02060d':'#071d30';
+  ctx.fillRect(0,0,w,h);ctx.restore();
+ }
+ drawMachineMetricGuides(ctx,w,h,cx,baseY,scale,options);
  const stopNumber=piece.stopByBend?.[st.activeBend]===2?2:1;
  const placement=gaugePlacement(scene,stopNumber);
- const perspective=Boolean(machineView?.perspective);
+ const perspective=Boolean(options.perspective);
  rearMachineBackdrop(ctx,w,h,cx,baseY,scale);
- // En 2D conservar EXACTAMENTE el orden anterior que ya funcionaba.
- if(!perspective)rearMachine(ctx,w,h,cx,baseY,scale,placement,false);
- dieDepth(ctx,{cx,cy:baseY,s:scale},opening,perspective,scene.die);
- drawDie(ctx,scene,cx,baseY,scale);
- // Sólo en PERSPECTIVA el tope se pinta después de la matriz y antes
- // de la chapa; así el labio delantero no queda tapado por la V.
- if(perspective)rearMachine(ctx,w,h,cx,baseY,scale,placement,true);
+ // Los controles alteran SOLO capas del lienzo, jamás el motor.
+ if(!perspective&&options.showGauge)
+  rearMachine(ctx,w,h,cx,baseY,scale,placement,false,options);
+ if(options.showDie){
+  dieDepth(ctx,{cx,cy:baseY,s:scale},opening,perspective,scene.die,options);
+  drawDie(ctx,scene,cx,baseY,scale);
+ }
+ // En perspectiva el tope se dibuja delante de la matriz para hacer
+ // visible su cara de contacto; no se recalculan coordenadas X/R.
+ if(perspective&&options.showGauge)
+  rearMachine(ctx,w,h,cx,baseY,scale,placement,true,options);
  // Los reflejos de la matriz se recortan a su contorno real en drawDie.
  // Ram advances to the sheet and descends while deforming it.
  // La formación no comienza antes de que la punta alcance la chapa.
  // Durante el golpe, punta y fibra central descienden conjuntamente hacia V.
  const tipY=baseY-scene.kinematics.tipHeight*scale;
  // Preserve the real profile; perspective adds an illustrative side face.
- ramDepth(ctx,{cx,cy:baseY,s:scale},tipY,punch,Boolean(machineView?.perspective));
- ctx.save();
- if(machineView?.transparent)ctx.globalAlpha=.3;
- drawRam(ctx,cx,baseY,scale,tipY,punch,scene);
- ctx.restore();
+ if(options.showRam||options.showPunch){
+  ramDepth(ctx,{cx,cy:baseY,s:scale},tipY,punch,perspective,options);
+  ctx.save();
+  if(options.transparent)ctx.globalAlpha=.3;
+  drawRam(ctx,cx,baseY,scale,tipY,punch,scene,options);
+  ctx.restore();
+ }
  const presentation=scene.presentation;
  // Pieza, matriz y punzón comparten escala mm→px. La fibra de la chapa
  // sigue el contacto con los dos hombros de la V y el descenso del punzón.
  const sheetY=baseY-scene.kinematics.centerHeight*scale;
- const transformed=machineSheetProjection(scene,cx,baseY,scale,Boolean(machineView?.perspective));
- sheetDepth(ctx,transformed,{cx,cy:baseY,s:scale},t,Boolean(machineView?.perspective));
- drawSheet(ctx,transformed,t,scale,st.press>.4);
- // Punzón en primer plano: el cuerpo de la herramienta NUNCA debe
- // desaparecer detrás de la chapa o de la textura de la máquina.
- drawPunchForeground(ctx,scene,cx,baseY,scale,Boolean(machineView?.transparent));
+ const transformed=machineSheetProjection(scene,cx,baseY,scale,perspective);
+ if(options.showSheet){
+  sheetDepth(ctx,transformed,{cx,cy:baseY,s:scale},t,perspective,options);
+  drawSheet(ctx,transformed,t,scale,st.press>.4);
+ }
+ // El dibujo del punzón conserva su perfil físico incluso cuando se
+ // oculta la chapa, la trancha o la matriz.
+ if(options.showPunch)
+  drawPunchForeground(ctx,scene,cx,baseY,scale,options.transparent);
  // Contacto de tope sólo indicado gráficamente cuando aparece un borde
  // trasero presentable en la sección; no se certifica el apoyo físico.
- if(placement.alignedToSheet){
+ if(options.showContact&&placement.alignedToSheet){
   const [x,y]=machineGaugeProjection(placement,cx,baseY,scale).point;
   ctx.save();ctx.beginPath();ctx.arc(x,y,Math.max(3,3.5*scale),0,Math.PI*2);
   const color=GAUGE_COLORS[gaugeRiskStatus(placement).level];
@@ -499,7 +547,7 @@ function stageScene(ctx,w,h,piece,sim,machineView){
   placement.gaugeTransition?.axisPhase??null);
  drawGaugeStatusCard(ctx,layout,level,GAUGE_COLORS[level]);
  // Workpiece shadow and hot contact glow along the working tool tip
- if(st.press>.36){
+ if(options.showSheet&&st.press>.36){
   ctx.save();ctx.globalAlpha=(st.press-.35)*.7;
   ctx.fillStyle=radial(ctx,cx,sheetY,33*scale,[[0,'#13c8ffdd'],[.12,'#16a7ff6d'],[1,'#00aaff00']]);
   ctx.beginPath();ctx.ellipse(cx,sheetY,33*scale,14*scale,0,0,Math.PI*2);ctx.fill();ctx.restore();
@@ -507,7 +555,7 @@ function stageScene(ctx,w,h,piece,sim,machineView){
  // El ángulo se presenta en el panel de control, sin dibujar una
  // circunferencia sobre el punto de contacto de la chapa con la matriz.
  const a=piece.angles[st.activeBend]||0;
- if(presentation.repositioning){
+ if(options.showLabels&&presentation.repositioning){
   ctx.save();ctx.fillStyle='#9dd8ff';
   ctx.font='700 '+Math.max(9,11*scale)+'px system-ui';ctx.textAlign='center';
   // La CHAPA se reorienta entre golpes; el DEDO sólo se retira si
@@ -523,7 +571,7 @@ function stageScene(ctx,w,h,piece,sim,machineView){
  }
  // El signo del plano no se cambia: sólo cambia la CARA de presentación
  // al trabajar con un punzón que desciende desde arriba.
- if(presentation.flipped){
+ if(options.showLabels&&presentation.flipped){
   ctx.save();
   ctx.font='700 '+Math.max(10,11*scale)+'px system-ui';
   ctx.textAlign='left';ctx.fillStyle='#ffca78';
@@ -535,13 +583,13 @@ function stageScene(ctx,w,h,piece,sim,machineView){
  // tiny badges in-frame visual signifiers
  // Los textos de contexto no deben tapar el punzón ni el estado cuando
  // la vista ocupa sólo ~300px en un smartphone.
- if(w>=900){
+ if(options.showLabels&&w>=900){
   ctx.font='700 10px system-ui';
   ctx.fillStyle='#87b6d6';ctx.textAlign='left';
   ctx.fillText('SIMULACIÓN · PERFIL',12,h-14);
   ctx.textAlign='right';ctx.fillStyle='#6f94ad';
   ctx.fillText(machineView?.perspective?'PERSPECTIVA ILUSTRATIVA · NO CAD':'MODELO PARAMÉTRICO · NO CONTROL CNC',w-12,h-14);
- }else if(w>=470){
+ }else if(options.showLabels&&w>=470){
   ctx.font='700 9px system-ui';ctx.fillStyle='#6f94ad';ctx.textAlign='left';
   ctx.fillText(machineView?.perspective?'PERSPECTIVA 2.5D · NO CAD':'VISTA LATERAL · MODELO PARAMÉTRICO',12,h-12);
  }
