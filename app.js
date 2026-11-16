@@ -1592,7 +1592,13 @@ function renderToolCards(){
   row.append(title);
   if(tool?.importedDxf){
    const span=document.createElement('span');
-   span.textContent='Perfil DXF local importado · verificar amarre, escala y sentido.';
+   span.textContent=tool.datumPending===true?
+    '⚠ DXF antiguo sin punta/V activa localizable. '+
+     'Reimporta y selecciona su eje X antes de autorizar un orden automático.':
+    'Perfil DXF: punta/V alineada en X=0 ('+
+     (tool.axisSource==='legacy-eje-inferido-en-memoria'?
+      'corrección temporal de DXF antiguo':'datum geométrico 2D')+
+     '). Montaje, radio, largo Z y amarre OEM pendientes de comprobar.';
    row.append(span);
   }else if(/^https:\/\/[^\s]+$/i.test(String(tool?.cadSourceUrl||''))){
    const a=document.createElement('a');
