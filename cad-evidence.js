@@ -163,7 +163,13 @@ export function reconcileCadDimensions(entries,{toleranceMm=.05,required=[]}={})
  }
  // Una contradicción no habilita una cota "promediada" peligrosa.
  for(const c of conflicts){delete dims[c.field];delete evidence[c.field];}
- const missing=required.filter(key=>!Object.prototype.hasOwnProperty.call(dims,key));
+ const minimum=required.length?required:first.kind==='punch'?
+  ['heightMm','angleDeg','tipRadiusMm']:
+  first.kind==='die'?
+   ['heightMm','angleDeg','vOpeningMm']:
+   first.kind==='machine'?
+    ['nominalBendingLengthMm','nominalTonnageKN','strokeStandardMm']:[];
+ const missing=minimum.filter(key=>!Object.prototype.hasOwnProperty.call(dims,key));
  const sameDatum=entries.every(x=>x.datum===first.datum&&
   x.datum&&x.datum!=='OEM_REFERENCE_UNCONFIRMED'&&
   x.datum!=='CATALOGUE_UNSPECIFIED'&&x.datum!=='FAMILY_ONLY');
