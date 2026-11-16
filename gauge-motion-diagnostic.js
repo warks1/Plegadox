@@ -78,6 +78,8 @@ function sampleStage(piece,operation,sub,machine){
    enabled:scene.gaugePlan.enabled===true,
    penetrationCount:scene.gaugePlan.penetrationCount??null,
    clearanceWarnings:scene.gaugePlan.clearanceWarnings??null,
+   minClearanceMm:scene.gaugePlan.minClearanceMm??null,
+   maxDeficitMm:scene.gaugePlan.maxDeficitMm??null,
    initialPenetration:scene.gaugePlan.initialPenetration===true,
    needsSetupCorrection:scene.gaugePlan.needsSetupCorrection===true
   },
