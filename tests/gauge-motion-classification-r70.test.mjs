@@ -31,7 +31,7 @@ test('R70: si durante G2 el dedo atraviesa chapa, identificar específicamente e
  assert.equal(result.movementFindings[0].kind,'penetracion');
  assert.equal(result.movementFindings[0].movingFinger,true);
  assert.equal(result.movementFindings[0].motionPhase,'regreso-a-siguiente-referencia');
- assert.match(result.movementFindings[0].reason,/DURANTE el desplazamiento completo/);
+ assert.match(result.movementFindings[0].reason,/DURANTE movimiento del tope/);
  assert.ok(result.movementFirstTime>9.2&&result.movementFirstTime<10);
  assert.equal(result.verified,false);
 });
