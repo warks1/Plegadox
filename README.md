@@ -1,5 +1,17 @@
 # Plegadox — control y simulador de plegado
 
+## Estado actual · R102 (v0.9.76) · 16 de noviembre de 2026
+
+- **Separación de contacto y holgura:** una falta de holgura 2D ya no convierte por sí misma un asiento nominal contra la cara frontal del tope en «sin contacto». La advertencia de holgura permanece **naranja**; una penetración calculada permanece **roja**; un contacto modelado sin interferencias puede mostrarse **verde**. Ningún color certifica la máquina.
+- **Plan manual independiente:** aunque coincida en útiles, orientación y orden con una propuesta automática, se inspecciona aparte. El resumen de alternativas automáticas no cuenta el plan manual dos veces.
+- **Regresiones:** pruebas de separación de plan manual, rechazo sin duplicados y semáforo del tope; pruebas existentes ajustadas a la distinción entre holgura y penetración. Se añade GitHub Actions para ejecutar `npm test` en cambios a `main` y solicitudes de cambios. **No se afirma aún que la ejecución de CI haya finalizado satisfactoriamente.**
+- **PWA:** versión, compilación, interfaz y caché offline sincronizadas a `PLEGADOX-20261116-R102` y `0.9.76`. Conserva datos locales al actualizar.
+- **Límite técnico:** faltan perfiles CAD OEM íntegros, datums y trayectorias reales X/R/Z; la sección muestreada 2D/2.5D no certifica ausencia de colisiones ni permite emitir instrucciones CNC.
+
+## Estado anterior · R101 (v0.9.75) · 16 de noviembre de 2026
+
+- El optimizador diferencia ausencia de contacto nominal del tope, referencia interior inválida y penetraciones modeladas de herramientas o topes; presenta motivos de descarte y mantiene la opción manual.
+
 ## Estado actual · R97 (v0.9.71) · 15 de noviembre de 2026
 
 - **Diagnóstico de topes exportable:** en Auditoría técnica previa a taller → Revisión de topes por golpe hay un botón «Descargar diagnóstico de movimientos del tope (JSON)». Registra la pieza y las referencias elegidas, la máquina con sus cotas configuradas y el perfil de punzón/matriz seleccionado, las coordenadas de chapa/contacto y las transiciones a 15 tiempos por cada golpe, más penetración/holgura estimada y semáforo. No cambia la pieza ni el movimiento de la simulación. Permite contrastar vídeos con la configuración exacta sin reconstruir las decisiones manuales.
