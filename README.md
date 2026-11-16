@@ -1,5 +1,15 @@
 # Plegadox — control y simulador de plegado
 
+## Estado actual · R104 (v0.9.78) · 16 de noviembre de 2026
+
+- **Apoyo automático ampliado:** sólo si los cantos libres no permiten un apoyo nominal 2D válido, STOP 1 comprueba caras exteriores de pestañas **previamente plegadas**. Se exige plegado anterior terminado, cara frontal vertical, solape y ausencia de penetración 2D. **Support 2** no sustituye su repisa por una pared lateral.
+- **Sin falsos contactos interiores:** un vértice interior cualquiera sigue prohibido. Las alternativas manuales conservan prioridad; no se cambian orden de pliegues, signos ni referencias del operario sin una acción explícita.
+- **Aviso inteligible:** el visor, el diagnóstico JSON y los botones de búsqueda distinguen `CANTO_LIBRE_2D`, `CARA_EXTERIOR_PREPLEGADA_2D` y ausencia de apoyo. Si durante el posicionamiento no se observa contacto frontal, aparece naranja por falta de contacto, no por choque. Penetración calculada: rojo.
+- **Aplicación exacta:** al aceptar una recomendación de extremo de ala se elimina la antigua cota manual de ese golpe, que de otro modo cambiaría la referencia evaluada.
+- **Regresiones y limitaciones:** añadidos ensayos R104 del solver, asesor de topes, preservación del modo manual y riesgo. Comprobaciones focalizadas y sintaxis de archivos modificados superadas; **aún no está confirmado el resultado de la suite completa ni un ensayo físico de la Trumpf V85/Bystronic**.
+- **Build:** `PLEGADOX-20261116-R104`, `v0.9.78`. Detalles: [R104_APOYO_CARA_PREPLEGADA.md](./R104_APOYO_CARA_PREPLEGADA.md).
+- **No certificación:** faltan geometrías y movimientos OEM para validar trayectorias 3D completas, colisiones físicas o producir CNC de forma segura.
+
 ## Estado actual · R103 (v0.9.77) · 16 de noviembre de 2026
 
 - **Diagnóstico de tope sin confundir causas:** el escáner temporal conserva por separado los avisos simultáneos de penetración, holgura y geometría de apoyo incorrecta. Una holgura 2D sin penetración no se llama choque, y una penetración real de sección sigue siendo roja.
