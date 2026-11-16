@@ -85,7 +85,11 @@ test('trayectoria: el escáner presenta penetración intermedia y no certifica C
  });
  assert.ok(scan.linearSweptPenetrations>0);
  assert.ok(scan.operations.some(row=>row.findings.some(f=>
-  f.kind==='ram'&&f.severity==='penetracion-barrido-lineal-modelado')));
+  f.kind==='ram'&&f.severity==='solape-barrido-provisional')));
+ assert.equal(scan.modeledMachineWarnings,0,
+  'Prismas sintéticos sin CAD montado no prueban penetración física');
+ assert.ok(scan.provisionalRamWarnings>0,
+  'El cruce entre muestras no se pierde: permanece como riesgo provisional');
  assert.equal(scan.canApproveForMachine,false);
  assert.equal(scan.continuousCollisionVerified,false);
 });
