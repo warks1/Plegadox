@@ -48,8 +48,9 @@ export function renderCadEvidence(){
  const count=CAD_EVIDENCE_SOURCES.filter(s=>s.cadUrl).length;
  if(coverage){status.dataset.error='false';
  status.textContent='Cobertura CAD registrada: '+coverage.importedCount+'/'+
-  coverage.requiredCount+' categorías con algún perfil importado. '+
-  (coverage.missing.length?'Faltan: '+coverage.missing.map(k=>ALL_LABELS[k]||k).join(', ')+'. ':'')+
+  coverage.requiredCount+' categorías de posible interferencia con algún perfil importado. '+
+  (coverage.missing.length?'Sin CAD cargado o sin descartar su presencia: '+
+   coverage.missing.map(k=>ALL_LABELS[k]||k).join(', ')+'. ':'')+
   count+' descargas directas confirmadas en fabricantes; '+ 
   'NO instaladas automáticamente. Los CAD de familias de máquina no sirven para certificar una unidad.';}
  const fragment=document.createDocumentFragment();
