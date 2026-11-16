@@ -2,8 +2,10 @@
  * R50 · Resuelve el apoyo en la CARA FRONTAL del dedo, antes de ordenar
  * cualquier retroceso. Sección 2D orientativa, sin CAD volumétrico CNC.
  *
- * La opción automática examina los dos bordes libres físicos de la pieza,
- * NO los extremos de los segmentos que terminan en vértices interiores.
+ * La opción automática prioriza los dos bordes libres físicos. Si NINGUNO
+ * es viable, examina únicamente caras exteriores de pestañas YA plegadas
+ * con pared frontal y contacto geométrico comprobado en 2D.
+ * Los vértices interiores ordinarios jamás cuentan como apoyo nominal.
  * La selección MANUAL del operario no se modifica ni se sustituye.
  */
 import {normalized,gaugeReference,gaugePointOnProfile,presentedForMachine} from './engine.js';
@@ -11,10 +13,11 @@ import {gaugeOutline,gaugeContactFeature} from './machine-config.js';
 import {inspectGaugeProfile} from './gauge-interference.js';
 const validNumber=x=>Number.isFinite(x);
 /**
- * ESTUDIO R94 · Sólo referencias MANUALES contra la cara externa de una
- * pestaña que YA ESTABA PLEGADA antes de este golpe. No modifica el
- * seleccionador automático ni convierte cualquier vértice en apoyo.
- * Esta detección es 2D provisional, sin ejes X/R/Z ni CAD de máquina.
+ * R104: esta detección de cara EXTERIOR previamente plegada se comparte
+ * entre la referencia MANUAL y el fallback automático controlado.
+ * Sólo se admite cara ya plegada, accesible por delante, con solape
+ * frontal suficiente y sin penetración en el dedo modelado.
+ * No convierte cualquier vértice en apoyo. Sigue siendo 2D provisional.
  */
 export function foldedStopFaceCandidate(positions,ref,st,feature,thickness,manual){
  if(!manual||ref?.freeEdge||ref?.atEnd!==true||
@@ -116,25 +119,54 @@ export function resolveGaugeSetup(piece,st,config){
   p.gaugeSegmentByBend[bend]!==null||p.gaugePointByBend[bend]!==null;
  const first=evaluateGaugeSetup(p,st,original,config,stopNumber);
  if(isManual)return {...first,manual:true,candidates:[first],autoSelected:false};
- const candidates=[first];
- for(const segment of [0,p.flanges.length-1]){
-  if(segment===original.segmentIndex&&original.freeEdge)continue;
-  const draft={...p,gaugeSegmentByBend:[...p.gaugeSegmentByBend]};
+ const candidates=[first],visited=new Set([
+  [original.side,original.segmentIndex,original.sourceIndex].join('|')
+ ]);
+ const examine=segment=>{
+  // Una referencia inferida sólo cambia la pieza candidata temporal.
+  // Nunca modificar el apoyo manual guardado ni los otros golpes.
+  const draft={...p,gaugeSegmentByBend:[...p.gaugeSegmentByBend],
+   gaugePointByBend:[...p.gaugePointByBend]};
   draft.gaugeSegmentByBend[bend]=segment;
-  const reference=gaugeReference(draft,bend);
-  candidates.push(evaluateGaugeSetup(draft,st,reference,config,stopNumber));
+  draft.gaugePointByBend[bend]=null;
+  const ref=gaugeReference(draft,bend);
+  const key=[ref.side,ref.segmentIndex,ref.sourceIndex].join('|');
+  if(visited.has(key))return null;
+  visited.add(key);
+  return evaluateGaugeSetup(draft,st,ref,config,stopNumber);
+ };
+ // Etapa 1: canto libre; no aceptar vértices interiores como cantos.
+ for(const segment of [0,p.flanges.length-1]){
+  const checked=examine(segment);
+  if(checked)candidates.push(checked);
  }
- // Sólo aceptar selección automática si hay contacto FRONTAL sin invasión.
- // Si ninguno pasa, preservar referencia y mostrar ERROR (no un verde falso).
+ const freeValid=candidates.filter(x=>x.valid&&x.ref.freeEdge===true);
+ // Etapa 2: SOLO si no existe ningún canto libre 2D viable, intentar
+ // cara exterior de pestaña YA formada. Support 2 exige repisa, por lo
+ // que este fallback de pared vertical es exclusivo del STOP 1.
+ if(!freeValid.length&&stopNumber===1){
+  for(let segment=1;segment<p.flanges.length-1;segment++){
+   const checked=examine(segment);
+   // Una esquina interior no validada no se ofrece como alternativa.
+   // Sólo mantener candidatos con evidencia de pestaña preplegada.
+   if(checked?.foldedWingContact===true)candidates.push(checked);
+  }
+ }
  const possible=candidates.filter(x=>x.valid);
- // La referencia automática original representa la primera opción de
- // presentación, definida por extremo libre y orden del programa.
- // NO cambiar de cara si ya es válida: el selector anterior ordenaba por
- // segmento 0 en caso de empate y volteaba G3->P4 de la Omega sin razón.
+ // No voltear la presentación de la Omega si el canto original YA
+ // es válido; el fallback sólo entra ante ausencia de apoyo nominal.
  const best=first.valid?first:possible.sort((a,b)=>{
-  const aDistance=a.ref.distance,bDistance=b.ref.distance;
-  return aDistance-bDistance||a.ref.segmentIndex-b.ref.segmentIndex;
+  const freeDiff=Number(b.ref.freeEdge===true)-Number(a.ref.freeEdge===true);
+  if(freeDiff)return freeDiff;
+  const cleanDiff=Number(a.clearanceWarning===true)-
+   Number(b.clearanceWarning===true);
+  if(cleanDiff)return cleanDiff;
+  return a.ref.distance-b.ref.distance||
+   a.ref.segmentIndex-b.ref.segmentIndex;
  })[0]??first;
  return {...best,manual:false,candidates,autoSelected:best!==first,
+  autoSupportKind:!best.valid?'SIN_APOYO_NOMINAL_2D':
+   best.foldedWingContact?'CARA_EXTERIOR_PREPLEGADA_2D':'CANTO_LIBRE_2D',
+  needsFoldedFaceReview:best.valid&&best.foldedWingContact===true,
   noSafeContact:possible.length===0};
 }
