@@ -86,7 +86,13 @@ function sampleStage(piece,operation,sub,machine){
   actualInterference:{
    kind:placement.gaugeInterference?.kind??'sin-geometria',
    warning:placement.gaugeInterference?.warning===true,
-   point:coordinate(placement.gaugeInterference?.point)
+   point:coordinate(placement.gaugeInterference?.point),
+   closestFingerPoint:coordinate(placement.gaugeInterference?.closestFingerPoint),
+   segment:placement.gaugeInterference?.segment??null,
+   fingerEdge:placement.gaugeInterference?.fingerEdge??null,
+   distanceMm:placement.gaugeInterference?.distanceMm??null,
+   requiredMm:placement.gaugeInterference?.requiredMm??null,
+   deficitMm:placement.gaugeInterference?.deficitMm??null
   },
   sheet:scene.sheetDisplay.map(coordinate),
   fingerPolygon:gaugeContourAtContact(placement,dimensions).map(coordinate),
