@@ -1856,6 +1856,8 @@ function renderSimulationText(){
     'chapa contra cara frontal inferior STOP 1')+
    ' · '+(shownRef.side==='before'?'presentación invertida':'presentación directa')+
   (plan?.autoSelected?' · apoyo alternativo automático del motor':'')+
+  (plan?.needsFoldedFaceReview?
+   ' · ⚠ FALLBACK: cara exterior de pestaña YA plegada (2D provisional; comprobar útiles y topes físicos)':'')+
   (freeEnd?' · borde libre':
     currentGaugeScene.gaugeSetup?.valid===true&&
     currentGaugeScene.gaugeSetup?.foldedWingContact===true?
@@ -1869,8 +1871,12 @@ function renderSimulationText(){
    (chosenGauge.seat.required?
     ' · ⚠ CARA FRONTAL DEL TOPE SIN SOLAPE SUFICIENTE':
     ' · ⚠ CARA FRONTAL DEL TOPE SIN SOLAPE DE ESPESOR'):'')+
-  (chosenGauge.gaugeInterference?.warning?
-   ' · ⚠ POSIBLE INTERFERENCIA 2D DEL TOPE CON LA CHAPA: revisar apoyo y retirada':
+  (chosenGauge.gaugeInterference?.kind==='penetracion'?
+   ' · ⛔ PENETRACIÓN GEOMÉTRICA 2D EN EL DEDO: revisar apoyo y retirada':
+   chosenGauge.gaugeInterference?.kind==='holgura'?
+   ' · ⚠ HOLGURA INSUFICIENTE 2D (no es penetración demostrada): revisar espesor y perfil':
+   chosenGauge.gaugeInterference?.kind==='sin-geometria'?
+   ' · ⚠ PERFIL 2D NO EVALUABLE: no se puede afirmar ausencia de colisión':
    !chosenGauge.contactEngaged?' · sin contacto confirmado en esta fase':' · contacto nominal 2D')+
   retractionNote+' · sin ejes X/R/Z calibrados';
  $('activeGaugeReference').dataset.interference=String(
