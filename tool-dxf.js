@@ -316,6 +316,28 @@ export function importedTool(parsed,options={}){
  }
  return tool;
 }
+/**
+ * R111 · Migración EN MEMORIA de DXF de versiones anteriores.
+ * Antes se centraban por el ancho exterior, no por la punta o V.
+ * Nunca se sobrescriben los ficheros ni las preferencias guardadas.
+ */
+export function normalizeStoredToolDatum(tool){
+ if(!tool?.importedDxf||tool.workingAxisX===0)return tool;
+ const kind=tool.opening!=null?'die':'punch';
+ try{
+  const aligned=alignToolSectionToWorkingAxis(tool.profilePoints,kind);
+  return {...tool,profilePoints:aligned.points,workingAxisX:0,
+   axisSource:'legacy-eje-inferido-en-memoria',
+   axisOriginallyAtMm:aligned.offsetX,
+   datumStatus:aligned.datumStatus,datumPending:false,
+   datumVerified:false,profileAccuracy:'provisional'};
+ }catch(error){
+  return {...tool,datumPending:true,datumVerified:false,
+   datumStatus:'LEGACY_SIN_EJE_DE_TRABAJO',
+   datumWarning:String(error.message||error),
+   profileAccuracy:'provisional'};
+ }
+}
 export function loadImportedTools(storage){
  try{
   const data=JSON.parse(storage?.getItem(TOOL_DXF_STORAGE_KEY)||'[]');
@@ -330,13 +352,17 @@ export function loadImportedTools(storage){
     return Number.isFinite(t.angle)&&Number.isFinite(t.height)&&
       (t.opening!=null?Number.isFinite(t.opening):Number.isFinite(t.tip));
    }catch{return false;}
-  });
+  }).map(normalizeStoredToolDatum);
  }catch{return [];}
 }
 export function registerImportedTools(dies,punches,tools){
- for(const item of tools){
+ for(const raw of tools){
+  const item=normalizeStoredToolDatum(raw);
   const collection=item.opening!=null?dies:punches;
-  if(!collection.some(t=>t.id===item.id))collection.push(item);
+  const index=collection.findIndex(t=>t.id===item.id);
+  if(index<0)collection.push(item);
+  else if(collection[index].importedDxf===true&&
+   collection[index].workingAxisX!==0)collection[index]=item;
  }
 }
 export function persistImportedTool(storage,tool){
