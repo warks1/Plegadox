@@ -149,7 +149,7 @@ export function gaugeFrontNosePolygon(placement,dimensions){
  * de estado; aquí solo mostramos el nivel y la acción requerida.
  * Es geometría de interfaz, NO movimiento de máquina.
  */
-export function gaugeStatusCardLayout(width,height,faceX,faceY,stopNumber,level,scale=1,movementPhase=null,forecast=null){
+export function gaugeStatusCardLayout(width,height,faceX,faceY,stopNumber,level,scale=1,movementPhase=null,forecast=null,reasonCode=null){
  if(![width,height,faceX,faceY,scale].every(Number.isFinite)||
   width<=0||height<=0||scale<=0||![1,2].includes(stopNumber)||
   !['green','amber','red'].includes(level))
@@ -174,8 +174,20 @@ export function gaugeStatusCardLayout(width,height,faceX,faceY,stopNumber,level,
   'regreso-a-siguiente-referencia':'VOLVIENDO DESDE RETIRADA',
   'reubicacion-siguiente-golpe':'CAMBIO DE COTA · NO RETROCESO'
  }[movementPhase]??null;
+ const issueText={
+  'apoyo-invalido':'APOYO NO VÁLIDO · REVISAR',
+  'comprobacion-incompleta':'DATOS 2D INSUFICIENTES',
+  'holgura-actual':'HOLGURA ACTUAL · REVISAR',
+  'interferencia-actual':'INTERFERENCIA ACTUAL',
+  'retirada-no-fiable':'RETIRADA NO FIABLE · REVISAR'
+ }[reasonCode]??null;
+ // Priorizar la incidencia real sobre el movimiento del dedo.
  const subline=level==='red'?'PENETRACIÓN 2D · REVISAR':
-  motionText||(level==='amber'?'REVISAR APOYO / HOLGURA':forecast==='retirada-prevista'?'RETIRADA PREVISTA · 2D':forecast==='holgura-futura'?'HOLGURA FUTURA · REVISAR':'COMPROBACIÓN 2D');
+  (level==='amber'&&issueText) ? issueText :
+  motionText||(level==='amber'?'REVISAR APOYO / HOLGURA':
+   forecast==='retirada-prevista'?'RETIRADA PREVISTA · 2D':
+   forecast==='holgura-futura'?'HOLGURA FUTURA · REVISAR':
+   'COMPROBACIÓN 2D');
  return {x,y,width:boxW,height:boxH,headline,subline,below,
   reservedLeft:left,reservedRight:right};
 }
@@ -450,10 +462,10 @@ function stageScene(ctx,w,h,piece,sim,machineView){
  if(perspective){
   // HUD dibujado al FINAL de los sólidos. La tarjeta no puede quedar
   // tapada por la matriz ni sobreescribir el canto frontal del dedo.
-  const level=gaugeRiskStatus(placement).level;
+  const gaugeRisk=gaugeRiskStatus(placement),level=gaugeRisk.level;
   const layout=gaugeStatusCardLayout(w,h,cx+placement.point.x*scale,
    baseY-placement.point.y*scale,placement.stopNumber,level,scale,
-   placement.gaugeTransition?.phase??null,gaugeRiskStatus(placement).forecast??null);
+   placement.gaugeTransition?.phase??null,gaugeRisk.forecast??null,gaugeRisk.code??null);
   drawGaugeStatusCard(ctx,layout,level,GAUGE_COLORS[level]);
  }
  // Workpiece shadow and hot contact glow along the working tool tip
