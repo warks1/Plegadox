@@ -849,10 +849,13 @@ function scheduleIntegratedAdvisor(){
      'No se modifica el orden manual ni se afirma que exista colisión: falta demostrar el apoyo físico.':
      report.candidatePairs>0?
      'Cotejadas '+report.planVariantsChecked+' variantes de '+report.pairsScreened+
-     ' parejas de útiles, pero ninguna garantiza un apoyo frontal válido del tope ni supera todos los filtros de penetración modelada '+
-     '(chapa, punzón, matriz, tope, trancha o mesa). No se recomienda aplicar '+
-     'automáticamente un orden potencialmente conflictivo. El orden manual sigue disponible. '+
-     'La revisión de envolventes 3D es preliminar y no equivale a certificar ausencia de colisiones.':
+     ' parejas de útiles, sin alternativa sin riesgos bloqueantes en el modelo. '+
+     'Penetración 2D punzón: '+report.rejectionSummary.punchPenetration+
+     ' planes; matriz: '+report.rejectionSummary.diePenetration+
+     '; trancha (envolvente 2,5D): '+report.rejectionSummary.ramInterference+
+     '; inspección crítica incompleta: '+report.rejectionSummary.toolCriticalUnresolved+'. '+
+     'Se conserva el orden MANUAL. No se aprobarán cambios automáticos hasta revisar los avisos. '+
+     'Los contornos CAD y recorridos CNC siguen SIN verificar.':
      'No se encontró ninguna pareja preseleccionada compatible. '+
      report.reasons.join(' ')+' Mantén o cambia tus herramientas manualmente; revisa sus límites.';
     return;
@@ -865,6 +868,17 @@ function scheduleIntegratedAdvisor(){
     ' · avisos chapa/útiles/topes (2D): '+plan.sheetWarnings+' / '+
     plan.toolWarnings+' / '+(plan.gaugeChecked?plan.gaugeWarnings:'sin comprobar')+
     ' · penetraciones posibles de útil: '+plan.toolPenetrations+
+    ' · punzón (fases críticas): '+(plan.toolCriticalChecked?
+     (plan.toolCriticalByKind?.punch?.penetrations||0)+' golpes con penetración 2D / '+
+      (plan.toolCriticalByKind?.punch?.warnings||0)+' con avisos':
+      'SIN COMPROBAR')+
+    ' · matriz (fases críticas): '+(plan.toolCriticalChecked?
+     (plan.toolCriticalByKind?.die?.penetrations||0)+' golpes con penetración 2D / '+
+      (plan.toolCriticalByKind?.die?.warnings||0)+' con avisos':
+      'SIN COMPROBAR')+
+    ' · trancha (volumen provisional): '+(plan.volumeChecked?
+     plan.volumeRamWarnings+' interferencias':'SIN COMPROBAR')+
+    ' · muestras adicionales de útiles: '+plan.toolCriticalFrames+
     ' · apoyos de tope sin contacto: '+(plan.gaugeContactNotObserved||0)+
     ' · referencias de tope inválidas: '+(plan.gaugeInvalidReferences||0)+
     ' · holguras de tope: '+(plan.gaugeClearanceWarnings||0)
