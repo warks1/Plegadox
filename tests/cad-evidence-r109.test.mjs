@@ -84,3 +84,47 @@ test('R109: las dos máquinas empiezan sin CAD OEM instalado, pero con inventari
  assert.ok(imported.missing.includes('mountDatums'));
  assert.ok(imported.missing.includes('axesXYZ'));
 });
+
+test('R109: se enlazan portamatriz y adaptadores sin confundirlos con matrices',()=>{
+ const die=by('ukb-22316');
+ const holder=by('ukb-22010');
+ const top=by('ukb-50430');
+ assert.equal(holder.kind,'lowerAdapter');
+ assert.equal(holder.dimensions.heightMm,51.5);
+ assert.equal(holder.dimensions.bodyWidthMm,60);
+ assert.equal(holder.cadUrl,'https://daten.ukb-gmbh.de/dxf/zip/22010.DXF.zip');
+ assert.equal(top.kind,'upperAdapter');
+ assert.equal(top.dimensions.heightMm,67);
+ assert.equal(top.status,'ENLACE_CONFIRMADO_NO_IMPORTADO');
+ assert.equal(die.dimensions.vOpeningMm,16);
+ assert.throws(()=>reconcileCadDimensions([die,holder]),
+  /referencias.*distintos|tipo.*distintos/);
+ const match=reconcileCadDimensions([holder]);
+ assert.equal(match.status,'COTAS_RECOPILADAS_NO_CERTIFICADAS');
+ assert.equal(match.verified,false);
+});
+
+test('R109: un soporte SOCLAM no se completa con alturas de otra variante',()=>{
+ const base=by('soclam-4006-34');
+ assert.equal(base.kind,'lowerAdapter');
+ assert.equal(base.dimensions.heightMm,34);
+ assert.equal(base.cadUrl,null);
+ assert.equal(reconcileCadDimensions([base]).status,'COTAS_PARCIALES');
+ const wrong={...base,id:'soclam-4007-55',reference:'40.07/55',
+  variant:'H55-PORTAMATRIZ-DOBLE-V',dimensions:{heightMm:55}};
+ assert.throws(()=>reconcileCadDimensions([base,wrong]),
+  /referencias.*distintos/);
+});
+
+test('R109: WILA sin descarga libre no se registra como DXF instalado',()=>{
+ const wila=by('wila-tsu-024');
+ assert.equal(wila.kind,'upperAdapter');
+ assert.equal(wila.dimensions.heightMm,73);
+ assert.equal(wila.dimensions.bodyWidthMm,49.5);
+ assert.equal(wila.cadUrl,null);
+ assert.equal(wila.access,'MYWILA_O_EMAIL');
+ const recon=reconcileCadDimensions([wila]);
+ assert.equal(recon.status,'COTAS_RECOPILADAS_NO_CERTIFICADAS');
+ assert.equal(recon.cadImported,false);
+ assert.equal(recon.canApproveForMachine,false);
+});
