@@ -29,6 +29,9 @@ const weight=plan=>
   plan.toolPenetrations*1000000+
   plan.sheetCross*100000+
   plan.sheetOverlap*60000+
+  // Un apoyo ausente no es una alternativa viable, aunque no choque.
+  (plan.gaugeContactNotObserved||0)*600000+
+  (plan.gaugeInvalidReferences||0)*350000+
   plan.gaugePenetrations*100000+
   plan.toolWarnings*3000+
   plan.gaugeWarnings*1200+
@@ -45,12 +48,22 @@ const toolProfileEvidence=tool=>{
 };
 const stopProblems=scan=>{
  const operations=Array.isArray(scan?.operations)?scan.operations:[];
- let severe=0;
+ let penetrations=0,invalidReferences=0,clearanceWarnings=0;
  for(const op of operations)
-  for(const finding of op.findings||[])
-   if(['penetracion','chapa-detras','holgura'].includes(finding.kind))severe++;
- return {warnings:Number(scan?.warningCount)||0,penetrations:severe,
-  contactNotObserved:Number(scan?.contactNotObserved)||0};
+  for(const finding of op.findings||[]){
+   if(finding.kind==='penetracion')penetrations++;
+   else if(['chapa-detras','apoyo-invalido','sin-asiento',
+            'referencia-interior'].includes(finding.kind))invalidReferences++;
+   else if(finding.kind==='holgura')clearanceWarnings++;
+  }
+ // El análisis completo aporta contactNotObserved; un evaluador
+ // simplificado puede aportar sólo contactObserved por operación.
+ const declared=Number(scan?.contactNotObserved);
+ const contactNotObserved=scan?.contactNotObserved!=null&&
+  Number.isFinite(declared)?Math.max(0,declared):
+  operations.filter(op=>op.contactObserved===false).length;
+ return {warnings:Number(scan?.warningCount)||0,penetrations,
+  invalidReferences,clearanceWarnings,contactNotObserved};
 };
 export function optimizeBendPlan(input,options={}){
  const p=normalized(input);
@@ -128,7 +141,8 @@ export function optimizeBendPlan(input,options={}){
    toolPenetrations:checked.penetrationOperations,
    toolWarnings:checked.warningOperations,
    toolSamples:checked.sampledPositions,
-   gaugeWarnings:0,gaugePenetrations:0,gaugeContactNotObserved:0,
+   gaugeWarnings:0,gaugePenetrations:0,gaugeClearanceWarnings:0,
+   gaugeInvalidReferences:0,gaugeContactNotObserved:0,
    gaugeChecked:false,gaugeError:null,
    volumeChecked:false,volumeMachineWarnings:0,volumeSweptSuspects:0,
    axisChecked:false,axisViolations:0,axisStatus:'EJES_SIN_PROGRAMA_FISICO',
@@ -195,6 +209,8 @@ export function optimizeBendPlan(input,options={}){
    const gauge=stopProblems(gaugeEvaluator(candidate));
    plan.gaugeWarnings=gauge.warnings;
    plan.gaugePenetrations=gauge.penetrations;
+   plan.gaugeClearanceWarnings=gauge.clearanceWarnings;
+   plan.gaugeInvalidReferences=gauge.invalidReferences;
    plan.gaugeContactNotObserved=gauge.contactNotObserved;
    plan.gaugeChecked=true;
   }catch(error){
@@ -204,6 +220,7 @@ export function optimizeBendPlan(input,options={}){
   plan.score=weight(plan);
   plan.possibleInterference=widthExceeded||plan.toolPenetrations>0||
    plan.sheetCross>0||plan.sheetOverlap>0||plan.gaugePenetrations>0||
+   plan.gaugeInvalidReferences>0||plan.gaugeContactNotObserved>0||
    plan.toolWarnings>0||plan.gaugeWarnings>0||!plan.gaugeChecked;
  }
  finalists.sort((a,b)=>{
@@ -258,6 +275,7 @@ export function optimizeBendPlan(input,options={}){
  const modeledBlockingRisk=plan=>plan.machineWidthExceeded||
   plan.sheetCross>0||plan.sheetOverlap>0||
   plan.toolPenetrations>0||plan.gaugePenetrations>0||
+  plan.gaugeInvalidReferences>0||plan.gaugeContactNotObserved>0||
   !plan.gaugeChecked||
   plan.axisViolations>0||plan.axisModeledCollisions>0||
   (volumeEvaluator&&(!plan.volumeChecked||plan.volumeMachineWarnings>0));
