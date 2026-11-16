@@ -1,3 +1,4 @@
+import {alignToolSectionToWorkingAxis} from './tool-cad-datum.js';
 /**
  * PlegadoX · importación acotada de CONTORNOS DXF ASCII 2D.
  * Se importan LINE/ARC encadenados o una LWPOLYLINE cerrada (bulge 42).
@@ -290,14 +291,23 @@ export function importedTool(parsed,options={}){
  const requestedMount=String(options.mount??'Desconocido').trim();
  if(!['Desconocido','WILA','Amada/Promecam','TRUMPF','Bystronic/Beyeler R'].includes(requestedMount))
   throw Error('Tipo de amarre no admitido: revisa WILA, Promecam o la interfaz real');
+ // EJE DE TRABAJO R111: una pata de cabra no debe quedar centrada
+ // por su cajetín exterior. Una matriz de V múltiple exige elegir
+ // qué garganta y orientación se van a montar.
+ const aligned=alignToolSectionToWorkingAxis(contour.points,kind,{
+  axisX:options.axisX??null
+ });
  const tool={id:'user-dxf-'+kind+'-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,9),
   name,reference:name,manufacturer:'Importado DXF',
   mount:requestedMount==='Desconocido'?'':requestedMount,
   mountVerified:false,mountDeclaration:'familia-declarada-en-formulario-sin-contraste',
   angle,height:Number(contour.height.toFixed(5)),length,
-  profilePoints:contour.points,importedDxf:true,
+  profilePoints:aligned.points,importedDxf:true,
+  workingAxisX:0,axisSource:aligned.inferred?'geometria-2d-inferida':'declarada-en-formulario',
+  datumStatus:aligned.datumStatus,axisOriginallyAtMm:aligned.offsetX,
+  datumVerified:false,
   verifiedSpecs:false,profileAccuracy:'provisional',
-  sourceDescription:'Contorno DXF 2D importado, punta/V y fijación sin verificación física'};
+  sourceDescription:'Contorno DXF 2D alineado con punta/V de trabajo; amarre y posicionamiento Z sin verificar'};
  if(kind==='die'){
   tool.opening=getNumber(options.opening,'Apertura V nominal',2,200);
  }else{
