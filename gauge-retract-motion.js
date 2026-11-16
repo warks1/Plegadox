@@ -72,12 +72,14 @@ export function gaugeRetractionPath({anchor,target=null,maxSheetX,fingerReach=0,
  if(t<GAUGE_RETRACT_START)return null;
  if(t<GAUGE_RETRACT_FINISH){
   const k=smooth((t-GAUGE_RETRACT_START)/(GAUGE_RETRACT_FINISH-GAUGE_RETRACT_START));
-  return {phase:'retroceso-antes-plegado',point:{x:lerp(anchor.x,park.x,k),y:anchor.y},
+  return {phase:'retroceso-antes-plegado',axisPhase:'X',
+   point:{x:lerp(anchor.x,park.x,k),y:anchor.y},
    from:anchor,to:park,parkPoint:park,progress:k,moving:true,withdrawn:false,
    plannedRetraction:park.x-anchor.x,verified:false};
  }
  if(t<GAUGE_REPOSITION_START||!target){
-  return {phase:'retirado-durante-plegado',point:park,from:anchor,to:park,
+  return {phase:'retirado-durante-plegado',axisPhase:'aparcado',
+   point:park,from:anchor,to:park,
    parkPoint:park,progress:1,moving:false,withdrawn:true,
    plannedRetraction:park.x-anchor.x,verified:false};
  }
