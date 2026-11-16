@@ -248,7 +248,102 @@ function insertedContour(record,blocks){
  // Un componente de máquina puede superar el máximo de un punzón.
  return mapped;
 }
-function resolveDxfGeometry(pairs,{entityLayer=null}={}){
+/**
+ * R120: separa ciclos 2D cerrados EXACTAMENTE a partir de las aristas
+ * originales del DXF. Las cadenas abiertas de cotas se dejan fuera;
+ * no se inventan segmentos para cerrar huecos. Nunca se escoge un
+ * contorno automáticamente: contourIndex requiere decisión del usuario.
+ */
+function closedContoursFromEntities(entities){
+ const edges=[],candidates=[],otherTypes=new Set();
+ for(const row of entities){
+  const {type,body}=row;
+  if(type==='LWPOLYLINE'){
+   const profile=polyline(body);
+   if(profile.length===2)edges.push(profile);
+   else{
+    try{
+     const contour=validateContour(profile);
+     candidates.push({points:contour.points,width:contour.width,
+      height:contour.height,segments:1,origin:'LWPOLYLINE'});
+    }catch{/* Polígonos inválidos no se proponen como cuerpo OEM. */}
+   }
+  }else if(type==='LINE'||type==='ARC'){
+   edges.push(type==='LINE'?line(body):arcEntity(body));
+  }else if(!['TEXT','MTEXT','POINT'].includes(type)){
+   otherTypes.add(type);
+  }
+ }
+ if(edges.length>MAX_POINTS)throw Error('DXF con demasiadas entidades de contorno');
+ if(!edges.length)return {candidates,otherTypes:[...otherTypes]};
+ const nodes=[],incidences=[];
+ const nodeOf=p=>{
+  let i=nodes.findIndex(q=>near(p,q));
+  if(i<0){i=nodes.length;nodes.push(p);incidences.push([]);}
+  return i;
+ };
+ const ends=edges.map((edge,i)=>{
+  const a=nodeOf(edge[0]),b=nodeOf(edge.at(-1));
+  incidences[a].push(i);incidences[b].push(i);
+  return [a,b];
+ });
+ // 2-core: eliminar aristas que no pueden pertenecer a ningún
+ // circuito cerrado porque terminan en un extremo abierto.
+ const alive=edges.map(()=>true);
+ const degree=incidences.map(x=>x.length);
+ const queue=degree.map((n,i)=>n<=1?i:-1).filter(i=>i>=0);
+ while(queue.length){
+  const n=queue.pop();
+  if(degree[n]!==1)continue;
+  const id=incidences[n].find(i=>alive[i]);
+  if(id===undefined)continue;
+  alive[id]=false;
+  const [a,b]=ends[id];
+  degree[a]--;degree[b]--;
+  if(degree[a]===1)queue.push(a);
+  if(degree[b]===1)queue.push(b);
+ }
+ const seen=new Set();
+ for(let first=0;first<edges.length;first++){
+  if(!alive[first]||seen.has(first))continue;
+  const component=[],stack=[first],groupNodes=new Set();
+  while(stack.length){
+   const i=stack.pop();
+   if(!alive[i]||seen.has(i))continue;
+   seen.add(i);component.push(i);
+   for(const node of ends[i]){
+    groupNodes.add(node);
+    for(const adjacent of incidences[node])
+     if(alive[adjacent]&&!seen.has(adjacent))stack.push(adjacent);
+   }
+  }
+  // Una unión de varias V o contornos en un punto es AMBIGUA.
+  // No dividirla a mano: se requiere exportar capas limpias.
+  if(component.length<2||![...groupNodes].every(n=>degree[n]===2))continue;
+  try{
+   const profile=assembleLines(component.map(i=>edges[i]));
+   const contour=validateContour(profile);
+   candidates.push({points:contour.points,width:contour.width,
+    height:contour.height,segments:component.length,origin:'LINE_ARC'});
+  }catch{/* Ciclo autointersectado/ambiguo: no importable. */}
+ }
+ return {candidates,otherTypes:[...otherTypes]};
+}
+/** Inventario de ciclos existentes para elegir, NO perfil instalado. */
+export function inspectToolDxfContours(text,{entityLayer=null}={}){
+ const pairs=parsePairs(text);
+ const records=dxfRecords(pairs).filter(row=>row.section==='ENTITIES');
+ const layer=entityLayer===null?null:String(entityLayer).trim();
+ const chosen=layer===null?records:
+  records.filter(r=>String(property(r.body,8,'0')).trim()===layer);
+ const result=closedContoursFromEntities(chosen);
+ return {candidates:result.candidates.map((x,index)=>({
+  index,widthMm:x.width,heightMm:x.height,
+  vertices:x.points.length,segments:x.segments,origin:x.origin
+ })),ignoredEntityTypes:result.otherTypes,
+  chosenLayer:layer,certified:false};
+}
+function resolveDxfGeometry(pairs,{entityLayer=null,contourIndex=null}={}){
  const records=dxfRecords(pairs);
  const allBlocks=records.filter(r=>r.section==='BLOCKS');
  const blocks=new Map();
@@ -279,6 +374,15 @@ function resolveDxfGeometry(pairs,{entityLayer=null}={}){
   sourceEntities.filter(r=>String(property(r.body,8,'0')).trim()===layer);
  if(layer!==null&&!entities.length)
   throw Error('La capa DXF '+layer+' no contiene entidades de perfil');
+ if(contourIndex!==null){
+  const index=Number(contourIndex);
+  if(!Number.isInteger(index)||index<0)
+   throw Error('Índice de contorno CAD no válido');
+  const available=closedContoursFromEntities(entities);
+  if(index>=available.candidates.length)
+   throw Error('El contorno solicitado no existe o no está cerrado');
+  return available.candidates[index].points;
+ }
  found=records.some(r=>r.section==='ENTITIES');
  if(!found)throw Error('Falta la sección ENTITIES del DXF ASCII');
  const insertions=entities.filter(r=>r.type==='INSERT');
@@ -387,7 +491,8 @@ export function parseToolDxf(text,options={}){
  if(units!==null&&units!==0&&units!==4)
   throw Error('DXF con unidades no milimétricas ($INSUNITS='+units+'). Convierte a mm antes de importar');
  const contour=validateContour(resolveDxfGeometry(pairs,{
-  entityLayer:options.entityLayer??null
+  entityLayer:options.entityLayer??null,
+  contourIndex:options.contourIndex??null
  }),options);
  const x0=Math.min(...contour.points.map(p=>p[0])),
        y0=Math.min(...contour.points.map(p=>p[1]));
