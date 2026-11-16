@@ -6,6 +6,7 @@ import {getActiveMachineProfile} from './machine-selection.js';
 import {MOTION_AXES,normalizeAxisMotion,motionPieceKey,
  assessAxisMotion,saveAxisMotion,loadAxisMotion} from './machine-axis-motion.js';
 import {loadAxisMapping,saveAxisMapping,scanAxisCADMovement} from './machine-axis-geometry.js';
+import './cad-evidence-ui.js';
 
 const $=id=>document.getElementById(id);
 const profileForTemplate=()=>getActiveMachineProfile();
