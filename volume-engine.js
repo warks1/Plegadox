@@ -192,7 +192,12 @@ export function buildVolumeScene(scene,{machine=getActiveMachineConfig(),machine
   const prism=cadPrism(kind,kind+'-CAD',localOrigin);
   if(prism?.valid)extras[kind]=prism;
  }
- const componentsRequired=['ram','bed','stop','support',
+ // Cada golpe monta/revisa el dedo ACTIVO. La ausencia del otro
+ // perfil no genera una carencia CAD ficticia en este fotograma.
+ // scanVolumeTrajectory agrega luego los componentes usados en todos
+ // los golpes: si la pieza requiere Stop y Support, faltarán ambos
+ // hasta que sus geometrías hayan sido contrastadas.
+ const componentsRequired=['ram','bed',stopNumber===2?'support':'stop',
   ...Object.keys(extraComponents)];
  return {sheet:segments,objects:{punch:punchPrism,die:diePrism,
    ram,bed,gauge,...extras},
