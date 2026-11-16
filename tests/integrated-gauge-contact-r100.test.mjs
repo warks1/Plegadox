@@ -16,7 +16,11 @@ const toolEvaluator=part=>({operations:part.order.map(()=>({
 }))});
 const volumeEvaluator=()=>({modeledMachineWarnings:0,uncertainSweptIntervals:0,
  framesChecked:8});
-const params={toolingAdvice,sheetEvaluator,toolEvaluator,volumeEvaluator,
+const criticalMock=piece=>({
+ operations:piece.order.map((bend,operation)=>({bend,operation,findings:[]})),
+ framesChecked:piece.order.length*10,penetrationOperations:0,warningOperations:0
+});
+const params={criticalToolEvaluator:criticalMock,toolingAdvice,sheetEvaluator,toolEvaluator,volumeEvaluator,
  maxPairs:2,maxOrders:1,maxFinalists:4};
 const report=(gaugeEvaluator)=>optimizeBendPlan(EXAMPLE,{...params,gaugeEvaluator});
 
