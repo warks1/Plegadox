@@ -11,7 +11,9 @@ import {sectionPunch,sectionDie,sectionBounds} from './tool-profiles.js';
 import {contactKinematics,roundedCorner} from './bend-contact.js';
 import {gaugePlacement,gaugeContourAtContact} from './backgauge-placement.js';
 import {getActiveMachineConfig,gaugeOutline,gaugeContactFeature} from './machine-config.js';
-import {gaugeRetractionPath,planGaugeRetraction} from './gauge-retract-motion.js';
+import {gaugeRetractionPath,planGaugeRetraction,
+ chooseGaugeAxisOrder,GAUGE_REPOSITION_START,GAUGE_REPOSITION_FINISH}
+ from './gauge-retract-motion.js';
 import {inspectGaugeProfile} from './gauge-interference.js';
 import {resolveGaugeSetup} from './gauge-contact-solver.js';
 import {punchParkHeight,sectionPresentation} from './punch-clearance.js';
@@ -21,6 +23,7 @@ const mm=v=>Number.isFinite(+v)?+v:0;
 // LRU pequeño: el barrido es POR CONFIGURACIÓN/PLIEGUE, no cada frame.
 const gaugePlanCache=new Map();
 const gaugeSetupCache=new Map();
+const gaugeRouteCache=new Map();
 
 /**
  * R90 · Envolvente de cámara estable en la sección técnica.
@@ -245,7 +248,7 @@ export function technicalScene(piece,instant=0){
  // Si ya hay penetración de fibra en la preparación, el dedo no puede
  // retirarse "a posteriori" y se mantiene bloqueada la simulación segura.
  const initialPenetration=resolvedGauge.interference?.kind==='penetracion';
- const gaugeDecision={...gaugePlan,
+ let gaugeDecision={...gaugePlan,
   enabled:gaugePlan.enabled&&!initialPenetration,
   setupValid:resolvedGauge.valid,
   setupReason:resolvedGauge.reason,
@@ -266,10 +269,91 @@ export function technicalScene(piece,instant=0){
   // inicial sigue señalando el apoyo erróneo en rojo.
   target={x:nextResolved.point.x,y:nextResolved.point.y};
  }
+ // R108: la altura R ANTES de X reduce cruces visuales, pero no
+ // sirve para cualquier Omega. Comparar AMBOS órdenes contra la
+ // sección real en reposicionamiento, con el dedo que se desplaza.
+ // Conservar el resultado para todos los fotogramas de este golpe.
+ // Sin CAD OEM, las dos rutas siguen sin certificación física.
+ const requiresAxisChoice=!!target&&
+  Math.abs(target.x-gaugeAnchor.x)>1e-7&&
+  Math.abs(target.y-gaugeAnchor.y)>1e-7;
+ let routePlan=null;
+ if(requiresAxisChoice){
+  const routeKey=cacheKey+'::route:'+JSON.stringify([
+   target,maxSheetX,fingerReach,gaugeDecision.enabled
+  ]);
+  routePlan=gaugeRouteCache.get(routeKey)||null;
+  if(!routePlan){
+   const radius=development(p).radius;
+   const steps=60;
+   const futureSheets=Array.from({length:steps+1},(_,i)=>{
+    const relative=GAUGE_REPOSITION_START+
+     (GAUGE_REPOSITION_FINISH-GAUGE_REPOSITION_START)*i/steps;
+    const future=stage(p,st.activeOperation*5+relative*5);
+    const futureFrom=presentedAtStage(p,future);
+    const futurePresentation=sectionPresentation(p,future,futureFrom,
+     feedMirror,nextFeedMirror);
+    const kine=contactKinematics({
+     points:futurePresentation.points,activeBend:future.activeBend,
+     angle:p.angles[future.activeBend]*future.fractions[future.activeBend],
+     opening:die.opening,dieDepth:die.depth,thickness:t,
+     phase:future.phase,press:future.press,
+     insideRadius:radius,feedMirrored:feedMirror,
+     repositionProgress:futurePresentation.repositioning?
+      futurePresentation.progress:1,
+     presentationLift:futurePresentation.clearanceLift??0
+    });
+    let sheet=kine.sheet;
+    for(let bend=p.angles.length-1;bend>=0;bend--)
+     if(future.fractions[bend]>1e-5)
+      sheet=roundedCorner(sheet,bend+1,kine.requestedCenterlineRadius);
+    return {relative,sheet};
+   });
+   routePlan=chooseGaugeAxisOrder(axisOrder=>{
+    let penetrations=0,clearances=0,incomplete=0;
+    for(const sample of futureSheets){
+     const moved=gaugeRetractionPath({
+      anchor:gaugeAnchor,target,maxSheetX,fingerReach,
+      opening:die.opening,sub:sample.relative,
+      enabled:gaugeDecision.enabled,axisOrder
+     });
+     if(!moved?.point){incomplete++;continue;}
+     const dx=moved.point.x-gaugeAnchor.x;
+     const dy=moved.point.y-gaugeAnchor.y;
+     const shift=q=>({x:q.x+dx,y:q.y+dy});
+     const polygon=fixedFingerPolygon.map(shift);
+     const shelf=feature.surface==='horizontal-top'?{
+      seated:resolvedGauge.valid,
+      from:shift({x:anchorOrigin.x+feature.from.x,
+       y:anchorOrigin.y+feature.from.y}),
+      to:shift({x:anchorOrigin.x+feature.to.x,
+       y:anchorOrigin.y+feature.to.y})
+     }:null;
+     const hit=inspectGaugeProfile(sample.sheet,polygon,t,moved.point,{
+      supportShelf:shelf
+     });
+     if(hit.kind==='penetracion')penetrations++;
+     else if(hit.kind==='holgura')clearances++;
+     else if(hit.kind==='sin-geometria')incomplete++;
+    }
+    return {penetrations,clearances,incomplete,
+     checkedFrames:futureSheets.length};
+   });
+   gaugeRouteCache.set(routeKey,routePlan);
+   if(gaugeRouteCache.size>24)
+    gaugeRouteCache.delete(gaugeRouteCache.keys().next().value);
+  }
+  gaugeDecision={...gaugeDecision,
+   axisOrder:routePlan.axisOrder,
+   returnRoute:routePlan,
+   movementCollisionUnresolved:routePlan.unresolvedPenetration,
+   movementGeometryIncomplete:routePlan.geometryIncomplete};
+ }
  const sub=st.completed?1:(st.time/5)%1;
  const gaugeTransition=gaugeRetractionPath({
   anchor:gaugeAnchor,target,maxSheetX,fingerReach,
-  opening:die.opening,sub,enabled:gaugeDecision.enabled
+  opening:die.opening,sub,enabled:gaugeDecision.enabled,
+  axisOrder:routePlan?.axisOrder||'R-then-X'
  });
  // R64 · Envolvente INVARIABLE del recorrido visible para cada golpe,
  // incluso ANTES de que comience el retroceso condicional del dedo.
