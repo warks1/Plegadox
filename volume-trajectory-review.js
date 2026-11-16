@@ -9,7 +9,11 @@ import {inspectVolumeFrame} from './volume-engine.js';
 import {assessAxisMotion,loadAxisMotion,motionPieceKey} from './machine-axis-motion.js';
 import {sweptPrismPair} from './swept-volume.js';
 import {scanAxisCADMovement,loadAxisMapping} from './machine-axis-geometry.js';
-const kinds=['ram','bed','gauge','punch','die'];
+// Registrar cuerpos montados además del punzón/matriz. Si falta CAD
+ // estos objetos NO existen en el modelo, nunca se consideran libres.
+ const machineKinds=['ram','bed','gauge','upperClamp','lowerClamp',
+  'upperAdapter','lowerAdapter','frontSupport'];
+ const kinds=[...machineKinds,'punch','die'];
 const bounded=(n,lo,hi,fallback)=>Number.isFinite(Number(n))?
  Math.max(lo,Math.min(hi,Math.trunc(Number(n)))):fallback;
 function bounds(prism){
@@ -74,12 +78,12 @@ export function scanVolumeTrajectory(input,options={}){
     const sheetSweep=union(
      previous.model.sheet.reduce((b,s)=>union(b,bounds(s)),null),
      model.sheet.reduce((b,s)=>union(b,bounds(s)),null));
-    for(const kind of ['ram','bed','gauge']){
-     const moving=union(bounds(previous.model.objects[kind]),
-      bounds(model.objects[kind]));
+    for(const kind of machineKinds){
+     const before=previous.model.objects[kind],after=model.objects[kind];
+     if(!before?.valid||!after?.valid)continue;
+     const moving=union(bounds(before),bounds(after));
      if(kindsHit.has(kind)||previous.kindsHit.has(kind)||
        !crosses(sheetSweep,moving))continue;
-     const before=previous.model.objects[kind],after=model.objects[kind];
      let sweepFound=null,allLinear=true;
      // Si ambos cuerpos mantienen sección y sólo TRASLADAN X/Y, se
      // comprueba la franja BARRIDA entre muestras, no sólo los extremos.
@@ -121,7 +125,7 @@ export function scanVolumeTrajectory(input,options={}){
    earliest:events[0]||null,findings:[...occurrences.values()],
    possibleInterference:events.length>0,
    modelPenetration:events.some(e=>
-    ['ram','bed','gauge'].includes(e.kind)&&
+    machineKinds.includes(e.kind)&&
     ['interferencia-envolvente','penetracion-barrido-lineal-modelado']
      .includes(e.severity)),
    checkedFrom:times[0],checkedTo:times.at(-1),verified:false});
@@ -153,13 +157,13 @@ export function scanVolumeTrajectory(input,options={}){
   machine:options.machine,machineCAD:options.machineCAD,
   maxIntervals:options.axisGeometryMaxIntervals
  });
-  const byKind={ram:0,bed:0,gauge:0,punch:0,die:0};
+  const byKind=Object.fromEntries(kinds.map(kind=>[kind,0]));
  for(const row of ops)for(const f of row.findings)byKind[f.kind]++;
  return {operations:ops,framesChecked,byKind,
   cadProfilesUsed:[...cadProfilesUsed],missingCadComponents:[...missingCadComponents],
   cadImportError,
   warningCount:ops.filter(o=>o.possibleInterference).length,
-  modeledMachineWarnings:byKind.ram+byKind.bed+byKind.gauge,
+  modeledMachineWarnings:machineKinds.reduce((n,kind)=>n+byKind[kind],0),
   // No confundir contacto normal de punzón/matriz con intrusión en
   // trancha. La trancha se comprueba como cuerpo INDEPENDIENTE.
   ramWarnings:byKind.ram,bedWarnings:byKind.bed,
