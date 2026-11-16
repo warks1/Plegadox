@@ -35,6 +35,14 @@ test('R117: no inferir un contacto demostrado desde una operación sin booleano'
  assert.equal(e.unexplainedOperations,1);
  assert.equal(e.incompleteContactData,true);
 });
+test('R117: cuatro mediciones duplicadas del mismo golpe no acreditan otros tres apoyos',()=>{
+ const e=reconcileGaugeEvidence({contactNotObserved:0,
+  operations:Array.from({length:4},()=>({operation:0,
+   contactObserved:true,findings:[]}))},4);
+ assert.equal(e.indexMismatch,true);
+ assert.equal(e.incompleteContactData,true);
+ assert.equal(e.contactNotObserved,0);
+});
 test('R117: los cuatro apoyos explícitamente observados cuentan como datos completos',()=>{
  const e=reconcileGaugeEvidence({contactNotObserved:0,
   operations:Array.from({length:4},(_,i)=>({operation:i,
