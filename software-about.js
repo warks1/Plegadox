@@ -5,8 +5,8 @@ import {validRelease,canInstallRelease} from './software-update-policy.js';
  * No elimina piezas, proyectos, herramientas ni calibraciones locales.
  * No presume que actualizar la interfaz certifique el uso industrial.
  */
-const BUILD='PLEGADOX-20261116-R115';
-const VERSION='0.9.89';
+const BUILD='PLEGADOX-20261116-R116';
+const VERSION='0.9.90';
 const BASE=new URL('./',document.baseURI);
 const CACHED_BUILD_KEY='plegadox:verified-loader-build';
 const $=id=>document.getElementById(id);
