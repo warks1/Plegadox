@@ -21,10 +21,13 @@ export function gaugeMovementLabel(placement){
   return 'TOPE '+n+' · RETROCESO POR PENETRACIÓN 2D PREVISTA';
  if(phase==='retirado-durante-plegado')
   return 'TOPE '+n+' · APARCADO POR PENETRACIÓN 2D PREVISTA';
+ const axis=placement?.gaugeTransition?.axisPhase;
+ const suffix=axis==='R'?' · AJUSTANDO EJE R':
+  axis==='X'?' · MOVIENDO EJE X':'';
  if(phase==='regreso-a-siguiente-referencia')
-  return 'TOPE '+n+' · VUELTA DESDE RETIRADA PREVENTIVA';
+  return 'TOPE '+n+' · VUELTA DESDE RETIRADA PREVENTIVA'+suffix;
  if(phase==='reubicacion-siguiente-golpe')
-  return 'TOPE '+n+' · CAMBIO DE COTA PARA EL SIGUIENTE GOLPE';
+  return 'TOPE '+n+' · CAMBIO DE COTA PARA EL SIGUIENTE GOLPE'+suffix;
  return '';
 }
 /**
@@ -177,7 +180,7 @@ export function gaugeFrontNosePolygon(placement,dimensions){
  * de estado; aquí solo mostramos el nivel y la acción requerida.
  * Es geometría de interfaz, NO movimiento de máquina.
  */
-export function gaugeStatusCardLayout(width,height,faceX,faceY,stopNumber,level,scale=1,movementPhase=null,forecast=null,reasonCode=null,clearanceMm=null,requiredMm=null){
+export function gaugeStatusCardLayout(width,height,faceX,faceY,stopNumber,level,scale=1,movementPhase=null,forecast=null,reasonCode=null,clearanceMm=null,requiredMm=null,axisPhase=null){
  if(![width,height,faceX,faceY,scale].every(Number.isFinite)||
   width<=0||height<=0||scale<=0||![1,2].includes(stopNumber)||
   !['green','amber','red'].includes(level))
@@ -202,6 +205,9 @@ export function gaugeStatusCardLayout(width,height,faceX,faceY,stopNumber,level,
   'regreso-a-siguiente-referencia':'VOLVIENDO DESDE RETIRADA',
   'reubicacion-siguiente-golpe':'CAMBIO DE COTA · NO RETROCESO'
  }[movementPhase]??null;
+ const axisLabel=axisPhase==='R'?' · EJE R':
+  axisPhase==='X'?' · EJE X':'';
+ const movementText=motionText?motionText+axisLabel:null;
  const issueText={
   'referencia-interior':'REFERENCIA INTERIOR · REVISAR',
   'sin-borde-libre':'SIN BORDE LIBRE DE APOYO',
@@ -223,7 +229,7 @@ export function gaugeStatusCardLayout(width,height,faceX,faceY,stopNumber,level,
  // Priorizar la incidencia real sobre el movimiento del dedo.
  const subline=level==='red'?'PENETRACIÓN 2D · REVISAR':
   measuredLine||(level==='amber'&&issueText) ? (measuredLine||issueText) :
-  motionText||(level==='amber'?'REVISAR APOYO / HOLGURA':
+  movementText||(level==='amber'?'REVISAR APOYO / HOLGURA':
    forecast==='retirada-prevista'?'RETIRADA PREVISTA · 2D':
    forecast==='holgura-futura'?'HOLGURA FUTURA · REVISAR':
    'COMPROBACIÓN 2D');
@@ -507,7 +513,8 @@ function stageScene(ctx,w,h,piece,sim,machineView){
   const layout=gaugeStatusCardLayout(w,h,faceX,
    faceY,placement.stopNumber,level,scale,
    placement.gaugeTransition?.phase??null,gaugeRisk.forecast??null,gaugeRisk.code??null,
-   gaugeRisk.clearanceMm??null,gaugeRisk.requiredMm??null);
+   gaugeRisk.clearanceMm??null,gaugeRisk.requiredMm??null,
+   placement.gaugeTransition?.axisPhase??null);
   drawGaugeStatusCard(ctx,layout,level,GAUGE_COLORS[level]);
  }
  // Workpiece shadow and hot contact glow along the working tool tip
