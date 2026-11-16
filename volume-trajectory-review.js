@@ -14,6 +14,14 @@ import {scanAxisCADMovement,loadAxisMapping} from './machine-axis-geometry.js';
  const machineKinds=['ram','bed','gauge','upperClamp','lowerClamp',
   'upperAdapter','lowerAdapter','frontSupport'];
  const kinds=[...machineKinds,'punch','die'];
+ // Nunca contar un barrido SIN RESOLVER como penetración 3D.
+ const modeledSeverities=new Set(['interferencia-envolvente',
+  'penetracion-barrido-lineal-modelado']);
+ const uncertainSeverities=new Set(['intervalo-barrido-no-resuelto',
+  'geometria-invalida']);
+ const severityRank=severity=>modeledSeverities.has(severity)?3:
+  severity==='contacto-o-penetracion-posible'?2:
+  uncertainSeverities.has(severity)?1:0;
 const bounded=(n,lo,hi,fallback)=>Number.isFinite(Number(n))?
  Math.max(lo,Math.min(hi,Math.trunc(Number(n)))):fallback;
 function bounds(prism){
@@ -118,9 +126,11 @@ export function scanVolumeTrajectory(input,options={}){
    previous={model,kindsHit};
   }
   const occurrences=new Map();
-  for(const ev of events)
-   if(!occurrences.has(ev.kind)||occurrences.get(ev.kind).severity==='intervalo-barrido-no-resuelto')
+  for(const ev of events){
+   const prior=occurrences.get(ev.kind);
+   if(!prior||severityRank(ev.severity)>severityRank(prior.severity))
     occurrences.set(ev.kind,ev);
+  }
   ops.push({operation:op,bend:p.order[op],samples:times.length,
    earliest:events[0]||null,findings:[...occurrences.values()],
    possibleInterference:events.length>0,
@@ -158,7 +168,15 @@ export function scanVolumeTrajectory(input,options={}){
   maxIntervals:options.axisGeometryMaxIntervals
  });
   const byKind=Object.fromEntries(kinds.map(kind=>[kind,0]));
- for(const row of ops)for(const f of row.findings)byKind[f.kind]++;
+ let unresolvedGeometryFindings=0;
+ for(const row of ops)for(const f of row.findings){
+  if(uncertainSeverities.has(f.severity))unresolvedGeometryFindings++;
+  // El contacto en el radio de matriz/punzón no prueba una intrusión;
+  // conservarlo como dato separado, no como penetración de la trancha.
+  if(modeledSeverities.has(f.severity)||
+    (['punch','die'].includes(f.kind)&&
+     f.severity==='contacto-o-penetracion-posible'))byKind[f.kind]++;
+ }
  return {operations:ops,framesChecked,byKind,
   cadProfilesUsed:[...cadProfilesUsed],missingCadComponents:[...missingCadComponents],
   cadImportError,
@@ -171,7 +189,8 @@ export function scanVolumeTrajectory(input,options={}){
   punchVolumeContacts:byKind.punch,dieVolumeContacts:byKind.die,
   ramEvidence:ops.flatMap(op=>op.findings.filter(f=>f.kind==='ram')
    .map(f=>({...f,operation:op.operation,bend:op.bend}))).slice(0,12),
-  uncertainSweptIntervals:uncheckedSwept,linearSweptPenetrations,
+  uncertainSweptIntervals:uncheckedSwept,unresolvedGeometryFindings,
+  linearSweptPenetrations,
   linearSweptIntervalsEvaluated,axisReport,axisViolationCount:axisReport.violations.length,
   axisGeometry,axisModeledCollisions:axisGeometry.events.length,
   status:'VOLUMENES_PARAMETRICOS_SIN_VALIDACION_CAD_CNC',
