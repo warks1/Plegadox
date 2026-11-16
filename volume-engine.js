@@ -237,10 +237,19 @@ export function inspectVolumeFrame(scene,options={}){
    unknown ||= overlap.unknown;
    if(overlap.volume>maxVolume){maxVolume=overlap.volume;segment=i;}
   }
-  if(maxVolume>EPS)issues.push({kind,segment,volumeMm3:maxVolume,
-   severity:kind==='punch'||kind==='die'?'contacto-o-penetracion-posible':
-    'interferencia-envolvente',
-   evidence:solid.provenance,verified:false});
+  if(maxVolume>EPS){
+   // Un dedo esquemático ocupa provisionalmente TODA la anchura Z de
+   // la chapa: el solape puede desaparecer con la Z real del dedo.
+   // Lo mismo ocurre con trancha/mesa sin perfil CAD. Bloquear su uso
+   // sin declarar falsamente una penetración contra CAD contrastado.
+   const tooling=kind==='punch'||kind==='die';
+   const declaredCAD=typeof solid.provenance==='string'&&
+    solid.provenance.startsWith('perfil CAD importado ');
+   issues.push({kind,segment,volumeMm3:maxVolume,
+    severity:tooling?'contacto-o-penetracion-posible':
+     declaredCAD?'interferencia-envolvente':'solape-envolvente-provisional',
+    evidence:solid.provenance,verified:false});
+  }
   if(unknown)issues.push({kind,segment:null,volumeMm3:null,
    severity:'geometria-invalida',evidence:solid.provenance,verified:false});
  }
