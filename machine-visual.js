@@ -11,6 +11,7 @@ import {getActiveMachineConfig} from './machine-config.js';
 import {gaugePlacement,gaugeContourAtContact} from './backgauge-placement.js';
 import {sceneAtmosphere,dieDepth,ramDepth,sheetDepth,surfaceDetail,sectionOverlay} from './render-enhancements.js';
 import {gaugeRiskStatus,GAUGE_COLORS} from './gauge-risk-status.js';
+import {perspectiveOffset,normalizeMachineView} from './machine-view-options.js';
 
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 // Etiqueta verificable: no denominar RETROCESO a un cambio de cota X/R.
@@ -123,7 +124,7 @@ function backdrop(ctx,w,h){
  * Proyectar SOLO el dibujo del dedo al mismo plano frontal visible;
  * ningún valor X/R, el contorno 2D ni la retirada de la máquina cambian.
  */
-export function gaugePerspectiveContours(polygon,scale,perspective=false){
+export function gaugePerspectiveContours(polygon,scale,perspective=false,view={perspective:true}){
  if(!Array.isArray(polygon)||polygon.some(p=>!Array.isArray(p)||p.length!==2||
   !p.every(Number.isFinite))||!Number.isFinite(scale)||scale<=0)
   throw Error('Contorno del tope inválido para perspectiva');
@@ -131,10 +132,11 @@ export function gaugePerspectiveContours(polygon,scale,perspective=false){
  // proyecta HACIA ATRÁS (+X/-Y). La cara frontal del dedo debe
  // compartir EXACTAMENTE ese plano, sin desplazar su contacto.
  const near=polygon.map(p=>[...p]);
- const far=perspective?polygon.map(([x,y])=>[x+23*scale,y-13*scale]):
-  polygon.map(p=>[...p]);
- return {near,far,depthX:perspective?23*scale:0,
-  depthY:perspective?-13*scale:0};
+ const {dx,dy}=perspective?
+  perspectiveOffset({...view,perspective:true,section:false},scale,'gauge'):
+  {dx:0,dy:0};
+ const far=polygon.map(([x,y])=>[x+dx,y+dy]);
+ return {near,far,depthX:dx,depthY:dy};
 }
 /**
  * R106 · Proyección única del dedo trasero, su cara de apoyo y el canto
@@ -284,7 +286,7 @@ function rearMachineBackdrop(ctx,w,h,cx,cy,scale){
  * mantener visible su cara frontal en alas cortas; la chapa se dibuja
  * después del tope. Las posiciones métricas X/R no cambian.
  */
-function rearMachine(ctx,w,h,cx,cy,scale,placement,perspective=false){
+function rearMachine(ctx,w,h,cx,cy,scale,placement,perspective=false,view={}){
  ctx.save();
  // En el vídeo real el tope llega DESDE DETRÁS (derecha en perfil)
  // hacia el borde trasero de la chapa. Esta referencia se deriva del
@@ -295,7 +297,7 @@ function rearMachine(ctx,w,h,cx,cy,scale,placement,perspective=false){
  const ox=cx+origin.x*scale,oy=cy-origin.y*scale;
  // Mismo perfil frontal del dedo para 2D y perspectiva 2,5D.
  const gg=projected.outline;
- const projection=gaugePerspectiveContours(gg,scale,perspective);
+ const projection=gaugePerspectiveContours(gg,scale,perspective,view);
  const front=projection.near;
  const faceX=projected.point[0];
  // El brazo viene por DETRÁS del dedo: no debe atravesar el propio perfil
@@ -374,7 +376,8 @@ function drawDie(ctx,scene,cx,cy,scale){
  return {top:cy,depth:die.depth*scale,opening:die.opening*scale,
   angle:die.angle,contour:pts,profileSource:die.importedDxf?'DXF':'provisional'};
 }
-function drawRam(ctx,cx,cy,scale,tipY,punch,scene){
+function drawRam(ctx,cx,cy,scale,tipY,punch,scene,view={}){
+ if(view.showRam!==false){
  // R108: la barra y el resalte lateral de la TRANCHA deben coincidir
  // con el mismo contorno 2,5D examinado por el motor de colisiones.
  // Se respeta la geometría OEM si existe en la revisión volumétrica.
@@ -386,6 +389,8 @@ function drawRam(ctx,cx,cy,scale,tipY,punch,scene){
        [cx+ramW*.66,top+5*scale],[cx+ramW*.52,top+10*scale]],
        '#2a4250','#647e8d',1.5);
  steelRect(ctx,cx-38*scale,top-10*scale,76*scale,27*scale,true);
+ }
+ if(view.showPunch===false)return;
  const pts=machineToolProjection(scene,cx,cy,scale).punch;
  ctx.save();ctx.shadowColor='#000e';ctx.shadowBlur=20*scale;ctx.shadowOffsetX=7*scale;
  poly(ctx,pts,gradient(ctx,cx-45*scale,0,cx+45*scale,0,
