@@ -164,7 +164,11 @@ export function gaugePlacement(scene,stopNumber=1){
   const valid=[a.x,a.y,reference.distance].every(Number.isFinite);
   const edge=gaugePointOnProfile(scene.sheet,reference);
   const gap=edge?Math.hypot(edge.x-a.x,edge.y-a.y):Infinity;
-  const approaching=['Posicionamiento','Aproximación'].includes(scene.stage?.phase);
+  // Durante SUJECIÓN el dedo sigue tocando si el motor no ordenó
+  // retroceso. Antes se borraba el contacto sólo por cambiar de fase.
+  // Un movimiento de retirada activo excluye el contacto más abajo.
+  const approaching=['Posicionamiento','Aproximación','Sujeción']
+   .includes(scene.stage?.phase);
   // Un punto interior no equivale a una cara libre: mostrar su posición,
   // pero NO conceder contacto validado ni tapar una penetración geométrica.
   const foldedWingContact=scene?.gaugeSetup?.valid===true&&
