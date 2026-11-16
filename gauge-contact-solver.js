@@ -111,13 +111,16 @@ export function evaluateGaugeSetup(piece,st,ref,config,stopNumber=1){
    foldedFace?'Cara lateral de pestaña preplegada · 2D provisional':
    'Canto libre contra cara frontal sin interferencia 2D en preparación'};
 }
-export function resolveGaugeSetup(piece,st,config){
+// La inyección de evaluador permite regresiones deterministas sin
+// modificar perfiles de máquina ni sustituir los datos del operador.
+// En producción siempre se utiliza evaluateGaugeSetup real.
+export function resolveGaugeSetup(piece,st,config,{evaluate=evaluateGaugeSetup}={}){
  const p=normalized(piece),bend=st.activeBend;
  const stopNumber=p.stopByBend[bend]===2?2:1;
  const original=gaugeReference(p,bend);
  const isManual=p.gaugeSideByBend[bend]!=='auto'||
   p.gaugeSegmentByBend[bend]!==null||p.gaugePointByBend[bend]!==null;
- const first=evaluateGaugeSetup(p,st,original,config,stopNumber);
+ const first=evaluate(p,st,original,config,stopNumber);
  if(isManual)return {...first,manual:true,candidates:[first],autoSelected:false};
  const candidates=[first],visited=new Set([
   [original.side,original.segmentIndex,original.sourceIndex].join('|')
@@ -133,7 +136,7 @@ export function resolveGaugeSetup(piece,st,config){
   const key=[ref.side,ref.segmentIndex,ref.sourceIndex].join('|');
   if(visited.has(key))return null;
   visited.add(key);
-  return evaluateGaugeSetup(draft,st,ref,config,stopNumber);
+  return evaluate(draft,st,ref,config,stopNumber);
  };
  // Etapa 1: canto libre; no aceptar vértices interiores como cantos.
  for(const segment of [0,p.flanges.length-1]){
