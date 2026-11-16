@@ -10,7 +10,7 @@ import {createHash} from 'node:crypto';
 import {inflateRawSync} from 'node:zlib';
 import {CAD_EVIDENCE_SOURCES} from '../cad-evidence.js';
 import {extractDxfFromZip,listDxfZipEntries} from '../cad-zip-reader.js';
-import {parseToolDxf} from '../tool-dxf.js';
+import {parseToolDxf,inspectToolDxfLayers} from '../tool-dxf.js';
 import {auditImportedCadDimensions} from '../tool-cad-oem-audit.js';
 const MAX=8*1024*1024;
 const now=new Date().toISOString();
@@ -85,15 +85,44 @@ async function audit(item){
      (await extractDxfFromZip(file,{selectName:entry.name,
       inflate:raw=>new Uint8Array(inflateRawSync(raw))})).content:
      new TextDecoder('utf-8',{fatal:true}).decode(file);
-    const parsed=parseToolDxf(content);
-    const review=measured(item,parsed);
-    variant.status=review.canRegister?
-     'DXF_LEIDO_COTAS_NOMINALES_COINCIDENTES':
-     'DXF_LEIDO_DISCREPANCIA_COTAS';
-    variant.points=parsed.points.length;variant.widthMm=parsed.width;
-    variant.heightMm=parsed.height;variant.unitsAssumed=parsed.unitsAssumed;
-    variant.conflicts=review.conflicts;
-    variant.missing=review.missing;
+    let parsed=null,sourceLayer=null;
+    try{parsed=parseToolDxf(content);}
+    catch(rootError){
+     variant.rootParseError=String(rootError?.message||rootError).slice(0,140);
+     // Una capa únicamente es candidata si SU contorno completo
+     // individual pasa la validación geométrica. Nunca fusionar capas.
+     const inventory=inspectToolDxfLayers(content);
+     variant.layers=inventory.layers.map(x=>({
+      name:x.name,total:x.total,types:x.types}));
+     const options=[];
+     for(const layer of inventory.layers.slice(0,32)){
+      try{
+       const shape=parseToolDxf(content,{entityLayer:layer.name});
+       const audit=measured(item,shape);
+       options.push({layer:layer.name,shape,audit});
+      }catch(error){
+       if(variant.layers.length<=6)
+        variant.layers.find(x=>x.name===layer.name).parseError=
+         String(error?.message||error).slice(0,100);
+      }
+     }
+     variant.candidateLayers=options.map(x=>({
+      layer:x.layer,heightMm:x.shape.height,widthMm:x.shape.width,
+      nominalMatch:x.audit.canRegister,conflicts:x.audit.conflicts}));
+     // La auditoría NO ELIGE CAPA: sólo indica las que podrían
+     // analizarse a petición del operario con el archivo original.
+     if(options.length)variant.status='DXF_CAPAS_CANDIDATAS_SIN_ELEGIR';
+    }
+    if(parsed){
+     const review=measured(item,parsed);
+     variant.status=review.canRegister?
+      'DXF_LEIDO_COTAS_NOMINALES_COINCIDENTES':
+      'DXF_LEIDO_DISCREPANCIA_COTAS';
+     variant.points=parsed.points.length;variant.widthMm=parsed.width;
+     variant.heightMm=parsed.height;variant.unitsAssumed=parsed.unitsAssumed;
+     variant.conflicts=review.conflicts;
+     variant.missing=review.missing;
+    }
    }catch(error){
     variant.status='DXF_NO_PARSABLE';
     variant.problem=String(error?.message||error).slice(0,180);
@@ -102,15 +131,17 @@ async function audit(item){
   }
   const good=record.variants.filter(x=>
    x.status==='DXF_LEIDO_COTAS_NOMINALES_COINCIDENTES');
+  const candidates=record.variants.filter(x=>
+   x.status==='DXF_CAPAS_CANDIDATAS_SIN_ELEGIR');
   const differs=record.variants.filter(x=>
    x.status==='DXF_LEIDO_DISCREPANCIA_COTAS');
-  record.status=entries.length>1?
-   good.length?'ZIP_VARIANTES_LEIDAS_REQUIEREN_ELECCION':
-    'ZIP_MULTIPLE_DXF_SIN_PERFIL_IDENTIFICADO':
-   good.length?'PERFIL_DXF_LEIDO_COTAS_NOMINALES_NO_CERTIFICADO':
+  record.status=good.length?'PERFIL_OEM_LEIDO_SIN_VALIDACION_MONTAJE':
+   candidates.length?'CAPAS_OEM_DETECTADAS_REQUIEREN_SELECCION':
    differs.length?'DXF_LEIDO_DISCREPANCIA_COTAS':
    'SIN_PERFIL_VALIDADO';
   record.parsedVariants=good.length+differs.length;
+  record.layerCandidates=candidates.reduce((n,x)=>
+   n+(x.candidateLayers?.length||0),0);
   record.nominalCandidates=good.length;
   record.conflictingVariants=differs.length;
  }catch(error){
@@ -135,7 +166,10 @@ await Promise.all(Array.from({length:workers},async()=>{
    (v.problem?' ('+v.problem+')':'')+
    (v.heightMm!=null?' H='+v.heightMm+'mm':'')+
    (v.conflicts?.length?' conflictos='+
-    v.conflicts.map(x=>x.field+':'+x.actual+'/'+x.expected).join(','):'')
+    v.conflicts.map(x=>x.field+':'+x.actual+'/'+x.expected).join(','):'')+
+   (v.layers?.length?' capas='+v.layers.map(x=>x.name+
+    '['+x.total+']').slice(0,6).join(','):'')+
+   (v.candidateLayers?.length?' capas validas='+v.candidateLayers.length:'')
   ).join(' | ');
   process.stdout.write(results[i].id+' '+results[i].status+
    (results[i].problem?' ('+results[i].problem+')':'')+
@@ -144,8 +178,9 @@ await Promise.all(Array.from({length:workers},async()=>{
 }));
 const metrics={
  total:results.length,
- read:results.filter(x=>x.status==='PERFIL_DXF_LEIDO_COTAS_NOMINALES_NO_CERTIFICADO').length,
- multiWithCandidates:results.filter(x=>x.status==='ZIP_VARIANTES_LEIDAS_REQUIEREN_ELECCION').length,
+ read:results.filter(x=>x.status==='PERFIL_OEM_LEIDO_SIN_VALIDACION_MONTAJE').length,
+ multiWithCandidates:results.filter(x=>x.status==='CAPAS_OEM_DETECTADAS_REQUIEREN_SELECCION').length,
+ layerCandidates:results.reduce((n,x)=>n+(x.layerCandidates||0),0),
  nominalCandidates:results.reduce((n,x)=>n+(x.nominalCandidates||0),0),
  mismatched:results.filter(x=>x.status==='DXF_LEIDO_DISCREPANCIA_COTAS').length,
  unavailable:results.filter(x=>!x.nominalCandidates).length,
