@@ -49,13 +49,17 @@ const toolProfileEvidence=tool=>{
 const stopProblems=scan=>{
  const operations=Array.isArray(scan?.operations)?scan.operations:[];
  let penetrations=0,invalidReferences=0,clearanceWarnings=0;
- for(const op of operations)
-  for(const finding of op.findings||[]){
-   if(finding.kind==='penetracion')penetrations++;
-   else if(['chapa-detras','apoyo-invalido','sin-asiento',
-            'referencia-interior'].includes(finding.kind))invalidReferences++;
-   else if(finding.kind==='holgura')clearanceWarnings++;
-  }
+ // R103: el inspector ya enumera SIMULTÁNEAMENTE varias causas por
+ // golpe. Medir las OPERACIONES afectadas, no sumar varias etiquetas del
+ // mismo contacto como si fueran tres golpes distintos.
+ const invalidKinds=new Set(['chapa-detras','apoyo-invalido','sin-asiento',
+  'referencia-interior']);
+ for(const op of operations){
+  const kinds=new Set((op.findings||[]).map(f=>f.kind));
+  if(kinds.has('penetracion'))penetrations++;
+  if([...kinds].some(kind=>invalidKinds.has(kind)))invalidReferences++;
+  if(kinds.has('holgura'))clearanceWarnings++;
+ }
  // El análisis completo aporta contactNotObserved; un evaluador
  // simplificado puede aportar sólo contactObserved por operación.
  const declared=Number(scan?.contactNotObserved);
