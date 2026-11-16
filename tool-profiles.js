@@ -110,7 +110,12 @@ export function gooseneckOutline(tool,{height,tipRadius,angle,noseArc}){
   [-leftReach,yShoulder],
   [shankLeft,yShoulder]
  ];
- return {points,neckOffset:neck,headSpan:span,
+ // R111: los dos extremos de un mismo hombro pueden coincidir
+ // (rightReach === shankRight). El contorno duplicado degeneraba
+ // el cálculo de choques de CONIC GN6/GN9 y Beyeler R.
+ const clean=points.filter((p,i)=>i===0||
+  Math.hypot(p[0]-points[i-1][0],p[1]-points[i-1][1])>1e-6);
+ return {points:clean,neckOffset:neck,headSpan:span,
   height,workingHeight:height,declaredHeight:height,
   measuredHeightType:'total',totalHeightVerified:tool.verifiedSpecs===true,
   headProjection:0,model:'gooseneck',profileSource:'parametric',
