@@ -277,10 +277,18 @@ function configure(){
      const candidates=[...draft.gaugeSegmentByBend];
      stops[current.bend]=advice.best.stop;
      candidates[current.bend]=advice.best.segment;
-     changePiece({...draft,stopByBend:stops,gaugeSegmentByBend:candidates},false);
+     // El asesor estudió el EXTREMO de la pestaña, sin la antigua
+     // cota manual que podría apuntar a otra zona interior.
+     const contactPoints=[...draft.gaugePointByBend];
+     contactPoints[current.bend]=null;
+     changePiece({...draft,stopByBend:stops,gaugeSegmentByBend:candidates,
+      gaugePointByBend:contactPoints},false);
      $('gaugeSideReview').textContent='Apoyo automático orientativo P'+(current.bend+1)+
       ': ala '+(advice.best.segment+1)+' / tope '+advice.best.stop+
-      '. No garantiza ausencia de colisiones sin CAD real.';
+      (advice.best.requiresPhysicalReview?
+       ' · ⚠ PESTAÑA PREPLEGADA: comprobar cara exterior y acceso físico.':
+       ' · canto libre.')+
+      ' No garantiza ausencia de colisiones sin CAD real.';
     }else{
      changePiece(draft,false);
      $('gaugeSideReview').textContent='⚠ Sin cara frontal viable en el muestreo 2D. '+
@@ -362,14 +370,15 @@ function configure(){
   const result=normalized(draft);
   changePiece(result,false);
   $('gaugeSideReview').textContent='✓ Apoyo propuesto para P'+(bend+1)+
-   ': extremo libre del ala '+(plan.ref.segmentIndex+1)+', tope '+proposedStop+
+   ': '+(plan.needsFoldedFaceReview?'cara exterior de pestaña YA plegada del ala ':
+    'extremo libre del ala ')+(plan.ref.segmentIndex+1)+', tope '+proposedStop+
    '. Sin penetración nominal 2D en preparación; falta verificar CAD, X/R/Z y máquina real.';
  };
  $('findGaugeContact').onclick=()=>{
   const review=suggestGaugeContact(piece,sim.time);
   const best=review.best;
   if(!best){
-   $('gaugeSideReview').textContent='Ninguna referencia sin avisos en las cuatro combinaciones 2D de bordes libres y topes. No se ha modificado la pieza. '+
+   $('gaugeSideReview').textContent='Ninguna referencia sin avisos entre cantos libres y posibles caras de pestañas preplegadas revisadas en 2D. No se ha modificado la pieza. '+
     review.options.map(o=>'Ala '+(o.segment+1)+'/Tope '+o.stop+': '+o.gaugeWarnings+' avisos').join(' · ')+
     '. Revisa geometría, útiles, volteo y contacto real.';
    return;
@@ -382,7 +391,10 @@ function configure(){
   changePiece({...piece,stopByBend,gaugeSegmentByBend,gaugePointByBend},false);
   $('gaugeSideReview').textContent='Propuesta 2D aplicada a P'+(review.bend+1)+
    ': Ala '+(best.segment+1)+' / Tope '+best.stop+
-   '. Cero avisos en las muestras NO garantiza ausencia de colisiones físicas.';
+   (best.requiresPhysicalReview?
+    ' · ⚠ Cara exterior de pestaña preplegada: comprobar acceso físico y útiles.':
+    ' · canto libre.')+
+   ' Cero avisos en las muestras NO garantiza ausencia de colisiones físicas.';
  };
  $('applyIntegratedPlan').onclick=()=>applyIntegratedRecommendation(pendingIntegratedPlan?.plan);
  window.addEventListener('plegadox:machineChanged',()=>{
