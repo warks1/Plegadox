@@ -1,3 +1,5 @@
+import {optimizeBendPlan} from '../integrated-bend-planner.js';
+import {DIES,PUNCHES,normalized} from '../engine.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {EXAMPLE} from '../engine.js';
@@ -79,4 +81,34 @@ test('R103: el golpe con penetración sigue rojo aunque el apoyo falle',()=>{
   gaugeInterference:{kind:'penetracion',warning:true}});
  assert.equal(risk.level,'red');
  assert.equal(risk.code,'penetracion-actual');
+});
+
+test('R103: penalización una sola vez por golpe aunque tenga tres causas de apoyo',()=>{
+ const piece=normalized({...EXAMPLE,flanges:[60,80],angles:[90],order:[0]});
+ const die=DIES.find(d=>d.id===piece.die);
+ const punch=PUNCHES.find(p=>p.id===piece.punch);
+ const result=optimizeBendPlan(piece,{
+  toolingAdvice:{candidates:[{dieId:die.id,punchId:punch.id,
+   dieName:die.name,punchName:punch.name,score:0}]},
+  sheetEvaluator:(_p,order)=>({order,score:0,
+   counts:{cross:0,overlap:0,touch:0,close:0}}),
+  toolEvaluator:p=>({operations:p.order.map(()=>({
+   possibleToolIntrusion:false,possibleToolInterference:false
+  }))}),
+  gaugeEvaluator:()=>({warningCount:1,contactNotObserved:1,operations:[{
+   contactObserved:false,findings:[
+    {kind:'apoyo-invalido'},{kind:'sin-asiento'},
+    {kind:'chapa-detras'},{kind:'holgura'}]
+  }]}),
+  volumeEvaluator:()=>({modeledMachineWarnings:0,
+   uncertainSweptIntervals:0,framesChecked:8}),
+  maxPairs:1,maxOrders:1,maxFinalists:1,maxVolumeCandidates:1
+ });
+ assert.ok(result.manual);
+ assert.equal(result.manual.gaugeInvalidReferences,1);
+ assert.equal(result.manual.gaugeClearanceWarnings,1);
+ assert.equal(result.manual.gaugePenetrations,0);
+ assert.equal(result.rejectionSummary.invalidGaugeReference,1);
+ assert.equal(result.rejectionSummary.gaugePenetration,0);
+ assert.equal(result.best,null,'No conceder un plan sin apoyo');
 });
