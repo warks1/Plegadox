@@ -107,10 +107,20 @@ export function reconcileGaugeEvidence(report,expectedOperations=null){
  const unexplainedOperations=ops.filter(op=>op?.contactObserved!==true&&
   op?.contactObserved!==false).length;
  const surplusOperations=expected===null?0:Math.max(0,ops.length-expected);
+ // Si se declaran IDs de operación, cuatro registros duplicados del
+ // golpe 1 no prueban cuatro apoyos distintos. Una batería antigua
+ // puede omitir el índice; en tal caso el orden del array es la única
+ // evidencia nominal y sigue señalada como modelo no certificado.
+ const indexed=ops.length>0&&ops.every(op=>Number.isInteger(op?.operation));
+ const distinct= indexed?new Set(ops.map(op=>op.operation)):null;
+ const indexMismatch=expected!==null&&indexed&&(
+  distinct.size!==expected||ops.some(op=>op.operation<0||
+   op.operation>=expected)) ;
  return {contactNotObserved:Math.max(count(report.contactNotObserved),observedAbsent),
   missingOperationCount,unexplainedOperations,surplusOperations,
+  indexMismatch,
   incompleteContactData:missingOperationCount>0||unexplainedOperations>0||
-   surplusOperations>0};
+   surplusOperations>0||indexMismatch};
 }
 /** Diagnóstico para el OPERARIO. No convierte un modelo sin advertencias
  * en una máquina comprobada ni llama COLISIÓN a una falta de contacto.
