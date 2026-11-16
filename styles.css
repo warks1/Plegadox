@@ -1742,3 +1742,27 @@ html[data-orientation="landscape"] .px-about-card{overflow-wrap:anywhere}
 }
 @media(max-width:390px){.px-view-form{grid-template-columns:1fr}
  .px-view-checks{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+
+/* R124 · modo inmersivo; Fullscreen API si existe, fallback CSS en iPhone. */
+.cp-machine-frame:fullscreen,.cp-machine-frame.px-view-immersive{
+ position:fixed!important;inset:0!important;margin:0!important;
+ width:100vw!important;height:100dvh!important;max-width:none!important;
+ z-index:99999!important;border-radius:0!important;background:#030c15!important;
+ overflow:hidden!important;
+}
+.cp-machine-frame:fullscreen>.machine,.cp-machine-frame.px-view-immersive>.machine{
+ height:100%!important;width:100%!important;
+ max-height:none!important;aspect-ratio:auto!important;
+}
+body.px-immersive-open{overflow:hidden!important;touch-action:pan-x pan-y}
+.cp-machine-frame:fullscreen .cp-floating-options,
+.cp-machine-frame.px-view-immersive .cp-floating-options{z-index:2;max-height:calc(100% - 20px);overflow:auto}
+@media(max-height:560px){
+ .cp-machine-frame:fullscreen .cp-floating-options,
+ .cp-machine-frame.px-view-immersive .cp-floating-options{
+  gap:3px;padding:4px}
+ .cp-machine-frame:fullscreen .cp-floating-options button,
+ .cp-machine-frame.px-view-immersive .cp-floating-options button{
+  min-height:27px;padding:2px 4px;font-size:10px}
+}
