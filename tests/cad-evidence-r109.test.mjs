@@ -154,3 +154,16 @@ test('R111: fichas UKB 85° y V30° mantienen referencia y amarre independiente'
  assert.equal(by('ukb-11151').cadImported,undefined,
   'Un enlace no equivale a un archivo físicamente importado');
 });
+
+test('R113: UKB 25.202 V8 de 84° conserva identidad y no simula importación OEM',()=>{
+ const record=by('ukb-25202');
+ assert.equal(record.reference,'25.202');
+ assert.equal(record.kind,'die');
+ assert.equal(record.dimensions.angleDeg,84);
+ assert.equal(record.dimensions.vOpeningMm,8);
+ assert.equal(record.dimensions.heightMm,100);
+ assert.equal(record.dimensions.shoulderRadiusMm,.8);
+ assert.equal(record.cadUrl,'https://daten.ukb-gmbh.de/dxf/zip/25202.DXF.zip');
+ assert.equal(record.status,'ENLACE_CONFIRMADO_NO_IMPORTADO');
+ assert.equal(reconcileCadDimensions([record]).canApproveForMachine,false);
+});
