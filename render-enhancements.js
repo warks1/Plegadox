@@ -93,6 +93,7 @@ export function ramDepth(ctx,location,tipY,punch,enabled,view={perspective:true}
  const factor=s;
  const {dx:offsetX,dy:offsetY}=perspectiveOffset(view,s,'ram');
  const pts=section.points.map(([x,y])=>[cx+x*factor,tipY-y*factor]);
+ if(view.showPunch!==false){
  ctx.save();ctx.shadowBlur=13*s;ctx.shadowColor='#000c';
  for(let i=0;i<pts.length;i++){
   const j=(i+1)%pts.length,a=pts[i],b=pts[j];
@@ -103,6 +104,8 @@ export function ramDepth(ctx,location,tipY,punch,enabled,view={perspective:true}
   path(ctx,face,g,'#2a5871',.8*s);
  }
  ctx.restore();
+ }
+ if(view.showRam===false)return;
  const top=tipY-section.height*factor;
  const housing=[
  [cx-57*s,top-65*s],
