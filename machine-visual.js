@@ -3,6 +3,7 @@
 import {stage,presentedAtStage,getTooling} from './engine.js';
 import {roundedRectPath} from './canvas-path.js';
 import {sectionPunch,sectionDie} from './tool-profiles.js';
+import {drawMachinedToolSection} from './industrial-tool-finish.js';
 import {machineRamEnvelope} from './machine-ram-envelope.js';
 import {drawTechnicalSection,technicalScene,technicalCameraBounds} from './technical-section.js';
 import {currentToolContact} from './tool-collision.js';
@@ -364,30 +365,25 @@ function rearMachine(ctx,w,h,cx,cy,scale,placement,perspective=false){
  ctx.restore();
 }
 function drawDie(ctx,scene,cx,cy,scale){
- // La geometría se comparte con technicalScene y cambia con V, ángulo y H.
+ // R120: TODO el metal de la matriz se dibuja sobre la sección exacta
+ // del motor técnico, incluido un DXF con varias V. Nunca superponer
+ // la V triangular ficticia V/2·tan(ángulo/2): sus líneas eran falsas.
  const {die}=scene,pts=machineToolProjection(scene,cx,cy,scale).die;
- const xs=pts.map(pt=>pt[0]),minX=Math.min(...xs),maxX=Math.max(...xs);
- ctx.save();ctx.shadowColor='#000d';ctx.shadowBlur=22*scale;ctx.shadowOffsetY=10*scale;
- poly(ctx,pts,gradient(ctx,minX,cy,maxX,cy,
-  [[0,'#c1cad0'],[.2,'#8496a5'],[.48,'#6d7d8b'],
-   [.65,'#a9b7c2'],[1,'#344c5d']]),'#152636',2*scale);
- ctx.restore();
- // Los reflejos decorativos no deben salirse del cuerpo acotado,
- // particularmente al pasar de una matriz H120 a otra H60.
+ const material=drawMachinedToolSection(ctx,pts,{kind:'die',scale});
+ // Únicamente dar textura superficial dentro del sólido existente.
  ctx.save();
- ctx.beginPath();pts.forEach((pt,i)=>i?ctx.lineTo(...pt):ctx.moveTo(...pt));
+ ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(...p):ctx.moveTo(...p));
  ctx.closePath();ctx.clip();
+ ctx.globalAlpha=.32;
  surfaceDetail(ctx,{cx,cy,s:scale},{opening:die.opening});
  ctx.restore();
- const half=die.opening/2*scale,depth=die.depth*scale;
- ctx.save();ctx.beginPath();
- ctx.moveTo(cx-half,cy);ctx.lineTo(cx,cy+depth);ctx.lineTo(cx+half,cy);
- ctx.strokeStyle='#091e2e';ctx.lineWidth=3*scale;ctx.lineJoin='round';ctx.stroke();
- ctx.strokeStyle='#cce8f4';ctx.lineWidth=1*scale;ctx.stroke();ctx.restore();
+ const {minX,maxX}=material.bounds;
  const bottom=cy+die.height*scale;
- // Esta base es la mesa/soporte ilustrativo, no parte del cuerpo de la matriz.
+ // La regleta inferior es una ENVOLVENTE ILUSTRATIVA de mesa.
+ // No forma parte del CAD de matriz ni del motor de colisiones.
  steelRect(ctx,minX-10*scale,bottom,maxX-minX+20*scale,13*scale,false,true);
- return {top:cy,depth,opening:die.opening*scale,angle:die.angle,contour:pts};
+ return {top:cy,depth:die.depth*scale,opening:die.opening*scale,
+  angle:die.angle,contour:pts,profileSource:die.importedDxf?'DXF':'provisional'};
 }
 function drawRam(ctx,cx,cy,scale,tipY,punch,scene){
  // R108: la barra y el resalte lateral de la TRANCHA deben coincidir
@@ -427,24 +423,15 @@ function drawRam(ctx,cx,cy,scale,tipY,punch,scene){
 export function drawPunchForeground(ctx,scene,cx,cy,scale,transparent=false){
  const pts=machineToolProjection(scene,cx,cy,scale).punch;
  if(pts.length<3)return;
- const xx=pts.map(p=>p[0]),min=Math.min(...xx),max=Math.max(...xx);
- const fill=gradient(ctx,min,0,max,0,[
-  [0,'#f2faff'],[.19,'#acc4d5'],[.42,'#fffefe'],
-  [.68,'#bed1df'],[.86,'#f5fbff'],[1,'#6a8aa2']]);
- ctx.save();ctx.lineJoin='round';ctx.lineCap='round';
- // Brillo exterior y borde oscuro interior: lectura clara sobre blanco,
- // azul, chapa oscura o texturas de bancada.
- ctx.shadowBlur=16*Math.max(.6,scale);ctx.shadowColor='#7be2ff';
- poly(ctx,pts,transparent?'#b4d6e246':fill,'#f4fcff',
-  Math.max(2.4,2.9*scale));
- ctx.shadowBlur=0;
- ctx.strokeStyle='#194765';ctx.lineWidth=Math.max(.9,1.1*scale);
- ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(...p):ctx.moveTo(...p));
- ctx.closePath();ctx.stroke();
+ // Cara industrial de acero cromado, sin añadir un cuello o tang
+ // diferente del CAD. El relieve se corta sobre el polígono REAL.
+ drawMachinedToolSection(ctx,pts,{kind:'punch',scale,transparent});
+ // Testigo óptico de posición de la punta. No es geometría material.
  const tip=pts.reduce((a,b)=>b[1]>a[1]?b:a,pts[0]);
- ctx.beginPath();ctx.arc(tip[0],tip[1],Math.max(2,2.6*scale),0,Math.PI*2);
- ctx.fillStyle='#eeffff';ctx.shadowColor='#55d8ff';ctx.shadowBlur=11*scale;ctx.fill();
- ctx.restore();
+ ctx.save();ctx.globalAlpha=transparent?.42:1;
+ ctx.beginPath();ctx.arc(tip[0],tip[1],Math.max(1.6,1.9*scale),0,Math.PI*2);
+ ctx.fillStyle='#e8faff';ctx.shadowColor='#45c5ed';
+ ctx.shadowBlur=8*Math.max(.7,scale);ctx.fill();ctx.restore();
 }
 function drawSheet(ctx,pts,thickness,scale,active){
  if(pts.length<2)return;
