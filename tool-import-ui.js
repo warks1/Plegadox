@@ -1,5 +1,6 @@
 /** Interfaz de importación DXF de utillaje, completamente local. */
 import {parseToolDxf,importedTool} from './tool-dxf.js';
+import {extractDxfFromZip} from './cad-zip-reader.js';
 import {inspectPunchWorkingAxis,inspectDieWorkingAxis} from './tool-cad-datum.js';
 import {CATALOG_PUNCHES,CATALOG_DIES} from './catalog.js';
 const $=id=>document.getElementById(id);
@@ -116,8 +117,14 @@ export function setupToolDxfImporter({add}){
       const response=await fetch(tool.cadDownloadUrl,{mode:'cors',credentials:'omit'});
       if(!response.ok)throw Error('HTTP '+response.status);
       const advertised=Number(response.headers.get('content-length')||0);
-      if(advertised>1024*1024)throw Error('DXF superior a 1 MB');
-      const source=await response.text();
+      if(advertised>8*1024*1024)throw Error('Archivo CAD superior a 8 MB');
+      const fileBytes=await response.arrayBuffer();
+      if(fileBytes.byteLength>8*1024*1024)
+       throw Error('Archivo CAD superior a 8 MB');
+      const isZip=/\.zip(?:$|[?#])/i.test(tool.cadDownloadUrl);
+      const source=isZip?
+       (await extractDxfFromZip(fileBytes)).content:
+       new TextDecoder('utf-8',{fatal:true}).decode(fileBytes);
       const model=parseToolDxf(source);
       parsed=model;save.disabled=false;preview.hidden=false;
       drawPreview(preview,model,axisReview(model),axisInput?.value||null);
@@ -141,18 +148,23 @@ export function setupToolDxfImporter({add}){
  input.addEventListener('change',async()=>{
   parsed=null;save.disabled=true;preview.hidden=true;
   const file=input.files?.[0];
-  if(!file){say('Selecciona un DXF ASCII de contorno cerrado.');return;}
+  if(!file){say('Selecciona un .DXF ASCII o .DXF.ZIP del fabricante.');return;}
   try{
-   if(!/\.dxf$/i.test(file.name))throw Error('Selecciona un archivo .dxf');
-   if(file.size>1024*1024)throw Error('Archivo superior a 1 MB');
-   const model=parseToolDxf(await file.text());
+   if(!/\.(dxf|zip)$/i.test(file.name))
+    throw Error('Selecciona un archivo .DXF o .DXF.ZIP');
+   const zipped=/\.zip$/i.test(file.name);
+   if(file.size>(zipped?8:1)*1024*1024)
+    throw Error('DXF o ZIP fuera de tamaño permitido');
+   const cad=zipped?await extractDxfFromZip(await file.arrayBuffer()):null;
+   const model=parseToolDxf(cad?cad.content:await file.text());
    parsed=model;
    if(!name.value.trim())name.value=file.name.replace(/\.dxf$/i,'').slice(0,65);
    preview.hidden=false;
    drawPreview(preview,model,axisReview(model),axisInput?.value||null);
    save.disabled=false;
    const audit=axisReview(model);
-   say('Contorno leído: '+model.points.length+' vértices · '+
+   say((cad?'ZIP comprobado (CRC correcto), DXF '+cad.name+'. ':'')+
+    'Contorno leído: '+model.points.length+' vértices · '+
     model.width.toFixed(2)+' × '+model.height.toFixed(2)+' mm · '+
     (audit.datumEstablished?'Eje de trabajo X '+audit.axisX.toFixed(3)+
      ' mm inferido; ':audit.status+'; introduce la X de la punta/V; ')+
