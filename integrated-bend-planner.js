@@ -200,8 +200,11 @@ export function optimizeBendPlan(input,options={}){
   if(selectedPlans.has(keyOf(plan)))continue;
   selectedPlans.add(keyOf(plan));finalists.push(plan);
  }
- if(current&&!finalists.some(plan=>keyOf(plan)===keyOf(current)))
-  finalists.push(current);
+ // El programa MANUAL es una evaluación independiente, incluso si la
+ // herramienta, orientación y orden coinciden con un candidato automático.
+ // No sustituirlo por ese candidato: sus avisos y métricas deben seguir
+ // perteneciendo a su propia ejecución y NO contaminar el resumen automático.
+ if(current)finalists.push(current);
  for(const plan of finalists){
   const candidate={...p,die:plan.dieId,punch:plan.punchId,
    order:plan.order,punchOrientation:plan.orientation};
@@ -228,7 +231,7 @@ export function optimizeBendPlan(input,options={}){
   if(a.gaugeChecked!==b.gaugeChecked)return a.gaugeChecked?-1:1;
   return compare(a,b);
  });
- const manual=finalists.find(plan=>current&&keyOf(plan)===keyOf(current))||current;
+ const manual=current;
  // Un cálculo volumétrico de las variantes finalistas, separado del
  // cribado rápido. Siempre incluir el programa manual aunque no cumpla
  // la preselección de utillaje. El muestreo NO acredita seguridad.
