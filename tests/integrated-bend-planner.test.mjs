@@ -16,9 +16,14 @@ const tool=piece=>({operations:piece.order.map(()=>({
  samples:2,possibleToolIntrusion:piece.punch==='straight88',
  possibleToolInterference:piece.punch==='straight88'
 }))});
+const criticalMock=piece=>({
+ operations:piece.order.map((bend,operation)=>({bend,operation,findings:[]})),
+ framesChecked:piece.order.length*10,penetrationOperations:0,warningOperations:0
+});
 test('la optimización compara punzón, matriz y secuencia sin alterar pieza',()=>{
  const initial=structuredClone(EXAMPLE);
  const report=optimizeBendPlan(EXAMPLE,{
+  criticalToolEvaluator:criticalMock,
   toolingAdvice:guidance(pair('v16','straight88'),pair('v12','goose',2)),
   sheetEvaluator:sheet,toolEvaluator:tool,gaugeEvaluator:gauge,volumeEvaluator:()=>({modeledMachineWarnings:0,uncertainSweptIntervals:0,framesChecked:6}),
   maxPairs:2,maxOrders:2
@@ -44,6 +49,7 @@ test('la optimización compara punzón, matriz y secuencia sin alterar pieza',()
 });
 test('el cribado de tope influye en elegir una pareja frente a otra',()=>{
  const report=optimizeBendPlan(EXAMPLE,{
+  criticalToolEvaluator:criticalMock,
   toolingAdvice:guidance(pair('v16','goose',0),pair('v12','goose',5)),
   sheetEvaluator:sheet,
   toolEvaluator:piece=>({operations:piece.order.map(()=>({
@@ -60,6 +66,7 @@ test('el cribado de tope influye en elegir una pareja frente a otra',()=>{
 });
 test('sin pares recomendables, informa limitación y conserva selección manual',()=>{
  const r=optimizeBendPlan(EXAMPLE,{
+  criticalToolEvaluator:criticalMock,
   toolingAdvice:guidance(),
   sheetEvaluator:sheet,toolEvaluator:tool,gaugeEvaluator:gauge
  });
@@ -71,6 +78,7 @@ test('la búsqueda permanece acotada en piezas complejas',()=>{
  const part={...EXAMPLE,flanges:Array(20).fill(35),
   angles:Array(19).fill(90),order:Array.from({length:19},(_,i)=>i)};
  const r=optimizeBendPlan(part,{
+  criticalToolEvaluator:criticalMock,
   toolingAdvice:guidance(pair('v16','straight88'),pair('v12','goose')),
   sheetEvaluator:sheet,toolEvaluator:tool,gaugeEvaluator:gauge,volumeEvaluator:()=>({modeledMachineWarnings:0,uncertainSweptIntervals:0,framesChecked:6}),
   maxPairs:1,maxOrders:2,maxFinalists:2
@@ -89,6 +97,7 @@ test('un plan inválido no cambia el programa',()=>{
 });
 test('los punzones pata de cabra se exploran en las dos orientaciones',()=>{
  const r=optimizeBendPlan(EXAMPLE,{
+  criticalToolEvaluator:criticalMock,
   toolingAdvice:guidance(pair('v16','goose')),
   sheetEvaluator:sheet,gaugeEvaluator:gauge,volumeEvaluator:()=>({modeledMachineWarnings:0,uncertainSweptIntervals:0,framesChecked:6}),
   volumeEvaluator:()=>({modeledMachineWarnings:0,uncertainSweptIntervals:0,framesChecked:6}),
