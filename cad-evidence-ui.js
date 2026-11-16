@@ -103,6 +103,9 @@ export function renderCadEvidence(){
     }else if(item.kind==='punch'||item.kind==='die'){
      const kind=$('toolDxfKind'),file=$('toolDxfFile');
      if(!kind||!file)return;
+     // Un origen de un DXF anterior nunca se traslada a otra
+     // referencia, especialmente de pata de cabra a matriz multivía.
+     const axis=$('toolDxfAxisX');if(axis)axis.value='';
      // El change del importador borra el contorno anterior antes
      // de preparar otra referencia, evitando mezclas accidentales.
      file.value='';file.dispatchEvent(new Event('change'));
