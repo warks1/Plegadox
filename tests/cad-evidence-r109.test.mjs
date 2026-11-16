@@ -128,3 +128,29 @@ test('R109: WILA sin descarga libre no se registra como DXF instalado',()=>{
  assert.equal(recon.cadImported,false);
  assert.equal(recon.canApproveForMachine,false);
 });
+
+test('R111: fichas UKB 85° y V30° mantienen referencia y amarre independiente',()=>{
+ const ids=['ukb-11151','ukb-11200','ukb-10170',
+  'ukb-25406','ukb-29351','ukb-29353','ukb-25501','ukb-29552'];
+ for(const id of ids){
+  const record=by(id);
+  assert.ok(record,'Falta referencia OEM '+id);
+  assert.match(record.sourceUrl,/^https:\/\/www\.ukb-gmbh\.de\/en\/\d+\.html$/);
+  assert.match(record.cadUrl,/^https:\/\/daten\.ukb-gmbh\.de\/dxf\/zip\/\d+\.DXF\.zip$/);
+  assert.equal(record.status,'ENLACE_CONFIRMADO_NO_IMPORTADO');
+  assert.equal(reconcileCadDimensions([record]).canApproveForMachine,false);
+ }
+ assert.equal(by('ukb-11151').dimensions.heightMm,104.5);
+ assert.equal(by('ukb-11200').dimensions.heightMm,66.5);
+ assert.equal(by('ukb-10170').dimensions.tipRadiusMm,.6);
+ assert.equal(by('ukb-25406').dimensions.vOpeningMm,20);
+ assert.equal(by('ukb-29351').dimensions.vOpeningMm,8);
+ assert.equal(by('ukb-29353').dimensions.vOpeningMm,16);
+ assert.equal(by('ukb-25501').dimensions.vOpeningMm,6);
+ assert.equal(by('ukb-29552').dimensions.vOpeningMm,12);
+ assert.notEqual(by('ukb-22316').mount,by('ukb-29353').mount);
+ assert.notEqual(by('ukb-22316').dimensions.shoulderRadiusMm,
+  by('ukb-29353').dimensions.shoulderRadiusMm);
+ assert.equal(by('ukb-11151').cadImported,undefined,
+  'Un enlace no equivale a un archivo físicamente importado');
+});
