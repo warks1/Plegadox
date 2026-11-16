@@ -189,13 +189,15 @@ export function gaugeStatusCardLayout(width,height,faceX,faceY,stopNumber,level,
   throw Error('Datos inválidos para aviso visual del tope');
  const compact=width<520;
  const left=compact?84:105,right=compact?100:118;
- const boxW=Math.min(compact?174:204,Math.max(112,width*.44));
+ // R121: franja superior de avisos, NO anclada al dedo ni a la matriz.
+ // Reservar columnas laterales para herramientas y zoom. El esquema
+ // geométrico NO cambia por la posición de estas tarjetas.
+ const lane=Math.max(0,width-left-right);
+ const boxW=Math.min(compact?174:204,Math.max(0,lane-8));
  const boxH=compact?33:35;
- const maxX=Math.max(0,width-right-boxW);
- const x=Math.max(Math.min(left,maxX),Math.min(maxX,Math.max(left,faceX-boxW*.22)));
- const below=faceY+Math.max(17,20*scale)+boxH<=height-(compact?10:16);
- const y=Math.max(4,Math.min(height-boxH-4,below?
-  faceY+Math.max(17,20*scale):faceY-boxH-Math.max(17,20*scale)));
+ const x=left+Math.max(0,(lane-boxW)/2);
+ const y=5;
+ const below=false;
  const headline=level==='red'?`⛔ TOPE ${stopNumber} · COLISIÓN`:
   level==='amber'?`⚠ TOPE ${stopNumber} · ATENCIÓN`:
   `TOPE ${stopNumber} · SIN CHOQUE 2D`;
@@ -347,21 +349,8 @@ function rearMachine(ctx,w,h,cx,cy,scale,placement,perspective=false){
  }
  for(const frac of [.24,.58])bolt(ctx,rodStart+(rodEnd-rodStart)*frac,
   cy-placement.point.y*scale-10*scale,2.4*scale);
- // En sección 2D conservar íntegro el indicador anterior.
- // Sólo la PERSPECTIVA utiliza la nueva tarjeta fuera del tope.
- if(!perspective){
-  ctx.font='800 '+Math.max(8,11*scale)+'px system-ui';
-  ctx.fillStyle=colors.label;ctx.textAlign='left';
-  const label=risk.level==='red'?
-   '⛔ TOPE '+placement.stopNumber+' · PENETRACIÓN EN 2D':
-   risk.level==='amber'?
-    '⚠ TOPE '+placement.stopNumber+' · '+risk.message:
-    placement.gaugeTransition?gaugeMovementLabel(placement):
-    'TOPE '+placement.stopNumber+' · SIN INTERFERENCIA 2D'+
-    (cadPending?' · CAD PENDIENTE':'');
-  ctx.fillText(label,Math.min(Math.max(8,ox+3*scale),w-145*scale),
-   Math.max(20,cy-placement.point.y*scale-24*scale));
- }
+ // Los estados del dedo se renderizan en el HUD superior COMÚN
+ // para 2D y perspectiva. No poner texto sobre la matriz o la chapa.
  ctx.restore();
 }
 function drawDie(ctx,scene,cx,cy,scale){
@@ -495,18 +484,16 @@ function stageScene(ctx,w,h,piece,sim,machineView){
   ctx.fill();ctx.strokeStyle=color.edge;ctx.lineWidth=1.2;ctx.stroke();ctx.restore();
  }
  sectionOverlay(ctx,{cx,cy:baseY,s:scale},opening,punch.tip||0,Boolean(machineView?.section));
- if(perspective){
-  // HUD dibujado al FINAL de los sólidos. La tarjeta no puede quedar
-  // tapada por la matriz ni sobreescribir el canto frontal del dedo.
-  const gaugeRisk=gaugeRiskStatus(placement),level=gaugeRisk.level;
-  const [faceX,faceY]=machineGaugeProjection(placement,cx,baseY,scale).point;
-  const layout=gaugeStatusCardLayout(w,h,faceX,
-   faceY,placement.stopNumber,level,scale,
-   placement.gaugeTransition?.phase??null,gaugeRisk.forecast??null,gaugeRisk.code??null,
-   gaugeRisk.clearanceMm??null,gaugeRisk.requiredMm??null,
-   placement.gaugeTransition?.axisPhase??null);
-  drawGaugeStatusCard(ctx,layout,level,GAUGE_COLORS[level]);
- }
+ // En todas las vistas (2D y 2.5D) los estados están en una franja
+ // superior estable: el dedo ya NO arrastra el aviso sobre la V.
+ const gaugeRisk=gaugeRiskStatus(placement),level=gaugeRisk.level;
+ const [faceX,faceY]=machineGaugeProjection(placement,cx,baseY,scale).point;
+ const layout=gaugeStatusCardLayout(w,h,faceX,faceY,
+  placement.stopNumber,level,scale,
+  placement.gaugeTransition?.phase??null,gaugeRisk.forecast??null,gaugeRisk.code??null,
+  gaugeRisk.clearanceMm??null,gaugeRisk.requiredMm??null,
+  placement.gaugeTransition?.axisPhase??null);
+ drawGaugeStatusCard(ctx,layout,level,GAUGE_COLORS[level]);
  // Workpiece shadow and hot contact glow along the working tool tip
  if(st.press>.36){
   ctx.save();ctx.globalAlpha=(st.press-.35)*.7;
@@ -556,6 +543,20 @@ function stageScene(ctx,w,h,piece,sim,machineView){
  }
 }
 // Entrypoint used from app.js drawMachine without changing the core timing engine.
+/**
+ * Banda de aviso de útiles, POR DEBAJO de la tarjeta del tope.
+ * Es una posición de pantalla fija y jamás un datum del punzón/matriz.
+ */
+export function toolWarningHudLayout(w,h,section=false){
+ if(![w,h].every(Number.isFinite)||w<180||h<82)
+  throw Error('Visor insuficiente para aviso industrial');
+ const compact=w<520,left=compact?84:105,right=compact?100:118;
+ const lane=w-left-right;
+ const width=Math.min(205,Math.max(0,lane-8));
+ return {x:left+Math.max(0,(lane-width)/2),
+  y:section?5:44,width,height:27,
+  reservedLeft:left,reservedRight:right};
+}
 function drawWarningHud(ctx,w,h,piece,sim,view){
  const diagnostic=currentToolContact(piece,sim.time);
  if(!diagnostic.hasWarning)return;
@@ -593,11 +594,13 @@ function drawWarningHud(ctx,w,h,piece,sim,view){
   '⚠ PENETRACIÓN 2D · '+tool:'⚠ HOLGURA 2D · '+tool;
  ctx.save();
  const font=Math.max(9,Math.min(12,w/48));
- ctx.font='800 '+font+'px system-ui';const width=Math.min(w-16,ctx.measureText(message).width+19);
- const x=8,y=view?.section?(w<500?h-133:h-57):h-61;
+ ctx.font='800 '+font+'px system-ui';
+ const hud=toolWarningHudLayout(w,h,view?.section===true);
+ const {x,y,width}=hud;
  ctx.fillStyle='#632416e9';ctx.strokeStyle='#ffab50';ctx.lineWidth=1.2;
  ctx.beginPath();roundedRectPath(ctx,x,y,width,26,5);ctx.fill();ctx.stroke();
- ctx.fillStyle='#ffdda3';ctx.fillText(message,x+9,y+18);
+ ctx.fillStyle='#ffdda3';ctx.fillText(message,x+9,y+18,
+  Math.max(1,width-18));
  ctx.restore();
 }
 export function drawIndustrialMachine(ctx,w,h,piece,sim,machineView){
