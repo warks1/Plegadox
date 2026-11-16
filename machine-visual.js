@@ -131,6 +131,34 @@ export function gaugePerspectiveContours(polygon,scale,perspective=false){
  return {near,far,depthX:perspective?23*scale:0,
   depthY:perspective?-13*scale:0};
 }
+/**
+ * R106 · Proyección única del dedo trasero, su cara de apoyo y el canto
+ * nominal. La vista lateral y perspectiva 2,5D comparten el mismo
+ * plano frontal; solo se extruye decorativamente el cuerpo del dedo.
+ * El motor geométrico sigue trabajando en milímetros.
+ */
+export function machineGaugeProjection(placement,cx,datumY,scale,dimensions=null){
+ if(!Number.isFinite(scale)||scale<=0||![cx,datumY].every(Number.isFinite))
+  throw Error('Transformación de tope inválida');
+ const stopNumber=placement?.stopNumber===2?2:1;
+ const values=dimensions||(stopNumber===2?
+  getActiveMachineConfig().support:getActiveMachineConfig().stop);
+ const contour=gaugeContourAtContact(placement,values);
+ if(contour.length<3||contour.some(q=>
+   !Number.isFinite(q?.x)||!Number.isFinite(q?.y)))
+  throw Error('Contorno de dedo trasero inválido');
+ const screen=p=>[cx+p.x*scale,datumY-p.y*scale];
+ const point=placement?.point;
+ if(!Number.isFinite(point?.x)||!Number.isFinite(point?.y))
+  throw Error('Punto de contacto del tope inválido');
+ const contact=placement?.contact;
+ const projectLine=line=>line?.from&&line?.to?
+  {from:screen(line.from),to:screen(line.to)}:null;
+ return {point:screen(point),outline:contour.map(screen),
+  face:projectLine(contact),frontFace:projectLine(contact?.frontFace),
+  contactPoint:contact?.point?screen(contact.point):null,
+  dimensions:values,verified:false};
+}
 /** Perfil físico del labio frontal del Stop, sin desplazar la chapa.
  * Se conserva como referencia geométrica; no duplica capas en pantalla.
  */
@@ -244,16 +272,15 @@ function rearMachine(ctx,w,h,cx,cy,scale,placement,perspective=false){
  // En el vídeo real el tope llega DESDE DETRÁS (derecha en perfil)
  // hacia el borde trasero de la chapa. Esta referencia se deriva del
  // borde presentado, no de una distancia fija inventada.
- const gauge=placement.profile==='support'?getActiveMachineConfig().support:getActiveMachineConfig().stop;
+ const projected=machineGaugeProjection(placement,cx,cy,scale);
+ const gauge=projected.dimensions;
  const origin=placement.contact?.origin||placement.point;
  const ox=cx+origin.x*scale,oy=cy-origin.y*scale;
- // La geometría del dedo y el punto de contacto están en el mismo
- // sistema de mm que chapa, punzón y matriz.
- const gg=gaugeContourAtContact(placement,gauge).map(p=>[
-  cx+p.x*scale,cy-p.y*scale]);
+ // Mismo perfil frontal del dedo para 2D y perspectiva 2,5D.
+ const gg=projected.outline;
  const projection=gaugePerspectiveContours(gg,scale,perspective);
  const front=projection.near;
- const faceX=cx+placement.point.x*scale;
+ const faceX=projected.point[0];
  // El brazo viene por DETRÁS del dedo: no debe atravesar el propio perfil
  // ni nacer en el punto de contacto chapa/dedo (fallo visible en vídeo).
  const bodyRear=Math.max(...gg.map(p=>p[0]));
@@ -282,9 +309,8 @@ function rearMachine(ctx,w,h,cx,cy,scale,placement,perspective=false){
  // Resaltar la cara real del dedo: STOP frontal o escalón SUPPORT.
  // Un vértice interior de la chapa no constituye un apoyo fiable.
  const contact=placement.contact;
- const screen=pt=>[cx+pt.x*scale,cy-pt.y*scale];
- if(contact){
-  const a=screen(contact.from),b=screen(contact.to);
+ if(contact&&projected.face){
+  const a=projected.face.from,b=projected.face.to;
   ctx.save();ctx.lineWidth=Math.max(3,3.6*scale);
   ctx.strokeStyle=colors.face;
   ctx.shadowBlur=11*scale;ctx.shadowColor=colors.glow;
@@ -292,14 +318,17 @@ function rearMachine(ctx,w,h,cx,cy,scale,placement,perspective=false){
   // Support: cara INFERIOR de la chapa apoyada sobre la pestaña BAJA
   // frontal y canto detenido contra la contrahuella ALTA posterior.
   // Esta cara debe subir, no bajar tras el punto de contacto.
-  if(contact.surface==='horizontal-top'&&contact.frontFace){
-   const u=screen(contact.frontFace.from),v=screen(contact.frontFace.to);
+  if(contact.surface==='horizontal-top'&&projected.frontFace){
+   const u=projected.frontFace.from,v=projected.frontFace.to;
    ctx.strokeStyle=colors.edge;
    ctx.beginPath();ctx.moveTo(...u);ctx.lineTo(...v);ctx.stroke();
   }
-  const cp=screen(contact.point);
-  ctx.beginPath();ctx.arc(...cp,Math.max(2.5,3*scale),0,Math.PI*2);
-  ctx.fillStyle=colors.face;ctx.fill();ctx.restore();
+  if(projected.contactPoint){
+   const cp=projected.contactPoint;
+   ctx.beginPath();ctx.arc(...cp,Math.max(2.5,3*scale),0,Math.PI*2);
+   ctx.fillStyle=colors.face;ctx.fill();
+  }
+  ctx.restore();
  }
  for(const frac of [.24,.58])bolt(ctx,rodStart+(rodEnd-rodStart)*frac,
   cy-placement.point.y*scale-10*scale,2.4*scale);
@@ -458,7 +487,7 @@ function stageScene(ctx,w,h,piece,sim,machineView){
  // Contacto de tope sólo indicado gráficamente cuando aparece un borde
  // trasero presentable en la sección; no se certifica el apoyo físico.
  if(placement.alignedToSheet){
-  const x=cx+placement.point.x*scale,y=baseY-placement.point.y*scale;
+  const [x,y]=machineGaugeProjection(placement,cx,baseY,scale).point;
   ctx.save();ctx.beginPath();ctx.arc(x,y,Math.max(3,3.5*scale),0,Math.PI*2);
   const color=GAUGE_COLORS[gaugeRiskStatus(placement).level];
    ctx.fillStyle=color.face;ctx.shadowColor=color.glow;ctx.shadowBlur=10*scale;
@@ -469,8 +498,9 @@ function stageScene(ctx,w,h,piece,sim,machineView){
   // HUD dibujado al FINAL de los sólidos. La tarjeta no puede quedar
   // tapada por la matriz ni sobreescribir el canto frontal del dedo.
   const gaugeRisk=gaugeRiskStatus(placement),level=gaugeRisk.level;
-  const layout=gaugeStatusCardLayout(w,h,cx+placement.point.x*scale,
-   baseY-placement.point.y*scale,placement.stopNumber,level,scale,
+  const [faceX,faceY]=machineGaugeProjection(placement,cx,baseY,scale).point;
+  const layout=gaugeStatusCardLayout(w,h,faceX,
+   faceY,placement.stopNumber,level,scale,
    placement.gaugeTransition?.phase??null,gaugeRisk.forecast??null,gaugeRisk.code??null);
   drawGaugeStatusCard(ctx,layout,level,GAUGE_COLORS[level]);
  }
