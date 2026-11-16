@@ -195,6 +195,18 @@ export const CAD_EVIDENCE_SOURCES=Object.freeze([
   note:'V85 histórica con 2050 nominal; la unidad PlegadoX está declarada 2040. No sobreescribir datos del control ni deducir versión de carrera.'
  }),
  freezeEntry({
+  id:'bystronic-bysoft-model-library',kind:'machine',maker:'BYSTRONIC',
+  reference:'BySoft CAM System Data',variant:'VERSION_CON_LICENCIA',
+  mount:'SIN_MONTAJE_VERIFICADO',datum:'NO_MACHINE_UNIT_DATUM',
+  title:'Bystronic BySoft CAM · modelos internos de máquina, tope y utillaje',
+  sourceUrl:'https://bystronic-mediacenter.picturepark.com/v/uSPrfoiG/',
+  cadUrl:null,format:'MODELOS_3D_EN_SISTEMA',
+  access:'DATOS_LOCALES_SOFTWARE_CON_LICENCIA',
+  status:'MODELOS_NO_EXPORTADOS',
+  dimensions:{},
+  note:'La documentación enumera BackStopModels, BendingMachineConfigs, BendingMachines, UpperTools, LowerTools y VrModels 3D. No hay archivos de la unidad del propietario descargados aquí; solicitar exportación autorizada del software instalado.'
+ }),
+ freezeEntry({
   id:'bystronic-afm-ep31-100-family',kind:'machine',maker:'BYSTRONIC',
   reference:'AFM EP 31-100',variant:'AFM_EP_FAMILIA_2007',
   mount:'MONTAJE_PENDIENTE',datum:'FAMILY_ONLY',
