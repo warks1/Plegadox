@@ -859,8 +859,12 @@ function scheduleIntegratedAdvisor(){
      ' parejas de útiles, sin alternativa sin riesgos bloqueantes en el modelo. '+
      'Penetración 2D punzón: '+report.rejectionSummary.punchPenetration+
      ' planes; matriz: '+report.rejectionSummary.diePenetration+
-     '; trancha (envolvente 2,5D): '+report.rejectionSummary.ramInterference+
-     '; inspección crítica incompleta: '+report.rejectionSummary.toolCriticalUnresolved+'. '+
+     '; trancha (CAD declarado 2,5D): '+report.rejectionSummary.ramInterference+
+     '; riesgos por envolvente SIN CAD real: '+report.rejectionSummary.provisionalEnvelopeRisk+
+     ' (trancha '+report.rejectionSummary.provisionalRamRisk+
+     ', tope '+report.rejectionSummary.provisionalGaugeRisk+'). '+
+     'Estos solapes son una señal de REVISIÓN, no una colisión física demostrada. '+
+     'Inspección crítica incompleta: '+report.rejectionSummary.toolCriticalUnresolved+'. '+
      'Se conserva el orden MANUAL. No se aprobarán cambios automáticos hasta revisar los avisos. '+
      'Los contornos CAD y recorridos CNC siguen SIN verificar.':
      'No se encontró ninguna pareja preseleccionada compatible. '+
@@ -888,15 +892,18 @@ function scheduleIntegratedAdvisor(){
      (plan.toolCriticalByKind?.die?.penetrations||0)+' golpes con penetración 2D / '+
       (plan.toolCriticalByKind?.die?.warnings||0)+' con avisos':
       'SIN COMPROBAR')+
-    ' · trancha (volumen provisional): '+(plan.volumeChecked?
-     plan.volumeRamWarnings+' interferencias':'SIN COMPROBAR')+
+    ' · trancha (CAD declarado): '+(plan.volumeChecked?
+     plan.volumeRamWarnings+' penetraciones modeladas':'SIN COMPROBAR')+
+    ' · trancha SIN CAD real: '+(plan.volumeChecked?
+     plan.volumeProvisionalRamWarnings+' solapes provisionales':'SIN COMPROBAR')+
     ' · muestras adicionales de útiles: '+plan.toolCriticalFrames+
     ' · apoyos de tope sin contacto: '+(plan.gaugeContactNotObserved||0)+
     ' · datos de contacto incompletos: '+(plan.gaugeContactUnknown?'SÍ':'NO')+
     ' · referencias de tope inválidas: '+(plan.gaugeInvalidReferences||0)+
     ' · holguras de tope: '+(plan.gaugeClearanceWarnings||0)+
     ' · envolventes 3D trancha/mesa/topes: '+
-    (plan.volumeChecked?plan.volumeMachineWarnings+' avisos':'SIN COMPROBAR')+
+    (plan.volumeChecked?plan.volumeMachineWarnings+' interferencias CAD / '+
+     plan.volumeProvisionalWarnings+' solapes de envolvente SIN CAD':'SIN COMPROBAR')+
     ' · barridos pendientes: '+plan.volumeSweptSuspects+
     ' · ejes físicos: '+plan.axisStatus+
     (plan.axisViolations?' ('+plan.axisViolations+' infracciones)':'')+
