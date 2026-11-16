@@ -1,6 +1,7 @@
 /** Interfaz de importación DXF de utillaje, completamente local. */
 import {parseToolDxf,importedTool} from './tool-dxf.js';
 import {extractDxfFromZip} from './cad-zip-reader.js';
+import {auditImportedCadDimensions,catalogCadAuditReference} from './tool-cad-oem-audit.js';
 import {inspectPunchWorkingAxis,inspectDieWorkingAxis} from './tool-cad-datum.js';
 import {CATALOG_PUNCHES,CATALOG_DIES} from './catalog.js';
 const $=id=>document.getElementById(id);
@@ -52,16 +53,45 @@ export function setupToolDxfImporter({add}){
  const axisReview=parsed=>parsed?(kind.value==='die'?
   inspectDieWorkingAxis(parsed.points):inspectPunchWorkingAxis(parsed.points)):null;
  const mount=$('toolDxfMount');
- let parsed=null;
+ let parsed=null,preparedSource=null;
  const say=(message,error=false)=>{
   status.textContent=message;status.dataset.error=String(error);
  };
+ const reviewCad=()=>{
+  if(!parsed){save.disabled=true;return null;}
+  const review=auditImportedCadDimensions(parsed,preparedSource,{
+   kind:kind.value,
+   angleDeg:Number($('toolDxfAngle').value),
+   openingMm:Number($('toolDxfOpening').value),
+   tipDiameterMm:Number($('toolDxfTip').value)
+  });
+  save.disabled=!review.canRegister;
+  if(!review.canRegister){
+   const differences=review.conflicts.map(x=>x.field+': '+
+    String(x.actual)+' frente a '+x.expected).join(' · ');
+   say('IMPORTACIÓN BLOQUEADA: la ficha '+review.reference+
+    ' no coincide con el DXF o con las cotas declaradas ('+
+    differences+'). Comprueba la referencia y el archivo OEM.',true);
+  }
+  return review;
+ };
+ for(const id of ['toolDxfAngle','toolDxfOpening','toolDxfTip'])
+  $(id)?.addEventListener('input',()=>{
+   if(parsed){
+    const audit=reviewCad();
+    if(audit?.canRegister&&preparedSource)
+     say('Cotas nominales cotejadas con la ficha '+audit.reference+
+      '. Esto NO acredita el fabricante ni el montaje.');
+   }
+  });
  const toggle=()=>{
   $('toolDxfDieOptions').hidden=kind.value!=='die';
   $('toolDxfPunchOptions').hidden=kind.value!=='punch';
  };
  kind.addEventListener('change',()=>{
+  preparedSource=null;
   toggle();
+  if(parsed)reviewCad();
   if(parsed)drawPreview(preview,parsed,axisReview(parsed),axisInput?.value||null);
  });toggle();
  axisInput?.addEventListener('input',()=>{
@@ -85,6 +115,7 @@ export function setupToolDxfImporter({add}){
    const preset=document.createElement('button');preset.type='button';
    preset.textContent='Preparar importación';
    preset.addEventListener('click',()=>{
+    preparedSource=catalogCadAuditReference(tool,toolKind);
     parsed=null;input.value='';save.disabled=true;preview.hidden=true;
     if(axisInput)axisInput.value='';
     kind.value=toolKind;toggle();name.value=tool.reference||tool.name;
@@ -126,7 +157,7 @@ export function setupToolDxfImporter({add}){
        (await extractDxfFromZip(fileBytes)).content:
        new TextDecoder('utf-8',{fatal:true}).decode(fileBytes);
       const model=parseToolDxf(source);
-      parsed=model;save.disabled=false;preview.hidden=false;
+      parsed=model;preview.hidden=false;
       drawPreview(preview,model,axisReview(model),axisInput?.value||null);
       const audit=axisReview(model);
       say('DXF del fabricante: '+model.points.length+' vértices. '+
@@ -134,6 +165,7 @@ export function setupToolDxfImporter({add}){
         audit.axisX.toFixed(3)+' mm (inferido)':
         'AMBIGUO: indica X de la punta/V seleccionada')+'. '+
        'Confirma orientación, escala y sistema de amarre antes de guardar.');
+      reviewCad();
      }catch(error){
       say('No se pudo cargar el DXF directamente: '+error.message+
        '. Descárgalo desde la ficha y selecciona el archivo en el campo superior.',true);
@@ -161,7 +193,6 @@ export function setupToolDxfImporter({add}){
    if(!name.value.trim())name.value=file.name.replace(/(?:\.dxf)?\.(?:dxf|zip)$/i,'').slice(0,65);
    preview.hidden=false;
    drawPreview(preview,model,axisReview(model),axisInput?.value||null);
-   save.disabled=false;
    const audit=axisReview(model);
    say((cad?'ZIP comprobado (CRC correcto), DXF '+cad.name+'. ':'')+
     'Contorno leído: '+model.points.length+' vértices · '+
@@ -170,22 +201,36 @@ export function setupToolDxfImporter({add}){
      ' mm inferido; ':audit.status+'; introduce la X de la punta/V; ')+
     (model.unitsAssumed?'El archivo no declara mm: revisa la escala. ':'')+
     'Comprueba la orientación (punta del punzón abajo, V de la matriz arriba), ángulo, apertura, longitud y amarre antes de guardar.');
+   reviewCad();
   }catch(e){say('No se puede importar: '+e.message,true);}
  });
  save.addEventListener('click',()=>{
   if(!parsed)return;
   try{
+   const cadReview=reviewCad();
+   if(!cadReview?.canRegister)
+    throw Error('El perfil no coincide con las cotas de la ficha seleccionada');
    const tool=importedTool(parsed,{
     kind:kind.value,name:name.value,angle:$('toolDxfAngle').value,
     length:$('toolDxfLength').value,opening:$('toolDxfOpening').value,
     tip:$('toolDxfTip').value,mount:mount?.value||'Desconocido',
     axisX:axisInput?.value?.trim()||null
    });
-   add(tool,kind.value);
+   const record=preparedSource?{...tool,
+    cadSourceReference:cadReview.reference,
+    cadSourcePage:cadReview.sourceUrl,
+    cadNominalReviewStatus:cadReview.status,
+    cadNominalChecks:cadReview.checks,
+    manufacturerVerified:false,
+    sourceDescription:tool.sourceDescription+
+     ' · Cotas de ficha comparadas (identidad OEM sin autenticar)'
+   }:tool;
+   add(record,kind.value);
    window.dispatchEvent(new Event('plegadox:toolingChanged'));
    say('✓ Perfil DXF añadido a la biblioteca y seleccionado. '+
     'La punta/V de trabajo queda en X=0 del dibujo geométrico. '+
-    'El amarre seleccionado es una declaración del operador, no una certificación de compatibilidad con la máquina.');
+    'El amarre seleccionado es una declaración del operador, no una certificación de compatibilidad con la máquina.'+
+    (preparedSource?' Cotas nominales contrastadas; archivo OEM NO autenticado.':''));
    save.disabled=true;
   }catch(e){say('No se pudo guardar: '+e.message,true);}
  });
