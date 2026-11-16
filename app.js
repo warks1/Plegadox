@@ -2128,3 +2128,18 @@ setupCustomToolBuilder({add:addPersonalTool});
 window.PLEGADOX_STATE=()=>({piece,sim});
 window.PLEGADOX_MACHINE_VIEW=machineView;
 window.PLEGADOX_REDRAW=()=>paintAll();
+window.PLEGADOX_REDRAW_MACHINE=()=>drawMachine();
+// R124: navegación por golpes/fases para inspección visual. La elección
+// de otro instante pausa Play pero NUNCA reordena ni reprograma el CNC.
+window.PLEGADOX_SEEK_PREVIEW=({operation=null,fraction=0}={})=>{
+ const count=piece.order.length;
+ if(!count)return {time:0,operation:0};
+ const previous=clamp(Math.floor(sim.time/5),0,count-1);
+ const step=Number.isFinite(operation)?clamp(Math.floor(operation),0,count-1):
+  previous;
+ const sub=Number.isFinite(fraction)?clamp(fraction,0,.999999):0;
+ pausePlayback();sim.blocked=null;sim.error=null;
+ sim.time=5*(step+sub);
+ paintAll();
+ return {time:sim.time,operation:step,fraction:sub};
+};
