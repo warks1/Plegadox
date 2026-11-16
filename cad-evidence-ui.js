@@ -119,8 +119,8 @@ export function renderCadEvidence(){
      if(tip&&Number.isFinite(item.dimensions.tipRadiusMm))
       tip.value=String(item.dimensions.tipRadiusMm*2);
      const mount=$('toolDxfMount');
-     if(mount&&[...mount.options].some(x=>x.value===item.mount))
-      mount.value=item.mount;
+     if(mount)mount.value=[...mount.options].some(x=>x.value===item.mount)?
+      item.mount:'Desconocido';
      const state=$('toolDxfStatus');
      if(state)state.textContent='Referencia '+item.reference+
       ' preparada. Importa el DXF OEM, revisa H, el montaje y la longitud. '+
