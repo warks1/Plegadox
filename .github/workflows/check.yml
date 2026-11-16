@@ -84,6 +84,7 @@ jobs:
               tests/gauge-both-r93-browser-smoke.mjs
               tests/gauge-motion-export-r97-browser-smoke.mjs
               tests/gauge-perspective-r95-browser-smoke.mjs
+              tests/status-hud-r121-browser-smoke.mjs
               tests/gauge-side-smoke.mjs
               tests/punch-stop-visibility-smoke.mjs
               tests/stop-support-contact-smoke.mjs
