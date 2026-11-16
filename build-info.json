@@ -3,6 +3,6 @@
   "version": "0.9.87",
   "machine": "bystronic-2006-2009-wila-promecam-gauge-conditional",
   "ui": "safe-service-worker-update-without-reloading-in-progress-work",
-  "cache": "plegadox-static-0.9.87-safe-sw-r112",
+  "cache": "plegadox-static-0.9.87-safe-sw-r113",
   "tooling": "wila-promecam-custom-profile-dxf-mm-backup50"
 }
