@@ -1,0 +1,33 @@
+name: PlegadoX · auditoría de CAD OEM externos
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'cad-evidence.js'
+      - 'tools/oem-cad-remote-audit.mjs'
+      - '.github/workflows/oem-cad-remote-audit.yml'
+permissions:
+  contents: read
+jobs:
+  cad-oem:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validar sintaxis y acceso al catálogo
+        run: |
+          node --check tools/oem-cad-remote-audit.mjs
+          node --check cad-evidence.js
+      - name: Descargar, medir y contrastar DXF OEM públicos
+        run: node tools/oem-cad-remote-audit.mjs
+      - name: Guardar informe de procedencia (sin redistribuir CAD)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: plegadox-cad-oem-audit
+          path: test-results/oem-cad-remote-audit.json
+          retention-days: 30
+          if-no-files-found: warn
