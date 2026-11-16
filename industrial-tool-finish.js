@@ -66,7 +66,7 @@ export function drawMachinedToolSection(ctx,points,{
  const step=Math.max(3.5,Math.min(8,height/22));
  for(let y=minY+2;y<maxY;y+=step){
   ctx.beginPath();ctx.moveTo(minX-2,y);ctx.lineTo(maxX+2,y);
-  ctx.strokeStyle=y%2<'1'?'#eaf5ff':'#031b2a';
+  ctx.strokeStyle=Math.round(y/step)%2===0?'#eaf5ff':'#031b2a';
   ctx.lineWidth=.38*px;ctx.stroke();
  }
  ctx.restore();
