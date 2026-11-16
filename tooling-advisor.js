@@ -23,6 +23,10 @@ export function targetVRatio(thickness){
  return t>=12?12:t>=9?10:8;
 }
 function pairData(p,die,punch,minimumInterior,minimumFlange,requiresClearance){
+ // R111: un DXF antiguo cuyo eje de punta/V NO se pudo identificar
+ // sigue disponible para revisión manual, pero no se recomienda
+ // automáticamente con geometría desplazada o multivía ambigua.
+ if(die.datumPending===true||punch.datumPending===true)return null;
  const opening=Number(die.opening),included=Number(die.angle),punchAngle=Number(punch.angle);
  // No proponer una pareja más corta que el ancho programado. Un
  // montaje de varios segmentos exige plano de distribución y comprobación
