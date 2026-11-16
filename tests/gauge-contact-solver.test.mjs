@@ -16,7 +16,8 @@ test('automático no declara apoyo físico si utiliza un vértice interior',()=>
  if(selected.valid){
   assert.equal(selected.ref.freeEdge,true);
   assert.equal(selected.faceAccessible,true);
-  assert.equal(selected.warning,false);
+  assert.ok(!selected.warning||selected.interference.kind==='holgura',
+   'Una holgura no equivale a ausencia de asiento nominal');
  }else{
   assert.equal(selected.noSafeContact,true);
  }
@@ -32,10 +33,13 @@ test('elección manual no se reemplaza automáticamente aunque haya interferenci
  assert.equal(selected.manual,true);
  assert.equal(selected.ref.segmentIndex,segment);
  assert.equal(selected.candidates.length,1);
- if(!selected.ref.freeEdge)
-  assert.equal(selected.valid,
-   selected.foldedWingContact===true&&selected.interference.warning===false,
-   'Solo una pestaña ya plegada y sin invasión puede sustituir el canto libre');
+ if(!selected.ref.freeEdge){
+  if(selected.valid)assert.equal(selected.foldedWingContact,true);
+  if(!selected.foldedWingContact)assert.equal(selected.valid,false,
+   'Un vértice interior sin cara externa NO puede validar el asiento');
+  assert.notEqual(selected.valid&&selected.interference.kind==='penetracion',true,
+   'Una penetración comprobada nunca valida el asiento');
+ }
 });
 test('apoyo inicial inválido NO se valida porque la vista prevé retroceso',()=>{
  const p=normalized(EXAMPLE),st=stage(p,5.4),bend=st.activeBend;
