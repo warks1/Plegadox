@@ -98,7 +98,11 @@ export async function extractDxfFromZip(data,{inflate=defaultInflate}={}){
   localName=v.getUint16(item.localAt+26,true),
   localExtra=v.getUint16(item.localAt+28,true);
  if(localMethod!==item.method)throw Error('Método ZIP local distinto del directorio');
+ const actualName=decoder.decode(range(bytes,item.localAt+30,localName));
+ if(actualName!==item.name)throw Error('Nombre DXF local no coincide con directorio ZIP');
  const start=item.localAt+30+localName+localExtra;
+ if(start+item.compressedLen>dirAt)
+  throw Error('Datos ZIP solapados con el directorio central');
  const compressed=range(bytes,start,item.compressedLen);
  const output=item.method===0?compressed:await inflate(compressed);
  const raw=output instanceof Uint8Array?output:new Uint8Array(output);
