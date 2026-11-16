@@ -4,6 +4,7 @@ import {extractDxfFromZip} from './cad-zip-reader.js';
 import {auditImportedCadDimensions,catalogCadAuditReference} from './tool-cad-oem-audit.js';
 import {inspectPunchWorkingAxis,inspectDieWorkingAxis} from './tool-cad-datum.js';
 import {listCadImportSources,suggestedMountFamily} from './cad-import-sources.js';
+import {drawMachinedToolSection} from './industrial-tool-finish.js';
 const $=id=>document.getElementById(id);
 function drawPreview(canvas,parsed,axisReview=null,manualAxis=null){
  const rect=canvas.getBoundingClientRect();
@@ -14,10 +15,16 @@ function drawPreview(canvas,parsed,axisReview=null,manualAxis=null){
  ctx.fillStyle='#061422';ctx.fillRect(0,0,w,h);
  const margin=24,scale=Math.min((w-margin*2)/parsed.width,(h-margin*2)/parsed.height);
  const map=([x,y])=>[w/2+x*scale,h-margin-(y*scale)];
+ // Cuadrícula y acero industriales, SOLO DECORATIVOS.
+ ctx.save();ctx.lineWidth=.6;ctx.strokeStyle='#2b57704a';
+ for(let x=12;x<w;x+=24){ctx.beginPath();ctx.moveTo(x,10);
+  ctx.lineTo(x,h-12);ctx.stroke();}
+ for(let y=10;y<h;y+=24){ctx.beginPath();ctx.moveTo(12,y);
+  ctx.lineTo(w-12,y);ctx.stroke();}
+ ctx.restore();
  const poly=parsed.points.map(map);
- ctx.beginPath();poly.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));
- ctx.closePath();ctx.fillStyle='#548daa';ctx.fill();
- ctx.lineWidth=2;ctx.strokeStyle='#b8eaff';ctx.stroke();
+ drawMachinedToolSection(ctx,poly,{kind:$('toolDxfKind')?.value==='punch'?
+  'punch':'die',scale:1.2});
  // R111: la línea de trabajo de la pata de cabra NO es el centro
  // de la caja del dibujo. Si hay dos V, dibujar ambas candidatas.
  const selected=manualAxis!==null&&String(manualAxis).trim()!==''?
