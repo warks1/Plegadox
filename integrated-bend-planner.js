@@ -15,6 +15,8 @@ import {scoreBendOrder,scoreToolOrder,sequenceCandidates} from './sequence-advis
 import {scanGaugeSequence} from './gauge-sequence-review.js';
 import {scanVolumeTrajectory} from './volume-trajectory-review.js';
 import {scanToolCriticalPhases} from './tool-collision.js';
+import {reconcileCriticalToolEvidence,reconcileVolumeEvidence,
+ reconcileGaugeEvidence,summarizePhysicalEvidence} from './planner-evidence-integrity.js';
 
 const integer=(value,fallback,min,max)=>{
  const n=Number(value);
@@ -63,12 +65,11 @@ const stopProblems=scan=>{
  }
  // El análisis completo aporta contactNotObserved; un evaluador
  // simplificado puede aportar sólo contactObserved por operación.
- const declared=Number(scan?.contactNotObserved);
- const contactNotObserved=scan?.contactNotObserved!=null&&
-  Number.isFinite(declared)?Math.max(0,declared):
-  operations.filter(op=>op.contactObserved===false).length;
+ const integrity=reconcileGaugeEvidence(scan);
  return {warnings:Number(scan?.warningCount)||0,penetrations,
-  invalidReferences,clearanceWarnings,contactNotObserved};
+  invalidReferences,clearanceWarnings,
+  contactNotObserved:integrity.contactNotObserved,
+  incompleteContactData:integrity.incompleteContactData};
 };
 export function optimizeBendPlan(input,options={}){
  const p=normalized(input);
@@ -161,7 +162,7 @@ export function optimizeBendPlan(input,options={}){
    toolCriticalFindings:[],
    gaugeWarnings:0,gaugePenetrations:0,gaugeClearanceWarnings:0,
    gaugeInvalidReferences:0,gaugeContactNotObserved:0,
-   gaugeChecked:false,gaugeError:null,
+   gaugeContactUnknown:false,gaugeChecked:false,gaugeError:null,
    volumeChecked:false,volumeMachineWarnings:0,volumeSweptSuspects:0,
    volumeRamWarnings:0,volumeBedWarnings:0,volumeGaugeWarnings:0,
    volumeRamEvidence:[],
@@ -235,6 +236,7 @@ export function optimizeBendPlan(input,options={}){
    plan.gaugeClearanceWarnings=gauge.clearanceWarnings;
    plan.gaugeInvalidReferences=gauge.invalidReferences;
    plan.gaugeContactNotObserved=gauge.contactNotObserved;
+   plan.gaugeContactUnknown=gauge.incompleteContactData;
    plan.gaugeChecked=true;
   }catch(error){
    plan.gaugeError=error instanceof Error?error.message:String(error);
@@ -263,17 +265,13 @@ export function optimizeBendPlan(input,options={}){
    order:plan.order,punchOrientation:plan.orientation};
   try{
    const check=criticalToolEvaluator(candidate);
-   if(!check||!Array.isArray(check.operations)||
-    check.operations.length!==candidate.order.length)
-    throw Error('Barrido crítico de punzón/matriz incompleto');
+   const integrity=reconcileCriticalToolEvidence(check,candidate.order.length);
    plan.toolCriticalChecked=true;
-   plan.toolCriticalFrames=Number(check.framesChecked)||0;
-   plan.toolCriticalPenetrations=Number(check.penetrationOperations)||0;
-   plan.toolCriticalWarnings=Number(check.warningOperations)||0;
-   plan.toolCriticalByKind=check.byKind||null;
-   plan.toolCriticalFindings=check.operations.flatMap(op=>
-    (op.findings||[]).map(f=>({...f,operation:op.operation,
-     bend:op.bend}))).slice(0,16);
+   plan.toolCriticalFrames=integrity.framesChecked;
+   plan.toolCriticalPenetrations=integrity.penetrationOperations;
+   plan.toolCriticalWarnings=integrity.warningOperations;
+   plan.toolCriticalByKind=integrity.byKind;
+   plan.toolCriticalFindings=integrity.findings;
    plan.toolPenetrations=Math.max(plan.toolPenetrations,
     plan.toolCriticalPenetrations);
    plan.toolWarnings=Math.max(plan.toolWarnings,
@@ -299,19 +297,20 @@ export function optimizeBendPlan(input,options={}){
     order:plan.order,punchOrientation:plan.orientation};
    try{
     const scanned=volumeEvaluator(candidate);
-    plan.volumeMachineWarnings=Number(scanned.modeledMachineWarnings)||0;
-    plan.volumeRamWarnings=Number(scanned.ramWarnings??scanned.byKind?.ram)||0;
-    plan.volumeBedWarnings=Number(scanned.bedWarnings??scanned.byKind?.bed)||0;
-    plan.volumeGaugeWarnings=Number(scanned.gaugeWarnings??scanned.byKind?.gauge)||0;
-    plan.volumeRamEvidence=scanned.ramEvidence||[];
-    plan.volumeSweptSuspects=Number(scanned.uncertainSweptIntervals)||0;
+    const integrity=reconcileVolumeEvidence(scanned);
+    plan.volumeMachineWarnings=integrity.modeledMachineWarnings;
+    plan.volumeRamWarnings=integrity.ramWarnings;
+    plan.volumeBedWarnings=integrity.bedWarnings;
+    plan.volumeGaugeWarnings=integrity.gaugeWarnings;
+    plan.volumeRamEvidence=integrity.ramEvidence;
+    plan.volumeSweptSuspects=integrity.uncertainSweptIntervals;
     plan.volumeFramesChecked=Number(scanned.framesChecked)||0;
     plan.volumeStatus=scanned.status||'MODELO_PRELIMINAR';
     plan.axisChecked=scanned.axisReport?.checked===true;
-    plan.axisViolations=Number(scanned.axisViolationCount)||0;
+    plan.axisViolations=integrity.axisViolations;
     plan.axisStatus=scanned.axisReport?.status||'EJES_SIN_PROGRAMA_FISICO';
     plan.axisGeometryChecked=scanned.axisGeometry?.checked===true;
-    plan.axisModeledCollisions=Number(scanned.axisModeledCollisions)||0;
+    plan.axisModeledCollisions=integrity.axisModeledCollisions;
     plan.axisGeometryStatus=scanned.axisGeometry?.status||'EJES_SIN_DATUM_CAD';
     plan.axisGeometryUnresolved=Number(scanned.axisGeometry?.unresolved)||0;
     plan.cadProfilesUsed=scanned.cadProfilesUsed||[];
@@ -332,6 +331,11 @@ export function optimizeBendPlan(input,options={}){
   if(a.gaugeChecked!==b.gaugeChecked)return a.gaugeChecked?-1:1;
   return compare(a,b);
  });
+ // Diagnóstico físico separado: una holgura o falta de CAD no es una
+ // penetración; el plan orientativo jamás equivale a autorización CNC.
+ for(const plan of finalists)
+  plan.physicalReview=summarizePhysicalEvidence(plan,{
+   volumeExpected:!!volumeEvaluator});
  // Una intrusión conocida no puede ganar sólo por una puntuación baja o
  // porque otras candidatas aún no fueron examinadas en 3D.
  // Los avisos de proximidad siguen visibles: NO hay autorización CNC.
@@ -367,6 +371,8 @@ export function optimizeBendPlan(input,options={}){
   plan.gaugeContactNotObserved===0&&plan.gaugeInvalidReferences===0);
  return {
   best,manual,rejectionSummary,
+  physicalReview:best?.physicalReview||null,
+  manualPhysicalReview:manual?.physicalReview||null,
   alternatives:finalists.filter(plan=>plan.source==='automatico'&&plan!==best&&
    (!volumeEvaluator||plan.volumeChecked)).slice(0,3),
   candidatePairs:candidates.length,
