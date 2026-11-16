@@ -1,4 +1,5 @@
 import {sectionPunch,sectionDie} from './tool-profiles.js';
+import {perspectiveOffset} from './machine-view-options.js';
 // Plegadox Studio · capas decorativas parametrizadas de la máquina.
 // Vista 2.5D ilustrativa: NO es una simulación de contacto, no aporta una
 // verificación de colisiones ni una geometría CAD de herramienta.
@@ -64,11 +65,11 @@ export function sceneAtmosphere(ctx,w,h,location){
  glow(ctx,cx,cy+7*s,125*s,'#2aaafe',.12);
  ctx.restore();
 }
-export function dieDepth(ctx,location,opening,enabled,profile=null){
+export function dieDepth(ctx,location,opening,enabled,profile=null,view={perspective:true}){
  if(!enabled)return;
  const {cx,cy,s}=location,die=profile||sectionDie({opening,angle:88,height:80});
  const points=die.points.map(([x,y])=>[cx+x*s,cy+(die.height-y)*s]);
- const dx=33*s,dy=-20*s;
+ const {dx,dy}=perspectiveOffset(view,s,'die');
  ctx.save();ctx.shadowBlur=14*s;ctx.shadowColor='#000a';
  // Extruir la MISMA sección de la matriz que se dibuja en 2D.
  // El relieve de la V debe conservarse también en la perspectiva.
@@ -83,19 +84,19 @@ export function dieDepth(ctx,location,opening,enabled,profile=null){
  }
  ctx.restore();
 }
-export function ramDepth(ctx,location,tipY,punch,enabled){
+export function ramDepth(ctx,location,tipY,punch,enabled,view={perspective:true}){
  if(!enabled)return;
  const {cx,s}=location;
  const section=sectionPunch(punch);
  // Use the SAME section polygon as the 2D drawing, not a hard-coded
  // triangular side that incorrectly turns a gooseneck into a straight punch.
  const factor=s;
- const offsetX=25*s,offsetY=-15*s;
+ const {dx:offsetX,dy:offsetY}=perspectiveOffset(view,s,'ram');
  const pts=section.points.map(([x,y])=>[cx+x*factor,tipY-y*factor]);
  ctx.save();ctx.shadowBlur=13*s;ctx.shadowColor='#000c';
  for(let i=0;i<pts.length;i++){
   const j=(i+1)%pts.length,a=pts[i],b=pts[j];
-  // Extrusion gives genuine 3D depth while retaining the punch cutouts.
+  // Extrusión únicamente visual 2,5D; la sección original y su CAD no cambian.
   const face=[a,b,[b[0]+offsetX,b[1]+offsetY],[a[0]+offsetX,a[1]+offsetY]];
   const g=grad(ctx,a[0],a[1],b[0]+offsetX,b[1]+offsetY,
       [[0,'#bbceda'],[.35,'#55778e'],[.75,'#29475e'],[1,'#a0c1d5']]);
@@ -112,9 +113,9 @@ export function ramDepth(ctx,location,tipY,punch,enabled){
  path(ctx,housing,grad(ctx,cx,top-65*s,cx,top-80*s,
   [[0,'#edf6fa'],[.34,'#738b9e'],[1,'#284259']]),'#50718b',1.3*s);
 }
-export function sheetDepth(ctx,points,location,thickness,enabled){
+export function sheetDepth(ctx,points,location,thickness,enabled,view={perspective:true}){
  if(!enabled||points.length<2)return;
- const {s}=location,dx=23*s,dy=-13*s;
+ const {s}=location,{dx,dy}=perspectiveOffset(view,s,'sheet');
  ctx.save();ctx.shadowBlur=9*s;ctx.shadowColor='#000b';ctx.shadowOffsetY=3*s;
  for(let i=0;i<points.length-1;i++){
   const a=points[i],b=points[i+1];
