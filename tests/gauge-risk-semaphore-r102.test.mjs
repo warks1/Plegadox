@@ -43,3 +43,19 @@ test('R102: detector sin resultado explícito no concede verde',()=>{
  assert.equal(incomplete.level,'amber');
  assert.equal(incomplete.code,'comprobacion-incompleta');
 });
+
+test('R104: sin contacto frontal en preparación es naranja, no colisión',()=>{
+ const placement={...nominal(),contactEngaged:false};
+ const status=gaugeRiskStatus(placement);
+ assert.equal(status.level,'amber');
+ assert.equal(status.code,'sin-contacto-actual');
+ assert.equal(status.verified,false);
+ // Una penetración geométrica detectada mantiene prioridad ROJA.
+ assert.equal(gaugeRiskStatus({...placement,gaugeInterference:{
+  kind:'penetracion',warning:true}}).level,'red');
+});
+
+test('R104: después de soltar la chapa no se exige contacto contra el tope',()=>{
+ const placement={...nominal(),phase:'Retorno',contactEngaged:false};
+ assert.equal(gaugeRiskStatus(placement).level,'green');
+});
