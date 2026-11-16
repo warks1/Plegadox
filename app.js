@@ -1585,15 +1585,9 @@ function toolCardPreview(tool,kind){
  path.setAttribute('stroke-width',String(Math.max(.4,Math.min(1.5,(maxX-minX)/55))));
  path.setAttribute('stroke-linejoin','round');
  svg.append(path);
- // Un segundo perfil tenue sirve de filo pulido; no añade ni
- // modifica metal en 2D o volumen 3D.
- const edge=document.createElementNS(ns,'path');
- edge.setAttribute('d',contour);
- edge.setAttribute('fill','none');
- edge.setAttribute('stroke','#e8f8ff');
- edge.setAttribute('stroke-opacity','.36');
- edge.setAttribute('stroke-width',String(Math.max(.2,(maxX-minX)/125)));
- svg.append(edge);
+ // ÚNICO contorno SVG por ficha. El degradado y el trazo metálico
+ // pertenecen al mismo path, sin superponer geometrías duplicadas;
+ // los inspectores de CAD y los tests acceden a una sola silueta.
  return svg;
 }
 function toolCard(tool,kind){
