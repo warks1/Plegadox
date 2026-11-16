@@ -11,7 +11,9 @@ const guidance=(...pairs)=>({choice:pairs[0]||null,
  candidates:pairs,alternatives:pairs.slice(1),reasons:['Ensayo controlado']});
 const sheet=(_piece,order)=>({order,score:0,
  counts:{cross:0,overlap:0,touch:0,close:0},verified:false});
-const gauge=()=>({warningCount:0,contactNotObserved:0,operations:[]});
+const gauge=piece=>({warningCount:0,contactNotObserved:0,
+ operations:piece.order.map((bend,operation)=>({
+  bend,operation,contactObserved:true,findings:[]}))});
 const tool=piece=>({operations:piece.order.map(()=>({
  samples:2,possibleToolIntrusion:piece.punch==='straight88',
  possibleToolInterference:piece.punch==='straight88'
@@ -57,7 +59,9 @@ test('el cribado de tope influye en elegir una pareja frente a otra',()=>{
   }))}),
   volumeEvaluator:()=>({modeledMachineWarnings:0,uncertainSweptIntervals:0,framesChecked:6}),
   gaugeEvaluator:piece=>piece.die==='v16'?
-   {warningCount:1,operations:[{findings:[{kind:'penetracion'}]}]}:gauge(),
+   {warningCount:1,contactNotObserved:0,operations:piece.order.map((bend,operation)=>({
+    bend,operation,contactObserved:true,
+    findings:operation===0?[{kind:'penetracion'}]:[]}))}:gauge(piece),
   maxOrders:1,maxPairs:2,maxFinalists:5
  });
  assert.equal(report.best.dieId,'v12');
