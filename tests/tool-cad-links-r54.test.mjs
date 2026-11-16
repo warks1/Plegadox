@@ -27,6 +27,6 @@ test('los enlaces DXF están fuera de botones de herramienta y no cambian el mon
  assert.match(app,/sources.replaceChildren\(\.\.\.nodes\)/);
  assert.match(app,/a\.href=tool\.cadSourceUrl/);
  assert.match(app,/noopener noreferrer/);
- assert.match(app,/DXF local importado/);
+ assert.match(app,/Perfil 2D importado de DXF local/);
  assert.match(html,/para sustituir el contorno provisional/);
 });
