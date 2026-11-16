@@ -1,5 +1,6 @@
 /** Interfaz de importación DXF de utillaje, completamente local. */
 import {parseToolDxf,importedTool} from './tool-dxf.js';
+import {inspectPunchWorkingAxis,inspectDieWorkingAxis} from './tool-cad-datum.js';
 import {CATALOG_PUNCHES,CATALOG_DIES} from './catalog.js';
 const $=id=>document.getElementById(id);
 function drawPreview(canvas,parsed){
@@ -23,6 +24,9 @@ export function setupToolDxfImporter({add}){
  const input=$('toolDxfFile'),save=$('toolDxfCommit'),status=$('toolDxfStatus');
  if(!input||!save||!status)return;
  const kind=$('toolDxfKind'),name=$('toolDxfName'),preview=$('toolDxfCanvas');
+ const axisInput=$('toolDxfAxisX');
+ const axisReview=parsed=>parsed?(kind.value==='die'?
+  inspectDieWorkingAxis(parsed.points):inspectPunchWorkingAxis(parsed.points)):null;
  const mount=$('toolDxfMount');
  let parsed=null;
  const say=(message,error=false)=>{
@@ -52,6 +56,7 @@ export function setupToolDxfImporter({add}){
    preset.textContent='Preparar importación';
    preset.addEventListener('click',()=>{
     parsed=null;input.value='';save.disabled=true;preview.hidden=true;
+    if(axisInput)axisInput.value='';
     kind.value=toolKind;toggle();name.value=tool.reference||tool.name;
     // Las familias de amarre se proponen desde catálogo, pero la
     // fijación física debe comprobarla el operador antes de guardar.
@@ -87,8 +92,12 @@ export function setupToolDxfImporter({add}){
       const model=parseToolDxf(source);
       parsed=model;save.disabled=false;preview.hidden=false;
       drawPreview(preview,model);
-      say('DXF del fabricante analizado: '+model.points.length+
-       ' vértices. Confirma la V activa, orientación, escala y fijación antes de guardar.');
+      const audit=axisReview(model);
+      say('DXF del fabricante: '+model.points.length+' vértices. '+
+       'Eje X '+(audit.datumEstablished?
+        audit.axisX.toFixed(3)+' mm (inferido)':
+        'AMBIGUO: indica X de la punta/V seleccionada')+'. '+
+       'Confirma orientación, escala y sistema de amarre antes de guardar.');
      }catch(error){
       say('No se pudo cargar el DXF directamente: '+error.message+
        '. Descárgalo desde la ficha y selecciona el archivo en el campo superior.',true);
@@ -113,8 +122,11 @@ export function setupToolDxfImporter({add}){
    preview.hidden=false;
    drawPreview(preview,model);
    save.disabled=false;
+   const audit=axisReview(model);
    say('Contorno leído: '+model.points.length+' vértices · '+
-    model.width.toFixed(2)+' × '+model.height.toFixed(2)+' mm. '+
+    model.width.toFixed(2)+' × '+model.height.toFixed(2)+' mm · '+
+    (audit.datumEstablished?'Eje de trabajo X '+audit.axisX.toFixed(3)+
+     ' mm inferido; ':audit.status+'; introduce la X de la punta/V; ')+
     (model.unitsAssumed?'El archivo no declara mm: revisa la escala. ':'')+
     'Comprueba la orientación (punta del punzón abajo, V de la matriz arriba), ángulo, apertura, longitud y amarre antes de guardar.');
   }catch(e){say('No se puede importar: '+e.message,true);}
@@ -125,12 +137,13 @@ export function setupToolDxfImporter({add}){
    const tool=importedTool(parsed,{
     kind:kind.value,name:name.value,angle:$('toolDxfAngle').value,
     length:$('toolDxfLength').value,opening:$('toolDxfOpening').value,
-    tip:$('toolDxfTip').value,mount:mount?.value||'Desconocido'
+    tip:$('toolDxfTip').value,mount:mount?.value||'Desconocido',
+    axisX:axisInput?.value?.trim()||null
    });
    add(tool,kind.value);
    window.dispatchEvent(new Event('plegadox:toolingChanged'));
    say('✓ Perfil DXF añadido a la biblioteca y seleccionado. '+
-    'Se utiliza su contorno 2D en el dibujo y cribado geométrico. '+
+    'La punta/V de trabajo queda en X=0 del dibujo geométrico. '+
     'El amarre seleccionado es una declaración del operador, no una certificación de compatibilidad con la máquina.');
    save.disabled=true;
   }catch(e){say('No se pudo guardar: '+e.message,true);}
