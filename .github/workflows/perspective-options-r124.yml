@@ -1,0 +1,39 @@
+name: PlegadoX · opciones avanzadas de perspectiva R124
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'machine-view-options.js'
+      - 'machine-visual.js'
+      - 'render-enhancements.js'
+      - 'studio.js'
+      - 'index.html'
+      - 'styles.css'
+      - 'tests/machine-perspective-r124-browser-smoke.mjs'
+      - '.github/workflows/perspective-options-r124.yml'
+permissions:
+  contents: read
+jobs:
+  perspective:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Preparar recursos y Chromium
+        run: |
+          python3 tools/generate-pwa-icons.py
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Comprobar opciones de cámara y controles en móvil, tablet y PC
+        run: node tests/machine-perspective-r124-browser-smoke.mjs
+      - name: Capturas industriales por dispositivo
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: plegadox-perspectivas-r124-iphone-tablet-pc
+          path: test-results/r124-perspective-*.png
+          if-no-files-found: warn
+          retention-days: 30
