@@ -89,11 +89,22 @@ export function inspectGaugeOperation(piece,operation,{
   const lo=Math.floor(f),hi=Math.min(lo+1,early.length-1);
   return early[lo]+(early[hi]-early[lo])*(f-lo);
  };
+ // R116: el planificador llama a veces con 8 muestras por operación.
+ // Interpolar sólo nueve poses repartidas uniformemente SALTABA por
+ // encima de .46 y .48, justo cuando el dedo puede rozar la chapa.
+ // Reservar esas fases de cierre incluso con presupuesto bajo, sin
+ // cambiar la distribución fina habitual de 18+ muestras.
+ const mandatory=[0,GAUGE_RETRACT_START,.40,GAUGE_RETRACT_FINISH,
+  .46,.48,GAUGE_REPOSITION_START,.92,1-2e-7];
+ const optional=[.42,.47,.65,.88,.96,.38,.45,.50,.60];
+ const lowBudget=samples<18?
+  [...new Set([...mandatory,...optional.slice(0,samples+1-mandatory.length)])]
+   .sort((a,b)=>a-b):null;
  for(let i=0;i<=samples;i++){
-  const relative=5*(i<=split?
+  const relative=5*(lowBudget?lowBudget[i]:(i<=split?
    earlyAt(i/split):
    GAUGE_REPOSITION_START+(1-GAUGE_REPOSITION_START)*
-    (i-split)/(samples-split));
+    (i-split)/(samples-split)));
   const time=start+(i===samples?5-1e-6:relative);
   const {scene,place}=inspect(p,time);
   if(!scene||!place||!scene.stage||scene.stage.activeOperation!==operation)
