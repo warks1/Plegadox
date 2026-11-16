@@ -72,3 +72,18 @@ test('R120: selección por nombre NO permite rutas peligrosas ni duplicados conf
   ['repetido.DXF',dxf(20)],['repetido.DXF',dxf(40)]
  ]),{selectName:'repetido.DXF'}),/varios DXF/);
 });
+
+test('R120: AppleDouble __MACOSX/._*.DXF no es una segunda geometría OEM',async()=>{
+ const real=dxf(40);
+ const archive=fixture([
+  ['11780.DXF',real],
+  ['__MACOSX/._11780.DXF',dxf(60)]
+ ]);
+ const entries=await listDxfZipEntries(archive);
+ assert.deepEqual(entries.map(x=>x.name),['11780.DXF']);
+ const selected=await extractDxfFromZip(archive);
+ assert.equal(selected.name,'11780.DXF');
+ assert.equal(parseToolDxf(selected.content).width,40);
+ await assert.rejects(extractDxfFromZip(archive,{
+  selectName:'__MACOSX/._11780.DXF'}),/no existe en el ZIP/);
+});
