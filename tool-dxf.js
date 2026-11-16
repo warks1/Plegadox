@@ -248,7 +248,7 @@ function insertedContour(record,blocks){
  // Un componente de máquina puede superar el máximo de un punzón.
  return mapped;
 }
-function resolveDxfGeometry(pairs){
+function resolveDxfGeometry(pairs,{entityLayer=null}={}){
  const records=dxfRecords(pairs);
  const allBlocks=records.filter(r=>r.section==='BLOCKS');
  const blocks=new Map();
@@ -271,7 +271,14 @@ function resolveDxfGeometry(pairs){
   }else throw Error('Entidad fuera de BLOCK en sección BLOCKS');
  }
  if(current)throw Error('BLOCK sin cierre ENDBLK');
- const entities=records.filter(r=>r.section==='ENTITIES');
+ const sourceEntities=records.filter(r=>r.section==='ENTITIES');
+ const layer=entityLayer===null?null:String(entityLayer).trim();
+ if(layer!==null&&(!layer||layer.length>120))
+  throw Error('La capa DXF seleccionada no es válida');
+ const entities=layer===null?sourceEntities:
+  sourceEntities.filter(r=>String(property(r.body,8,'0')).trim()===layer);
+ if(layer!==null&&!entities.length)
+  throw Error('La capa DXF '+layer+' no contiene entidades de perfil');
  found=records.some(r=>r.section==='ENTITIES');
  if(!found)throw Error('Falta la sección ENTITIES del DXF ASCII');
  const insertions=entities.filter(r=>r.type==='INSERT');
@@ -349,6 +356,27 @@ export function validateContour(raw,options={}){
  }
  return {points,width,height};
 }
+/**
+ * Inventario seguro de CAPAS de un DXF ASCII OEM. Las anotaciones,
+ * cotas y perfiles no deben fusionarse por su cercanía visual.
+ * Seleccionar capa significa sólo filtrar sus entidades: después
+ * parseToolDxf seguirá exigiendo UN contorno cerrado sin duplicados.
+ */
+export function inspectToolDxfLayers(text){
+ const items=dxfRecords(parsePairs(text))
+  .filter(row=>row.section==='ENTITIES');
+ const groups=new Map();
+ for(const row of items){
+  if(['TEXT','MTEXT','POINT'].includes(row.type))continue;
+  const layer=String(property(row.body,8,'0')).trim()||'0';
+  if(!groups.has(layer))groups.set(layer,{name:layer,total:0,types:{}});
+  const group=groups.get(layer);
+  group.total++;
+  group.types[row.type]=(group.types[row.type]||0)+1;
+ }
+ return {layers:[...groups.values()].sort((a,b)=>a.name.localeCompare(b.name)),
+  entityCount:items.length,profileCertified:false};
+}
 export function parseToolDxf(text,options={}){
  const pairs=parsePairs(text);
  let units=null;
@@ -358,7 +386,9 @@ export function parseToolDxf(text,options={}){
  }
  if(units!==null&&units!==0&&units!==4)
   throw Error('DXF con unidades no milimétricas ($INSUNITS='+units+'). Convierte a mm antes de importar');
- const contour=validateContour(resolveDxfGeometry(pairs),options);
+ const contour=validateContour(resolveDxfGeometry(pairs,{
+  entityLayer:options.entityLayer??null
+ }),options);
  const x0=Math.min(...contour.points.map(p=>p[0])),
        y0=Math.min(...contour.points.map(p=>p[1]));
  const normalized=contour.points.map(([x,y])=>[
