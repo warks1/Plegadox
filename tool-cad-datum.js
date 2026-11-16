@@ -83,10 +83,18 @@ export function alignToolSectionToWorkingAxis(points,kind,{axisX=null}={}){
  if(manual&&(!Number.isFinite(Number(axisX))||
   Number(axisX)<b.xMin-.01||Number(axisX)>b.xMax+.01))
   throw Error('Eje X del útil fuera de su contorno CAD');
+ if(kind==='die'&&observed.vCount===0)
+  throw Error('DXF SIN GARGANTA V IDENTIFICABLE: no puede registrarse como matriz V; comprueba orientación y tipo');
  if(!manual&&!observed.datumEstablished)
   throw Error(observed.status+
    ': indica X exacta de la punta/V o selecciona la V de trabajo');
  const selected=manual?Number(axisX):observed.axisX;
+ if(kind==='die'&&manual&&
+  !observed.vCenters.some(q=>Math.abs(q.x-selected)<.75))
+  throw Error('La X seleccionada no coincide con ninguna garganta V identificada');
+ if(kind==='punch'&&manual&&observed.datumEstablished&&
+  Math.abs(observed.axisX-selected)>.25)
+  throw Error('La X seleccionada no coincide con la punta detectada del punzón');
  const normalized=points.map(p=>[
   Number((p[0]-selected).toFixed(6)),
   Number((p[1]-b.yMin).toFixed(6))
