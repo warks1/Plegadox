@@ -3,7 +3,7 @@ import {parseToolDxf,importedTool} from './tool-dxf.js';
 import {extractDxfFromZip} from './cad-zip-reader.js';
 import {auditImportedCadDimensions,catalogCadAuditReference} from './tool-cad-oem-audit.js';
 import {inspectPunchWorkingAxis,inspectDieWorkingAxis} from './tool-cad-datum.js';
-import {CATALOG_PUNCHES,CATALOG_DIES} from './catalog.js';
+import {listCadImportSources,suggestedMountFamily} from './cad-import-sources.js';
 const $=id=>document.getElementById(id);
 function drawPreview(canvas,parsed,axisReview=null,manualAxis=null){
  const rect=canvas.getBoundingClientRect();
@@ -99,18 +99,20 @@ export function setupToolDxfImporter({add}){
  });
  const cadSources=$('toolCadSources');
  if(cadSources){
-  const records=[
-   ...CATALOG_PUNCHES.filter(x=>x.cadSourceUrl).map(x=>({tool:x,kind:'punch'})),
-   ...CATALOG_DIES.filter(x=>x.cadSourceUrl).map(x=>({tool:x,kind:'die'}))
-  ];
+  const records=listCadImportSources();
   const display=records.map(({tool,kind:toolKind})=>{
    const card=document.createElement('article');card.className='px-oem-cad-source';
    const title=document.createElement('strong');
    title.textContent=(tool.manufacturer||'OEM')+' · '+(tool.reference||tool.name);
    const details=document.createElement('small');
-   details.textContent=(toolKind==='punch'?'Punzón':'Matriz')+' · '+tool.angle+'°'+
-    (toolKind==='die'?' · V'+tool.opening:' · R'+(tool.tip/2))+
-    ' · H nominal '+tool.height+' mm · DXF todavía sin importar';
+   const angle=Number.isFinite(tool.angle)?tool.angle+'°':'ángulo pendiente';
+   const throat=toolKind==='die'?
+    (Number.isFinite(tool.opening)?'V'+tool.opening:'V pendiente'):
+    (Number.isFinite(tool.tip)?'R'+(tool.tip/2):'R pendiente');
+   details.textContent=(toolKind==='punch'?'Punzón':'Matriz')+' · '+angle+
+    ' · '+throat+' · H nominal '+
+    (Number.isFinite(tool.height)?tool.height+' mm':'sin cota')+
+    ' · DXF todavía sin importar';
    const actions=document.createElement('div');actions.className='px-oem-cad-actions';
    const preset=document.createElement('button');preset.type='button';
    preset.textContent='Preparar importación';
@@ -121,15 +123,15 @@ export function setupToolDxfImporter({add}){
     kind.value=toolKind;toggle();name.value=tool.reference||tool.name;
     // Las familias de amarre se proponen desde catálogo, pero la
     // fijación física debe comprobarla el operador antes de guardar.
-    const family=String(tool.mount||'');
-    const declared=['WILA','Amada/Promecam','TRUMPF','Bystronic/Beyeler R'].includes(family)?
-     family:/Bystronic|Beyeler/i.test(family)?'Bystronic/Beyeler R':'Desconocido';
+    const declared=suggestedMountFamily(tool.mount);
     if(mount)mount.value=declared;
-    $('toolDxfAngle').value=String(tool.angle);
-    $('toolDxfLength').value=String(tool.length||415);
-    if(toolKind==='die')$('toolDxfOpening').value=String(tool.opening);
-    else $('toolDxfTip').value=String(tool.tip||1);
-    say('Referencia '+tool.reference+' preparada. Descarga el DXF OEM y súbelo a este formulario. El contorno y el amarre quedan pendientes de comprobación.');
+    $('toolDxfAngle').value=Number.isFinite(tool.angle)?String(tool.angle):'';
+    $('toolDxfLength').value=Number.isFinite(tool.length)&&tool.length>0?
+     String(tool.length):'';
+    if(toolKind==='die')$('toolDxfOpening').value=
+     Number.isFinite(tool.opening)?String(tool.opening):'';
+    else $('toolDxfTip').value=Number.isFinite(tool.tip)?String(tool.tip):'';
+    say('Referencia '+tool.reference+' preparada. Descarga el DXF OEM y súbelo a este formulario. Indica la longitud real del segmento Z, confirma el amarre exacto y comprueba las cotas; ningún enlace equivale a CAD certificado.');
    });
    const ref=document.createElement('a');ref.href=tool.cadSourceUrl;
    ref.target='_blank';ref.rel='noopener noreferrer';
