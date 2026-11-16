@@ -52,6 +52,7 @@ function expected(item){
  const d=item.dimensions||{};
  return {kind:item.kind,reference:item.reference,
   sourceUrl:item.sourceUrl,heightMm:d.heightMm??null,
+  cadHeightEvidence:item.heightEvidence||null,
   angleDeg:d.angleDeg??null,
   openingMm:d.vOpeningMm??null,
   tipDiameterMm:d.tipRadiusMm==null?null:2*d.tipRadiusMm};
@@ -136,6 +137,8 @@ async function audit(item){
          heightMm:parsedCycle.height,widthMm:parsedCycle.width,
          segments:candidate.segments,geometrySha256:fingerprint,
          nominalMatch:review.canRegister,conflicts:review.conflicts,
+         heightReviewStatus:review.status,
+         mountingTangMm:review.cadHeightDatumPending?review.mountingTangMm:null,
          heightDifferenceMm:item.dimensions?.heightMm!=null?
           Number((parsedCycle.height-item.dimensions.heightMm).toFixed(4)):null});
        }
@@ -242,7 +245,7 @@ await writeFile(OUTPUT,JSON.stringify({
 const summary=[
  '## PlegadoX · rastreo remoto CAD OEM',
  '',
- '| Enlaces | Capas seleccionables | Ciclos originales distintos | Ciclos con H nominal coincidente | CAD montados comprobados |',
+ '| Enlaces | Capas seleccionables | Ciclos originales distintos | Ciclos con altura cotejada (incluye zanco documentado) | CAD montados comprobados |',
  '|---:|---:|---:|---:|---:|',
  `| ${metrics.total} | ${metrics.layerCandidates} | ${metrics.cycleCandidates} | ${metrics.nominalCycleCandidates} | 0 |`,
  '',
