@@ -383,16 +383,28 @@ export function setupToolDxfImporter({add}){
     cadSourcePage:cadReview.sourceUrl,
     cadNominalReviewStatus:cadReview.status,
     cadNominalChecks:cadReview.checks,
+    cadHeightDatumPending:cadReview.cadHeightDatumPending===true,
+    nominalHeightMm:cadReview.nominalHeightMm??null,
+    mountingTangMm:cadReview.mountingTangMm??null,
     manufacturerVerified:false,
+    mountVerified:false,datumVerified:false,
     sourceDescription:tool.sourceDescription+
-     ' · Cotas de ficha comparadas (identidad OEM sin autenticar)'
+     (cadReview.cadHeightDatumPending?
+      ' · Altura total del dibujo '+cadReview.totalContourHeightMm+
+      ' mm; H nominal '+cadReview.nominalHeightMm+
+      ' mm + zanco '+cadReview.mountingTangMm+
+      ' mm. POSICIÓN DE MONTAJE NO VERIFICADA.' :
+      ' · Cotas de ficha comparadas (identidad OEM sin autenticar)')
    }:tool;
    add(record,kind.value);
    window.dispatchEvent(new Event('plegadox:toolingChanged'));
    say('✓ Perfil DXF añadido a la biblioteca y seleccionado. '+
     'La punta/V de trabajo queda en X=0 del dibujo geométrico. '+
     'El amarre seleccionado es una declaración del operador, no una certificación de compatibilidad con la máquina.'+
-    (preparedSource?' Cotas nominales contrastadas; archivo OEM NO autenticado.':''));
+    (preparedSource?(cadReview.cadHeightDatumPending?
+     ' Dibujo OEM con altura total y zanco cotejados. El cero de montaje '+
+     'y la altura útil CNC siguen PENDIENTES; perfil no certificado.':
+     ' Cotas nominales contrastadas; archivo OEM NO autenticado.'):'') );
    save.disabled=true;
   }catch(e){say('No se pudo guardar: '+e.message,true);}
  });
