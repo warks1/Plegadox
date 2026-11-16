@@ -26,7 +26,26 @@ export function auditImportedCadDimensions(parsed,expected=null,declared={}){
    tolerance,origin,match:false,reason:'Dato declarado ausente o inválido'});return;}
   checks.push(check(field,actual,nominal,tolerance,origin));
  };
- assess('heightMm',parsed.height,expected.heightMm,.5,'MEDIDO_EN_DXF_2D');
+ // Algunas matrices llevan zanco de montaje por DEBAJO de la
+ // altura nominal de trabajo. Solo reconocer H completa si hay un
+ // plano acotado de la MISMA referencia que muestre H útil+zanco.
+ // Nunca inferir 20/30 mm por una coincidencia casual de diferencias.
+ const datum=expected.cadHeightEvidence;
+ const documentedFull=expected.kind==='die'&&
+  datum?.kind==='DIE_PROFILE_INCLUDING_MOUNTING_TANG'&&
+  String(datum.reference)===String(expected.reference)&&
+  isNum(datum.nominalHeightMm)&&
+  isNum(datum.drawingOverallMm)&&
+  isNum(datum.mountingTangMm)&&datum.mountingTangMm>0&&
+  Math.abs(datum.drawingOverallMm-datum.nominalHeightMm-
+   datum.mountingTangMm)<.001&&
+  isNum(expected.heightMm)&&
+  Math.abs(expected.heightMm-datum.nominalHeightMm)<.001&&
+  /^https:\/\//.test(String(datum.sourceUrl||''));
+ const expectedContourHeight=documentedFull?
+  datum.drawingOverallMm:expected.heightMm;
+ assess('heightMm',parsed.height,expectedContourHeight,.5,
+  documentedFull?'TOTAL_CONTORNO_VS_PLANO_OEM_CON_ZANCO':'MEDIDO_EN_DXF_2D');
  assess('angleDeg',Number(declared.angleDeg),expected.angleDeg,.1,
   'SOLO_DECLARACION_OPERADOR_NO_MEDIDO_EN_DXF');
  if(expected.kind==='die')
@@ -36,9 +55,15 @@ export function auditImportedCadDimensions(parsed,expected=null,declared={}){
   'SOLO_DECLARACION_OPERADOR_NO_MEDIDO_EN_DXF');
  const conflicts=checks.filter(c=>!c.match);
  return {status:conflicts.length?'DISCREPANCIA_BLOQUEANTE':
+  documentedFull?'ALTURA_TOTAL_DXF_COTEJADA_DATUM_MONTAJE_PENDIENTE':
   missing.length?'COTAS_PARCIALES_NO_CERTIFICADAS':'COTAS_NOMINALES_COINCIDENTES_NO_CERTIFICADAS',
   canRegister:conflicts.length===0,checks,conflicts,missing,
   reference:String(expected.reference||''),sourceUrl:String(expected.sourceUrl||''),
+  nominalHeightMm:documentedFull?datum.nominalHeightMm:null,
+  totalContourHeightMm:documentedFull?datum.drawingOverallMm:null,
+  mountingTangMm:documentedFull?datum.mountingTangMm:null,
+  cadHeightDatumPending:documentedFull,
+  heightEvidenceSource:documentedFull?datum.sourceUrl:null,
   verified:false,manufacturerVerified:false};
 }
 export function catalogCadAuditReference(tool,kind){
@@ -46,6 +71,7 @@ export function catalogCadAuditReference(tool,kind){
  const evidence={kind,reference:String(tool.reference||tool.name||''),
   sourceUrl:String(tool.cadSourceUrl||''),
   heightMm:isNum(tool.height)?tool.height:null,
+  cadHeightEvidence:tool.cadHeightEvidence||null,
   angleDeg:isNum(tool.angle)?tool.angle:null};
  if(kind==='die')evidence.openingMm=isNum(tool.opening)?tool.opening:null;
  else evidence.tipDiameterMm=isNum(tool.tip)?tool.tip:null;
