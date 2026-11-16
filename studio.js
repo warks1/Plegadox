@@ -146,12 +146,11 @@ function init(){
   bindButton(id,()=>{
    const v=currentView();if(!v)return;
    if(key==='perspective'){
-    v.perspective=!v.perspective;v.section=false;
-    v.preset=v.perspective?'nominal':'profile';
+    // El atajo 2D/2,5D aplica un preset REAL, no conserva una
+    // profundidad personalizada mientras la UI dice 'Industrial'.
+    applyViewPreset(v,v.perspective?'profile':'nominal');
    }else if(key==='section'){
-    v.section=!v.section;
-    v.perspective=!v.section;
-    v.preset=v.section?'section':'nominal';
+    applyViewPreset(v,v.section?'nominal':'section');
    }else v.transparent=!v.transparent;
    paint();
   });
