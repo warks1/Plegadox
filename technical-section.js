@@ -8,6 +8,7 @@
  */
 import {normalized,stage,presentedAtStage,presentedForMachine,gaugeReference,gaugePointOnProfile,getTooling,development,clamp} from './engine.js';
 import {sectionPunch,sectionDie,sectionBounds} from './tool-profiles.js';
+import {drawMachinedToolSection} from './industrial-tool-finish.js';
 import {contactKinematics,roundedCorner} from './bend-contact.js';
 import {gaugePlacement,gaugeContourAtContact} from './backgauge-placement.js';
 import {getActiveMachineConfig,gaugeOutline,gaugeContactFeature} from './machine-config.js';
@@ -482,11 +483,10 @@ export function drawTechnicalSection(ctx,w,h,piece,sim,view={}){
  ctx.setLineDash([6,5]);ctx.lineWidth=1;
  ctx.strokeStyle='#65a7ce5c';ctx.beginPath();ctx.moveTo(0,origin.y);
  ctx.lineTo(w,origin.y);ctx.stroke();ctx.setLineDash([]);
- // Tool contour is derived from die opening and included V-angle in mm.
- const dp=poly(result.diePolygon),dieFill=gradient(ctx,dp[0].x,0,dp.at(5).x,0,
- [[0,'#24576b'],[.24,'#85b6c5'],[.52,'#356e82'],[.75,'#9bcbd5'],[1,'#244359']]);
- ctx.save();ctx.shadowBlur=16;ctx.shadowColor='#000b';
- polygon(ctx,dp,dieFill,'#a2d5e9',1.7);ctx.restore();
+ // Misma sección del motor CAD y mismo acero mecanizado que la vista
+ // industrial 2,5D. Nada de dibujar la V genérica sobre un DXF multivía.
+ const dp=poly(result.diePolygon);
+ drawMachinedToolSection(ctx,dp.map(p=>[p.x,p.y]),{kind:'die',scale});
  // Tope seleccionado detrás de la chapa, como en la foto de taller.
  // Sin reconstrucción CAD ni posición de los ejes X/R/Z de la máquina.
  const stopNumber=result.piece.stopByBend?.[st.activeBend]===2?2:1;
@@ -514,11 +514,9 @@ export function drawTechnicalSection(ctx,w,h,piece,sim,view={}){
  ctx.beginPath();ctx.arc(nose.x,nose.y,3.2,0,Math.PI*2);
  ctx.fillStyle=colors.face;ctx.fill();
  ctx.restore();
-  const pp=poly(result.punchPolygon),punchFill=gradient(ctx,pp[0].x,0,pp[1].x,0,
- [[0,'#435d6f'],[.17,'#d7ebf2'],[.4,'#809cac'],[.55,'#e7f5f9'],[.8,'#637f95'],[1,'#253f57']]);
- ctx.save();ctx.globalAlpha=view.transparent?.34:1;
- ctx.shadowColor='#000b';ctx.shadowBlur=11;
- polygon(ctx,pp,punchFill,'#d8f1ff',1.35);ctx.restore();
+  const pp=poly(result.punchPolygon);
+ drawMachinedToolSection(ctx,pp.map(p=>[p.x,p.y]),
+  {kind:'punch',scale,transparent:Boolean(view.transparent)});
  // Sheet from the current accumulated bend state, not a finished omega.
  const sp=poly(result.sheetDisplay);
  ctx.save();ctx.beginPath();sp.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));
