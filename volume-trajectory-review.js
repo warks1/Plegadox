@@ -19,7 +19,10 @@ import {scanAxisCADMovement,loadAxisMapping} from './machine-axis-geometry.js';
   'penetracion-barrido-lineal-modelado']);
  const uncertainSeverities=new Set(['intervalo-barrido-no-resuelto',
   'geometria-invalida']);
- const severityRank=severity=>modeledSeverities.has(severity)?3:
+ const provisionalSeverities=new Set(['solape-envolvente-provisional',
+  'solape-barrido-provisional']);
+ const severityRank=severity=>modeledSeverities.has(severity)?4:
+  provisionalSeverities.has(severity)?3:
   severity==='contacto-o-penetracion-posible'?2:
   uncertainSeverities.has(severity)?1:0;
 const bounded=(n,lo,hi,fallback)=>Number.isFinite(Number(n))?
@@ -105,10 +108,14 @@ export function scanVolumeTrajectory(input,options={}){
      }
      if(sweepFound){
       linearSweptPenetrations++;
+      const cadDeclared=[before.provenance,after.provenance].every(source=>
+       typeof source==='string'&&source.startsWith('perfil CAD importado '));
       const event={operation:op,bend:p.order[op],time,kind,
-       severity:'penetracion-barrido-lineal-modelado',
+       severity:cadDeclared?'penetracion-barrido-lineal-modelado':
+        'solape-barrido-provisional',
        segment:sweepFound.segment,volumeMm3:null,
-       evidence:'intersección de prismas en el barrido lineal entre poses de la simulación; no es una trayectoria CNC registrada',
+       evidence:'intersección en barrido lineal entre poses de la simulación; '+
+        (cadDeclared?'CAD importado sin validación CNC':'envolvente ilustrativa sin CAD OEM')+', no es trayectoria CNC registrada',
        verified:false};
       events.push(event);
       if(allEvents.length<200)allEvents.push(event);
@@ -133,6 +140,9 @@ export function scanVolumeTrajectory(input,options={}){
   }
   ops.push({operation:op,bend:p.order[op],samples:times.length,
    earliest:events[0]||null,findings:[...occurrences.values()],
+   // Conservar todas las incertidumbres del golpe incluso si otra
+   // muestra del MISMO cuerpo presenta después una penetración.
+   unresolvedFindingsCount:events.filter(e=>uncertainSeverities.has(e.severity)).length,
    possibleInterference:events.length>0,
    modelPenetration:events.some(e=>
     machineKinds.includes(e.kind)&&
@@ -168,16 +178,27 @@ export function scanVolumeTrajectory(input,options={}){
   maxIntervals:options.axisGeometryMaxIntervals
  });
   const byKind=Object.fromEntries(kinds.map(kind=>[kind,0]));
+ const provisionalByKind=Object.fromEntries(machineKinds.map(kind=>[kind,0]));
  let unresolvedGeometryFindings=0;
- for(const row of ops)for(const f of row.findings){
-  if(uncertainSeverities.has(f.severity))unresolvedGeometryFindings++;
-  // El contacto en el radio de matriz/punzón no prueba una intrusión;
-  // conservarlo como dato separado, no como penetración de la trancha.
-  if(modeledSeverities.has(f.severity)||
-    (['punch','die'].includes(f.kind)&&
-     f.severity==='contacto-o-penetracion-posible'))byKind[f.kind]++;
+ for(const row of ops){
+  unresolvedGeometryFindings+=row.unresolvedFindingsCount;
+  for(const f of row.findings){
+   if(provisionalByKind[f.kind]!==undefined&&
+      provisionalSeverities.has(f.severity))
+    provisionalByKind[f.kind]++;
+   // Una envolvente sin Z real no demuestra penetración de máquina.
+   // El contacto habitual con el radio del útil se cuenta por separado.
+   if(modeledSeverities.has(f.severity)||
+     (['punch','die'].includes(f.kind)&&
+      f.severity==='contacto-o-penetracion-posible'))byKind[f.kind]++;
+  }
  }
- return {operations:ops,framesChecked,byKind,
+ return {operations:ops,framesChecked,byKind,provisionalByKind,
+  provisionalMachineWarnings:machineKinds.reduce((n,kind)=>
+   n+provisionalByKind[kind],0),
+  provisionalRamWarnings:provisionalByKind.ram,
+  provisionalBedWarnings:provisionalByKind.bed,
+  provisionalGaugeWarnings:provisionalByKind.gauge,
   cadProfilesUsed:[...cadProfilesUsed],missingCadComponents:[...missingCadComponents],
   cadImportError,
   warningCount:ops.filter(o=>o.possibleInterference).length,
