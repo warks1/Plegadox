@@ -158,7 +158,7 @@ export function setupToolDxfImporter({add}){
    const cad=zipped?await extractDxfFromZip(await file.arrayBuffer()):null;
    const model=parseToolDxf(cad?cad.content:await file.text());
    parsed=model;
-   if(!name.value.trim())name.value=file.name.replace(/\.dxf$/i,'').slice(0,65);
+   if(!name.value.trim())name.value=file.name.replace(/(?:\.dxf)?\.(?:dxf|zip)$/i,'').slice(0,65);
    preview.hidden=false;
    drawPreview(preview,model,axisReview(model),axisInput?.value||null);
    save.disabled=false;
