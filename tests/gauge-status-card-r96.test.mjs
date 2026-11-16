@@ -49,8 +49,8 @@ test('R96: nivel de riesgo visible, sin cambiar geometría ni instrucciones de r
   [amber.x,amber.y,amber.width,amber.height],
   'El cambio de estado no puede desplazar el indicador');
  const file=readFileSync(new URL('../machine-visual.js',import.meta.url),'utf8');
- assert.match(file,/if\(!perspective\)\{[\s\S]*'⚠ TOPE '\+placement.stopNumber/,
-  'La vista 2D anterior debe quedar conservada');
- assert.match(file,/if\(perspective\)\{[\s\S]*drawGaugeStatusCard\(ctx,layout,level,GAUGE_COLORS\[level\]\)/,
-  'Sólo perspectiva usa la tarjeta de aviso compacta');
+ assert.match(file,/drawGaugeStatusCard\(ctx,layout,level,GAUGE_COLORS\[level\]\)/,
+  '2D y perspectiva deben conservar el semáforo en la banda superior');
+ assert.doesNotMatch(file,/ctx\.fillText\(label,Math\.min\(Math\.max\(8,ox/,
+  'El texto del tope NO puede seguir al dedo sobre la matriz');
 });
