@@ -63,7 +63,7 @@ El resultado se marca `COTAS_PARCIALES`,
 `COTAS_CONTRADICTORIAS` o `COTAS_RECOPILADAS_NO_CERTIFICADAS`.
 **Nunca** `canApproveForMachine=true`.
 
-## Componentes necesarios por máquina (13 categorías)
+## Categorías que deben identificarse por máquina (13 posibles)
 1. Trancha o viga superior (ram)
 2. Mesa inferior
 3. Dedo posterior STOP 1
