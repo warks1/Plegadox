@@ -3,7 +3,7 @@ import {parseToolDxf,importedTool} from './tool-dxf.js';
 import {inspectPunchWorkingAxis,inspectDieWorkingAxis} from './tool-cad-datum.js';
 import {CATALOG_PUNCHES,CATALOG_DIES} from './catalog.js';
 const $=id=>document.getElementById(id);
-function drawPreview(canvas,parsed){
+function drawPreview(canvas,parsed,axisReview=null,manualAxis=null){
  const rect=canvas.getBoundingClientRect();
  const w=Math.max(300,Math.round(rect.width||440)),h=220;
  const ratio=Math.min(window.devicePixelRatio||1,2);
@@ -16,9 +16,32 @@ function drawPreview(canvas,parsed){
  ctx.beginPath();poly.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));
  ctx.closePath();ctx.fillStyle='#548daa';ctx.fill();
  ctx.lineWidth=2;ctx.strokeStyle='#b8eaff';ctx.stroke();
+ // R111: la línea de trabajo de la pata de cabra NO es el centro
+ // de la caja del dibujo. Si hay dos V, dibujar ambas candidatas.
+ const selected=manualAxis!==null&&String(manualAxis).trim()!==''?
+  Number(manualAxis):axisReview?.axisX;
+ const marks=axisReview?.vCenters?.length>1?
+  axisReview.vCenters.map(v=>v.x):
+  (Number.isFinite(selected)?[selected]:[]);
+ for(const axis of marks){
+  const x=map([axis,0])[0];
+  ctx.beginPath();ctx.setLineDash([5,5]);ctx.lineWidth=1.4;
+  ctx.moveTo(x,25);ctx.lineTo(x,h-22);
+  ctx.strokeStyle=Number.isFinite(selected)&&Math.abs(axis-selected)<.75?
+   '#81f3ce':'#ffc66b';
+  ctx.stroke();ctx.setLineDash([]);
+ }
  ctx.fillStyle='#d9efff';ctx.font='12px system-ui';
  ctx.fillText('CONTORNO DXF 2D · mm',12,17);
  ctx.fillText('Ancho '+parsed.width.toFixed(2)+' mm · Alto '+parsed.height.toFixed(2)+' mm',12,h-7);
+ if(axisReview){
+  ctx.fillStyle=axisReview.datumEstablished||Number.isFinite(selected)?
+   '#8ff6d1':'#ffd08a';
+  const annotation=Number.isFinite(selected)?
+   'PUNTA / V · X='+selected.toFixed(3)+' mm':
+   'EJE AMBIGUO · ELEGIR V / PUNTA';
+  ctx.fillText(annotation,12,34);
+ }
 }
 export function setupToolDxfImporter({add}){
  const input=$('toolDxfFile'),save=$('toolDxfCommit'),status=$('toolDxfStatus');
@@ -36,7 +59,13 @@ export function setupToolDxfImporter({add}){
   $('toolDxfDieOptions').hidden=kind.value!=='die';
   $('toolDxfPunchOptions').hidden=kind.value!=='punch';
  };
- kind.addEventListener('change',toggle);toggle();
+ kind.addEventListener('change',()=>{
+  toggle();
+  if(parsed)drawPreview(preview,parsed,axisReview(parsed),axisInput?.value||null);
+ });toggle();
+ axisInput?.addEventListener('input',()=>{
+  if(parsed)drawPreview(preview,parsed,axisReview(parsed),axisInput.value);
+ });
  const cadSources=$('toolCadSources');
  if(cadSources){
   const records=[
@@ -91,7 +120,7 @@ export function setupToolDxfImporter({add}){
       const source=await response.text();
       const model=parseToolDxf(source);
       parsed=model;save.disabled=false;preview.hidden=false;
-      drawPreview(preview,model);
+      drawPreview(preview,model,axisReview(model),axisInput?.value||null);
       const audit=axisReview(model);
       say('DXF del fabricante: '+model.points.length+' vértices. '+
        'Eje X '+(audit.datumEstablished?
@@ -120,7 +149,7 @@ export function setupToolDxfImporter({add}){
    parsed=model;
    if(!name.value.trim())name.value=file.name.replace(/\.dxf$/i,'').slice(0,65);
    preview.hidden=false;
-   drawPreview(preview,model);
+   drawPreview(preview,model,axisReview(model),axisInput?.value||null);
    save.disabled=false;
    const audit=axisReview(model);
    say('Contorno leído: '+model.points.length+' vértices · '+
