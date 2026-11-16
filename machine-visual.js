@@ -3,6 +3,7 @@
 import {stage,presentedAtStage,getTooling} from './engine.js';
 import {roundedRectPath} from './canvas-path.js';
 import {sectionPunch,sectionDie} from './tool-profiles.js';
+import {machineRamEnvelope} from './machine-ram-envelope.js';
 import {drawTechnicalSection,technicalScene,technicalCameraBounds} from './technical-section.js';
 import {currentToolContact} from './tool-collision.js';
 import {getActiveMachineConfig} from './machine-config.js';
@@ -389,12 +390,12 @@ function drawDie(ctx,scene,cx,cy,scale){
  return {top:cy,depth,opening:die.opening*scale,angle:die.angle,contour:pts};
 }
 function drawRam(ctx,cx,cy,scale,tipY,punch,scene){
- // Silueta del punzón calculada con el ángulo incluido nominal:
- // 30° = transición larga y estrecha, 60° = intermedia, 88° = corta.
- const geometry=sectionPunch(punch);
- const factor=scale;
- const top=tipY-geometry.height*factor;
- const ramW=125*scale;
+ // R108: la barra y el resalte lateral de la TRANCHA deben coincidir
+ // con el mismo contorno 2,5D examinado por el motor de colisiones.
+ // Se respeta la geometría OEM si existe en la revisión volumétrica.
+ const ramShape=machineRamEnvelope(scene,getActiveMachineConfig());
+ const top=cy-ramShape.toolTop*scale;
+ const ramW=ramShape.width*scale;
  steelRect(ctx,cx-ramW*.48,top-65*scale,ramW,75*scale,false);
  poly(ctx,[[cx+ramW*.52,top-65*scale],[cx+ramW*.66,top-76*scale],
        [cx+ramW*.66,top+5*scale],[cx+ramW*.52,top+10*scale]],
