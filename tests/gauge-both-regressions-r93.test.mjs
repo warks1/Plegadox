@@ -46,8 +46,9 @@ test('R93: G2 del vídeo retira el dedo con penetración futura aunque el apoyo 
  assert.equal(clamp.gaugeTransition.phase,'retroceso-antes-plegado');
  assert.equal(bend.gaugeTransition.phase,'retirado-durante-plegado');
  assert.ok(bend.gaugeTransition.plannedRetraction>0);
- assert.equal(gaugeRiskStatus(gaugePlacement(before,1)).level,'amber',
-  'La penetración FUTURA exige aviso ámbar aunque el apoyo inicial sea válido');
+ assert.equal(gaugeRiskStatus(gaugePlacement(before,1)).level,'green',
+  'La predicción con dedo quieto no representa un choque de la pose actual');
+ assert.equal(gaugeRiskStatus(gaugePlacement(before,1)).forecast,'retirada-prevista');
  assert.equal(JSON.stringify(p),saved,'No modificar la referencia manual');
 });
 
