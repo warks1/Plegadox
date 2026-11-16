@@ -894,7 +894,10 @@ function scheduleIntegratedAdvisor(){
     ', V='+plan.toolProfileEvidence.die+
     ' (ningún montaje certificado)'+
     ' · CAD máquina utilizado: '+(plan.cadProfilesUsed?.join(', ')||'ninguno')+
-    ' · CAD pendiente: '+(plan.cadMissing?.join(', ')||'sin inventario confirmado');
+    ' · CAD pendiente: '+(plan.cadMissing?.join(', ')||'sin inventario confirmado')+
+    ' · diagnóstico físico: '+(plan.physicalReview?.status||'SIN DATOS')+
+    (plan.physicalReview?.unknown?.length?
+     ' · sin comprobar: '+plan.physicalReview.unknown.slice(0,3).join(' / '):'');
    status.dataset.state=best.possibleInterference?'warning':'suggested';
    status.textContent='Cotejadas '+report.candidatePairs+' parejas preseleccionadas; '+
     report.pairsScreened+' parejas y '+report.planVariantsChecked+
@@ -902,8 +905,11 @@ function scheduleIntegratedAdvisor(){
     (report.truncated?' (búsqueda limitada). ':'. ')+
     'Mejor estimación: '+describe(best)+'. '+
     (report.machineWidthExceeded?'⚠ Ancho superior a la zona de máquina configurada. ':'')+
-    (best.possibleInterference?'⚠ Persisten avisos o datos sin comprobar. ':
-     'No se han detectado avisos en las muestras revisadas; esto NO acredita seguridad. ')+
+    (best.physicalReview?.unknown?.length?
+     '⚠ DATOS FÍSICOS PENDIENTES (NO significa colisión): '+
+      best.physicalReview.unknown.slice(0,3).join(' · ')+'. ':
+     best.possibleInterference?'⚠ Persisten avisos geométricos que requieren revisión. ':
+     'Sin interferencia observada en el modelo; NO certifica seguridad. ')+
     'Cotas Cybelec utilizadas en sólidos extruidos 3D; CAD OEM y recorridos CNC: SIN VERIFICAR.';
    const key=JSON.stringify(piece);
    pendingIntegratedPlan={key,plan:best};
