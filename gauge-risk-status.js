@@ -1,6 +1,6 @@
 /** Semáforo orientativo del tope en la sección 2D.
  * Verde: geometría calculada y sin interferencia detectada.
- * Naranja: apoyo inválido, datos insuficientes o riesgo/retirada prevista.
+ * Naranja: apoyo inválido, datos insuficientes o riesgo en pose actual.
  * Rojo: penetración geométrica detectada en la pose mostrada.
  * Ningún color equivale a una certificación 3D o autorización CNC.
  */
@@ -31,13 +31,22 @@ export function gaugeRiskStatus(placement){
  // Sólo se concede verde con kind explícito de ausencia de interferencia.
  if(!hit||hit.kind==='sin-geometria'||hit.kind!=='sin-interferencia-detectada'&&hit.warning===false)
   return {level:'amber',message:'COMPROBACIÓN 2D INCOMPLETA',verified:false};
- if(hit.warning===true||
-    plan?.enabled===true||
-    (Number(plan?.clearanceWarnings)||0)>0||
-    (Number(plan?.penetrationCount)||0)>0)
-  return {level:'amber',message:'POSIBLE INTERFERENCIA / REVISAR APOYO',verified:false};
- if(hit.kind==='sin-interferencia-detectada'&&hit.warning===false&&plan?.known===true)
-  return {level:'green',message:'SIN INTERFERENCIA DETECTADA EN 2D',verified:false};
+ // El pronóstico supone un dedo de tope inmóvil, pero la pose del
+ // simulador puede mostrar el dedo retirado. No confundir ambos riesgos.
+ if(hit.warning===true)
+  return {level:'amber',message:'HOLGURA O INTERFERENCIA EN POSICIÓN 2D ACTUAL',verified:false};
+ if(plan?.withdrawalUnverified===true||plan?.initialPenetration===true||
+    ((Number(plan?.penetrationCount)||0)>0&&plan?.enabled!==true))
+  return {level:'amber',message:'INTERFERENCIA FUTURA SIN RETIRADA FIABLE',verified:false};
+ if(hit.kind==='sin-interferencia-detectada'&&hit.warning===false&&plan?.known===true){
+  const forecast=plan?.enabled===true?'retirada-prevista':
+   (Number(plan?.clearanceWarnings)||0)>0?'holgura-futura':null;
+  return {level:'green',message:forecast==='retirada-prevista'?
+   'SIN CHOQUE EN POSE 2D · RETIRADA PREVISTA':
+   forecast==='holgura-futura'?
+   'SIN CHOQUE EN POSE 2D · HOLGURA FUTURA A REVISAR':
+   'SIN INTERFERENCIA DETECTADA EN 2D',forecast,verified:false};
+ }
  return {level:'amber',message:'COMPROBACIÓN 2D INCOMPLETA',verified:false};
 }
 export const GAUGE_COLORS=Object.freeze({
