@@ -14,12 +14,10 @@ test('R83: verde sin interferencia 2D aun con CAD OEM pendiente',()=>{
  assert.equal(status.level,'green');assert.equal(status.verified,false);
  assert.match(status.message,/2D/);
 });
-test('R83: naranja por holgura, retirada, apoyo incorrecto o dato incompleto',()=>{
+test('R98: naranja por holgura actual, apoyo incorrecto o dato incompleto',()=>{
  for(const p of [
   {...base,gaugeInterference:{warning:true,kind:'holgura'}},
   {...base,setupValid:false},
-  {...base,gaugeDecision:{known:true,enabled:true,penetrationCount:1}},
-  {...base,gaugeDecision:{known:true,enabled:false,clearanceWarnings:1}},
   {...base,gaugeDecision:{known:false},gaugeInterference:{warning:false,kind:'sin-geometria'}}
  ])assert.equal(gaugeRiskStatus(p).level,'amber');
 });
