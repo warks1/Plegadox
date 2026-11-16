@@ -54,6 +54,7 @@ export function listCadImportSources({
    // Sin cota longitudinal del SEGMENTO exacto no completar con 415 mm.
    length:null,
    cadSourceUrl:item.sourceUrl,cadDownloadUrl:item.cadUrl,
+   cadHeightEvidence:item.heightEvidence?{...item.heightEvidence}:null,
    cadStatus:'ENLACE_NO_IMPORTADO',profileAccuracy:'provisional',
    verifiedSpecs:false
   };
