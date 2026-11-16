@@ -658,5 +658,17 @@ function drawWarningHud(ctx,w,h,piece,sim,view){
 export function drawIndustrialMachine(ctx,w,h,piece,sim,machineView){
  if(machineView?.section)drawTechnicalSection(ctx,w,h,piece,sim,machineView);
  else stageScene(ctx,w,h,piece,sim,machineView);
+ // Los avisos físicos permanecen aunque el operador oculte componentes.
  drawWarningHud(ctx,w,h,piece,sim,machineView);
+ // La captura PNG no puede perder este aviso al desmarcar 'Rótulos'.
+ const status=machineView?.section?'SECCIÓN NOMINAL · NO CNC':
+  machineView?.perspective?'PERSPECTIVA 2,5D · CAD SIN VERIFICAR':
+   'PERFIL NOMINAL 2D · NO CNC';
+ ctx.save();
+ ctx.font='700 '+(w<520?9:10)+'px system-ui';
+ ctx.textAlign='right';ctx.textBaseline='alphabetic';
+ ctx.fillStyle='#b8d7e7';
+ ctx.shadowBlur=5;ctx.shadowColor='#071522';
+ ctx.fillText(status,w-10,h-6,Math.max(70,w*.7));
+ ctx.restore();
 }
