@@ -85,7 +85,13 @@ export async function extractDxfFromZip(data,{
   const safe=!name.startsWith('/')&&!name.includes('\\')&&
    !name.split('/').some(x=>x==='..'||x==='.');
   if(!safe)throw Error('Ruta peligrosa en archivo ZIP');
-  if(/\.dxf$/i.test(name)){
+  // Los ZIP oficiales de UKB incluyen AppleDouble de macOS
+  // (__MACOSX/._nombre.DXF): NO son dibujos. No permitir que el
+  // operador los confunda con variantes o se trate de leerlos.
+  const parts=name.split('/');
+  const metadata=parts.some(part=>part==='__MACOSX')||
+   parts.at(-1)?.startsWith('._');
+  if(/\.dxf$/i.test(name)&&!metadata){
    if(rawLen>MAX_DXF_BYTES||rawLen<20)
     throw Error('DXF dentro del ZIP fuera de tamaño permitido (1 MB)');
    if(method!==0&&method!==8)
