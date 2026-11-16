@@ -21,7 +21,7 @@ test('R89: verde sólo con sección evaluada y apoyo frontal físicamente válid
  ]){
   const status=gaugeRiskStatus({...valid,...broken});
   assert.equal(status.level,'amber',JSON.stringify(broken));
-  assert.match(status.message,/(APOYO|CHAPA POR DETRÁS|CARA DE PARADA)/);
+  assert.match(status.message,/(APOYO|CHAPA POR DETRÁS|CARA DE PARADA|ASIENTO FRONTAL)/);
  }
 });
 test('R89: datos de geometría desconocida nunca se pintan verdes',()=>{
