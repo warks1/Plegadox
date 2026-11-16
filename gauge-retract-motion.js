@@ -85,7 +85,12 @@ export function planGaugeRetraction({sheetSamples,polygon,thickness=2,contact,
    inspectGaugeProfile(sample.sheet,polygon,thickness,contact);
   if(!assessment)continue;
   if(assessment.warning){
-   issues.push({at:sample.at??null,kind:assessment.kind,point:assessment.point??null});
+   issues.push({at:sample.at??null,kind:assessment.kind,
+    point:assessment.point??null,segment:assessment.segment??null,
+    fingerEdge:assessment.fingerEdge??null,
+    distanceMm:assessment.distanceMm??null,
+    requiredMm:assessment.requiredMm??null,
+    deficitMm:assessment.deficitMm??null});
   }
  }
  // La holgura nominal próxima al canto NO es prueba de colisión con
