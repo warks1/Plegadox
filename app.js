@@ -829,7 +829,13 @@ function scheduleIntegratedAdvisor(){
    if(epoch!==integratedPlannerEpoch)return;
    if(!report.best){
     status.dataset.state='none';
-    status.textContent=report.candidatePairs>0?
+    status.textContent=report.status==='SIN_APOYO_NOMINAL_2D_VIABLE'?
+     'Ninguna de las '+report.planVariantsChecked+' variantes comprobadas ha mostrado apoyo nominal 2D válido en todos los pliegues. '+
+     'Variantes sin contacto: '+report.rejectionSummary.noGaugeContact+
+     '; con referencia inválida: '+report.rejectionSummary.invalidGaugeReference+
+     '. Revisa cara frontal, ala de referencia y tipo STOP/SUPPORT. '+
+     'No se modifica el orden manual ni se afirma que exista colisión: falta demostrar el apoyo físico.':
+     report.candidatePairs>0?
      'Cotejadas '+report.planVariantsChecked+' variantes de '+report.pairsScreened+
      ' parejas de útiles, pero ninguna garantiza un apoyo frontal válido del tope ni supera todos los filtros de penetración modelada '+
      '(chapa, punzón, matriz, tope, trancha o mesa). No se recomienda aplicar '+
