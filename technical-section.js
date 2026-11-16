@@ -182,7 +182,10 @@ export function technicalScene(piece,instant=0){
  ]);
  let prediction=gaugePlanCache.get(cacheKey);
  if(!prediction){
-  const fractionsForBend=[.44,.48,.52,.56,.60,.64,.68,.72,.76,.8,.83];
+  // R107: el aviso chapa/tope puede durar menos de 0,04 de golpe.
+  // Una malla de .44 a .48 perdía holguras presentes en .46.
+  const fractionsForBend=[.44,.45,.46,.47,.48,.52,.56,.60,.64,.68,
+   .72,.76,.80,.83];
   const nominalRadius=development(p).radius;
   const sheetSamples=fractionsForBend.map(relative=>{
    const next=stage(p,st.activeOperation*5+5*relative);
