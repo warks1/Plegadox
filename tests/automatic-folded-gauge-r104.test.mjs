@@ -110,3 +110,46 @@ test('R104: cara vertical preplegada requiere fracción de golpe ejecutada',()=>
   {...feature,surface:'horizontal-top'},2,true),null,
   'la cara lateral no sustituye la repisa de Support 2');
 });
+
+test('R105: cambia el canto original con HOLGURA si otro canto libre está limpio',()=>{
+ const p=makePiece(),before=JSON.stringify(p),st=stage(p,5.1);
+ const firstSegment=st.activeBend;
+ const evaluate=(_piece,_st,ref)=>{
+  const isFirst=ref.segmentIndex===firstSegment;
+  const otherFree=ref.segmentIndex===0;
+  return {valid:isFirst||otherFree,ref,
+   foldedWingContact:false,faceAccessible:true,
+   clearanceWarning:isFirst,verified:false};
+ };
+ const result=resolveGaugeSetup(p,st,{}, {evaluate});
+ assert.equal(result.valid,true);
+ assert.equal(result.ref.freeEdge,true);
+ assert.equal(result.ref.segmentIndex,0);
+ assert.equal(result.clearanceWarning,false);
+ assert.equal(result.autoSelected,true);
+ assert.equal(JSON.stringify(p),before);
+});
+
+test('R105: no invierte la Omega si las dos alternativas tienen la misma holgura',()=>{
+ const p=makePiece(),st=stage(p,5.1);
+ const evaluation=(_piece,_st,ref)=>({
+  valid:true,ref,foldedWingContact:false,faceAccessible:true,
+  clearanceWarning:true,verified:false
+ });
+ const first=resolveGaugeSetup(p,st,{}, {evaluate:evaluation});
+ assert.equal(first.ref.segmentIndex,st.activeBend,
+  'Mantener lado de alimentación programado si no mejora el aviso');
+ assert.equal(first.autoSelected,false);
+ assert.equal(first.clearanceWarning,true);
+});
+
+test('R105: no cambia de lado cuando la referencia original ya está limpia',()=>{
+ const p=makePiece(),st=stage(p,5.1);
+ const evaluation=(_piece,_st,ref)=>({
+  valid:true,ref,foldedWingContact:false,faceAccessible:true,
+  clearanceWarning:false,verified:false
+ });
+ const selected=resolveGaugeSetup(p,st,{}, {evaluate:evaluation});
+ assert.equal(selected.ref.segmentIndex,st.activeBend);
+ assert.equal(selected.autoSelected,false);
+});
