@@ -1,5 +1,15 @@
 # Plegadox — control y simulador de plegado
 
+## Estado actual · R107 (v0.9.81) · 16 de noviembre de 2026
+
+- **Holgura medida, no supuesta:** el detector 2D calcula la mínima separación entre la fibra media de la chapa y cada arista del tope, el umbral geométrico e/2 y el déficit resultante. El punto y segmento de chapa y la arista correspondiente del dedo quedan identificados.
+- **Aviso naranja con milímetros:** vista 2D, panel de referencia, tarjeta 2,5D, revisión por golpes y diagnóstico JSON pueden mostrar la separación real y el umbral orientativo. Una penetración real de fibra media sigue siendo roja; la mera proximidad no se llama colisión física confirmada.
+- **Motor inteligente sin huecos temporales:** el pronóstico ahora inspecciona también .45, .46 y .47 del ciclo; la revisión por golpe conserva 19 instantes habituales, incluyendo .46 y .48 sin perder los de cierre y reubicación final. Antes podía pasar de .44 a .48 y ocultar avisos breves que sí mostraba la animación.
+- **Omega 1→2→4→3:** comprobadas holguras puntuales en los cuatro golpes, con separaciones modeladas de aproximadamente 0,018 a 0,785 mm y umbral de 1 mm (chapa 2 mm). El barrido corregido detecta también G2 y G4; no aparecen penetraciones de fibra media en esas poses muestreadas. Las geometrías del dedo siguen siendo provisionales.
+- **Sin retiro automático especulativo:** una advertencia de holgura por perfil provisional no desencadena por sí sola un movimiento CNC ni modifica la secuencia manual; `minClearanceMm` y `maxDeficitMm` se conservan para auditar decisiones.
+- **Regresiones:** `tests/gauge-clearance-metrics-r107.test.mjs`. Documento técnico: [R107_HOLGURAS_TOPES_OMEGA.md](./R107_HOLGURAS_TOPES_OMEGA.md). Build `PLEGADOX-20261116-R107`, versión `0.9.81`.
+- **Limitaciones:** comprobar `npm test` completo, las vistas en móvil y CAD/datos reales de dedos y recorridos X/R/Z antes de declarar ausencia física de colisiones o programar máquina.
+
 ## Estado actual · R106 (v0.9.80) · 16 de noviembre de 2026
 
 - **Proyección compartida 2D/2,5D del dedo trasero:** una nueva función `machineGaugeProjection` transforma el mismo contorno del Stop/Support, su cara frontal, contrahuella y punto de contacto. El render de la cabina, el anillo de contacto y la tarjeta de estado utilizan esa misma proyección.
