@@ -156,9 +156,16 @@ export function resolveGaugeSetup(piece,st,config,{evaluate=evaluateGaugeSetup}=
   }
  }
  const possible=candidates.filter(x=>x.valid);
- // No voltear la presentación de la Omega si el canto original YA
- // es válido; el fallback sólo entra ante ausencia de apoyo nominal.
- const best=first.valid?first:possible.sort((a,b)=>{
+ // R105: una holgura nominal NO obliga a cambiar cara, pero tampoco
+ // debemos mantener el primer canto naranja si existe otro canto libre
+ // sin advertencia. Mantener la presentación inicial cuando es limpia,
+ // y también si ambas opciones presentan advertencias equivalentes.
+ // Esto evita el volteo innecesario G3→P4 de la Omega cuando hay empate.
+ const cleanFreeAlternative=possible.some(x=>
+  x.ref.freeEdge===true&&x.clearanceWarning!==true);
+ const keepOriginal=first.valid&&
+  (first.clearanceWarning!==true||!cleanFreeAlternative);
+ const best=keepOriginal?first:possible.sort((a,b)=>{
   const freeDiff=Number(b.ref.freeEdge===true)-Number(a.ref.freeEdge===true);
   if(freeDiff)return freeDiff;
   const cleanDiff=Number(a.clearanceWarning===true)-
