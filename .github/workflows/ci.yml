@@ -1,0 +1,29 @@
+name: PlegadoX · pruebas geométricas
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  tests:
+    name: Validación de módulos y regresiones
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Obtener código
+        uses: actions/checkout@v4
+      - name: Configurar Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verificar versión y sintaxis de módulos principales
+        run: |
+          node --version
+          node --check tool-dxf.js
+          node --check tool-cad-datum.js
+          node --check cad-zip-reader.js
+          node --check tool-import-ui.js
+      - name: Ejecutar batería completa de regresión
+        run: npm test
