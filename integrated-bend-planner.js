@@ -283,16 +283,17 @@ export function optimizeBendPlan(input,options={}){
  const best=finalists.find(plan=>plan.source==='automatico'&&
   !modeledBlockingRisk(plan))||null;
  // Separar causas de rechazo: no hallar contacto no es una penetración.
+ const automaticPlans=finalists.filter(plan=>plan.source==='automatico');
  const rejectionSummary={
-  noGaugeContact:finalists.filter(plan=>plan.gaugeChecked&&
+  noGaugeContact:automaticPlans.filter(plan=>plan.gaugeChecked&&
    plan.gaugeContactNotObserved>0).length,
-  invalidGaugeReference:finalists.filter(plan=>plan.gaugeChecked&&
+  invalidGaugeReference:automaticPlans.filter(plan=>plan.gaugeChecked&&
    plan.gaugeInvalidReferences>0).length,
-  gaugePenetration:finalists.filter(plan=>plan.gaugeChecked&&
+  gaugePenetration:automaticPlans.filter(plan=>plan.gaugeChecked&&
    plan.gaugePenetrations>0).length,
-  toolPenetration:finalists.filter(plan=>plan.toolPenetrations>0).length
+  toolPenetration:automaticPlans.filter(plan=>plan.toolPenetrations>0).length
  };
- const hasNominalGaugeSupport=finalists.some(plan=>plan.gaugeChecked&&
+ const hasNominalGaugeSupport=automaticPlans.some(plan=>plan.gaugeChecked&&
   plan.gaugeContactNotObserved===0&&plan.gaugeInvalidReferences===0);
  return {
   best,manual,rejectionSummary,
