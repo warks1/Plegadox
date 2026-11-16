@@ -10,7 +10,8 @@ import {createHash} from 'node:crypto';
 import {inflateRawSync} from 'node:zlib';
 import {CAD_EVIDENCE_SOURCES} from '../cad-evidence.js';
 import {extractDxfFromZip,listDxfZipEntries} from '../cad-zip-reader.js';
-import {parseToolDxf,inspectToolDxfLayers} from '../tool-dxf.js';
+import {parseToolDxf,inspectToolDxfLayers,
+ inspectToolDxfContours} from '../tool-dxf.js';
 import {auditImportedCadDimensions} from '../tool-cad-oem-audit.js';
 const MAX=8*1024*1024;
 const now=new Date().toISOString();
@@ -109,6 +110,33 @@ async function audit(item){
      variant.candidateLayers=options.map(x=>({
       layer:x.layer,heightMm:x.shape.height,widthMm:x.shape.width,
       nominalMatch:x.audit.canRegister,conflicts:x.audit.conflicts}));
+     // Si no hay una capa completa, buscar circuitos formados sólo
+     // por LINE/ARC originales. Retirar ramas abiertas nunca crea
+     // segmentos ficticios; el operador debe ELEGIR el ciclo correcto.
+     if(!options.length){
+      const cycles=[];
+      for(const layer of [null,...inventory.layers.map(x=>x.name)]){
+       let found;
+       try{found=inspectToolDxfContours(content,{entityLayer:layer});}
+       catch{continue;}
+       for(const candidate of found.candidates.slice(0,16)){
+        let parsedCycle,review;
+        try{
+         parsedCycle=parseToolDxf(content,{
+          ...(layer!==null?{entityLayer:layer}:{}),
+          contourIndex:candidate.index
+         });
+         review=measured(item,parsedCycle);
+        }catch{continue;}
+        cycles.push({layer:layer??'TODAS',index:candidate.index,
+         heightMm:parsedCycle.height,widthMm:parsedCycle.width,
+         segments:candidate.segments,
+         nominalMatch:review.canRegister,conflicts:review.conflicts});
+       }
+      }
+      variant.closedCycles=cycles.slice(0,24);
+      if(cycles.length)variant.status='DXF_CICLOS_ORIGINALES_REQUIEREN_ELECCION';
+     }
      // La auditoría NO ELIGE CAPA: sólo indica las que podrían
      // analizarse a petición del operario con el archivo original.
      if(options.length)variant.status='DXF_CAPAS_CANDIDATAS_SIN_ELEGIR';
@@ -133,15 +161,20 @@ async function audit(item){
    x.status==='DXF_LEIDO_COTAS_NOMINALES_COINCIDENTES');
   const candidates=record.variants.filter(x=>
    x.status==='DXF_CAPAS_CANDIDATAS_SIN_ELEGIR');
+  const cycles=record.variants.filter(x=>
+   x.status==='DXF_CICLOS_ORIGINALES_REQUIEREN_ELECCION');
   const differs=record.variants.filter(x=>
    x.status==='DXF_LEIDO_DISCREPANCIA_COTAS');
   record.status=good.length?'PERFIL_OEM_LEIDO_SIN_VALIDACION_MONTAJE':
    candidates.length?'CAPAS_OEM_DETECTADAS_REQUIEREN_SELECCION':
+   cycles.length?'CICLOS_OEM_DETECTADOS_REQUIEREN_SELECCION':
    differs.length?'DXF_LEIDO_DISCREPANCIA_COTAS':
    'SIN_PERFIL_VALIDADO';
   record.parsedVariants=good.length+differs.length;
   record.layerCandidates=candidates.reduce((n,x)=>
    n+(x.candidateLayers?.length||0),0);
+  record.closedCycles=cycles.reduce((n,x)=>
+   n+(x.closedCycles?.length||0),0);
   record.nominalCandidates=good.length;
   record.conflictingVariants=differs.length;
  }catch(error){
@@ -169,7 +202,11 @@ await Promise.all(Array.from({length:workers},async()=>{
     v.conflicts.map(x=>x.field+':'+x.actual+'/'+x.expected).join(','):'')+
    (v.layers?.length?' capas='+v.layers.map(x=>x.name+
     '['+x.total+']').slice(0,6).join(','):'')+
-   (v.candidateLayers?.length?' capas validas='+v.candidateLayers.length:'')
+   (v.candidateLayers?.length?' capas validas='+v.candidateLayers.length:'')+
+   (v.closedCycles?.length?' ciclos='+v.closedCycles.length+
+    ' '+v.closedCycles.slice(0,3).map(x=>
+     x.layer+':'+x.widthMm.toFixed(1)+'x'+x.heightMm.toFixed(1)+
+     (x.nominalMatch?' OK':'')).join(','):'')
   ).join(' | ');
   process.stdout.write(results[i].id+' '+results[i].status+
    (results[i].problem?' ('+results[i].problem+')':'')+
@@ -181,6 +218,7 @@ const metrics={
  read:results.filter(x=>x.status==='PERFIL_OEM_LEIDO_SIN_VALIDACION_MONTAJE').length,
  multiWithCandidates:results.filter(x=>x.status==='CAPAS_OEM_DETECTADAS_REQUIEREN_SELECCION').length,
  layerCandidates:results.reduce((n,x)=>n+(x.layerCandidates||0),0),
+ cycleCandidates:results.reduce((n,x)=>n+(x.closedCycles||0),0),
  nominalCandidates:results.reduce((n,x)=>n+(x.nominalCandidates||0),0),
  mismatched:results.filter(x=>x.status==='DXF_LEIDO_DISCREPANCIA_COTAS').length,
  unavailable:results.filter(x=>!x.nominalCandidates).length,
@@ -194,9 +232,9 @@ await writeFile(OUTPUT,JSON.stringify({
 const summary=[
  '## PlegadoX · rastreo remoto CAD OEM',
  '',
- '| Enlaces | ZIP con variantes evaluadas | Perfiles nominales candidatos | No verificados | Montados verificados |',
+ '| Enlaces | Capas seleccionables | Ciclos originales encontrados | Perfiles nominales aceptados sin certificar | Montados verificados |',
  '|---:|---:|---:|---:|---:|',
- `| ${metrics.total} | ${metrics.multiWithCandidates} | ${metrics.nominalCandidates} | ${metrics.unavailable} | 0 |`,
+ `| ${metrics.total} | ${metrics.layerCandidates} | ${metrics.cycleCandidates} | ${metrics.nominalCandidates} | 0 |`,
  '',
  'Los perfiles no se copian al repositorio ni se marcan como CAD industrial verificado.',
  'Un perfil DXF leído pero con geometría compleja puede requerir tratamiento CAD manual.',
