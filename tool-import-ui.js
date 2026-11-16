@@ -128,6 +128,7 @@ export function setupToolDxfImporter({add}){
     tip:$('toolDxfTip').value,mount:mount?.value||'Desconocido'
    });
    add(tool,kind.value);
+   window.dispatchEvent(new Event('plegadox:toolingChanged'));
    say('✓ Perfil DXF añadido a la biblioteca y seleccionado. '+
     'Se utiliza su contorno 2D en el dibujo y cribado geométrico. '+
     'El amarre seleccionado es una declaración del operador, no una certificación de compatibilidad con la máquina.');
