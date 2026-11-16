@@ -73,6 +73,8 @@ test('R107: holgura no se convierte automáticamente en orden de retroceso CNC',
  assert.equal(result.clearanceWarnings,1);
  assert.equal(result.issues[0].distanceMm,1);
  assert.equal(result.issues[0].requiredMm,2);
+ assert.equal(result.minClearanceMm,1);
+ assert.equal(result.maxDeficitMm,1);
  assert.equal(result.verified,false);
 });
 
@@ -92,6 +94,10 @@ test('R107: Omega conserva mismas mediciones en visor y diagnóstico JSON',()=>{
   assert.equal(frame.actualInterference.deficitMm,hit?.deficitMm??null);
   assert.equal(frame.actualInterference.fingerEdge,hit?.fingerEdge??null);
   assert.equal(frame.risk.level,gaugeRiskStatus(placement).level);
+  assert.equal(frame.prediction.minClearanceMm,
+   scene.gaugePlan.minClearanceMm??null);
+  assert.equal(frame.prediction.maxDeficitMm,
+   scene.gaugePlan.maxDeficitMm??null);
   if(hit?.kind==='holgura'){
    assert.ok(Number.isFinite(hit.distanceMm));
    assert.ok(hit.requiredMm>hit.distanceMm);
