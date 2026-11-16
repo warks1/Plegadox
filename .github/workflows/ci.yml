@@ -25,5 +25,6 @@ jobs:
           node --check tool-cad-datum.js
           node --check cad-zip-reader.js
           node --check tool-import-ui.js
+          node --check tool-cad-oem-audit.js
       - name: Ejecutar batería completa de regresión
         run: npm test
