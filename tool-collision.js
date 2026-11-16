@@ -293,3 +293,74 @@ export function inspectSequenceTools(piece,samplesPerOperation=9){
   warningCount:out.filter(x=>x.possibleToolInterference).length,
   intrusionCount:out.filter(x=>x.possibleToolIntrusion).length};
 }
+
+/**
+ * R108 · Segundo pase de útiles sobre fases CRÍTICAS de cada golpe.
+ * Evita que las únicas muestras .166/.50/.833 del cribado rápido
+ * omitan una invasión breve de punzón o matriz al comenzar el cierre.
+ * No infiere la trancha del punzón: la trancha se analiza por separado
+ * en volume-engine con el sólido CAD o su envolvente provisional.
+ * No afirma una validación continua ni autoriza ejecutar CNC.
+ */
+export const TOOL_CRITICAL_PHASES=Object.freeze([
+ .16,.34,.36,.40,.44,.45,.46,.47,.48,.50,.52,.56,.60,.64,.68,.72,.84,.92
+]);
+export function scanToolCriticalPhases(input,{inspect=inspectToolContact,
+ phases=TOOL_CRITICAL_PHASES}={}){
+ const p=normalized(input);
+ if(!Array.isArray(phases)||!phases.length||
+  phases.some(x=>!Number.isFinite(x)||x<0||x>=1))
+  throw Error('Fases críticas de punzón inválidas');
+ const distinct=[...new Set(phases)].sort((a,b)=>a-b);
+ const operations=[];
+ for(let operation=0;operation<p.order.length;operation++){
+  const findings=[],kinds=new Set(),penetrationKinds=new Set();
+  for(const sub of distinct){
+   const time=5*(operation+sub),result=inspect(p,time);
+   if(!result||!Array.isArray(result.issues))
+    throw Error('Inspección de útiles incompleta en '+time);
+   for(const hit of result.issues){
+    if(!['punch','die'].includes(hit.kind))continue;
+    const value={kind:hit.kind,category:hit.category,segment:hit.segment,
+     depth:hit.depth??null,point:hit.point??null,time,sub,
+     verified:false};
+    // Conservar el peor diagnóstico REAL por herramienta y categoría,
+    // sin transformar la holgura de la fibra en penetración de trancha.
+    const key=value.kind+':'+value.category;
+    if(!kinds.has(key)){
+     kinds.add(key);findings.push(value);
+    }else{
+     const idx=findings.findIndex(x=>x.kind===value.kind&&
+      x.category===value.category);
+     if(idx>=0&&(Number(value.depth)||0)>(Number(findings[idx].depth)||0))
+      findings[idx]=value;
+    }
+    if(value.category==='penetration')penetrationKinds.add(hit.kind);
+   }
+  }
+  operations.push({operation,bend:p.order[operation],
+   framesChecked:distinct.length,
+   penetrationKinds:[...penetrationKinds],
+   hasPenetration:penetrationKinds.size>0,
+   hasWarning:findings.length>0,
+   findings:findings.sort((a,b)=>
+    Number(b.category==='penetration')-Number(a.category==='penetration')||
+    (Number(b.depth)||0)-(Number(a.depth)||0)),verified:false});
+ }
+ const byKind={punch:{penetrations:0,warnings:0},
+  die:{penetrations:0,warnings:0}};
+ for(const op of operations){
+  for(const kind of ['punch','die']){
+   if(op.findings.some(x=>x.kind===kind))
+    byKind[kind].warnings++;
+   if(op.penetrationKinds.includes(kind))
+    byKind[kind].penetrations++;
+  }
+ }
+ return {operations,byKind,
+  penetrationOperations:operations.filter(x=>x.hasPenetration).length,
+  warningOperations:operations.filter(x=>x.hasWarning).length,
+  framesChecked:operations.reduce((n,x)=>n+x.framesChecked,0),
+  phases:distinct,verified:false,
+  limitations:'Punzón y matriz 2D en fases discretas; sin CAD OEM ni barrido continuo de trancha o CNC.'};
+}
