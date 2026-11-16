@@ -63,7 +63,10 @@ test('CAD+ejes: traslación calibrada de la trancha detecta choque con mesa entr
  assert.ok(ramVsBed);
  assert.match(ramVsBed.sourceMoving,/CAD importado/);
  assert.match(ramVsBed.sourceAgainst,/CAD importado/);
- assert.equal(result.status,'COLISIONES_EN_BARRIDO_CAD_DECLARADO');
+ assert.equal(result.status,'PENETRACION_EN_ENVOLVENTE_PROVISIONAL');
+ assert.ok(result.missingCad.includes('upperClamp'));
+ assert.ok(result.missingCad.includes('lowerAdapter'));
+ // Una colisión con CAD de trancha/mesa no certifica todo el conjunto sin amarres.
  assert.equal(result.verified,false);
  assert.equal(result.canApproveForMachine,false);
 });
