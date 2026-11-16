@@ -64,6 +64,7 @@ function sampleStage(piece,operation,sub,machine){
   },
   motion:transition?{
    phase:transition.phase,
+   axisPhase:transition.axisPhase??null,
    point:coordinate(transition.point),
    from:coordinate(transition.from),
    to:coordinate(transition.to),
