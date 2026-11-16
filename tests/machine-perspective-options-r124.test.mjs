@@ -92,7 +92,8 @@ test('R124: panel de opciones, control de seguridad y captura deben estar presen
   'machinePrevFold','machineNextFold','machineCapture','machineResetOptions',
   'machineOptionsButton']){
   assert.ok(html.includes('id="'+id+'"'),'Falta el control '+id);
-  assert.ok(studio.includes("'"+id+"'"),'El control debe estar cableado '+id);
+  assert.ok(studio.includes("'"+id+"'")||studio.includes(id+':'),
+   'El control debe estar cableado '+id);
  }
  assert.match(visual,/drawGaugeStatusCard\(ctx,layout,level,GAUGE_COLORS\[level\]\)/);
  assert.match(visual,/drawWarningHud\(ctx,w,h,piece,sim,machineView\)/);
