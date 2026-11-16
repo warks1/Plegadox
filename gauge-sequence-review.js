@@ -72,8 +72,12 @@ export function inspectGaugeOperation(piece,operation,{
  // en 36-44 % y traslado a la siguiente referencia desde 84 %.
  // La segunda mitad de las muestras sigue cubriendo densamente el
  // final del golpe y se conserva el número de muestras contratado.
- const early=[0,.20,.34,GAUGE_RETRACT_START,.38,.40,.42,
-  GAUGE_RETRACT_FINISH,.65,GAUGE_REPOSITION_START];
+ // R107: mantener las 19 poses habituales (samples=18) y la
+ // densidad final de traslado, pero comprobar .46 y .48 para detectar
+ // holguras breves entre sujeción y deformación. No fingir que un
+ // fotograma limpio a .48 descarta un roce transitorio a .46.
+ const early=[0,GAUGE_RETRACT_START,.38,.40,.42,
+  GAUGE_RETRACT_FINISH,.46,.48,.65,GAUGE_REPOSITION_START];
  const earlyAt=k=>{
   const f=Math.min(early.length-1,Math.max(0,k*(early.length-1)));
   const lo=Math.floor(f),hi=Math.min(lo+1,early.length-1);
