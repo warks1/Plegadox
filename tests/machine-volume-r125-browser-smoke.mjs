@@ -30,7 +30,7 @@ try{
    .textContent.startsWith('Sólidos dibujados:'),null,{timeout:20000});
   assert.equal(await page.locator('#machineSolidToggle').getAttribute('aria-pressed'),'true');
   assert.equal(await page.locator('#machineSolidCanvas').isVisible(),true);
-  assert.ok((await page.locator('#machineSolidStatus').innerText()).includes('No habilita aprobación'));
+  assert.ok((await page.locator('#machineSolidStatus').textContent()).includes('No habilita aprobación'));
   await page.locator('#machineSolidCanvas').screenshot({
    path:'test-results/r125-solids-'+target.id+'-initial.png'});
   const beforePng=await page.locator('#machineSolidCanvas').screenshot();
