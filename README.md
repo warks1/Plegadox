@@ -1,5 +1,15 @@
 # Plegadox — control y simulador de plegado
 
+## Estado actual · R130 (v0.9.104) · 17 de noviembre de 2026
+
+- **Trazas de ejes vinculadas a la pieza completa:** invalida el CNC guardado al cambiar elección Stop/Support, ala/punto de apoyo, radio o desarrollo, además de orden/útiles. Rechaza una traza de otra plegadora.
+- **Avisos de colisión más fiables:** separa solapes entre dos CAD aportados, CAD contra geometría calculada y dos envolventes provisionales. Ningún nivel se declara físicamente certificado.
+- **Diagnóstico exportable:** en Configuración de máquina → Recorridos físicos de ejes, visualizar los cuerpos e intervalos afectados y descargar el informe JSON de evidencias.
+- **Cobertura real de CAD:** admite perfil compartido o DXF independiente Stop/Support Z1/Z2 sin exigir ambos a la vez.
+- **Build:** PLEGADOX-20261117-R130 · 0.9.104 · informe [R130_TRAZAS_CNC_EVIDENCIAS.md](./R130_TRAZAS_CNC_EVIDENCIAS.md).
+
+
+
 ## Estado actual · R129 (v0.9.103) · 17 de noviembre de 2026
 
 - **Cada dedo puede tener su propio CAD:** importar Stop Z1/Z2 o Support Z1/Z2 con sección XY, origen X/Y y fuentes documentales diferentes, o mantener un DXF compartido si son iguales.

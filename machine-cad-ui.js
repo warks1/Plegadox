@@ -81,10 +81,35 @@ function refreshMotion(){
   try{
    const mapping=loadAxisMapping(localStorage);
    const review=p?scanAxisCADMovement(p,{
-    axisMotion:program,mapping,machine:getActiveMachineConfig()}):null;
-   if(review)extra=' · CAD/ejes: '+review.status+
-    ' · cruces modelados '+review.events.length+
-    ' · intervalos sin resolver '+review.unresolved;
+    axisMotion:program,mapping,machine:getActiveMachineConfig(),
+    machineId:getActiveMachineProfile().id}):null;
+   if(review){
+    const e=review.evidenceSummary;
+    extra=' · CAD/ejes: '+review.status+
+     ' · solapes MODELADOS '+review.events.length+
+     (e?' (2 DXF: '+e.cadPairCount+
+      ', mixtos: '+e.mixedCount+
+      ', provisionales: '+e.provisionalCount+')':'')+
+     ' · intervalos sin resolver '+review.unresolved;
+    const list=$('machineAxisFindings');
+    if(list){
+     const lines=[
+      'Estado: '+review.status+' · sin validación de choque físico ni certificación CNC',
+      ...(review.missingCad?.length?[
+       'CAD pendiente: '+review.missingCad.join(', ')]:[]),
+      ...(review.events||[]).slice(0,10).map(hit=>
+       Number(hit.startTime).toFixed(3)+'–'+Number(hit.endTime).toFixed(3)+
+       ' s · '+hit.moving+' / '+hit.against+' · '+
+       (hit.evidenceLabel||'interferencia no clasificada')),
+      ...(!review.events?.length?[
+       'Sin solapes entre poses comprobadas no significa recorrido físico libre de colisiones']:[]),
+      ...(review.events?.length>10?['Solo se muestran los primeros 10 avisos; descarga el informe completo']:[])
+     ];
+     list.replaceChildren(...lines.map(line=>{
+      const li=document.createElement('li');li.textContent=line;return li;
+     }));
+    }
+   }
   }catch(error){extra=' · calibración inválida: '+error.message;}
   say('machineAxisStatus',
    'Trazas Y1/Y2/X/R/Z1/Z2: '+status.status+
@@ -233,6 +258,27 @@ function installer(){
   event.target.value='';
  });
   $('machineAxisCheck')?.addEventListener('click',refreshMotion);
+ $('machineAxisReportDownload')?.addEventListener('click',()=>{
+  try{
+   const p=part();
+   if(!p)throw Error('No hay pieza activa');
+   const report=scanAxisCADMovement(p,{
+    axisMotion:loadAxisMotion(localStorage),
+    mapping:loadAxisMapping(localStorage),
+    machine:getActiveMachineConfig(),machineId:getActiveMachineProfile().id
+   });
+   download(filePrefix()+'-evidencias-barrido-cad.json',
+    JSON.stringify({format:'plegadox-cnc-evidence-r130',
+     exportedAt:new Date().toISOString(),
+     pieceKey:motionPieceKey(p),
+     machineId:getActiveMachineProfile().id,
+     report,certified:false,canApproveForMachine:false},null,2));
+   say('machineAxisStatus','Informe geométrico R130 exportado. Los datos NO certifican recorrido seguro.');
+  }catch(error){
+   say('machineAxisStatus','No se pudo exportar diagnóstico: '+error.message,true);
+  }
+ });
+ window.addEventListener('plegadox:machineChanged',refreshMotion);
  try{refreshCAD();refreshMotion();refreshGaugeFingerZ();}
  catch(error){say('machineCadStatus','Datos CAD guardados no legibles: '+error.message,true);}
 }

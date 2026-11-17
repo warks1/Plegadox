@@ -17,6 +17,8 @@ import {buildVolumeScene} from './volume-engine.js';
 import {sweptPrismPair,translatePrism} from './swept-volume.js';
 import {normalizeAxisMotion,motionPieceKey} from './machine-axis-motion.js';
 import {machineConfigurationKey} from './machine-cad.js';
+import {getActiveMachineProfile} from './machine-selection.js';
+import {classifyAxisContact,summarizeAxisContacts} from './machine-axis-evidence.js';
 export const AXIS_MAPPING_KEY='plegadox:axis-cad-mapping:v1';
 const AXES=['Y','X','R','Z1','Z2'];
 const numeric=(v,name,min,max)=>{
@@ -77,7 +79,19 @@ export function scanAxisCADMovement(input,options={}){
  catch(error){return unknown('TRAZA_O_DATUM_INVALIDOS',String(error.message||error));}
  const piece=normalized(input),machine=options.machine||getActiveMachineConfig();
  if(program.pieceKey!==motionPieceKey(piece))
-  return unknown('TRAZA_DE_OTRA_PIEZA','La traza no corresponde a geometría, orden y útiles actuales');
+  return unknown('TRAZA_DE_OTRA_PIEZA',
+   'La traza no corresponde a pieza, orden, herramientas, tipo Stop/Support, posición de apoyo, radio o desarrollo actuales');
+ // R130: no trasladar una traza archivada para otra plegadora aunque
+ // casualmente comparta los mismos límites o la misma llave de cotas.
+ const activeMachineId=options.machineId||getActiveMachineProfile().id;
+ // Compatibilidad con trazas históricas que sí declaraban el modelo V85,
+ // pero aún no especificaban el ID normalizado. No equiparar una V85
+ // con ninguna Bystronic, ni afirmar su número de serie como verificado.
+ const genericV85=program.machineId==='V85'&&
+  activeMachineId==='trumpf-v85';
+ if(program.machineId!==activeMachineId&&!genericV85)
+  return unknown('TRAZA_DE_OTRA_MAQUINA',
+   'La traza corresponde a '+program.machineId+' y no a '+activeMachineId);
  if(mapping.machineConfigKey!==machineConfigurationKey(machine))
   return unknown('DATUM_DE_OTRA_MAQUINA','La configuración de plegadora cambió tras calibrar los ejes');
  const initial=program.poses[0];
@@ -152,12 +166,16 @@ export function scanAxisCADMovement(input,options={}){
  if(twoFingers)reviewedPairs.push(['gaugeZ1','gaugeZ2']);
  const recordEvent=(sweep,kind,object,from,to)=>{
   if(events.length>=120)return;
+  const sourceMoving=base.objects[kind]?.provenance||'chapa de modelo';
+  const sourceAgainst=base.objects[object]?.provenance||
+   (object.startsWith('chapa-')?'malla-chapa-compartida':'envolvente provisional');
+  const evidence=classifyAxisContact(sourceMoving,sourceAgainst);
   events.push({kind:'contacto-cad-trayectoria',moving:kind,against:object,
    startTime:from.time,endTime:to.time,
-   modeledReason:sweep.reason,
-   sourceMoving:base.objects[kind]?.provenance||'chapa de modelo',
-   sourceAgainst:base.objects[object]?.provenance||'chapa de modelo',
-   verified:false});
+   modeledReason:sweep.reason,evidenceCode:evidence.code,
+   evidenceLabel:evidence.label,
+   sourceMoving,sourceAgainst,verified:false,
+   physicalCollisionCertified:false});
  };
  const refTilt=ref.Y1-ref.Y2;
  for(let i=1;i<program.poses.length;i++){
@@ -198,8 +216,15 @@ export function scanAxisCADMovement(input,options={}){
    }
   }
  }
- const needed=['ram','bed',piece.stopByBend[
-  technicalScene(piece,mapping.referenceSceneTime).stage.activeBend]===2?'support':'stop',
+ // R130: si hay DOS perfiles independientes, exigir stopZ1+stopZ2
+ // (o supportZ1+supportZ2), no un inexistente perfil común stop.
+ // No falsear el informe "falta CAD" cuando ambos ya están montados.
+ const activeBend=technicalScene(piece,mapping.referenceSceneTime).stage.activeBend;
+ const gaugeKind=piece.stopByBend[activeBend]===2?'support':'stop';
+ const gaugeKinds=twoFingers&&
+  base.gaugeFingerReview?.status==='DOS_PERFILES_DXF_INDEPENDIENTES'?
+  [gaugeKind+'Z1',gaugeKind+'Z2']:[gaugeKind];
+ const needed=['ram','bed',...gaugeKinds,
   'upperClamp','lowerClamp','upperAdapter','lowerAdapter','frontSupport'];
  const missing=needed.filter(k=>!base.cadProfilesUsed.includes(k));
  if(missing.length)unknowns.push('CAD de máquina sin perfil referenciado: '+missing.join(', '));
@@ -213,15 +238,28 @@ export function scanAxisCADMovement(input,options={}){
   unknowns.push('Perfil de punzón no acreditado con CAD OEM');
  if(!base.objects.die.provenance.includes('perfil-acotado'))
   unknowns.push('Perfil de matriz no acreditado con CAD OEM');
- return {status:events.length?
-  (missing.length?'PENETRACION_EN_ENVOLVENTE_PROVISIONAL':'COLISIONES_EN_BARRIDO_CAD_DECLARADO'):
+ if(genericV85)unknowns.push(
+  'Identificación CNC histórica solo como V85; placa/número de serie sin verificar');
+ const evidenceSummary=summarizeAxisContacts(events);
+ const riskStatus=events.length?
+  evidenceSummary.status:
   unresolved||missing.length?'REVISION_CAD_CNC_INCOMPLETA':
-  'INTERVALOS_LINEALES_REVISADOS_SIN_CERTIFICAR',
+  'INTERVALOS_LINEALES_REVISADOS_SIN_CERTIFICAR';
+ return {status:riskStatus,evidenceSummary,
   checked:intervalsChecked>0,intervalsChecked,framesChecked,
   unresolved,tiltUnresolved,
   cadProfilesUsed:base.cadProfilesUsed,missingCad:missing,
   axisFingerModeled:twoFingers?['Z1','Z2']:mapping.activeFinger,
   bothGaugeFingersModeled:twoFingers,mappingSource:mapping.source,
+  traceSource:program.source,
+  machineId:activeMachineId,traceMachineId:program.machineId,
+  machineIdentityGeneric:genericV85,
+  gaugeCadKindsRequired:gaugeKinds,
+  coverage:{machineCadPresent:needed.length-missing.length,
+   machineCadRequired:needed.length,missingCad:missing,
+   sampledIntervals:intervalsChecked,unresolvedIntervals:unresolved,
+   fullOEM:false,fullCNC:false},
+  physicalCollisionCertified:false,
   evidence:zMode,events,unknown:unknowns,verified:false,
   canApproveForMachine:false};
 }

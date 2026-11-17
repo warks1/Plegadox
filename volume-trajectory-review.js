@@ -183,6 +183,7 @@ export function scanVolumeTrajectory(input,options={}){
  const axisGeometry=scanAxisCADMovement(p,{
   axisMotion:axisSource, mapping,
   machine:options.machine,machineCAD:options.machineCAD,
+  gaugeFingers:options.gaugeFingers,machineId:options.machineId,
   maxIntervals:options.axisGeometryMaxIntervals
  });
   const byKind=Object.fromEntries(kinds.map(kind=>[kind,0]));
@@ -226,8 +227,9 @@ export function scanVolumeTrajectory(input,options={}){
   linearSweptPenetrations,
   linearSweptIntervalsEvaluated,axisReport,axisViolationCount:axisReport.violations.length,
   axisGeometry,axisModeledCollisions:axisGeometry.events.length,
+  axisEvidenceSummary:axisGeometry.evidenceSummary||null,
   status:'VOLUMENES_PARAMETRICOS_SIN_VALIDACION_CAD_CNC',
   source:'Cotas V85 Cybelec del usuario + perfiles CAD importados cuando consten + envolventes provisionales cuando falten',
   verified:false,continuousCollisionVerified:false,canApproveForMachine:false,
-  limitations:'Se comprueban sólidos 2,5D y barridos lineales rígidos del visor. Cuando existe calibración explícita de signos y datum, la traza Y/X/R/Z se proyecta sobre sólidos CAD sólo en fases de chapa declarada inmóvil; no se modelan inclinación Y1/Y2 superior a tolerancia, el segundo dedo, giro, deformación, montaje OEM ni el recorrido continuo real. Las poses Y1/Y2/X/R/Z1/Z2 también se revisan contra límites declarados. Sin sólidos STEP, amarres, recorridos reales completos y volteos no puede certificarse seguridad.'};
+  limitations:'Se comprueban sólidos 2,5D prismáticos y barridos lineales rígidos de las poses declaradas. Con signos y datum importados, X/R/Z1/Z2 se analizan por dedo si existen los dos DXF y bandas Z acreditadas para la pose estática; sin ellos quedan envolventes provisionales. No se modelan giros, deformación continua, inclinación Y1/Y2 fuera de tolerancia ni el recorrido completo del CNC/PLC. La vista no sustituye amarres OEM, STEP, pruebas físicas o validación industrial.'};
 }

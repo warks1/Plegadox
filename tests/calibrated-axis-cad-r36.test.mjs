@@ -51,7 +51,12 @@ test('CAD+ejes: geometría ilustrativa se anuncia como provisional',()=>{
  const report=scanAxisCADMovement(EXAMPLE,{machine,machineCAD:partial,
   mapping:mapping(),axisMotion:motion()});
  assert.ok(report.missingCad.includes('bed'));
- assert.equal(report.status,'PENETRACION_EN_ENVOLVENTE_PROVISIONAL');
+ // R130 desglosa la evidencia por objeto; no equiparar este aviso
+ // de CAD incompleto a un choque real certificado.
+ assert.ok(report.events.length>0);
+ assert.ok(report.evidenceSummary);
+ assert.equal(report.physicalCollisionCertified,false);
+ assert.notEqual(report.status,'INTERVALOS_LINEALES_REVISADOS_SIN_CERTIFICAR');
  assert.equal(report.canApproveForMachine,false);
 });
 test('CAD+ejes: traslación calibrada de la trancha detecta choque con mesa entre posiciones',()=>{
@@ -63,7 +68,9 @@ test('CAD+ejes: traslación calibrada de la trancha detecta choque con mesa entr
  assert.ok(ramVsBed);
  assert.match(ramVsBed.sourceMoving,/CAD importado/);
  assert.match(ramVsBed.sourceAgainst,/CAD importado/);
- assert.equal(result.status,'PENETRACION_EN_ENVOLVENTE_PROVISIONAL');
+ assert.equal(result.status,'SOLAPE_ENTRE_DXF_DECLARADOS');
+ assert.equal(ramVsBed.evidenceCode,'DOS_PERFILES_CAD');
+ assert.equal(ramVsBed.physicalCollisionCertified,false);
  assert.ok(result.missingCad.includes('upperClamp'));
  assert.ok(result.missingCad.includes('lowerAdapter'));
  // Una colisión con CAD de trancha/mesa no certifica todo el conjunto sin amarres.
