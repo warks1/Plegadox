@@ -191,6 +191,9 @@ test('R136: app conserva semáforo 2D independiente y CNC separado con caché Ga
  assert.ok(viewer.includes('CNC: SIN EVIDENCIA APLICABLE'));
  assert.ok(controller.includes('PLEGADOX_CNC_GAUGE_SNAPSHOT'));
  assert.ok(controller.includes('plegadox:cncGaugeReview'));
+ assert.ok(controller.includes('invalidateCncSnapshot'));
+ assert.ok(!controller.includes("'plegadox:pieceChanged',refreshMotion"),
+  'Cambiar una cota nunca debe repetir barridos CNC costosos en Galaxy');
  assert.ok(style.includes('.px-cnc-gauge-status[data-level="neutral"]'));
  assert.ok(sw.includes('"./machine-cnc-gauge-semaphore-r136.js"'));
 });
