@@ -19,7 +19,13 @@ test('R109: nueva lista de importación incluye todos los cuerpos de máquina',(
   assert.ok(MACHINE_CAD_KINDS.includes(name));
   assert.ok(machineCadDatum(name));
  }
- assert.equal(MACHINE_CAD_KINDS.length,9);
+ // R109 fijaba 9 cuerpos. La R129 conserva los nueve y añade 4 DXF
+ // por dedo; extender una biblioteca no debe romper la regresión antigua.
+ assert.equal(MACHINE_CAD_KINDS.length,13);
+ for(const kind of ['stopZ1','stopZ2','supportZ1','supportZ2']){
+  assert.ok(MACHINE_CAD_KINDS.includes(kind));
+  assert.ok(machineCadDatum(kind));
+ }
  assert.throws(()=>normalizeMachineCad({...cad('upperClamp'),kind:'mordaza-certificada'}),
   /Tipo CAD no reconocido/);
 });

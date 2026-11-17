@@ -12,6 +12,9 @@ on:
       - 'machine-cad-ui.js'
       - 'machine-axis-geometry.js'
       - 'tests/machine-gauge-fingers-r128-browser-smoke.mjs'
+      - 'tests/machine-independent-fingers-r129-browser-smoke.mjs'
+      - 'machine-cad.js'
+      - 'volume-engine.js'
       - 'machine-solid-gauge-style.js'
       - 'machine-volume-layers.js'
       - 'tests/gauge-volume-r127-browser-smoke.mjs'
@@ -47,6 +50,8 @@ jobs:
         run: node tests/gauge-volume-r127-browser-smoke.mjs
       - name: Comprobar dos dedos físicos Z1/Z2, pose y caché Galaxy
         run: node tests/machine-gauge-fingers-r128-browser-smoke.mjs
+      - name: Comprobar dedos CAD diferentes y bloqueo por revisión en Galaxy
+        run: node tests/machine-independent-fingers-r129-browser-smoke.mjs
       - name: Adjuntar capturas
         if: always()
         uses: actions/upload-artifact@v4
@@ -57,5 +62,6 @@ jobs:
             test-results/r126-galaxy-*.png
             test-results/r127-*.png
             test-results/r128-*.png
+            test-results/r129-*.png
           if-no-files-found: warn
           retention-days: 20

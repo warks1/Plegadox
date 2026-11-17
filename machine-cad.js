@@ -13,7 +13,8 @@ export const MACHINE_CAD_KEY='plegadox:machine-cad:v1';
 // dedos. Un componente ausente queda PENDIENTE; nunca se sintetiza como
 // "certificado" a partir de otro fabricante o de cotas de familia.
 export const MACHINE_CAD_KINDS=Object.freeze([
- 'ram','bed','stop','support','upperClamp','lowerClamp',
+ 'ram','bed','stop','support','stopZ1','stopZ2','supportZ1','supportZ2',
+ 'upperClamp','lowerClamp',
  'upperAdapter','lowerAdapter','frontSupport'
 ]);
 /** Clave local de revisión de configuración: invalida un montaje CAD
@@ -47,7 +48,8 @@ const typed=(value,len,label)=>{
 export function machineCadDatum(kind){
  if(kind==='ram')return 'punta del punzón (se mueve con Y)';
  if(kind==='bed')return 'superficie nominal superior de la V (fija)';
- if(kind==='stop'||kind==='support')return 'origen del dedo de tope (se mueve con X/R)';
+ if(['stop','support','stopZ1','stopZ2','supportZ1','supportZ2'].includes(kind))
+  return 'origen local del dedo trasero (X/R; Z1/Z2 configurado aparte)';
  if(kind==='upperClamp'||kind==='upperAdapter')
   return 'referencia local de punta del punzón (se mueve con Y1/Y2)';
  if(kind==='lowerClamp'||kind==='lowerAdapter')
