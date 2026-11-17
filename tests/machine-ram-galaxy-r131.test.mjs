@@ -43,20 +43,20 @@ test('R131: caché LRU recupera golpes revisitados y limita memoria Galaxy',()=>
  assert.equal(cache.stats.hits,1);
  const c=cache.get(piece,12,1200);
  assert.equal(builds,3);
- assert.equal(cache.stats.entries,2);
+ assert.equal(cache.details.entries,2);
  assert.equal(cache.get(piece,0,1200),a);
  assert.notEqual(cache.get(piece,6,1200),b);
- assert.equal(cache.stats.capacity,2);
- assert.ok(cache.stats.evictions>0);
+ assert.equal(cache.details.capacity,2);
+ assert.ok(cache.details.evictions>0);
  cache.setCapacity(1);
- assert.equal(cache.stats.entries,1);
+ assert.equal(cache.details.entries,1);
  cache.invalidate();
- assert.equal(cache.stats.entries,0);
+ assert.equal(cache.details.entries,0);
  assert.notEqual(cache.get(piece,12,1200),c);
  assert.throws(()=>cache.setCapacity(20),/1 a 8/);
  const fail=createSolidFrameCache(()=>{throw Error('No se creó la escena')});
  assert.throws(()=>fail.get(piece,0,1200),/No se creó/);
- assert.equal(fail.stats.entries,0);
+ assert.equal(fail.details.entries,0);
 });
 test('R131: diferencia Y1/Y2 conocida no se oculta por la media de cilindros',()=>{
  const ref={Y1:0,Y2:0},a={Y1:0,Y2:0},b={Y1:2,Y2:0};
