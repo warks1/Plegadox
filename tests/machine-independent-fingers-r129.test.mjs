@@ -105,6 +105,25 @@ test('R129: dos secciones diferentes participan en la malla y colisiones como cu
  assert.equal(changed.gaugeFingerReview.status,'DXF_CAMBIADO_Z2');
  assert.ok(machineVolumeMesh(changed).faces.some(f=>f.kind==='gauge'));
 });
+test('R129: Support también admite sus DOS perfiles DXF propios',()=>{
+ const supportZ1=normalizeMachineCad({...left,kind:'supportZ1',
+  source:'Support Z1 de ensayo'});
+ const supportZ2=normalizeMachineCad({...right,kind:'supportZ2',
+  source:'Support Z2 de ensayo'});
+ const config={...dims(),profileKind:'support',
+  profileFingerprints:{Z1:gaugeSectionFingerprint(supportZ1),
+   Z2:gaugeSectionFingerprint(supportZ2)}};
+ const piece={...EXAMPLE,stopByBend:[2,2,2,2]};
+ const model=buildVolumeScene(technicalScene(piece,0),{
+  machine,machineCAD:{supportZ1,supportZ2},gaugeFingers:config
+ });
+ assert.equal(model.gaugeReferenceOnly,true,model.gaugeFingerReview.reason);
+ assert.equal(model.gaugeFingerReview.status,'DOS_PERFILES_DXF_INDEPENDIENTES');
+ assert.ok(model.cadProfilesUsed.includes('supportZ1'));
+ assert.ok(model.cadProfilesUsed.includes('supportZ2'));
+ assert.equal(model.missingCadComponents.includes('support'),false);
+ assert.deepEqual([model.objects.gaugeZ1.zMin,model.objects.gaugeZ1.zMax],[-25,-8]);
+});
 test('R129: componentes 3D reales y avisos no se aplican fuera de la pose',()=>{
  const changed=buildVolumeScene(technicalScene(EXAMPLE,5.01),opts());
  assert.equal(changed.gaugeReferenceOnly,false);
