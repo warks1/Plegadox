@@ -13,6 +13,9 @@ En R127 el modelo volumétrico seguía teniendo un único sólido de tope, inclu
 - El diagnóstico de apoyo Z separa Z1 y Z2 y solo concede coincidencia transversal cuando al menos uno cae dentro del ancho de chapa; si ambos están fuera del ancho se muestra naranja por imposibilidad de apoyo.
 - `inspectVolumeFrame` revisa por separado interferencias con ambos dedos, `scanVolumeTrajectory` informa los hallazgos por `gaugeZ1` y `gaugeZ2` y `scanAxisCADMovement` desplaza cada sólido con su **propio eje Z1 o Z2** al revisar trazas CAD X/R/Z en intervalos que tienen la chapa inmóvil.
 - El visor prismático muestra ambos dedos a la vez, con semáforo y ocultación de capa compartida; sus recorridos relativos de ejes usan el centro real declarado de cada dedo.
+- Los barridos CNC modelados también comprueban **Z1 contra Z2** durante desplazamientos simultáneos: puede detectarse un cruce entre los dedos incluso si las posiciones extremas no coinciden. Sigue siendo un análisis geométrico de dos prismas con trayectoria lineal, sin certificación física.
+- Las cotas declaradas quedan asociadas a una **huella local del DXF, sus offsets, referencia y montaje**; al sustituir o modificar el archivo se bloquea su aplicación hasta cotejarlo de nuevo.
+- Los cambios manuales de golpe/pose fuerzan el redibujado inmediato, sin quedar atrapados por el límite de refresco de Chrome Galaxy.
 - Si cambia el golpe o la pose temporal, el montaje Z **no se extrapola** por adivinación. Vuelve el modelo conservador de información insuficiente hasta contar con la traza completa para ese instante.
 
 ## Tests
