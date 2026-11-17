@@ -48,6 +48,26 @@ test('R132: AABB solapado NO demuestra choque; triangulacion detallada decide',(
  assert.equal(sweptBroadphase(a,b,c,c).mayOverlap,true);
  assert.equal(sweptPrismPair(a,b,c,c).intersects,false);
 });
+test('R132: chapon girado/deformado no permite descarte por AABB de extremos',()=>{
+ const before=prism('pieza',-50,-50);
+ const deformed=makePrism('pieza',rect(-40,-40,5,2),-10,10,
+  'malla de chapa no rigida');
+ const away=prism('elemento',100,100);
+ assert.equal(movingPrismBounds(before,deformed),null);
+ const screen=sweptBroadphase(before,deformed,away,away);
+ assert.equal(screen.mayOverlap,true);
+ assert.equal(screen.known,false);
+ assert.equal(sweptPrismPair(before,deformed,away,away).unknown,true);
+});
+test('R132: contacto tangente y holgura numericamente despreciable NO se descartan',()=>{
+ const one=prism('a',0,0);
+ const touching=prism('b',2,0);
+ const near=prism('b',2+1e-9,0);
+ assert.equal(sweptBroadphase(one,one,touching,touching).mayOverlap,true);
+ assert.equal(sweptBroadphase(one,one,near,near).mayOverlap,true);
+ const separated=prism('b',2.01,0);
+ assert.equal(sweptBroadphase(one,one,separated,separated).mayOverlap,false);
+});
 test('R132: CAD invalido permanece SIN RESOLVER, no se omite por optimizacion',()=>{
  const invalid={id:'sin-cad',valid:false};
  const r=sweptBroadphase(invalid,to,target,target);
