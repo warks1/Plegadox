@@ -3,6 +3,11 @@ import {normalized,development} from './engine.js';
 export function flatBendLayout(raw){
  const piece=normalized(raw),dev=development(piece);
  const length=dev.length,width=piece.width;
+ if(!dev.flatPatternFeasible){
+  const details=dev.invalidFlangeIndexes.map(i=>'ala '+(i+1)).join(', ');
+  throw new RangeError('Desarrollo no factible'+
+   (details?': '+details+' sin tramo útil tras BD/BA':': revisar las cotas'));
+ }
  if(!Number.isFinite(length)||length<=0||!Number.isFinite(width)||width<=0)
   throw new RangeError('Longitud desarrollada no valida: revisar cotas, angulos y radio');
  const folds=[];

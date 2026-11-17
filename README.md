@@ -1,5 +1,12 @@
 # Plegadox — control y simulador de plegado
 
+## Estado actual · R143 (v0.9.117) · 17 de noviembre de 2026
+
+- **Afinado de Desarrollo:** BD/BA se comprueba por ala; si una deducción medida o pliegue extremo consume un tramo de ala, se avisa qué ala no es factible y se bloquea DXF plano. No inventar compensaciones ni certificar físicamente el plegado.
+- **Comparador de V:** muestra «No factible» cuando el modelo da desarrollo inviable; deja elegir matrices manualmente con aviso.
+- **Windows:** conserva instalador desde USB y edición portátil, con copias separadas. iOS/Android: PWA instalable desde Safari/Chrome, sin APK/AAB/IPA de tienda.
+- **Build:** PLEGADOX-20261117-R143 · v0.9.117 · [Informe R143](./R143_DESARROLLO_BD_FACTIBILIDAD.md).
+
 ## Estado actual · R142 (v0.9.116) · 17 de noviembre de 2026
 
 - **Candidato de distribución:** Windows 10/11 de 64 bits admite instalador desde USB y programa portátil sin instalación, ambos compilados desde los mismos archivos y probados en GitHub Actions. [Guía de instalación](./DISTRIBUCION_INSTALACION.md).

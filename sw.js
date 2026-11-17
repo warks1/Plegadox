@@ -1,5 +1,5 @@
 // PlegadoX · caché offline estática. Se versiona para no arrastrar JS obsoleto.
-const CACHE='plegadox-static-0.9.116-safe-sw-r142';
+const CACHE='plegadox-static-0.9.117-safe-sw-r143';
 // Sólo el arte aprobado del splash usa la copia versionada local primero.
 // Evita volver a descargar el PNG grande en cada arranque de Galaxy.
 const SPLASH_ASSETS=new Set([

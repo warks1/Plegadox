@@ -1682,7 +1682,7 @@ function renderVComparison(){
  const key=JSON.stringify([piece.material,piece.rmMPa,piece.thickness,piece.width,
   piece.flanges,piece.angles,piece.kFactor,piece.radius,piece.datum,piece.die]);
  if(root.dataset.key===key)return;
- const current=development(piece).length;
+ const currentDev=development(piece),current=currentDev.length;
  const candidates=DIES.filter(d=>/^v[0-9]+$/.test(d.id)||d.id===piece.die)
   .sort((a,b)=>a.opening-b.opening||a.angle-b.angle);
  const rows=candidates.map(d=>{
@@ -1690,11 +1690,14 @@ function renderVComparison(){
    force=estimateAirBendForce(testPiece),ratio=d.opening/piece.thickness;
   const tr=document.createElement('tr');tr.dataset.dieId=d.id;
   tr.className=d.id===piece.die?'v-comparison-selected':'';
+  const comparable=dev.flatPatternFeasible&&currentDev.flatPatternFeasible;
   const figures=[d.name,numbers(ratio,1),numbers(dev.radius,2)+' mm',
-   numbers(dev.length,2)+' mm',
-   (dev.length>=current?'+':'')+numbers(dev.length-current,2)+' mm',
+   dev.flatPatternFeasible?numbers(dev.length,2)+' mm':'No factible',
+   comparable?(dev.length>=current?'+':'')+numbers(dev.length-current,2)+' mm':'—',
    numbers(force.tonneForce,2)+' t',
-   ratio<5||ratio>14?'Fuera guía V/t':force.conventionalAirBend90?'Orientativo':'Fuera aire 90°'];
+   !dev.flatPatternFeasible?'⚠ Desarrollo inviable':
+    ratio<5||ratio>14?'Fuera guía V/t':
+    force.conventionalAirBend90?'Orientativo':'Fuera aire 90°'];
   for(const value of figures){
    const cell=document.createElement('td');cell.textContent=value;
    tr.append(cell);
@@ -1703,6 +1706,7 @@ function renderVComparison(){
   button.type='button';button.className='mini v-compare-apply';
   button.textContent=d.id===piece.die?'Actual':'Elegir';
   button.disabled=d.id===piece.die;
+  if(!dev.flatPatternFeasible)button.title='Desarrollo inviable; revisar antes de exportar DXF.';
   button.setAttribute('aria-label','Seleccionar matriz '+d.name);
   button.addEventListener('click',()=>changePiece({...piece,die:d.id},true));
   action.append(button);tr.append(action);return tr;
@@ -1811,7 +1815,7 @@ function renderDevelopment(){
   }
  }
  const d=development(piece),check=geometryReport(),force=estimateAirBendForce(piece);
- const items=[['Nominal',d.nominal,'mm'],['Desarrollo',d.length,'mm'],
+ const items=[['Nominal',d.nominal,'mm'],['Desarrollo',d.flatPatternFeasible?d.length:NaN,'mm'],
   ['Deducción total',d.totalBD,'mm'],['BD de taller',d.calibratedCount,'pliegues'],
   ['Radio interior',d.radius,'mm'],
   ['Fuerza aire aprox.',force.tonneForce,'t'],
@@ -1837,9 +1841,13 @@ function renderDevelopment(){
  $('devRows').replaceChildren(...d.perBend.map(b=>{const tr=document.createElement('tr');for(const val of [b.index+1,(b.angle>0?'+':'')+b.angle+'°',numbers(b.ba,2),numbers(b.bd,2)+(b.calibrated?' (taller)':' (estim.)')]){const td=document.createElement('td');td.textContent=val;tr.append(td);}return tr;}));
  const out=[['Alas',piece.flanges.length],['Pliegues',piece.angles.length],['L. nominal',numbers(d.nominal,1)+' mm']];
  $('geometrySummary').replaceChildren(...out.map(([name,val])=>{const e=document.createElement('div');e.className='stat';const b=document.createElement('b');b.textContent=String(val);const s=document.createElement('span');s.textContent=name;e.append(b,s);return e;}));
- $('validity').textContent=check.hasGeometryWarning?'Revisar geometría y configuración':'Perfil calculado · sin validación física';
- $('validity').style.background=check.hasGeometryWarning?'#5b351b':'#173c54';
- $('validity').style.color=check.hasGeometryWarning?'#ffd89c':'#b9e5ff';
+ const invalidFlat=!d.flatPatternFeasible,needsReview=invalidFlat||check.hasGeometryWarning;
+ const invalidNames=d.invalidFlangeIndexes.map(i=>'ala '+(i+1)).join(', ');
+ $('validity').textContent=invalidFlat?
+  '⚠ Desarrollo no factible'+(invalidNames?': '+invalidNames:'')+' · no exportar DXF':
+  check.hasGeometryWarning?'Revisar geometría y configuración':'Perfil calculado · sin validación física';
+ $('validity').style.background=needsReview?'#5b351b':'#173c54';
+ $('validity').style.color=needsReview?'#ffd89c':'#b9e5ff';
 }
 /**
  * Accesos a las incidencias de cada golpe. La vista saltará al instante

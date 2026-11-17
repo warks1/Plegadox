@@ -169,7 +169,19 @@ export function development(piece){
  const totalBD=perBend.reduce((a,b)=>a+b.bd,0);
  const length=p.datum==='neutral'?nominal+totalBA:nominal-totalBD;
  const calibratedCount=perBend.filter(b=>b.calibrated).length;
+ // BA/BD ocupa media longitud en cada ala adyacente: no inventar alas negativas.
+ const flatSegments=p.flanges.map((flange,i)=>{
+  const before=i?perBend[i-1]:null,after=perBend[i]||null;
+  const share=b=>b?(p.datum==='neutral'?b.ba:-b.bd)/2:0;
+  return flange+share(before)+share(after);
+ });
+ const invalidFlangeIndexes=flatSegments.flatMap((x,i)=>
+  (!Number.isFinite(x)||x<=0)?[i]:[]);
+ const flatPatternFeasible=Number.isFinite(length)&&length>0&&
+  !invalidFlangeIndexes.length&&perBend.every(b=>
+   Number.isFinite(b.ba)&&Number.isFinite(b.bd));
  return {radius:r,k,nominal,totalBA,totalBD,length,perBend,
+  flatSegments,invalidFlangeIndexes,flatPatternFeasible,
   calibratedCount,uncalibratedCount:perBend.length-calibratedCount,
   kSource:p.kFactor==null?'MATERIAL_ESTIMADO':'INTRODUCIDO',
   radiusSource:p.radius==null?'V_ESTIMADO':'INTRODUCIDO',

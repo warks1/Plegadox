@@ -21,7 +21,7 @@ test('cotas sobre fibra neutra: se añade BA y media BA hasta centro',()=>{
 });
 test('rechaza pliegues fuera de desarrollo o solapados',()=>{
  assert.throws(()=>flatBendLayout({...EXAMPLE,flanges:[1,1,1,1,1],
-  thickness:10,radius:100}),/Longitud desarrollada|Posiciones de pliegue/);
+  thickness:10,radius:100}),/Longitud desarrollada|Posiciones de pliegue|Desarrollo no factible/);
 });
 test('secuencia inversa no cambia orden espacial de las marcas',()=>{
  const p={...EXAMPLE,width:1800,order:[3,2,1,0],angles:[-30,45,-120,90]};
