@@ -4,7 +4,7 @@ export function visibleVolumeFaces(faces,view={}){
  const groups={
   sheet:'showSheet',punch:'showPunch',die:'showDie',
   ram:'showRam',upperClamp:'showRam',upperAdapter:'showRam',
-  gauge:'showGauge',lowerClamp:'showDie',lowerAdapter:'showDie'
+  gauge:'showGauge',gaugeZ1:'showGauge',gaugeZ2:'showGauge',lowerClamp:'showDie',lowerAdapter:'showDie'
  };
  return faces.filter(face=>{
   const key=groups[face.kind];
