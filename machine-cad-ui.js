@@ -6,7 +6,7 @@ import {getActiveMachineProfile} from './machine-selection.js';
 import {MOTION_AXES,normalizeAxisMotion,motionPieceKey,
  assessAxisMotion,saveAxisMotion,loadAxisMotion} from './machine-axis-motion.js';
 import {loadAxisMapping,saveAxisMapping,scanAxisCADMovement} from './machine-axis-geometry.js';
-import {loadGaugeFingers,saveGaugeFingers,clearGaugeFingers} from './machine-gauge-fingers.js';
+import {loadGaugeFingers,saveGaugeFingers,clearGaugeFingers,gaugeSectionFingerprint} from './machine-gauge-fingers.js';
 import './cad-evidence-ui.js';
 
 const $=id=>document.getElementById(id);
@@ -40,6 +40,12 @@ function refreshGaugeFingerZ(){
   const config=machineConfigurationKey(getActiveMachineConfig());
   if(config!==saved.machineConfigKey){
    say('machineGaugeZStatus','Cotas Z de otra revisión de máquina: quedan conservadas pero BLOQUEADAS. Vuelve a medir y registrar.',true);
+   return;
+  }
+  const activeCad=loadMachineCad(localStorage)[saved.profileKind];
+  if(gaugeSectionFingerprint(activeCad)!==saved.profileFingerprint){
+   say('machineGaugeZStatus',
+    'CAD del dedo '+saved.profileKind+' cambiado o ausente: cotas Z1/Z2 BLOQUEADAS hasta volver a comprobar el perfil y montaje.',true);
    return;
   }
   const format=key=>key+' '+saved.fingers[key].zMin+'…'+saved.fingers[key].zMax+' mm';
@@ -86,10 +92,16 @@ function installer(){
  $('machineGaugeZSave')?.addEventListener('click',()=>{
   try{
    const source=$('machineGaugeZSource').value.trim();
+   const profileKind=$('machineGaugeZKind').value;
+   const sourceCAD=loadMachineCad(localStorage)[profileKind];
+   const profileFingerprint=gaugeSectionFingerprint(sourceCAD);
+   if(!profileFingerprint)
+    throw Error('Importa primero el DXF real del dedo '+profileKind+
+     ' en el panel CAD y comprueba su montaje.');
    const row=saveGaugeFingers(localStorage,{
     version:1,unit:'mm',
     machineConfigKey:machineConfigurationKey(getActiveMachineConfig()),
-    profileKind:$('machineGaugeZKind').value,
+    profileKind,profileFingerprint,
     sameSectionConfirmed:$('machineGaugeZIdentical').checked,
     source,referenceSceneTime:$('machineGaugeZTime').value,
     fingers:{
