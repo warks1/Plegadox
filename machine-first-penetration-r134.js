@@ -15,7 +15,7 @@
 import {prismOverlap} from './volume-engine.js';
 import {prismTranslation,sweptPrismPair,translatePrism} from './swept-volume.js';
 const ready=n=>typeof n==='number'&&Number.isFinite(n);
-const boundedSteps=v=>Number.isInteger(v)&&v>=1&&v<=14?v:8;
+const boundedSteps=v=>Number.isInteger(v)&&v>=1&&v<=14?v:10;
 const threshold=v=>ready(v)&&v>0&&v<=1?v:.02;
 const result=(status,windowSeconds=null,iterations=0,detail='')=>({
  status,windowSeconds,iterations,
