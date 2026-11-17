@@ -288,6 +288,10 @@ export function setupToolDxfImporter({add}){
   try{
    acceptCad(parseToolDxf(content),cad,fileName);
   }catch(error){
+   // Unidades ajenas a mm o geometría no plana son errores duros.
+   // NO ofrecer elegir capa/contorno que aparentaría saltarse el bloqueo.
+   if(/unidades no milimétricas|no plano|fuera del plano|extrusión OCS|inserción 3D/i
+    .test(String(error?.message||error)))throw error;
    // Un DXF OEM puede tener perfiles y DIMENSIONES en capas separadas.
    // El usuario debe elegir su capa: no se escoge la de mayor área
    // ni se fusionan líneas de referencia con el contorno material.
