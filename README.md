@@ -5,6 +5,7 @@
 - **Samsung Galaxy Chrome:** caché de geometría para que orbitar/zoom no regenere cada sólido; invalida al cambiar pieza, golpe, máquina o CAD.
 - **Ejes coherentes:** bloquea visualización de trazas relativas procedentes de otra pieza, máquina o datum; los recorridos CNC siguen sin estar certificados.
 - **Tope y semáforo:** muestra el motivo preciso del color 2D y aclara que sin Z real del dedo un solape volumétrico provisional no demuestra colisión.
+- **Importación CAD:** reparado el reconocimiento de .dxf/.zip locales y el bloqueo explicativo de DXF en pulgadas. Dos fichas oficiales Eurostamp con enlace DXF incorporadas como evidencia pendiente de importar (1015 y 1063).
 - **Build:** PLEGADOX-20261117-R126 · 0.9.100. Informe: [R126_GALAXY_CACHE_TOPE_CNC.md](./R126_GALAXY_CACHE_TOPE_CNC.md).
 
 
