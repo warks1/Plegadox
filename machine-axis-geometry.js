@@ -15,6 +15,7 @@ import {getActiveMachineConfig} from './machine-config.js';
 import {technicalScene} from './technical-section.js';
 import {buildVolumeScene} from './volume-engine.js';
 import {sweptPrismPair,translatePrism} from './swept-volume.js';
+import {sweptBroadphase} from './machine-swept-broadphase-r132.js';
 import {normalizeAxisMotion,motionPieceKey} from './machine-axis-motion.js';
 import {machineConfigurationKey} from './machine-cad.js';
 import {getActiveMachineProfile} from './machine-selection.js';
@@ -140,6 +141,7 @@ export function scanAxisCADMovement(input,options={}){
   Number.isFinite(Number(options.maxIntervals))?Math.trunc(Number(options.maxIntervals)):100));
  let intervalsChecked=0,framesChecked=0,unresolved=0,tiltUnresolved=0;
  let ramTiltApproximatedIntervals=0,ramTiltApproximationMaxMm=0;
+ let broadphaseRejectedPairs=0,narrowphasePairsChecked=0,indeterminateBroadphasePairs=0;
  const zMode=options.machineCAD===undefined?'biblioteca local':
   'CAD de máquina facilitado';
  const pairs=[
@@ -213,6 +215,10 @@ export function scanAxisCADMovement(input,options={}){
   for(const [moving,against] of reviewedPairs){
    if(!a[moving]?.valid||!b[moving]?.valid||
     !a[against]?.valid||!b[against]?.valid)continue;
+   const broad=sweptBroadphase(a[moving],b[moving],a[against],b[against]);
+   if(!broad.mayOverlap){broadphaseRejectedPairs++;continue;}
+   if(!broad.known)indeterminateBroadphasePairs++;
+   narrowphasePairsChecked++;
    const sweep=sweptPrismPair(a[moving],b[moving],a[against],b[against]);
    if(sweep.intersects)recordEvent(sweep,moving,against,before,after,
     tilt.meanApproximationErrorMm);
@@ -222,6 +228,10 @@ export function scanAxisCADMovement(input,options={}){
    'lowerClamp','lowerAdapter','frontSupport']){
    if(!a[moving]?.valid||!b[moving]?.valid)continue;
    for(let n=0;n<a.sheet.length;n++){
+    const broad=sweptBroadphase(a[moving],b[moving],a.sheet[n],b.sheet[n]);
+    if(!broad.mayOverlap){broadphaseRejectedPairs++;continue;}
+    if(!broad.known)indeterminateBroadphasePairs++;
+    narrowphasePairsChecked++;
     const sweep=sweptPrismPair(a[moving],b[moving],a.sheet[n],b.sheet[n]);
     if(sweep.intersects)recordEvent(sweep,moving,'chapa-'+(n+1),before,after,
      tilt.meanApproximationErrorMm);
@@ -268,6 +278,7 @@ export function scanAxisCADMovement(input,options={}){
   checked:intervalsChecked>0,intervalsChecked,framesChecked,
   unresolved,tiltUnresolved,
   ramTiltApproximatedIntervals,ramTiltApproximationMaxMm,
+  broadphaseRejectedPairs,narrowphasePairsChecked,indeterminateBroadphasePairs,
   ramIndependentYGeometryModeled:false,
   cadProfilesUsed:base.cadProfilesUsed,missingCad:missing,
   axisFingerModeled:twoFingers?['Z1','Z2']:mapping.activeFinger,
@@ -280,6 +291,7 @@ export function scanAxisCADMovement(input,options={}){
    machineCadRequired:needed.length,missingCad:missing,
    sampledIntervals:intervalsChecked,unresolvedIntervals:unresolved,
    ramTiltApproximatedIntervals,ramTiltApproximationMaxMm,
+   broadphaseRejectedPairs,narrowphasePairsChecked,indeterminateBroadphasePairs,
    fullOEM:false,fullCNC:false},
   physicalCollisionCertified:false,
   evidence:zMode,events,unknown:unknowns,verified:false,

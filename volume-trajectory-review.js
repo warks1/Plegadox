@@ -8,6 +8,7 @@ import {technicalScene} from './technical-section.js';
 import {inspectVolumeFrame} from './volume-engine.js';
 import {assessAxisMotion,loadAxisMotion,motionPieceKey} from './machine-axis-motion.js';
 import {sweptPrismPair} from './swept-volume.js';
+import {sweptBroadphase} from './machine-swept-broadphase-r132.js';
 import {scanAxisCADMovement,loadAxisMapping} from './machine-axis-geometry.js';
 // Registrar cuerpos montados además del punzón/matriz. Si falta CAD
  // estos objetos NO existen en el modelo, nunca se consideran libres.
@@ -61,7 +62,8 @@ export function scanVolumeTrajectory(input,options={}){
    gaugeFingers:options.gaugeFingers}));
  const ops=[],allEvents=[],cadProfilesUsed=new Set(),missingCadComponents=new Set();
  let uncheckedSwept=0,linearSweptPenetrations=0,linearSweptIntervalsEvaluated=0,
-  framesChecked=0,cadImportError=null,gaugePairReferenceFrames=0;
+  framesChecked=0,cadImportError=null,gaugePairReferenceFrames=0,
+  broadphaseRejectedSweeps=0,narrowphaseSweeps=0;
  for(let op=0;op<p.order.length;op++){
   const times=perOpTimes(op,perOperation),events=[];
   let previous=null;
@@ -107,8 +109,11 @@ export function scanVolumeTrajectory(input,options={}){
      // Si la chapa DEFORMA/GIRA o cambia Z, NO se inventa continuidad.
      if(previous.model.sheet.length!==model.sheet.length)allLinear=false;
      else for(let segment=0;segment<model.sheet.length;segment++){
-      const sweep=sweptPrismPair(
-       previous.model.sheet[segment],model.sheet[segment],before,after);
+      const sheetBefore=previous.model.sheet[segment],sheetAfter=model.sheet[segment];
+      const broad=sweptBroadphase(sheetBefore,sheetAfter,before,after);
+      if(!broad.mayOverlap){broadphaseRejectedSweeps++;continue;}
+      narrowphaseSweeps++;
+      const sweep=sweptPrismPair(sheetBefore,sheetAfter,before,after);
       if(sweep.unknown){allLinear=false;continue;}
       if(sweep.intersects){sweepFound={...sweep,segment};break;}
      }
@@ -224,6 +229,7 @@ export function scanVolumeTrajectory(input,options={}){
   ramEvidence:ops.flatMap(op=>op.findings.filter(f=>f.kind==='ram')
    .map(f=>({...f,operation:op.operation,bend:op.bend}))).slice(0,12),
   uncertainSweptIntervals:uncheckedSwept,unresolvedGeometryFindings,
+  broadphaseRejectedSweeps,narrowphaseSweeps,
   linearSweptPenetrations,
   linearSweptIntervalsEvaluated,axisReport,axisViolationCount:axisReport.violations.length,
   axisGeometry,axisModeledCollisions:axisGeometry.events.length,

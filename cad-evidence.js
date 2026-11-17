@@ -23,6 +23,32 @@ export const CAD_REQUIREMENTS=Object.freeze({
 const freezeEntry=x=>Object.freeze({...x,
  dimensions:Object.freeze({...x.dimensions})});
 export const CAD_EVIDENCE_SOURCES=Object.freeze([
+ // R132: fichas OEM y botones Download DXF comprobados en Eurostamp.
+ // El fichero NO está importado ni se conoce el cero de montaje real.
+ freezeEntry({
+  id:'eurostamp-3163',kind:'die',maker:'EUROSTAMP',reference:'3163',
+  variant:'SELF-CENTERING-1V-88-V16-H60',mount:'Amada/Promecam',
+  datum:'OEM_REFERENCE_UNCONFIRMED',
+  title:'EUROSTAMP 3163 · matriz autocentrante V16/88° H60',
+  sourceUrl:'https://eurostampsrl.it/en/11184/1v-self-centering-dies-88-amada/3163-1v-dies-self-centering-dies-88',
+  cadUrl:'https://eurostampsrl.it/dxf/3163.dxf',
+  format:'DXF',access:'PUBLIC_DIRECT_DXF',status:'ENLACE_CONFIRMADO_NO_IMPORTADO',
+  dimensions:{heightMm:60,angleDeg:88,vOpeningMm:16,
+   maxTonnesPerMetre:100},
+  note:'Ficha OEM 1V autocentrante: V16, 88°, H60, 100 t/m. Revisar base, ceros, longitud Z y geometría del propio DXF antes de registrar el útil.'
+ }),
+ freezeEntry({
+  id:'eurostamp-3165',kind:'die',maker:'EUROSTAMP',reference:'3165',
+  variant:'SELF-CENTERING-1V-88-V25-H60',mount:'Amada/Promecam',
+  datum:'OEM_REFERENCE_UNCONFIRMED',
+  title:'EUROSTAMP 3165 · matriz autocentrante V25/88° H60',
+  sourceUrl:'https://eurostampsrl.it/en/11198/1v-self-centering-dies-88/3165-die-88',
+  cadUrl:'https://eurostampsrl.it/dxf/3165.dxf',
+  format:'DXF',access:'PUBLIC_DIRECT_DXF',status:'ENLACE_CONFIRMADO_NO_IMPORTADO',
+  dimensions:{heightMm:60,angleDeg:88,vOpeningMm:25,
+   maxTonnesPerMetre:100},
+  note:'Ficha OEM 1V autocentrante: V25, 88°, H60, 100 t/m. El DXF se ofrece desde la web; amarre y ocupación Z sin certificar.'
+ }),
  freezeEntry({
   id:'eurostamp-1063',kind:'punch',maker:'EUROSTAMP',reference:'1063',
   variant:'STRAIGHT-88',mount:'Desconocido',datum:'OEM_REFERENCE_UNCONFIRMED',
