@@ -34,6 +34,8 @@ export function createSolidFrameCache(factory,{capacity=1}={}){
    cap=limit(value);
    while(frames.length>cap){frames.shift();evictions++;}
   },
-  get stats(){return {hits,misses,evictions,entries:frames.length,capacity:cap};}
+  // API histórica R126: conservar SOLO hits/misses para compatibilidad.
+  get stats(){return {hits,misses};},
+  get details(){return {hits,misses,evictions,entries:frames.length,capacity:cap};}
  };
 }
