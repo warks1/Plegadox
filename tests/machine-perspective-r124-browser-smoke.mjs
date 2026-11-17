@@ -7,7 +7,7 @@ mkdirSync('test-results',{recursive:true});
 const server=spawn('python3',['-m','http.server','4443','--bind','127.0.0.1'],{stdio:'ignore'});
 let browser;
 try{
- browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+ browser=await chromium.launch({headless:true,executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE||undefined,args:['--no-sandbox']});
  for(const target of [
   {id:'iphone',w:390,h:844,mobile:true},
   {id:'tablet',w:768,h:1024,mobile:true},

@@ -1766,3 +1766,16 @@ body.px-immersive-open{overflow:hidden!important;touch-action:pan-x pan-y}
  .cp-machine-frame.px-view-immersive .cp-floating-options button{
   min-height:27px;padding:2px 4px;font-size:10px}
 }
+
+/* Preferencias del puesto: no alteran geometría ni alarmas. */
+#softwareFields{grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:18px;padding:12px 0}
+#tab-software .card{margin-bottom:16px}#tab-software input[type=file]{max-width:100%}
+html[data-pref-text-size=large] :is(button,input,select,textarea){font-size:16px!important}
+html[data-pref-text-size=extra] :is(button,input,select,textarea){font-size:18px!important}
+html[data-pref-density=touch] :is(button,select,input:not([type=checkbox]):not([type=range])){min-height:48px}
+html[data-pref-contrast=strong] :is(button,input,select,textarea,.card){border-width:2px;border-color:#688ba5}
+html[data-pref-focus=strong] :focus-visible{outline:3px solid #ed9600!important;outline-offset:3px!important}
+html[data-pref-numbers=tabular] :is(input,select,output,.stat){font-variant-numeric:tabular-nums}
+html[data-pref-scroll=smooth]{scroll-behavior:smooth}
+html[data-pref-motion=reduce] *,html[data-pref-motion=reduce] *::before,html[data-pref-motion=reduce] *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+@media(prefers-reduced-motion:reduce){html[data-pref-motion=system] *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}

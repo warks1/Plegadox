@@ -287,4 +287,5 @@ function init(){
  if(!displayOptions(view).safetyWarningsVisible)throw Error('Avisos desactivados');
  syncControls();syncFullscreen();window.PLEGADOX_REDRAW_MACHINE?.();
 }
+window.addEventListener('plegadox:viewPreferencesChanged',()=>paint());
 init();

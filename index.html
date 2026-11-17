@@ -7,7 +7,7 @@
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="./icon-premium-180.png">
 <link rel="manifest" href="./manifest.webmanifest">
-<meta name="plegadox-build" content="PLEGADOX-20261116-R124">
+<meta name="plegadox-build" content="PLEGADOX-20261117-R125">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="PlegadoX">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -18,7 +18,7 @@
 </div>
 <div id="app">
 <header class="topbar">
-<div class="header-logo"><span class="logo-title">PLEGA<span>DO</span><em>X</em></span><small>PRECISIÓN EN CADA ÁNGULO</small><small id="buildMark" class="px-build-mark" aria-label="Versión instalada de PlegadoX">PLEGADOX-20261116-R124</small></div>
+<div class="header-logo"><span class="logo-title">PLEGA<span>DO</span><em>X</em></span><small>PRECISIÓN EN CADA ÁNGULO</small><small id="buildMark" class="px-build-mark" aria-label="Versión instalada de PlegadoX">PLEGADOX-20261117-R125</small></div>
 <div class="header-project"><span class="h-icon" aria-hidden="true"><svg class="px-icon"><use href="./icons.svg#project"/></svg></span><div class="h-content"><small>PROYECTO ACTUAL</small><strong id="topProject">Omega · ejemplo geométrico</strong></div></div>
 <div class="header-stats"><div><small>Material</small><strong id="topMaterial">Acero S235</strong></div><div><small>Espesor</small><strong id="topThickness">2,00 mm</strong></div><div><small>Ángulo</small><strong id="topAngle">+90°</strong></div><div><small>Apertura V</small><strong id="topV">16 mm</strong></div><div><small>Punzón</small><strong id="topPunch">Recto 88°</strong></div><div><small>Matriz</small><strong id="topDie">V16</strong></div></div>
 <div class="header-right"><div class="header-status"><button id="topPlayBtn" class="led" type="button" aria-label="Reproducir simulación" aria-pressed="false" title="Reproducir / pausar simulación">▶</button><span id="topState">Simulación lista</span></div><span id="clock" aria-label="Hora"></span><button id="forceUpdateBtn" class="header-icon-button px-refresh-button" title="Actualizar PlegadoX sin borrar piezas" aria-label="Actualizar PlegadoX sin borrar piezas"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#refresh"/></svg></button><button id="saveBtn" class="header-icon-button" title="Guardar pieza" aria-label="Guardar pieza"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#save"/></svg></button></div>
@@ -30,8 +30,9 @@
 <button class="nav" data-tab="herramientas"><span class="nav-picto" aria-hidden="true"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#tools"/></svg></span><span>HERRAMIENTAS</span></button>
 <button class="nav" data-tab="desarrollo"><span class="nav-picto" aria-hidden="true"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#ruler"/></svg></span><span>DESARROLLO</span></button>
 <button class="nav" data-tab="maquina"><span class="nav-picto" aria-hidden="true"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#settings"/></svg></span><span>MÁQUINA</span></button>
+<button class="nav" data-tab="software"><span class="nav-picto" aria-hidden="true">⚙</span><span>SOFTWARE</span></button>
 <button class="nav" data-tab="acerca"><span class="nav-picto" aria-hidden="true"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#info"/></svg></span><span>ACERCA DE</span></button>
-<div class="nav-spacer"></div><button class="side-action" id="sideSave" title="Guardar pieza" aria-label="Guardar pieza"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#save"/></svg><span>GUARDAR</span></button><button class="side-action" id="sideImport" title="Importar pieza JSON" aria-label="Importar pieza JSON"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#upload"/></svg><span>IMPORTAR</span></button><div class="nav-version">AMS Tecnologics Services · PLEGADOX v0.9.98</div>
+<div class="nav-spacer"></div><button class="side-action" id="sideSave" title="Guardar pieza" aria-label="Guardar pieza"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#save"/></svg><span>GUARDAR</span></button><button class="side-action" id="sideImport" title="Importar pieza JSON" aria-label="Importar pieza JSON"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#upload"/></svg><span>IMPORTAR</span></button><div class="nav-version">AMS Tecnologics Services · PLEGADOX v0.9.99</div>
 </nav>
 <main>
 <section class="panel" id="tab-programacion">
@@ -154,7 +155,7 @@
 <div class="px-view-section">
 <strong>VISTAS Y CÁMARA</strong>
 <div class="px-view-form">
-<label for="machineViewPreset">Perspectiva<select id="machineViewPreset"><option value="profile">Perfil lateral 2D</option><option value="nominal" selected>Industrial 2,5D</option><option value="shallow">Suave 2,5D</option><option value="deep">Profunda 2,5D</option><option value="elevated">Elevada 2,5D</option><option value="section">Sección técnica (mm)</option><option value="custom">Personalizada</option></select></label>
+<label for="machineViewPreset">Perspectiva<select id="machineViewPreset"><option value="profile">Perfil lateral 2D</option><option value="nominal" selected>Industrial 2,5D</option><option value="shallow">Suave 2,5D</option><option value="deep">Profunda 2,5D</option><option value="elevated">Elevada 2,5D</option><option value="section">Sección técnica (mm)</option><option value="wide">Panorámica 2,5D</option><option value="low">Rasante 2,5D</option><option value="steep">Elevación pronunciada 2,5D</option><option value="compact">Profundidad mínima 2,5D</option><option value="custom">Personalizada</option></select></label>
 <label for="machineTheme">Ambiente<select id="machineTheme"><option value="industrial">Taller industrial</option><option value="blueprint">Plano técnico oscuro</option><option value="contrast">Contraste elevado</option></select></label>
 <label for="machineDepth">Profundidad visual <output id="machineDepthValue" for="machineDepth">100 %</output><input id="machineDepth" type="range" min="0.4" max="2.1" step="0.05" value="1"></label>
 <label for="machineTilt">Inclinación visual <output id="machineTiltValue" for="machineTilt">100 %</output><input id="machineTilt" type="range" min="0.45" max="1.9" step="0.05" value="1"></label>
@@ -360,6 +361,12 @@
 </section>
 
 
+<section class="panel" id="tab-software" aria-labelledby="softwareTitle">
+<div class="page-title"><div><h1 id="softwareTitle">Opciones del software</h1><p>Personaliza tu puesto de trabajo. Los cambios se aplican al instante y se guardan en este navegador.</p></div></div>
+<article class="card"><h2>Pantalla y manejo</h2><div class="px-view-form" id="softwareFields"></div></article>
+<article class="card"><h2>Preferencias y copias</h2><p>Exporta tus preferencias de interfaz y vista. Las piezas y herramientas se guardan desde sus opciones de copia de seguridad.</p><div class="actions"><button id="preferencesExport" type="button">Exportar preferencias</button><label>Importar preferencias JSON <input id="preferencesImport" type="file" accept=".json,application/json"></label><button id="preferencesReset" type="button">Restablecer preferencias de software</button></div><p id="preferencesStatus" role="status" aria-live="polite"></p></article>
+<article class="card"><h2>Atajos opcionales</h2><p>Alt + S: guardar pieza · Alt + P: pausar simulación · Alt + V: opciones de vista · Alt + O: software. No actúan mientras escribes en un campo.</p></article>
+</section>
 <section class="panel px-about-panel" id="tab-acerca" aria-labelledby="pxAboutTitle">
  <div class="page-title"><div>
   <h1 id="pxAboutTitle">Acerca de PlegadoX</h1>
@@ -377,8 +384,8 @@
    <h2>Información de la aplicación</h2>
    <dl class="px-about-facts">
     <div><dt>Nombre comercial</dt><dd>PlegadoX</dd></div>
-    <div><dt>Versión instalada</dt><dd id="softwareInstalledVersion">v0.9.98</dd></div>
-    <div><dt>Compilación</dt><dd id="softwareInstalledBuild">PLEGADOX-20261116-R124</dd></div>
+    <div><dt>Versión instalada</dt><dd id="softwareInstalledVersion">v0.9.99</dd></div>
+    <div><dt>Compilación</dt><dd id="softwareInstalledBuild">PLEGADOX-20261117-R125</dd></div>
     <div><dt>Plataformas</dt><dd>Web, PC, Mac, tablet, iOS y Android mediante aplicación web instalable</dd></div>
     <div><dt>Orientación</dt><dd>Automática según pantalla vertical u horizontal cuando el sistema permite girar</dd></div>
     <div><dt>Almacenamiento</dt><dd>Piezas, herramientas y ajustes almacenados localmente en este navegador</dd></div>
@@ -394,7 +401,7 @@
   <article class="card px-about-card px-about-updates">
    <h2>Actualización del software</h2>
    <p>Comprueba la versión publicada e instala las mejoras disponibles desde esta misma aplicación, sin borrar las piezas ni herramientas guardadas.</p>
-   <div class="px-update-version-row"><span>Instalada</span><strong id="softwareCurrentBuild">v0.9.98</strong>
+   <div class="px-update-version-row"><span>Instalada</span><strong id="softwareCurrentBuild">v0.9.99</strong>
     <span>Publicada</span><strong id="softwarePublishedVersion">Sin comprobar</strong></div>
    <div class="inline-actions"><button id="softwareUpdateBtn" class="px-about-update-button" type="button">Buscar e instalar actualizaciones</button></div>
    <p id="softwareUpdateStatus" class="hint" role="status" aria-live="polite">Pulsa el botón para consultar la última versión publicada.</p>
@@ -424,7 +431,7 @@
  * PlegadoX anteriores y cargar luego todos los módulos secuencialmente.
  * Nunca se elimina localStorage, IndexedDB ni los proyectos del usuario.
  */
-const BUILD="PLEGADOX-20261116-R124";
+const BUILD="PLEGADOX-20261117-R125";
 const STATUS=document.getElementById('buildMark');
 const KEY='plegadox:verified-loader-build';
 const BASE=new URL('./',document.baseURI);
@@ -473,7 +480,7 @@ const clearOldCode=async()=>{
 };
 const loadModules=async()=>{
  const scripts=['pwa.js','app.js','cockpit.js','boceto2.js',
-  'responsive.js','studio.js','machine-editor.js','machine-cad-ui.js','software-about.js'];
+  'responsive.js','studio.js','machine-editor.js','machine-cad-ui.js','software-about.js','software-preferences.js'];
  for(const [index,path] of scripts.entries()){
   splashStep(18+Math.round(72*(index+1)/scripts.length),'Cargando '+path.replace('.js','')+'…');
   await import('./'+path+'?build='+encodeURIComponent(BUILD));
