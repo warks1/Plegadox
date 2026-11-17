@@ -382,6 +382,14 @@
 <details class="px-tech-details" id="machineAxisEvidencePanel">
 <summary>Diagnóstico CAD/CNC · cuerpos, intervalos, pruebas y datos pendientes</summary>
 <p class="hint">Diferencia solapes entre dos perfiles DXF declarados, solapes entre DXF y geometría paramétrica, e incidencias sobre envolventes provisionales. El análisis NO permite afirmar que hay un choque físico real o que la trayectoria no presenta colisiones. Solo evalúa intervalos lineales de chapa inmóvil con registros CNC y datum aplicables.</p>
+<label class="hint" for="machineAxisEvolutionFilter">Mostrar incidencias del barrido
+<select id="machineAxisEvolutionFilter" aria-label="Filtrar solapes modelados según su origen">
+<option value="all">Todas las incidencias y datos pendientes</option>
+<option value="new">Sólo nuevas o transitorias</option>
+<option value="preexisting">Sólo preexistentes en el datum</option>
+<option value="uncertain">Sólo sin causa temporal clasificable</option>
+</select></label>
+<p class="hint" id="machineAxisEvolutionSummary">Origen del solape pendiente de analizar; no se presume compatibilidad o seguridad.</p>
 <ul class="hint" id="machineAxisFindings" aria-label="Interferencias y evidencias por cuerpo"><li>Importa y comprueba un recorrido para ver hallazgos por cuerpo y tiempo.</li></ul>
 <details class="px-tech-details" id="machineAxisMountedInterfacesPanel">
 <summary>Interfaces de montaje excluidas del detector de choque rígido</summary>
