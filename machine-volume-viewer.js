@@ -51,7 +51,9 @@ export function prismMesh(prism,kind='sheet'){
 export function machineVolumeMesh(model,maxFaces=2500){
  const faces=[],omitted=[];
  const solids=[...model.sheet.map(s=>[s,'sheet']),
-  ...Object.entries(model.objects).map(([kind,s])=>[s,kind])];
+  ...Object.entries(model.objects)
+   .filter(([kind])=>!(model.gaugeReferenceOnly&&kind==='gauge'))
+   .map(([kind,s])=>[s,kind])];
  for(const [solid,kind] of solids){
   const part=prismMesh(solid,kind);
   if(!part.length){omitted.push(kind+' (geometría no dibujable)');continue;}
@@ -84,10 +86,14 @@ export function axisRelativeTrails(motion,mapping,model){
   result.push({name:side.name,points:trail});
  }
  for(const key of ['Z1','Z2']){
+  const finger=model.gaugeReferenceOnly?model.objects['gauge'+key]:gauge;
+  const center=finger?.valid?midpoint(finger.polygon):gm;
+  const zCenter=finger?.valid?(finger.zMin+finger.zMax)/2:
+   (gauge.zMin+gauge.zMax)/2;
   const trail=poses.filter((_,i)=>i%stride===0||i===poses.length-1)
-   .map(p=>({x:gm.x+(p.axes.X-first.X)*signs.X,
-    y:gm.y+(p.axes.R-first.R)*signs.R,
-    z:(gauge.zMin+gauge.zMax)/2+(p.axes[key]-first[key])*signs[key]}));
+   .map(p=>({x:center.x+(p.axes.X-first.X)*signs.X,
+    y:center.y+(p.axes.R-first.R)*signs.R,
+    z:zCenter+(p.axes[key]-first[key])*signs[key]}));
   result.push({name:'X/R/'+key,points:trail});
  }
  return result;
@@ -118,7 +124,7 @@ function paint(ctx,w,h,faces,trails,camera,maxFaces,gaugeEvidence){
  prepared.sort((a,b)=>a.depth-b.depth);
  const gaugeStyle=gaugeSolidStyle(gaugeEvidence);
  for(const face of prepared){
-  const special=face.kind==='gauge';
+  const special=face.kind==='gauge'||face.kind==='gaugeZ1'||face.kind==='gaugeZ2';
   const base=special?gaugeStyle.color:(palette[face.kind]||[120,145,155]);
   const span=face.vertices;
   const dx=span[1].x-span[0].x,dy=span[1].y-span[0].y;
@@ -198,7 +204,8 @@ function install(){
     reason:'Error de validación de ejes: '+String(error?.message||error)};
   }
   return {model,mesh,trails,trailEvidence,
-   gauge:describeGaugeVisualEvidence(model.gaugePlacement,model.objects.gauge,model.sheet)};
+   gauge:describeGaugeVisualEvidence(model.gaugePlacement,model.objects.gauge,model.sheet,
+    model.gaugeReferenceOnly?[model.objects.gaugeZ1,model.objects.gaugeZ2]:null)};
  });
  window.PLEGADOX_SOLID_RENDER_STATS=()=>frameCache.stats;
  window.PLEGADOX_GRAPHICS_BUDGET=()=>budget;
@@ -224,7 +231,7 @@ function install(){
    const visibleFaces=visibleVolumeFaces(mesh.faces,window.PLEGADOX_MACHINE_VIEW);
    paint(ctx,w,h,visibleFaces,trails,camera,budget.maxFaces,gauge);
    const missing=model.missingCadComponents.join(', ');
-   const message='Sólidos dibujados: '+visibleFaces.length+' de '+mesh.faces.length+' caras · CAD de máquina importado: '+
+   const message='Sólidos dibujados: '+visibleFaces.length+' de '+mesh.faces.length+' caras · Dedos Z1/Z2: '+model.gaugeFingerReview.status+' · CAD de máquina importado: '+
     (mesh.importedKinds.join(', ')||'ninguno')+'. Faltan: '+(missing||'ninguno')+
     (mesh.omitted.length?'. Omitidos: '+mesh.omitted.join(', '):'')+
     '. Recorridos: '+trailEvidence.reason+
