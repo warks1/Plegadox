@@ -24,17 +24,6 @@ const freezeEntry=x=>Object.freeze({...x,
  dimensions:Object.freeze({...x.dimensions})});
 export const CAD_EVIDENCE_SOURCES=Object.freeze([
  freezeEntry({
-  id:'eurostamp-1015',kind:'punch',maker:'EUROSTAMP',reference:'1015',
-  variant:'GOOSENECK-88',mount:'Desconocido',datum:'OEM_REFERENCE_UNCONFIRMED',
-  title:'EUROSTAMP 1015 · pata de cabra 88° R3 H88.5',
-  sourceUrl:'https://eurostampsrl.it/en/10556/punches-88/1015-punch-88',
-  cadUrl:'https://eurostampsrl.it/dxf/1015.dxf',
-  format:'DXF',access:'PUBLIC_DIRECT_DXF',status:'ENLACE_CONFIRMADO_NO_IMPORTADO',
-  dimensions:{heightMm:88.5,angleDeg:88,tipRadiusMm:3,
-   maxTonnesPerMetre:60},
-  note:'Ficha y enlace DXF publicados por Eurostamp. El contorno CAD binario no está importado ni cotejado; confirmar la familia de amarre, longitud Z y radio antes del montaje.'
- }),
- freezeEntry({
   id:'eurostamp-1063',kind:'punch',maker:'EUROSTAMP',reference:'1063',
   variant:'STRAIGHT-88',mount:'Desconocido',datum:'OEM_REFERENCE_UNCONFIRMED',
   title:'EUROSTAMP 1063 · punzón recto 88° R0.8 H104.65',
