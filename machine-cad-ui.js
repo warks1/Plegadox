@@ -91,6 +91,8 @@ function refreshMotion(){
       ', mixtos: '+e.mixedCount+
       ', provisionales: '+e.provisionalCount+')':'')+
      ' · intervalos sin resolver '+review.unresolved+
+     (review.broadphaseRejectedPairs?
+      ' · parejas separadas sin triangulación '+review.broadphaseRejectedPairs:'')+
      (review.ramTiltApproximatedIntervals?
       ' · Y1/Y2 no paralelos: '+review.ramTiltApproximationMaxMm.toFixed(3)+
        ' mm de incertidumbre en '+review.ramTiltApproximatedIntervals+
