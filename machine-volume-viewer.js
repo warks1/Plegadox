@@ -7,8 +7,13 @@
 import {buildVolumeScene,triangulateSimplePolygon} from './volume-engine.js';
 import {technicalScene} from './technical-section.js';
 import {getActiveMachineConfig} from './machine-config.js';
-import {loadAxisMotion} from './machine-axis-motion.js';
+import {loadAxisMotion,motionPieceKey} from './machine-axis-motion.js';
 import {loadAxisMapping} from './machine-axis-geometry.js';
+import {machineConfigurationKey} from './machine-cad.js';
+import {getActiveMachineProfile} from './machine-selection.js';
+import {createSolidFrameCache} from './machine-solid-frame-cache.js';
+import {assessTrailEvidence} from './machine-axis-trail-evidence.js';
+import {describeGaugeVisualEvidence} from './machine-gauge-evidence.js';
 import {browserRenderBudget,readQuality,saveQuality} from './adaptive-render-budget.js';
 
 const palette=Object.freeze({
@@ -143,6 +148,7 @@ function install(){
  const canvas=document.getElementById('machineSolidCanvas');
  const button=document.getElementById('machineSolidToggle');
  const status=document.getElementById('machineSolidStatus');
+ const gaugeStatus=document.getElementById('machineGaugeEvidence');
  const chooser=document.getElementById('machineRenderQuality');
  if(!canvas||!button)return;
  let enabled=false;
@@ -151,6 +157,31 @@ function install(){
  const pointers=new Map();
  let previousPinch=0,lastRender=0;
  let budget=browserRenderBudget(window,mode);
+ // La cámara, zoom y pan no cambian los vértices. Reutilizar los
+ // mismos sólidos y triangulación hasta que cambie la pieza o fase.
+ const frameCache=createSolidFrameCache((piece,time,maxFaces)=>{
+  const machine=getActiveMachineConfig();
+  const scene=technicalScene(piece,time);
+  const model=buildVolumeScene(scene,{machine});
+  const mesh=machineVolumeMesh(model,maxFaces);
+  let motion=null,mapping=null,trailEvidence=null,trails=[];
+  try{
+   motion=loadAxisMotion(localStorage);
+   mapping=loadAxisMapping(localStorage);
+   trailEvidence=assessTrailEvidence({
+    motion,mapping,pieceKey:motionPieceKey(piece),
+    machineConfigKey:machineConfigurationKey(machine),
+    machineId:getActiveMachineProfile().id
+   });
+   if(trailEvidence.drawable)trails=axisRelativeTrails(motion,mapping,model);
+  }catch(error){
+   trailEvidence={drawable:false,code:'lectura-invalida',
+    reason:'Error de validación de ejes: '+String(error?.message||error)};
+  }
+  return {model,mesh,trails,trailEvidence,
+   gauge:describeGaugeVisualEvidence(model.gaugePlacement,model.objects.gauge)};
+ });
+ window.PLEGADOX_SOLID_RENDER_STATS=()=>frameCache.stats;
  window.PLEGADOX_GRAPHICS_BUDGET=()=>budget;
  window.PLEGADOX_SOLID_ACTIVE=()=>enabled;
  const setStatus=message=>{if(status)status.textContent=message;};
@@ -168,24 +199,19 @@ function install(){
   if(canvas.width!==bw||canvas.height!==bh){canvas.width=bw;canvas.height=bh;}
   const ctx=canvas.getContext('2d',{alpha:false});
   ctx.setTransform(dpr,0,0,dpr,0,0);
-  let scene,mesh;
   try{
-   scene=technicalScene(state.piece,state.sim.time);
-   const model=buildVolumeScene(scene,{machine:getActiveMachineConfig()});
-   mesh=machineVolumeMesh(model,budget.maxFaces);
-   let trails=[];
-   try{
-    const motion=loadAxisMotion(localStorage);
-    const mapping=loadAxisMapping(localStorage);
-    trails=axisRelativeTrails(motion,mapping,model);
-   }catch{}
+   const frame=frameCache.get(state.piece,state.sim.time,budget.maxFaces);
+   const {model,mesh,trails,trailEvidence,gauge}=frame;
    paint(ctx,w,h,mesh.faces,trails,camera,budget.maxFaces);
    const missing=model.missingCadComponents.join(', ');
-   setStatus('Sólidos dibujados: '+mesh.faces.length+' caras · CAD de máquina importado: '+
+   const message='Sólidos dibujados: '+mesh.faces.length+' caras · CAD de máquina importado: '+
     (mesh.importedKinds.join(', ')||'ninguno')+'. Faltan: '+(missing||'ninguno')+
     (mesh.omitted.length?'. Omitidos: '+mesh.omitted.join(', '):'')+
-    '. Recorridos: '+(trails.length?'relativos a la primera pose, SIN datum físico absoluto':'sin calibración/registro CNC')+
-    '. No habilita aprobación de colisiones.');
+    '. Recorridos: '+trailEvidence.reason+
+    '. No habilita aprobación de colisiones.';
+   if(status&&status.textContent!==message)setStatus(message);
+   if(gaugeStatus&&gaugeStatus.textContent!==gauge.message)
+    gaugeStatus.textContent=gauge.message;
   }catch(error){
    setStatus('No se pudo dibujar el sólido: '+String(error?.message||error));
   }
@@ -207,7 +233,7 @@ function install(){
  });
  chooser?.addEventListener('change',()=>{
   mode=saveQuality(window.localStorage,chooser.value);
-  refreshBudget();
+  frameCache.invalidate();refreshBudget();
   window.PLEGADOX_REDRAW?.();
  });
  document.getElementById('machineSolidReset')?.addEventListener('click',()=>{
@@ -245,7 +271,8 @@ function install(){
  },{passive:false});
  window.addEventListener('resize',refreshBudget,{passive:true});
  window.addEventListener('plegadox:viewportChanged',refreshBudget);
- window.addEventListener('plegadox:machineChanged',()=>render(true));
+ window.addEventListener('plegadox:machineChanged',()=>{frameCache.invalidate();render(true);});
+ window.addEventListener('plegadox:pieceChanged',()=>{frameCache.invalidate();render(true);});
  window.PLEGADOX_SOLID_RENDER=()=>render(false);
  refreshBudget();
 }
