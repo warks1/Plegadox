@@ -84,7 +84,12 @@ export function scanAxisCADMovement(input,options={}){
  // R130: no trasladar una traza archivada para otra plegadora aunque
  // casualmente comparta los mismos límites o la misma llave de cotas.
  const activeMachineId=options.machineId||getActiveMachineProfile().id;
- if(program.machineId!==activeMachineId)
+ // Compatibilidad con trazas históricas que sí declaraban el modelo V85,
+ // pero aún no especificaban el ID normalizado. No equiparar una V85
+ // con ninguna Bystronic, ni afirmar su número de serie como verificado.
+ const genericV85=program.machineId==='V85'&&
+  activeMachineId==='trumpf-v85';
+ if(program.machineId!==activeMachineId&&!genericV85)
   return unknown('TRAZA_DE_OTRA_MAQUINA',
    'La traza corresponde a '+program.machineId+' y no a '+activeMachineId);
  if(mapping.machineConfigKey!==machineConfigurationKey(machine))
@@ -233,6 +238,8 @@ export function scanAxisCADMovement(input,options={}){
   unknowns.push('Perfil de punzón no acreditado con CAD OEM');
  if(!base.objects.die.provenance.includes('perfil-acotado'))
   unknowns.push('Perfil de matriz no acreditado con CAD OEM');
+ if(genericV85)unknowns.push(
+  'Identificación CNC histórica solo como V85; placa/número de serie sin verificar');
  const evidenceSummary=summarizeAxisContacts(events);
  const riskStatus=events.length?
   evidenceSummary.status:
@@ -245,7 +252,8 @@ export function scanAxisCADMovement(input,options={}){
   axisFingerModeled:twoFingers?['Z1','Z2']:mapping.activeFinger,
   bothGaugeFingersModeled:twoFingers,mappingSource:mapping.source,
   traceSource:program.source,
-  machineId:activeMachineId,
+  machineId:activeMachineId,traceMachineId:program.machineId,
+  machineIdentityGeneric:genericV85,
   gaugeCadKindsRequired:gaugeKinds,
   coverage:{machineCadPresent:needed.length-missing.length,
    machineCadRequired:needed.length,missingCad:missing,
