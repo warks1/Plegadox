@@ -1,0 +1,38 @@
+name: PlegadoX · Galaxy Chrome y sólidos 3D R125
+on:
+  pull_request:
+    paths:
+      - 'adaptive-render-budget.js'
+      - 'machine-volume-viewer.js'
+      - 'app.js'
+      - 'index.html'
+      - 'styles.css'
+      - 'tests/machine-volume-r125-browser-smoke.mjs'
+      - '.github/workflows/galaxy-solids-r125.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  galaxy-solids:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Instalar Chromium y Playwright
+        run: |
+          python3 tools/generate-pwa-icons.py
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Comprobar malla y respuesta Galaxy/PC
+        run: node tests/machine-volume-r125-browser-smoke.mjs
+      - name: Adjuntar capturas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: plegadox-r125-galaxy-3d
+          path: test-results/r125-solids-*.png
+          if-no-files-found: warn
+          retention-days: 20
