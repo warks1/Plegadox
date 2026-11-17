@@ -165,7 +165,7 @@ function paint(ctx,w,h,faces,trails,camera,maxFaces,gaugeEvidence,cncGaugeStatus
  ctx.fillStyle='#d5efe1';
  const color=gaugeStyle.level==='red'?'ROJO':
   gaugeStyle.level==='green'?'VERDE':'NARANJA';
- ctx.fillText('TOPE 2D: '+color+
+ ctx.fillText('TOPE: '+color+' · 2D'+
   (gaugeStyle.provisional?' · Z provisional (línea discontinua)':
    ' · Z de DXF declarada sin certificar'),12,39);
  const cncColors={red:'#f38f85',amber:'#efc381',green:'#86dbc1',
