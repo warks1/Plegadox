@@ -7,6 +7,11 @@ on:
       - 'machine-solid-frame-cache.js'
       - 'machine-axis-trail-evidence.js'
       - 'machine-gauge-evidence.js'
+      - 'machine-gauge-depth.js'
+      - 'machine-solid-gauge-style.js'
+      - 'machine-volume-layers.js'
+      - 'tests/gauge-volume-r127-browser-smoke.mjs'
+      - 'studio.js'
       - 'tests/machine-volume-r126-browser-smoke.mjs'
       - 'app.js'
       - 'index.html'
@@ -34,6 +39,8 @@ jobs:
         run: node tests/machine-volume-r125-browser-smoke.mjs
       - name: Comprobar caché orbital y causas del semáforo en Galaxy
         run: node tests/machine-volume-r126-browser-smoke.mjs
+      - name: Comprobar Z del tope, capas y captura 3D en Galaxy
+        run: node tests/gauge-volume-r127-browser-smoke.mjs
       - name: Adjuntar capturas
         if: always()
         uses: actions/upload-artifact@v4
@@ -42,5 +49,6 @@ jobs:
           path: |
             test-results/r125-solids-*.png
             test-results/r126-galaxy-*.png
+            test-results/r127-*.png
           if-no-files-found: warn
           retention-days: 20

@@ -1,15 +1,32 @@
-/** R126 · semáforo 2D separado de evidencia volumétrica Z del tope. */
+/** R127 · semáforo de sección y profundidad real del dedo, sin certificar CNC. */
 import {gaugeRiskStatus} from './gauge-risk-status.js';
-export function describeGaugeVisualEvidence(placement,gauge){
- const risk=gaugeRiskStatus(placement);
- const color=risk.level==='red'?'ROJO':risk.level==='green'?'VERDE':'NARANJA';
- const statement=color+' · '+risk.message+
-  (risk.code?' · motivo: '+risk.code:'')+' · diagnóstico de sección 2D.';
- const knownZ=typeof gauge?.provenance==='string'&&
-  gauge.provenance.startsWith('perfil CAD importado ');
- const depth=knownZ?
-  'Existe Z declarada por DXF, pero el CAD y su montaje siguen sin verificar físicamente.':
+import {assessGaugeDepth} from './machine-gauge-depth.js';
+export function describeGaugeVisualEvidence(placement,gauge,sheet=null){
+ const planar=gaugeRiskStatus(placement);
+ const depth=assessGaugeDepth(sheet,gauge);
+ const outside=depth.contactAvailable===false;
+ // Un contorno que atraviesa la chapa en XY NO equivale a choque 3D
+ // si ambos sólidos CAD se encuentran fuera de la misma banda Z.
+ // Pero tampoco puede ofrecer apoyo en ese montaje: nunca verde.
+ const level=outside?'amber':planar.level;
+ const label=level==='red'?'ROJO':level==='green'?'VERDE':'NARANJA';
+ const planarLabel=planar.level==='red'?'roja':
+  planar.level==='green'?'verde':'naranja';
+ const base=label+' · '+(outside?
+  'DEDO FUERA DEL ANCHO DE CHAPA EN Z · NO PUEDE SERVIR DE TOPE EN ESTA POSE':
+  planar.message)+
+  (planar.code?' · motivo 2D: '+planar.code:'')+
+  ' · diagnóstico de sección 2D'+
+  (outside?' ('+planarLabel+', sin coincidencia transversal real)':'')+'.';
+ const cross=outside?
+  'Perfil CAD declarado en Z sin solape con la chapa: no hay penetración volumétrica de estos prismas en esta pose, pero tampoco contacto de apoyo.':
+  depth.contactAvailable===true?
+  'Perfil CAD con intervalos Z solapados '+depth.overlapMm.toFixed(2)+
+   ' mm; geometría y montaje SIN validación CNC.':
+  depth.knownZ?
+  'Existe perfil CAD DXF importado con Z incompleta; el montaje sigue sin verificar físicamente y no puede comprobarse la coincidencia transversal.':
   'Z real del dedo no documentada: el visor usa una envolvente provisional de toda la anchura; el solape aparente no demuestra colisión 3D.';
- return {level:risk.level,code:risk.code||'sin-incidencia-2d',knownZ,
-  message:statement+' '+depth,verified:false};
+ return {level,code:outside?'tope-fuera-de-z':planar.code||'sin-incidencia-2d',
+  knownZ:depth.knownZ,depth,planarLevel:planar.level,
+  message:base+' '+cross,verified:false};
 }

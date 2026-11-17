@@ -88,6 +88,9 @@ function paint(){
  if(typeof window.PLEGADOX_REDRAW_MACHINE==='function')
   window.PLEGADOX_REDRAW_MACHINE();
  else window.PLEGADOX_REDRAW?.();
+ // El visor volumétrico reutiliza el mismo control de capas de la sección.
+ // Ocultar chapa/tope/punzón NO desactiva el motor de colisiones.
+ window.dispatchEvent(new Event('plegadox:visualChanged'));
 }
 function choosePreset(name){
  const view=currentView();if(!view)return;
@@ -151,7 +154,11 @@ async function toggleFullscreen(){
  requestAnimationFrame(()=>window.PLEGADOX_REDRAW_MACHINE?.());
 }
 function capturePNG(){
- const canvas=$('machineCanvas');if(!canvas)return;
+ const solidActive=window.PLEGADOX_SOLID_ACTIVE?.()===true;
+ if(solidActive)window.PLEGADOX_SOLID_RENDER_FORCE?.();
+ const canvas=solidActive&&!$('machineSolidCanvas')?.hidden?
+  $('machineSolidCanvas'):$('machineCanvas');
+ if(!canvas)return;
  try{
   // La captura respeta capas, zoom y perspectiva; NO adjunta una
   // certificación de colisión ni la transforma en modelo 3D.
@@ -159,11 +166,11 @@ function capturePNG(){
    .replace(/[^\p{L}\p{N}_-]+/gu,'-').slice(0,50);
   const stamp=new Date().toISOString().slice(0,19).replaceAll(':','-');
   const link=document.createElement('a');
-  link.download='PlegadoX-'+name+'-'+stamp+'-vista-2p5D.png';
+  link.download='PlegadoX-'+name+'-'+stamp+(solidActive?'-solidos-3D':'-vista-2p5D')+'.png';
   link.href=canvas.toDataURL('image/png');
   document.body.append(link);link.click();link.remove();
   const status=$('machineViewHint');
-  if(status)status.textContent='Captura PNG de la vista actual guardada. Es ilustrativa: no certifica colisiones.';
+  if(status)status.textContent='Captura PNG de la vista '+(solidActive?'3D prismática':'2,5D')+' guardada. Es ilustrativa: no certifica colisiones.';
  }catch(error){
   const status=$('machineViewHint');
   if(status)status.textContent='No se pudo exportar PNG: '+error.message;

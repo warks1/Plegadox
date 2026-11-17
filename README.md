@@ -1,5 +1,14 @@
 # Plegadox — control y simulador de plegado
 
+## Estado actual · R127 (v0.9.101) · 17 de noviembre de 2026
+
+- **Topes 3D:** rojo/naranja/verde de acuerdo con el diagnóstico, no color naranja fijo. Si falta el ancho y Z del dedo, se muestra una envolvente discontinua, no geometría OEM inventada.
+- **Contraste Z:** un dedo DXF declarado fuera de la anchura transversal de la chapa no puede ofrecer apoyo ni producir penetración 3D en el mismo intervalo Z; la sección 2D original continúa visible.
+- **Perspectivas:** las capas se comparten entre visor 2,5D y 3D sin ocultar alarmas de seguridad. La exportación PNG captura la vista orbital 3D efectiva.
+- **Build:** PLEGADOX-20261117-R127 · 0.9.101. Informe [R127_TOPE_3D_CAPAS_CNC.md](./R127_TOPE_3D_CAPAS_CNC.md). Ni CAD OEM completo ni certificación industrial.
+
+
+
 ## Estado actual · R126 (v0.9.100) · 17 de noviembre de 2026
 
 - **Samsung Galaxy Chrome:** caché de geometría para que orbitar/zoom no regenere cada sólido; invalida al cambiar pieza, golpe, máquina o CAD.
