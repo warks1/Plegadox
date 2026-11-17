@@ -7,7 +7,7 @@
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="./icon-premium-180.png">
 <link rel="manifest" href="./manifest.webmanifest">
-<meta name="plegadox-build" content="PLEGADOX-20261116-R124">
+<meta name="plegadox-build" content="PLEGADOX-20261117-R125">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="PlegadoX">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -18,7 +18,7 @@
 </div>
 <div id="app">
 <header class="topbar">
-<div class="header-logo"><span class="logo-title">PLEGA<span>DO</span><em>X</em></span><small>PRECISIÓN EN CADA ÁNGULO</small><small id="buildMark" class="px-build-mark" aria-label="Versión instalada de PlegadoX">PLEGADOX-20261116-R124</small></div>
+<div class="header-logo"><span class="logo-title">PLEGA<span>DO</span><em>X</em></span><small>PRECISIÓN EN CADA ÁNGULO</small><small id="buildMark" class="px-build-mark" aria-label="Versión instalada de PlegadoX">PLEGADOX-20261117-R125</small></div>
 <div class="header-project"><span class="h-icon" aria-hidden="true"><svg class="px-icon"><use href="./icons.svg#project"/></svg></span><div class="h-content"><small>PROYECTO ACTUAL</small><strong id="topProject">Omega · ejemplo geométrico</strong></div></div>
 <div class="header-stats"><div><small>Material</small><strong id="topMaterial">Acero S235</strong></div><div><small>Espesor</small><strong id="topThickness">2,00 mm</strong></div><div><small>Ángulo</small><strong id="topAngle">+90°</strong></div><div><small>Apertura V</small><strong id="topV">16 mm</strong></div><div><small>Punzón</small><strong id="topPunch">Recto 88°</strong></div><div><small>Matriz</small><strong id="topDie">V16</strong></div></div>
 <div class="header-right"><div class="header-status"><button id="topPlayBtn" class="led" type="button" aria-label="Reproducir simulación" aria-pressed="false" title="Reproducir / pausar simulación">▶</button><span id="topState">Simulación lista</span></div><span id="clock" aria-label="Hora"></span><button id="forceUpdateBtn" class="header-icon-button px-refresh-button" title="Actualizar PlegadoX sin borrar piezas" aria-label="Actualizar PlegadoX sin borrar piezas"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#refresh"/></svg></button><button id="saveBtn" class="header-icon-button" title="Guardar pieza" aria-label="Guardar pieza"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#save"/></svg></button></div>
@@ -141,11 +141,12 @@
 <article class="card cp-simulation">
 <div class="cp-machine-frame">
 <canvas id="machineCanvas" class="canvas machine" aria-label="Cinemática de punzón, matriz, tope y chapa"></canvas>
+<canvas id="machineSolidCanvas" class="px-machine-solid-canvas" hidden aria-label="Sólidos volumétricos 3D de máquina y chapa. Arrastra para orbitar y pellizca para acercar."></canvas>
 <div class="cp-machine-floats" aria-hidden="true">
 <div class="cp-float-tool"><strong>PUNZÓN</strong><svg viewBox="0 0 90 94"><defs><linearGradient id="mgt" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#e5f5ff"/><stop offset=".34" stop-color="#708c9d"/><stop offset=".6" stop-color="#cedde7"/><stop offset="1" stop-color="#566d80"/></linearGradient></defs><path fill="url(#mgt)" stroke="#e1edf9" stroke-width="1" d="M21 10H70V42L47 88L44 94L41 88L21 44Z"/></svg><span id="cpPunchLabel">Punzón</span></div>
 <div class="cp-float-tool"><strong>MATRIZ</strong><svg viewBox="0 0 90 94"><defs><linearGradient id="mgd" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d0e1eb"/><stop offset=".4" stop-color="#758d9e"/><stop offset="1" stop-color="#2d485e"/></linearGradient></defs><path fill="url(#mgd)" stroke="#abcadd" stroke-width="1" d="M8 20H32L45 60L58 20H82V87H8Z"/><path d="M32 20L45 60L58 20" fill="none" stroke="#06172a" stroke-width="5"/></svg><span id="cpDieLabel">Matriz</span></div>
 </div>
-<div class="cp-floating-options"><span id="machineViewLabel">VISTA LATERAL</span><button id="machineZoomIn" title="Acercar máquina" aria-label="Acercar máquina"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#zoom-in"/></svg></button><button id="machineZoomOut" title="Alejar máquina" aria-label="Alejar máquina"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#zoom-out"/></svg></button><button id="machineReset" title="Centrar máquina" aria-label="Centrar máquina"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#maximize"/></svg></button><button id="machinePerspective" type="button" aria-pressed="false" title="Activar perspectiva ilustrativa 2.5D" aria-label="Perspectiva ilustrativa de máquina"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#cube"/></svg> 3D</button><button id="machineSection" type="button" aria-pressed="false" title="Vista técnica: chapa, punzón y matriz con la misma escala en milímetros" aria-label="Mostrar sección técnica en milímetros"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#layers"/></svg> mm</button><button id="machineTransparent" type="button" aria-pressed="false" title="Hacer el punzón semitransparente" aria-label="Punzón transparente"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#eye"/></svg> Trans.</button><button id="machineView3D" title="Mostrar pieza tridimensional" aria-label="Mostrar pieza tridimensional"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#cube"/></svg> Pieza</button><button id="machineOptionsButton" type="button" title="Abrir perspectivas avanzadas y opciones de visualización" aria-label="Abrir opciones de perspectiva" aria-controls="machineViewStudio" aria-expanded="false">⚙ Opc.</button><button id="machineFullscreen" type="button" title="Ampliar simulación a pantalla completa" aria-label="Alternar pantalla completa de la máquina" aria-pressed="false">⛶ Pant.</button></div>
+<div class="cp-floating-options"><span id="machineViewLabel">VISTA LATERAL</span><button id="machineZoomIn" title="Acercar máquina" aria-label="Acercar máquina"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#zoom-in"/></svg></button><button id="machineZoomOut" title="Alejar máquina" aria-label="Alejar máquina"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#zoom-out"/></svg></button><button id="machineReset" title="Centrar máquina" aria-label="Centrar máquina"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#maximize"/></svg></button><button id="machinePerspective" type="button" aria-pressed="false" title="Activar perspectiva ilustrativa 2.5D" aria-label="Perspectiva ilustrativa de máquina"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#cube"/></svg> 3D</button><button id="machineSection" type="button" aria-pressed="false" title="Vista técnica: chapa, punzón y matriz con la misma escala en milímetros" aria-label="Mostrar sección técnica en milímetros"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#layers"/></svg> mm</button><button id="machineTransparent" type="button" aria-pressed="false" title="Hacer el punzón semitransparente" aria-label="Punzón transparente"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#eye"/></svg> Trans.</button><button id="machineView3D" title="Mostrar pieza tridimensional" aria-label="Mostrar pieza tridimensional"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#cube"/></svg> Pieza</button><button id="machineSolidToggle" type="button" aria-pressed="false" title="Abrir sólidos volumétricos 3D (CAD no certificado)">◈ Sólidos 3D</button><button id="machineOptionsButton" type="button" title="Abrir perspectivas avanzadas y opciones de visualización" aria-label="Abrir opciones de perspectiva" aria-controls="machineViewStudio" aria-expanded="false">⚙ Opc.</button><button id="machineFullscreen" type="button" title="Ampliar simulación a pantalla completa" aria-label="Alternar pantalla completa de la máquina" aria-pressed="false">⛶ Pant.</button></div>
 <div class="cp-overlay cp-overlay-right"><span id="simStatus" class="tag">Preparado</span><span id="cpCurrentAngle">+90°</span></div>
 </div>
 <details class="px-view-studio" id="machineViewStudio">
@@ -163,7 +164,10 @@
 <div class="px-view-nav" role="group" aria-label="Desplazar el encuadre de la máquina"><button id="machinePanLeft" type="button">← Izquierda</button><button id="machinePanUp" type="button">↑ Arriba</button><button id="machinePanDown" type="button">↓ Abajo</button><button id="machinePanRight" type="button">Derecha →</button><button id="machineCenterView" type="button">Centrar</button></div>
 </div>
 <div class="px-view-section">
-<strong>CAPAS VISIBLES</strong>
+<strong>RENDIMIENTO Y VOLUMEN 3D</strong>
+<div class="px-view-form"><label for="machineRenderQuality">Calidad de gráficos<select id="machineRenderQuality"><option value="auto">Automática (recomendada)</option><option value="eco">Económica · Galaxy/Android</option><option value="balanced">Equilibrada</option><option value="high">Alta resolución</option></select></label><button type="button" id="machineSolidReset">Centrar cámara 3D</button></div>
+<small id="machineSolidStatus" role="status" aria-live="polite">Activa «Sólidos 3D» para orbitar la máquina. Los sólidos sin CAD OEM no son aptos para certificar colisiones.</small>
+</div><div class="px-view-section"><strong>CAPAS VISIBLES</strong>
 <div class="px-view-checks">
 <label><input type="checkbox" id="machineShowSheet" checked> Chapa</label>
 <label><input type="checkbox" id="machineShowPunch" checked> Punzón</label>
@@ -378,7 +382,7 @@
    <dl class="px-about-facts">
     <div><dt>Nombre comercial</dt><dd>PlegadoX</dd></div>
     <div><dt>Versión instalada</dt><dd id="softwareInstalledVersion">v0.9.98</dd></div>
-    <div><dt>Compilación</dt><dd id="softwareInstalledBuild">PLEGADOX-20261116-R124</dd></div>
+    <div><dt>Compilación</dt><dd id="softwareInstalledBuild">PLEGADOX-20261117-R125</dd></div>
     <div><dt>Plataformas</dt><dd>Web, PC, Mac, tablet, iOS y Android mediante aplicación web instalable</dd></div>
     <div><dt>Orientación</dt><dd>Automática según pantalla vertical u horizontal cuando el sistema permite girar</dd></div>
     <div><dt>Almacenamiento</dt><dd>Piezas, herramientas y ajustes almacenados localmente en este navegador</dd></div>
@@ -424,7 +428,7 @@
  * PlegadoX anteriores y cargar luego todos los módulos secuencialmente.
  * Nunca se elimina localStorage, IndexedDB ni los proyectos del usuario.
  */
-const BUILD="PLEGADOX-20261116-R124";
+const BUILD="PLEGADOX-20261117-R125";
 const STATUS=document.getElementById('buildMark');
 const KEY='plegadox:verified-loader-build';
 const BASE=new URL('./',document.baseURI);
@@ -473,7 +477,7 @@ const clearOldCode=async()=>{
 };
 const loadModules=async()=>{
  const scripts=['pwa.js','app.js','cockpit.js','boceto2.js',
-  'responsive.js','studio.js','machine-editor.js','machine-cad-ui.js','software-about.js'];
+  'responsive.js','studio.js','machine-volume-viewer.js','machine-editor.js','machine-cad-ui.js','software-about.js'];
  for(const [index,path] of scripts.entries()){
   splashStep(18+Math.round(72*(index+1)/scripts.length),'Cargando '+path.replace('.js','')+'…');
   await import('./'+path+'?build='+encodeURIComponent(BUILD));
