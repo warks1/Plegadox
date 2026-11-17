@@ -91,6 +91,12 @@ function refreshMotion(){
       ', mixtos: '+e.mixedCount+
       ', provisionales: '+e.provisionalCount+')':'')+
      ' · intervalos sin resolver '+review.unresolved+
+     (review.collisionPairPlanCount?
+      ' · parejas comprobables por intervalo: '+review.collisionPairPlanCount:'')+
+     (review.uniquePendingPairs?
+      ' · parejas pendientes de geometría: '+review.uniquePendingPairs:'')+
+     (review.pairIntervalsChecked!=null?
+      ' · comprobaciones geométricas: '+review.pairIntervalsChecked:'')+
      (review.broadphaseRejectedPairs?
       ' · parejas separadas sin triangulación '+review.broadphaseRejectedPairs:'')+
      (review.ramTiltApproximatedIntervals?
@@ -103,6 +109,13 @@ function refreshMotion(){
       'Estado: '+review.status+' · sin validación de choque físico ni certificación CNC',
       ...(review.missingCad?.length?[
        'CAD pendiente: '+review.missingCad.join(', ')]:[]),
+      ...(review.uniquePendingPairs?[
+       'COBERTURA INCOMPLETA: '+review.uniquePendingPairs+
+       ' parejas de componentes sin CAD válido o sin modelar; '+
+       review.pairIntervalsMissing+' evaluaciones omitidas. Nunca se interpretan como libres.']:[]),
+      ...(review.missingPairExamples||[]).slice(0,12).map(p=>
+       'Sin comprobar '+p.moving+' / '+p.against+' (intervalo '+
+       p.interval+'): '+p.reason),
       ...(review.ramTiltApproximatedIntervals?[
        'Trancha/amarres superiores: movimiento Y1/Y2 DIFERENCIAL; desplazamiento medio de modelo, desviación de hasta '+
         review.ramTiltApproximationMaxMm.toFixed(3)+
@@ -117,6 +130,16 @@ function refreshMotion(){
      ];
      list.replaceChildren(...lines.map(line=>{
       const li=document.createElement('li');li.textContent=line;return li;
+     }));
+    }
+    const mounts=$('machineAxisMountInterfaces');
+    if(mounts){
+     const items=review.assemblyInterfacesPending||[];
+     mounts.replaceChildren(...items.map(p=>{
+      const li=document.createElement('li');
+      li.textContent=p.moving+' / '+p.against+
+       ': no se interpreta contacto solidario como choque automático. '+
+       p.reason;return li;
      }));
     }
    }
