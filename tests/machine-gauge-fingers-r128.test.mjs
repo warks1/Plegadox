@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {normalizeGaugeFingers,gaugeFingerSlices,saveGaugeFingers,
- loadGaugeFingers,clearGaugeFingers} from '../machine-gauge-fingers.js';
+ loadGaugeFingers,clearGaugeFingers,gaugeSectionFingerprint} from '../machine-gauge-fingers.js';
 import {getActiveMachineConfig} from '../machine-config.js';
 import {machineConfigurationKey} from '../machine-cad.js';
 import {technicalScene} from '../technical-section.js';
@@ -17,7 +17,7 @@ const machine=getActiveMachineConfig();
 const key=machineConfigurationKey(machine);
 const sample=(overrides={})=>({version:1,unit:'mm',machineConfigKey:key,
  profileKind:'stop',referenceSceneTime:0,
- sameSectionConfirmed:true,source:'Plano real de montaje Z1/Z2, operador',
+ profileFingerprint:gaugeSectionFingerprint(localRecord()),sameSectionConfirmed:true,source:'Plano real de montaje Z1/Z2, operador',
  fingers:{Z1:{zMin:-20,zMax:-5},Z2:{zMin:5,zMax:20}},...overrides});
 const localRecord=()=>({kind:'stop',
  points:[[-200,-50],[200,-50],[200,200],[-200,200]],
@@ -56,20 +56,26 @@ test('R128: las dos Z se materializan SOLO con DXF y en la pose del mismo perfil
  const proxy=makePrism('gauge',[
   {x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}
  ],-50,50,'perfil CAD importado DXF ASCII · montaje no certificado');
- const ok=gaugeFingerSlices(sample(),{machineConfigKey:key,profileKind:'stop',
+ const ok=gaugeFingerSlices(sample(),{profileFingerprint:gaugeSectionFingerprint(localRecord()),machineConfigKey:key,profileKind:'stop',
   sceneTime:0,gauge:proxy});
  assert.equal(ok.modeled,true);
  assert.equal(ok.slices.length,2);
  assert.deepEqual(ok.slices.map(s=>[s.zMin,s.zMax]),[[-20,-5],[5,20]]);
  assert.equal(ok.verified,false);
- const badTime=gaugeFingerSlices(sample(),{machineConfigKey:key,
+ const stale=gaugeFingerSlices(sample(),{machineConfigKey:key,
+  profileFingerprint:'cad-00000000',profileKind:'stop',sceneTime:0,gauge:proxy});
+ assert.equal(stale.status,'DXF_CAMBIADO');
+ const first=localRecord();
+ const changed={...first,source:'Otro plano CAD diferente'};
+ assert.notEqual(gaugeSectionFingerprint(first),gaugeSectionFingerprint(changed));
+ const badTime=gaugeFingerSlices(sample(),{profileFingerprint:gaugeSectionFingerprint(localRecord()),machineConfigKey:key,
   profileKind:'stop',sceneTime:.001,gauge:proxy});
  assert.equal(badTime.status,'OTRA_POSE');assert.equal(badTime.modeled,false);
- assert.equal(gaugeFingerSlices(sample(),{machineConfigKey:'v85-deadbeef',
+ assert.equal(gaugeFingerSlices(sample(),{profileFingerprint:gaugeSectionFingerprint(localRecord()),machineConfigKey:'v85-deadbeef',
   profileKind:'stop',sceneTime:0,gauge:proxy}).status,'OTRA_CONFIGURACION');
- assert.equal(gaugeFingerSlices(sample(),{machineConfigKey:key,
+ assert.equal(gaugeFingerSlices(sample(),{profileFingerprint:gaugeSectionFingerprint(localRecord()),machineConfigKey:key,
   profileKind:'support',sceneTime:0,gauge:proxy}).status,'OTRO_TIPO_DE_DEDO');
- assert.equal(gaugeFingerSlices(sample(),{machineConfigKey:key,
+ assert.equal(gaugeFingerSlices(sample(),{profileFingerprint:gaugeSectionFingerprint(localRecord()),machineConfigKey:key,
   profileKind:'stop',sceneTime:0,gauge:{...proxy,provenance:'envolvente'}})
   .status,'FALTA_DXF_DEL_DEDO');
 });
