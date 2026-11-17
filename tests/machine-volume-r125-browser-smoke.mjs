@@ -18,6 +18,12 @@ try{
    deviceScaleFactor:target.dpr,isMobile:target.mobile,hasTouch:target.mobile,
    userAgent:target.agent});
   const page=await context.newPage(),errors=[];
+  // El runner CI puede exponer 2 CPU incluso con una resolución de PC.
+  // Emular hardware de escritorio potente para el caso equilibrado.
+  if(target.id==='pc')await page.addInitScript(()=>{
+   Object.defineProperty(navigator,'hardwareConcurrency',{configurable:true,get:()=>12});
+   Object.defineProperty(navigator,'deviceMemory',{configurable:true,get:()=>16});
+  });
   page.on('pageerror',err=>errors.push(err.message));
   await page.goto('http://127.0.0.1:4449/',{waitUntil:'networkidle',timeout:40000});
   await page.waitForFunction(()=>typeof window.PLEGADOX_SOLID_RENDER==='function',
