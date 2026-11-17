@@ -415,7 +415,8 @@ export function technicalScene(piece,instant=0){
   gaugeReference:reference,gaugeAnchor,gaugeTransition,gaugeMotionEnvelope,
   gaugePlan:gaugeDecision,gaugeSetup,feedMirrored:feedMirror
  });
- return {piece:p,stage:st,presentation,sheet,sheetDisplay,kinematics,diePolygon,punchPolygon,die,punch,
+ return {piece:p,stage:st,sceneTime:typeof instant==='number'?instant:null,
+         presentation,sheet,sheetDisplay,kinematics,diePolygon,punchPolygon,die,punch,
          gaugeReference:reference,gaugeAnchor,gaugeTransition,gaugeMotionEnvelope,
          gaugePlan:gaugeDecision,gaugeSetup,feedMirrored:feedMirror,
          dimensions:{opening:die.opening,dieAngle:die.angle,depth:die.depth,

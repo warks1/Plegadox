@@ -89,9 +89,10 @@ export function scanAxisCADMovement(input,options={}){
   return unknown('REFERENCIA_FUERA_DE_PIEZA','El tiempo de chapa supera la secuencia');
  let base;
  try{base=buildVolumeScene(technicalScene(piece,mapping.referenceSceneTime),{
-  machine,machineCAD:options.machineCAD});}
+  machine,machineCAD:options.machineCAD,gaugeFingers:options.gaugeFingers});}
  catch(error){return unknown('ESCENA_CAD_INVALIDA',String(error.message||error));}
  const ref=initial.axes;
+ const twoFingers=base.gaugeReferenceOnly===true;
  const at=pose=>{
   const y=((pose.axes.Y1-ref.Y1)+(pose.axes.Y2-ref.Y2))/2*mapping.signs.Y;
   const x=(pose.axes.X-ref.X)*mapping.signs.X;
@@ -109,7 +110,13 @@ export function scanAxisCADMovement(input,options={}){
   return {
    ram:translatePrism(base.objects.ram,0,y),
    punch:translatePrism(base.objects.punch,0,y),
-   gauge:translatePrism(base.objects.gauge,x,r,z),
+   gauge:twoFingers?null:translatePrism(base.objects.gauge,x,r,z),
+   ...(twoFingers?{
+    gaugeZ1:translatePrism(base.objects.gaugeZ1,x,r,
+     (pose.axes.Z1-ref.Z1)*mapping.signs.Z1),
+    gaugeZ2:translatePrism(base.objects.gaugeZ2,x,r,
+     (pose.axes.Z2-ref.Z2)*mapping.signs.Z2)
+   }:{}),
    bed:base.objects.bed,die:base.objects.die,
    ...extra,sheet:base.sheet
   };
@@ -132,6 +139,17 @@ export function scanAxisCADMovement(input,options={}){
   ['gauge','frontSupport'],['punch','lowerClamp'],
   ['punch','lowerAdapter'],['ram','frontSupport']
  ];
+ // Cuando la pose dispone de dos dedos CAD, no barrer el viejo prisma
+ // de ancho total; examinar cada dedo junto a su propio Z1/Z2.
+ const fingerNames=twoFingers?['gaugeZ1','gaugeZ2']:['gauge'];
+ const reviewedPairs=pairs.flatMap(([moving,against])=>{
+  const aa=moving==='gauge'?fingerNames:[moving];
+  const bb=against==='gauge'?fingerNames:[against];
+  return aa.flatMap(a=>bb.map(b=>[a,b]));
+ });
+ // El barrido propio de Z1 y Z2 también debe comprobar si los dos
+ // dedos se encuentran entre sí, no sólo contra chapa o herramientas.
+ if(twoFingers)reviewedPairs.push(['gaugeZ1','gaugeZ2']);
  const recordEvent=(sweep,kind,object,from,to)=>{
   if(events.length>=120)return;
   events.push({kind:'contacto-cad-trayectoria',moving:kind,against:object,
@@ -163,14 +181,14 @@ export function scanAxisCADMovement(input,options={}){
   try{a=at(before);b=at(after);}
   catch(error){unresolved++;unknowns.push(String(error.message||error));continue;}
   intervalsChecked++;framesChecked+=2;
-  for(const [moving,against] of pairs){
+  for(const [moving,against] of reviewedPairs){
    if(!a[moving]?.valid||!b[moving]?.valid||
     !a[against]?.valid||!b[against]?.valid)continue;
    const sweep=sweptPrismPair(a[moving],b[moving],a[against],b[against]);
    if(sweep.intersects)recordEvent(sweep,moving,against,before,after);
    else if(sweep.unknown)unresolved++;
   }
-  for(const moving of ['ram','gauge','upperClamp','upperAdapter',
+  for(const moving of ['ram',...fingerNames,'upperClamp','upperAdapter',
    'lowerClamp','lowerAdapter','frontSupport']){
    if(!a[moving]?.valid||!b[moving]?.valid)continue;
    for(let n=0;n<a.sheet.length;n++){
@@ -187,7 +205,10 @@ export function scanAxisCADMovement(input,options={}){
  if(missing.length)unknowns.push('CAD de máquina sin perfil referenciado: '+missing.join(', '));
  if(program.poses.length-1>intervalsChecked)unknowns.push(
   'Hay fases sin chapa inmóvil o sin correspondencia con la animación');
- unknowns.push('No se ha modelado el segundo dedo Z1/Z2, inclinación continua Y1/Y2, volteos ni deformación de chapa. Los amarres/adaptadores se inspeccionan sólo cuando existe su CAD registrado.');
+ unknowns.push((twoFingers?
+  'Se han modelado los DOS dedos en Z1/Z2 con CAD y bandas Z declaradas, únicamente a partir del datum y en intervalos de chapa inmóvil; NO hay validación CNC continua, inclinación Y1/Y2 ni deformación/volteos.':
+  'No se ha modelado el segundo dedo Z1/Z2, inclinación continua Y1/Y2, volteos ni deformación de chapa.')+
+  ' Los amarres/adaptadores se inspeccionan sólo cuando existe su CAD registrado.');
  if(!base.objects.punch.provenance.includes('perfil-acotado'))
   unknowns.push('Perfil de punzón no acreditado con CAD OEM');
  if(!base.objects.die.provenance.includes('perfil-acotado'))
@@ -199,7 +220,8 @@ export function scanAxisCADMovement(input,options={}){
   checked:intervalsChecked>0,intervalsChecked,framesChecked,
   unresolved,tiltUnresolved,
   cadProfilesUsed:base.cadProfilesUsed,missingCad:missing,
-  axisFingerModeled:mapping.activeFinger,mappingSource:mapping.source,
+  axisFingerModeled:twoFingers?['Z1','Z2']:mapping.activeFinger,
+  bothGaugeFingersModeled:twoFingers,mappingSource:mapping.source,
   evidence:zMode,events,unknown:unknowns,verified:false,
   canApproveForMachine:false};
 }

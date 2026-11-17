@@ -11,7 +11,7 @@ import {sweptPrismPair} from './swept-volume.js';
 import {scanAxisCADMovement,loadAxisMapping} from './machine-axis-geometry.js';
 // Registrar cuerpos montados además del punzón/matriz. Si falta CAD
  // estos objetos NO existen en el modelo, nunca se consideran libres.
- const machineKinds=['ram','bed','gauge','upperClamp','lowerClamp',
+ const machineKinds=['ram','bed','gauge','gaugeZ1','gaugeZ2','upperClamp','lowerClamp',
   'upperAdapter','lowerAdapter','frontSupport'];
  const kinds=[...machineKinds,'punch','die'];
  // Nunca contar un barrido SIN RESOLVER como penetración 3D.
@@ -57,16 +57,18 @@ export function scanVolumeTrajectory(input,options={}){
  const p=normalized(input);
  const perOperation=bounded(options.samplesPerOperation,4,50,8);
  const inspect=options.inspect||((part,time)=>inspectVolumeFrame(
-  technicalScene(part,time),{machine:options.machine,machineCAD:options.machineCAD}));
+  technicalScene(part,time),{machine:options.machine,machineCAD:options.machineCAD,
+   gaugeFingers:options.gaugeFingers}));
  const ops=[],allEvents=[],cadProfilesUsed=new Set(),missingCadComponents=new Set();
  let uncheckedSwept=0,linearSweptPenetrations=0,linearSweptIntervalsEvaluated=0,
-  framesChecked=0,cadImportError=null;
+  framesChecked=0,cadImportError=null,gaugePairReferenceFrames=0;
  for(let op=0;op<p.order.length;op++){
   const times=perOpTimes(op,perOperation),events=[];
   let previous=null;
   for(const time of times){
    const frame=inspect(p,time);
    framesChecked++;
+   if(frame.model?.gaugeReferenceOnly)gaugePairReferenceFrames++;
    for(const name of frame.model?.cadProfilesUsed||[])cadProfilesUsed.add(name);
    for(const name of frame.model?.missingCadComponents||[])missingCadComponents.add(name);
    if(frame.model?.cadImportError)cadImportError=frame.model.cadImportError;
@@ -90,6 +92,10 @@ export function scanVolumeTrajectory(input,options={}){
      previous.model.sheet.reduce((b,s)=>union(b,bounds(s)),null),
      model.sheet.reduce((b,s)=>union(b,bounds(s)),null));
     for(const kind of machineKinds){
+     // No barrer una envolvente falsa de ancho total mientras el modelo
+     // dispone de dedos Z1/Z2 reales para cualquiera de los extremos.
+     if(kind==='gauge'&&(previous.model.gaugeReferenceOnly||
+      model.gaugeReferenceOnly))continue;
      const before=previous.model.objects[kind],after=model.objects[kind];
      if(!before?.valid||!after?.valid)continue;
      const moving=union(bounds(before),bounds(after));
@@ -201,7 +207,8 @@ export function scanVolumeTrajectory(input,options={}){
    n+provisionalByKind[kind],0),
   provisionalRamWarnings:provisionalByKind.ram,
   provisionalBedWarnings:provisionalByKind.bed,
-  provisionalGaugeWarnings:provisionalByKind.gauge,
+  provisionalGaugeWarnings:provisionalByKind.gauge+
+   provisionalByKind.gaugeZ1+provisionalByKind.gaugeZ2,
   cadProfilesUsed:[...cadProfilesUsed],missingCadComponents:[...missingCadComponents],
   cadImportError,
   warningCount:ops.filter(o=>o.possibleInterference).length,
@@ -209,7 +216,9 @@ export function scanVolumeTrajectory(input,options={}){
   // No confundir contacto normal de punzón/matriz con intrusión en
   // trancha. La trancha se comprueba como cuerpo INDEPENDIENTE.
   ramWarnings:byKind.ram,bedWarnings:byKind.bed,
-  gaugeWarnings:byKind.gauge,
+  gaugeWarnings:byKind.gauge+byKind.gaugeZ1+byKind.gaugeZ2,
+  gaugeFingerWarnings:{Z1:byKind.gaugeZ1,Z2:byKind.gaugeZ2},
+  gaugePairReferenceFrames,
   punchVolumeContacts:byKind.punch,dieVolumeContacts:byKind.die,
   ramEvidence:ops.flatMap(op=>op.findings.filter(f=>f.kind==='ram')
    .map(f=>({...f,operation:op.operation,bend:op.bend}))).slice(0,12),

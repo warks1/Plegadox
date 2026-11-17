@@ -8,6 +8,10 @@ on:
       - 'machine-axis-trail-evidence.js'
       - 'machine-gauge-evidence.js'
       - 'machine-gauge-depth.js'
+      - 'machine-gauge-fingers.js'
+      - 'machine-cad-ui.js'
+      - 'machine-axis-geometry.js'
+      - 'tests/machine-gauge-fingers-r128-browser-smoke.mjs'
       - 'machine-solid-gauge-style.js'
       - 'machine-volume-layers.js'
       - 'tests/gauge-volume-r127-browser-smoke.mjs'
@@ -41,6 +45,8 @@ jobs:
         run: node tests/machine-volume-r126-browser-smoke.mjs
       - name: Comprobar Z del tope, capas y captura 3D en Galaxy
         run: node tests/gauge-volume-r127-browser-smoke.mjs
+      - name: Comprobar dos dedos físicos Z1/Z2, pose y caché Galaxy
+        run: node tests/machine-gauge-fingers-r128-browser-smoke.mjs
       - name: Adjuntar capturas
         if: always()
         uses: actions/upload-artifact@v4
@@ -50,5 +56,6 @@ jobs:
             test-results/r125-solids-*.png
             test-results/r126-galaxy-*.png
             test-results/r127-*.png
+            test-results/r128-*.png
           if-no-files-found: warn
           retention-days: 20

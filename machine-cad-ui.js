@@ -6,6 +6,7 @@ import {getActiveMachineProfile} from './machine-selection.js';
 import {MOTION_AXES,normalizeAxisMotion,motionPieceKey,
  assessAxisMotion,saveAxisMotion,loadAxisMotion} from './machine-axis-motion.js';
 import {loadAxisMapping,saveAxisMapping,scanAxisCADMovement} from './machine-axis-geometry.js';
+import {loadGaugeFingers,saveGaugeFingers,clearGaugeFingers,gaugeSectionFingerprint} from './machine-gauge-fingers.js';
 import './cad-evidence-ui.js';
 
 const $=id=>document.getElementById(id);
@@ -28,6 +29,31 @@ function refreshCAD(){
    rows[kind].points.length+' vértices · Z '+rows[kind].zMin+'…'+rows[kind].zMax+
     ' mm · '+rows[kind].source:'sin CAD')).join(' | ')+
   '. Las geometrías importadas NO están certificadas para fabricación.');
+}
+function refreshGaugeFingerZ(){
+ try{
+  const saved=loadGaugeFingers(localStorage);
+  if(!saved){
+   say('machineGaugeZStatus','Sin Z1/Z2 documentadas. El visor usa una envolvente provisional, NO dos dedos físicos conocidos.');
+   return;
+  }
+  const config=machineConfigurationKey(getActiveMachineConfig());
+  if(config!==saved.machineConfigKey){
+   say('machineGaugeZStatus','Cotas Z de otra revisión de máquina: quedan conservadas pero BLOQUEADAS. Vuelve a medir y registrar.',true);
+   return;
+  }
+  const activeCad=loadMachineCad(localStorage)[saved.profileKind];
+  if(gaugeSectionFingerprint(activeCad)!==saved.profileFingerprint){
+   say('machineGaugeZStatus',
+    'CAD del dedo '+saved.profileKind+' cambiado o ausente: cotas Z1/Z2 BLOQUEADAS hasta volver a comprobar el perfil y montaje.',true);
+   return;
+  }
+  const format=key=>key+' '+saved.fingers[key].zMin+'…'+saved.fingers[key].zMax+' mm';
+  say('machineGaugeZStatus','Z1 y Z2 declarados para '+saved.profileKind+
+   ' · '+format('Z1')+' · '+format('Z2')+
+   ' · solo pose '+saved.referenceSceneTime+' · '+saved.source+
+   '. NO certifica recorridos, montaje, colisiones ni seguridad CNC.');
+ }catch(error){say('machineGaugeZStatus','Registro Z1/Z2 ilegible: '+error.message,true);}
 }
 function part(){
  return window.PLEGADOX_STATE?.().piece||null;
@@ -63,6 +89,47 @@ function download(filename,content){
 }
 function installer(){
  if(!$('machineCadFile'))return;
+ $('machineGaugeZSave')?.addEventListener('click',()=>{
+  try{
+   const source=$('machineGaugeZSource').value.trim();
+   const profileKind=$('machineGaugeZKind').value;
+   const sourceCAD=loadMachineCad(localStorage)[profileKind];
+   const profileFingerprint=gaugeSectionFingerprint(sourceCAD);
+   if(!profileFingerprint)
+    throw Error('Importa primero el DXF real del dedo '+profileKind+
+     ' en el panel CAD y comprueba su montaje.');
+   const row=saveGaugeFingers(localStorage,{
+    version:1,unit:'mm',
+    machineConfigKey:machineConfigurationKey(getActiveMachineConfig()),
+    profileKind,profileFingerprint,
+    sameSectionConfirmed:$('machineGaugeZIdentical').checked,
+    source,referenceSceneTime:$('machineGaugeZTime').value,
+    fingers:{
+     Z1:{zMin:$('machineGaugeZ1Min').value,zMax:$('machineGaugeZ1Max').value},
+     Z2:{zMin:$('machineGaugeZ2Min').value,zMax:$('machineGaugeZ2Max').value}
+    }
+   });
+   refreshGaugeFingerZ();signal();
+  }catch(error){say('machineGaugeZStatus','No se registraron dedos Z1/Z2: '+error.message,true);}
+ });
+ $('machineGaugeZDelete')?.addEventListener('click',()=>{
+  try{clearGaugeFingers(localStorage);refreshGaugeFingerZ();signal();}
+  catch(error){say('machineGaugeZStatus','No se borraron cotas: '+error.message,true);}
+ });
+ try{
+  const saved=loadGaugeFingers(localStorage);
+  if(saved&&saved.machineConfigKey===machineConfigurationKey(getActiveMachineConfig())){
+   $('machineGaugeZKind').value=saved.profileKind;
+   $('machineGaugeZTime').value=String(saved.referenceSceneTime);
+   $('machineGaugeZSource').value=saved.source;
+   $('machineGaugeZIdentical').checked=saved.sameSectionConfirmed;
+   for(const axis of ['Z1','Z2']){
+    $('machineGauge'+axis+'Min').value=String(saved.fingers[axis].zMin);
+    $('machineGauge'+axis+'Max').value=String(saved.fingers[axis].zMax);
+   }
+  }
+ }catch{/* Registro corrupto se explica en el estado, no se sobrescribe. */}
+ window.addEventListener('plegadox:machineChanged',refreshGaugeFingerZ);
  const save=$('machineCadSave'),file=$('machineCadFile'),kind=$('machineCadKind');
  save?.addEventListener('click',async()=>{
   const entry=file.files?.[0];
@@ -143,7 +210,7 @@ function installer(){
   event.target.value='';
  });
   $('machineAxisCheck')?.addEventListener('click',refreshMotion);
- try{refreshCAD();refreshMotion();}
+ try{refreshCAD();refreshMotion();refreshGaugeFingerZ();}
  catch(error){say('machineCadStatus','Datos CAD guardados no legibles: '+error.message,true);}
 }
 installer();
