@@ -1,5 +1,14 @@
 # Plegadox — control y simulador de plegado
 
+## Estado actual · R131 (v0.9.105) · 17 de noviembre de 2026
+
+- **Galaxy Chrome:** límite de resolución para evitar bitmaps 3D demasiado grandes en pantallas UHD, incluso en calidad alta. Eco: máximo 1,2 millones de píxeles; caché LRU de escenas y golpes recientes sin recalcular CAD al volver atrás.
+- **Trancha Y1/Y2:** se informa el error de aproximación en mm cuando ambos cilindros no se desplazan igual respecto al datum; esos contactos se consideran **provisionales**, no intersecciones exactas de CAD.
+- **Validación:** pruebas de memoria, recorrido Y1/Y2, revisión del golpe y navegador Chrome Galaxy; cálculo de colisiones independiente de la calidad gráfica.
+- **Build:** PLEGADOX-20261117-R131 · 0.9.105 · informe [R131_GALAXY_MEMORIA_RAM_Y1_Y2.md](./R131_GALAXY_MEMORIA_RAM_Y1_Y2.md). Ningún informe certifica ausencia de colisiones OEM/CNC.
+
+
+
 ## Estado actual · R130 (v0.9.104) · 17 de noviembre de 2026
 
 - **Trazas de ejes vinculadas a la pieza completa:** invalida el CNC guardado al cambiar elección Stop/Support, ala/punto de apoyo, radio o desarrollo, además de orden/útiles. Rechaza una traza de otra plegadora.
