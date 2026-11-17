@@ -1,9 +1,9 @@
 {
-  "build": "PLEGADOX-20261117-R143",
-  "version": "0.9.117",
+  "build": "PLEGADOX-20261117-R144",
+  "version": "0.9.118",
   "machine": "bystronic-2006-2009-wila-promecam-gauge-conditional",
-  "ui": "windows-install-splash-and-development-feasibility",
-  "cache": "plegadox-static-0.9.117-safe-sw-r143",
+  "ui": "release-candidate-windows-usb-bd-flat-guard-v-comparator",
+  "cache": "plegadox-static-0.9.118-safe-sw-r144",
   "tooling": "wila-promecam-custom-profile-dxf-mm-backup50",
   "renderer": "prismatic-3d-cnc-vs-planar-gauge-dual-evidence"
 }

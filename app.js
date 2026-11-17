@@ -1680,7 +1680,8 @@ function renderToolCards(){
 function renderVComparison(){
  const root=$('vComparisonRows');if(!root)return;
  const key=JSON.stringify([piece.material,piece.rmMPa,piece.thickness,piece.width,
-  piece.flanges,piece.angles,piece.kFactor,piece.radius,piece.datum,piece.die]);
+  piece.flanges,piece.angles,piece.kFactor,piece.radius,piece.datum,piece.die,
+  piece.bendDeductionByBend]);
  if(root.dataset.key===key)return;
  const currentDev=development(piece),current=currentDev.length;
  const candidates=DIES.filter(d=>/^v[0-9]+$/.test(d.id)||d.id===piece.die)

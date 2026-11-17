@@ -35,7 +35,7 @@ test('DXF formato ASCII R12 mantiene ángulos negativos y no genera número inv�
 });
 test('desarrollo inválido se rechaza en vez de entregar un fichero de corte falso',()=>{
  const part={...EXAMPLE,angles:[179,179,179,179],radius:100,thickness:20};
- assert.throws(()=>exportFlatDXF(part),/Longitud desarrollada/);
+ assert.throws(()=>exportFlatDXF(part),/Longitud desarrollada|Desarrollo no factible/);
 });
 
 test('DXF incluye 4 marcas en capa NO CORTE y secuencia 1-2-4-3',()=>{

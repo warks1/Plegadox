@@ -1,5 +1,12 @@
 # Plegadox — control y simulador de plegado
 
+## Estado actual · R144 (v0.9.118) · 17 de noviembre de 2026
+
+- **Desarrollo y comparador V afinados:** al modificar la BD de taller se invalida la caché visual de las alternativas V, para que las longitudes, diferencias y avisos no queden desactualizados.
+- El DXF de desarrollos matemáticamente inviables sigue bloqueado y se informa qué ala tiene tramo útil no positivo. Regresión antigua actualizada para reconocer el aviso específico.
+- **Distribución:** instalador Windows desde USB y edición portátil verificados en Windows; PWA para iOS/Android. Sin certificación CNC/OEM ni aplicaciones de tienda firmadas.
+- **Build:** PLEGADOX-20261117-R144 · v0.9.118 · [Informe R144](./R144_BD_COMPARADOR_CACHE.md).
+
 ## Estado actual · R143 (v0.9.117) · 17 de noviembre de 2026
 
 - **Afinado de Desarrollo:** BD/BA se comprueba por ala; si una deducción medida o pliegue extremo consume un tramo de ala, se avisa qué ala no es factible y se bloquea DXF plano. No inventar compensaciones ni certificar físicamente el plegado.
