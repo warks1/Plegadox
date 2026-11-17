@@ -12,7 +12,7 @@ test('R138: boceto elegido se pinta antes del iframe y de los modulos',()=>{
  assert.match(html,/#pxSplashImmediate\{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:contain\}/);
  assert.match(html,/<iframe id="pxSplashReference"[^>]+src="\.\/splash-foto-premium\.html"/);
  assert.match(css,/\.px-titanium-original #pxSplashReference\{[^}]*opacity:0/s);
- assert.match(css,/\.px-titanium-original #pxSplashReference\.is-ready\{opacity:1\}/);
+ assert.match(css,/\.px-titanium-original #pxSplashReference\.is-ready\{opacity:1(?:;pointer-events:auto)?\}/);
  assert.ok(html.includes("SPLASH_IFRAME?.addEventListener('load',revealOriginalSplash)"));
  assert.ok(html.includes('if(!original)return'));
  assert.ok(html.includes('splashStep(splashProgress,splashMessage)'));
