@@ -168,6 +168,10 @@
 <div class="px-view-form"><label for="machineRenderQuality">Calidad de gráficos<select id="machineRenderQuality"><option value="auto">Automática (recomendada)</option><option value="eco">Económica · Galaxy/Android</option><option value="balanced">Equilibrada</option><option value="high">Alta resolución</option></select></label><button type="button" id="machineSolidReset">Centrar cámara 3D</button></div>
 <small id="machineSolidStatus" role="status" aria-live="polite">Activa «Sólidos 3D» para orbitar la máquina. Los sólidos sin CAD OEM no son aptos para certificar colisiones.</small>
 <small id="machineGaugeEvidence" role="status" aria-live="polite">Tope: diagnóstico 2D y evidencia Z pendiente; naranja no equivale a penetración 3D.</small>
+<small class="px-cnc-gauge-status" id="machineCncGaugeEvidence" role="status"
+ aria-live="polite" data-level="neutral">
+CNC DEL TOPE · SIN EVIDENCIA DE TRAYECTORIA APLICABLE · No equivale a naranja por colisión.
+</small>
 </div><div class="px-view-section"><strong>CAPAS VISIBLES</strong>
 <div class="px-view-checks">
 <label><input type="checkbox" id="machineShowSheet" checked> Chapa</label>
