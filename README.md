@@ -1,5 +1,14 @@
 # Plegadox — control y simulador de plegado
 
+## Estado actual · R128 (v0.9.102) · 17 de noviembre de 2026
+
+- **Dos dedos físicos:** permite documentar y dibujar Z1 y Z2 por separado con perfil DXF, extremos Z medidos, revisión de máquina y pose de referencia, sin extrapolar cotas faltantes.
+- **Análisis transversal:** elimina la falsa envolvente completa de tope en la pose declarada; detecta por separado los cruces Z y los barridos X/R/Z1 y Z2 en fases de chapa inmóvil.
+- **Garantía de integridad:** vuelve a «posición no documentada» fuera de la pose o al cambiar perfil/máquina, y conserva la visualización 2,5D y todas las alertas.
+- **Build:** PLEGADOX-20261117-R128 · 0.9.102 · informe [R128_DOS_DEDOS_CAD_Z_CNC.md](./R128_DOS_DEDOS_CAD_Z_CNC.md). Sigue sin certificación CNC ni CAD STEP OEM integral.
+
+
+
 ## Estado actual · R127 (v0.9.101) · 17 de noviembre de 2026
 
 - **Topes 3D:** rojo/naranja/verde de acuerdo con el diagnóstico, no color naranja fijo. Si falta el ancho y Z del dedo, se muestra una envolvente discontinua, no geometría OEM inventada.
