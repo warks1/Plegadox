@@ -46,8 +46,8 @@ try{
  });
  assert.match(details.saved,/dos DXF individuales/,
   'El formulario de dos CAD no debe exigir la sección idéntica: '+JSON.stringify(details));
- await page.waitForFunction(()=>document.querySelector('#machineSolidStatus')?
-  .textContent.includes('DOS_PERFILES_DXF_INDEPENDIENTES'),null,{timeout:20000});
+ await page.waitForFunction(()=>document.querySelector('#machineSolidStatus')?.
+  textContent.includes('DOS_PERFILES_DXF_INDEPENDIENTES'),null,{timeout:20000});
  const model=await page.evaluate(async()=>{
   const {getActiveMachineConfig}=await import('/machine-config.js');
   const {technicalScene}=await import('/technical-section.js');
@@ -80,8 +80,8 @@ try{
   return document.getElementById('machineGaugeZStatus').textContent;
  });
  assert.match(blocked,/Bloqueadas cotas|BLOQUEADAS|Bloqueadas/);
- await page.waitForFunction(()=>document.querySelector('#machineSolidStatus')?
-  .textContent.includes('DXF_CAMBIADO_Z2'),null,{timeout:20000});
+ await page.waitForFunction(()=>document.querySelector('#machineSolidStatus')?.
+  textContent.includes('DXF_CAMBIADO_Z2'),null,{timeout:20000});
  assert.equal(await page.evaluate(()=>window.PLEGADOX_STATE().piece.width),500);
  assert.deepEqual(errors,[],'Errores en Chrome Galaxy');
  console.log('R129_GALAXY_INDEPENDENT_DXF_Z1_Z2_INVALIDATION_OK');
