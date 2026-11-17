@@ -1,5 +1,15 @@
 # Plegadox — control y simulador de plegado
 
+## Estado actual · R138 (v0.9.112) · 17 de noviembre de 2026
+
+- **Imagen elegida visible antes del visor:** la pantalla premium aparece directamente en la primera pintura del documento, incluso mientras se está abriendo el iframe del cargador.
+- **Sin destello intermedio:** CSS crítico, fondo oscuro unificado y transición del iframe únicamente cuando su controlador de progreso está disponible.
+- **Sin alterar el Boceto 1:** misma foto premium, mismo progreso real y mismos colores. No hay espera artificial.
+- **Móvil, tablet y escritorio:** precarga prioritaria de la imagen con proporción preservada.
+- **Android WebAPK:** el splash inicial del sistema operativo sigue existiendo y no puede ocultarse desde el sitio; la R137 ya armonizó icono y colores.
+- **Sin borrar piezas:** código, compilación y caché sincronizados.
+- **Build:** PLEGADOX-20261117-R138 · 0.9.112 · [Informe R138](./R138_PRIMERA_PINTURA_SPLASH.md).
+
 ## Estado actual · R137 (v0.9.111) · 17 de noviembre de 2026
 
 - **Arranque nativo Android:** corrige la declaración `any maskable` del PNG premium transparente. Nuevo icono adaptable SVG con fondo azul-negro opaco y la P cromada dentro de la zona segura, sin cuadro blanco añadido por una máscara defectuosa.
