@@ -8,6 +8,22 @@
  * Fuera de dicha pose la posición se considera DESCONOCIDA.
  */
 export const GAUGE_FINGERS_KEY='plegadox:machine-gauge-fingers:v1';
+/**
+ * Identificador local exacto del DXF y montaje activo. Si la geometría,
+ * fuente o offsets del dedo cambian, sus cotas Z se invalidan. No es
+ * una firma criptográfica ni demuestra autenticidad del fabricante.
+ */
+export function gaugeSectionFingerprint(record){
+ if(!record||!['stop','support'].includes(record.kind)||
+  !Array.isArray(record.points))return null;
+ const data=JSON.stringify([record.kind,record.points,
+  record.offsetX,record.offsetY,record.zMin,record.zMax,
+  record.source,record.sourceFormat,record.machineConfigKey]);
+ let h=2166136261;
+ for(let i=0;i<data.length;i++)
+  h=Math.imul(h^data.charCodeAt(i),16777619)>>>0;
+ return 'cad-'+h.toString(16).padStart(8,'0');
+}
 const finite=(v,label,min,max)=>{
  if(v===null||v===undefined||v===''||!Number.isFinite(Number(v))||
   Number(v)<min||Number(v)>max)throw Error(label+' debe estar entre '+min+' y '+max+' mm');
@@ -27,6 +43,8 @@ export function normalizeGaugeFingers(raw){
  if(!/^(?:machine|v85)-[0-9a-f]{8}$/.test(machineConfigKey))
   throw Error('Vincular las cotas Z a la revisión real de máquina');
  const profileKind=raw.profileKind;
+ if(!/^cad-[0-9a-f]{8}$/.test(String(raw.profileFingerprint||'')))
+  throw Error('Vincular ambas bandas Z a la sección DXF exacta importada');
  if(profileKind!=='stop'&&profileKind!=='support')
   throw Error('Elegir contorno físico Stop o Support');
  if(raw.sameSectionConfirmed!==true)
@@ -39,6 +57,7 @@ export function normalizeGaugeFingers(raw){
  if(Math.min(z1.zMax,z2.zMax)-Math.max(z1.zMin,z2.zMin)>1e-7)
   throw Error('Z1 y Z2 ocupan la misma anchura; verificar medidas y cero Z');
  return {version:1,unit:'mm',machineConfigKey,profileKind,
+  profileFingerprint:String(raw.profileFingerprint),
   sameSectionConfirmed:true,source,referenceSceneTime,
   fingers:{Z1:z1,Z2:z2},
   industrialVerified:false,cncValidated:false};
@@ -62,7 +81,7 @@ export function clearGaugeFingers(storage){
 const unavailable=(status,reason)=>({status,reason,modeled:false,
  slices:[],verified:false,canApproveForMachine:false});
 /** Construye las DOS bandas únicamente si la pose y el DXF coinciden. */
-export function gaugeFingerSlices(raw,{machineConfigKey,profileKind,sceneTime,
+export function gaugeFingerSlices(raw,{machineConfigKey,profileKind,profileFingerprint,sceneTime,
  gauge}={}){
  if(!raw)return unavailable('FALTAN_Z1_Z2','Posiciones Z1/Z2 no declaradas');
  let record;
@@ -79,6 +98,9 @@ export function gaugeFingerSlices(raw,{machineConfigKey,profileKind,sceneTime,
   !String(gauge.provenance||'').startsWith('perfil CAD importado '))
   return unavailable('FALTA_DXF_DEL_DEDO',
    'Para situar dos dedos hace falta el contorno DXF importado del tipo seleccionado');
+ if(record.profileFingerprint!==profileFingerprint)
+  return unavailable('DXF_CAMBIADO',
+   'El contorno o montaje DXF del dedo cambió: las cotas Z deben comprobarse de nuevo');
  const slices=['Z1','Z2'].map(axis=>({
   id:'tope-'+axis,axis,polygon:gauge.polygon,
   zMin:record.fingers[axis].zMin,zMax:record.fingers[axis].zMax,
