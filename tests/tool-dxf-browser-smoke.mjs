@@ -23,9 +23,8 @@ try{
  const file=page.locator('#toolDxfFile');
  await file.setInputFiles({name:'Pata-cabra-DXF.dxf',mimeType:'application/dxf',
   buffer:Buffer.from(dxf())});
- await page.waitForFunction(()=>!document.querySelector('#toolDxfCommit').disabled,{
-   timeout:10000
-  }).catch(async e=>{
+ await page.waitForFunction(()=>!document.querySelector('#toolDxfCommit').disabled,
+   null,{timeout:12000}).catch(async e=>{
    const report=await page.evaluate(()=>({
     message:document.querySelector('#toolDxfStatus')?.textContent,
     selected:document.querySelector('#toolDxfFile')?.files?.[0]?.name,
