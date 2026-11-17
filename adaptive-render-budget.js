@@ -15,6 +15,10 @@ export function renderBudget(device={},mode='auto'){
   sceneIntervalMs:tier==='eco'?230:tier==='balanced'?130:100,
   statusIntervalMs:tier==='eco'?400:250,
   maxFaces:tier==='eco'?1200:tier==='balanced'?2500:4200,
+  // Cap de píxeles: tablet Galaxy con UHD nunca reserva decenas de MB
+  // solo para redibujar el visor. El modo alto también está acotado.
+  maxCanvasPixels:tier==='eco'?1200000:tier==='balanced'?2200000:3600000,
+  maxCachedFrames:tier==='eco'?2:tier==='balanced'?3:4,
   reason:mode==='auto'?(constrained?'dispositivo/contenido de alta densidad':'rendimiento normal'):'selección manual'});
 }
 export const QUALITY_STORAGE_KEY='plegadox:render-quality:r125';

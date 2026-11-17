@@ -6,9 +6,18 @@
  */
 const imported=source=>typeof source==='string'&&
  source.startsWith('perfil CAD importado ');
-export function classifyAxisContact(sourceMoving,sourceAgainst){
+export function classifyAxisContact(sourceMoving,sourceAgainst,options={}){
  const cadMoving=imported(sourceMoving);
  const cadAgainst=imported(sourceAgainst);
+ // La media de Y1/Y2 NO reproduce el sólido inclinado; ni siquiera
+ // dos DXF aportados permiten afirmar penetración precisa en esa pose.
+ if(options.upperAssemblyYApproximationMm>1e-7)return {
+  code:'GEOMETRIA_PROVISIONAL',
+  label:'Solape ORIENTATIVO: trancha/útil superior usa media Y1/Y2, incertidumbre de inclinación '+
+   options.upperAssemblyYApproximationMm.toFixed(3)+' mm',
+  cadMoving,cadAgainst,upperAssemblyTiltUnmodeled:true,
+  verified:false,physicalCollisionCertified:false
+ };
  const code=cadMoving&&cadAgainst?'DOS_PERFILES_CAD':
   cadMoving||cadAgainst?'CAD_Y_MODELO':'GEOMETRIA_PROVISIONAL';
  const label=code==='DOS_PERFILES_CAD'?

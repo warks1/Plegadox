@@ -1,9 +1,9 @@
 {
-  "build": "PLEGADOX-20261117-R130",
-  "version": "0.9.104",
+  "build": "PLEGADOX-20261117-R131",
+  "version": "0.9.105",
   "machine": "bystronic-2006-2009-wila-promecam-gauge-conditional",
   "ui": "safe-service-worker-update-without-reloading-in-progress-work",
-  "cache": "plegadox-static-0.9.104-safe-sw-r130",
+  "cache": "plegadox-static-0.9.105-safe-sw-r131",
   "tooling": "wila-promecam-custom-profile-dxf-mm-backup50",
-  "renderer": "3d-independent-fingers-cnc-evidence-trace-bound"
+  "renderer": "prismatic-3d-galaxy-memory-budget-lru-y1y2-uncertainty"
 }

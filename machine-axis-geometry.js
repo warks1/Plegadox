@@ -19,6 +19,7 @@ import {normalizeAxisMotion,motionPieceKey} from './machine-axis-motion.js';
 import {machineConfigurationKey} from './machine-cad.js';
 import {getActiveMachineProfile} from './machine-selection.js';
 import {classifyAxisContact,summarizeAxisContacts} from './machine-axis-evidence.js';
+import {assessRamYTilt} from './machine-ram-tilt-evidence-r131.js';
 export const AXIS_MAPPING_KEY='plegadox:axis-cad-mapping:v1';
 const AXES=['Y','X','R','Z1','Z2'];
 const numeric=(v,name,min,max)=>{
@@ -138,6 +139,7 @@ export function scanAxisCADMovement(input,options={}){
  const events=[],unknowns=[],maxIntervals=Math.max(1,Math.min(250,
   Number.isFinite(Number(options.maxIntervals))?Math.trunc(Number(options.maxIntervals)):100));
  let intervalsChecked=0,framesChecked=0,unresolved=0,tiltUnresolved=0;
+ let ramTiltApproximatedIntervals=0,ramTiltApproximationMaxMm=0;
  const zMode=options.machineCAD===undefined?'biblioteca local':
   'CAD de máquina facilitado';
  const pairs=[
@@ -164,20 +166,25 @@ export function scanAxisCADMovement(input,options={}){
  // El barrido propio de Z1 y Z2 también debe comprobar si los dos
  // dedos se encuentran entre sí, no sólo contra chapa o herramientas.
  if(twoFingers)reviewedPairs.push(['gaugeZ1','gaugeZ2']);
- const recordEvent=(sweep,kind,object,from,to)=>{
+ const upperKinds=new Set(['ram','punch','upperClamp','upperAdapter']);
+ const recordEvent=(sweep,kind,object,from,to,tiltApproximationMm=0)=>{
   if(events.length>=120)return;
   const sourceMoving=base.objects[kind]?.provenance||'chapa de modelo';
   const sourceAgainst=base.objects[object]?.provenance||
    (object.startsWith('chapa-')?'malla-chapa-compartida':'envolvente provisional');
-  const evidence=classifyAxisContact(sourceMoving,sourceAgainst);
+  const upperAssemblyInvolved=upperKinds.has(kind)||upperKinds.has(object);
+  const evidence=classifyAxisContact(sourceMoving,sourceAgainst,{
+   upperAssemblyYApproximationMm:upperAssemblyInvolved?tiltApproximationMm:0
+  });
   events.push({kind:'contacto-cad-trayectoria',moving:kind,against:object,
    startTime:from.time,endTime:to.time,
    modeledReason:sweep.reason,evidenceCode:evidence.code,
    evidenceLabel:evidence.label,
+   upperAssemblyTiltUnmodeled:evidence.upperAssemblyTiltUnmodeled===true,
+   upperAssemblyYApproximationMm:upperAssemblyInvolved?tiltApproximationMm:0,
    sourceMoving,sourceAgainst,verified:false,
    physicalCollisionCertified:false});
  };
- const refTilt=ref.Y1-ref.Y2;
  for(let i=1;i<program.poses.length;i++){
   if(intervalsChecked>=maxIntervals){unresolved+=program.poses.length-i;
    unknowns.push('Se alcanzó el límite de intervalos de esta revisión');break;}
@@ -187,13 +194,17 @@ export function scanAxisCADMovement(input,options={}){
    Math.abs(before.sceneTime-mapping.referenceSceneTime)>1e-7){
    unresolved++;continue;
   }
-  const skew0=(before.axes.Y1-before.axes.Y2)-refTilt;
-  const skew1=(after.axes.Y1-after.axes.Y2)-refTilt;
-  if(Math.abs(skew0)>mapping.ramTiltTolerance||
-   Math.abs(skew1)>mapping.ramTiltTolerance){
+  const tilt=assessRamYTilt(before.axes,after.axes,ref,
+   mapping.ramTiltTolerance);
+  if(tilt.exceedsTolerance){
    tiltUnresolved++;unresolved++;
    unknowns.push('Inclinación Y1/Y2 fuera de tolerancia de modelo 2,5D');
    continue;
+  }
+  if(tilt.hasUnmodeledTilt){
+   ramTiltApproximatedIntervals++;
+   ramTiltApproximationMaxMm=Math.max(ramTiltApproximationMaxMm,
+    tilt.meanApproximationErrorMm);
   }
   let a,b;
   try{a=at(before);b=at(after);}
@@ -203,7 +214,8 @@ export function scanAxisCADMovement(input,options={}){
    if(!a[moving]?.valid||!b[moving]?.valid||
     !a[against]?.valid||!b[against]?.valid)continue;
    const sweep=sweptPrismPair(a[moving],b[moving],a[against],b[against]);
-   if(sweep.intersects)recordEvent(sweep,moving,against,before,after);
+   if(sweep.intersects)recordEvent(sweep,moving,against,before,after,
+    tilt.meanApproximationErrorMm);
    else if(sweep.unknown)unresolved++;
   }
   for(const moving of ['ram',...fingerNames,'upperClamp','upperAdapter',
@@ -211,7 +223,8 @@ export function scanAxisCADMovement(input,options={}){
    if(!a[moving]?.valid||!b[moving]?.valid)continue;
    for(let n=0;n<a.sheet.length;n++){
     const sweep=sweptPrismPair(a[moving],b[moving],a.sheet[n],b.sheet[n]);
-    if(sweep.intersects)recordEvent(sweep,moving,'chapa-'+(n+1),before,after);
+    if(sweep.intersects)recordEvent(sweep,moving,'chapa-'+(n+1),before,after,
+     tilt.meanApproximationErrorMm);
     else if(sweep.unknown)unresolved++;
    }
   }
@@ -230,6 +243,11 @@ export function scanAxisCADMovement(input,options={}){
  if(missing.length)unknowns.push('CAD de máquina sin perfil referenciado: '+missing.join(', '));
  if(program.poses.length-1>intervalsChecked)unknowns.push(
   'Hay fases sin chapa inmóvil o sin correspondencia con la animación');
+ if(ramTiltApproximatedIntervals)unknowns.push(
+  'Y1/Y2 presentan un movimiento diferencial en '+
+  ramTiltApproximatedIntervals+' intervalos: desviación geométrica aproximada máxima '+
+  ramTiltApproximationMaxMm.toFixed(3)+
+  ' mm respecto al movimiento medio. No se modela la flexión ni inclinación real de la trancha.');
  unknowns.push((twoFingers?
   'Se han modelado los DOS dedos en Z1/Z2 con CAD y bandas Z declaradas, únicamente a partir del datum y en intervalos de chapa inmóvil; NO hay validación CNC continua, inclinación Y1/Y2 ni deformación/volteos.':
   'No se ha modelado el segundo dedo Z1/Z2, inclinación continua Y1/Y2, volteos ni deformación de chapa.')+
@@ -243,11 +261,14 @@ export function scanAxisCADMovement(input,options={}){
  const evidenceSummary=summarizeAxisContacts(events);
  const riskStatus=events.length?
   evidenceSummary.status:
-  unresolved||missing.length?'REVISION_CAD_CNC_INCOMPLETA':
+  unresolved||missing.length||ramTiltApproximatedIntervals?
+   'REVISION_CAD_CNC_INCOMPLETA':
   'INTERVALOS_LINEALES_REVISADOS_SIN_CERTIFICAR';
  return {status:riskStatus,evidenceSummary,
   checked:intervalsChecked>0,intervalsChecked,framesChecked,
   unresolved,tiltUnresolved,
+  ramTiltApproximatedIntervals,ramTiltApproximationMaxMm,
+  ramIndependentYGeometryModeled:false,
   cadProfilesUsed:base.cadProfilesUsed,missingCad:missing,
   axisFingerModeled:twoFingers?['Z1','Z2']:mapping.activeFinger,
   bothGaugeFingersModeled:twoFingers,mappingSource:mapping.source,
@@ -258,6 +279,7 @@ export function scanAxisCADMovement(input,options={}){
   coverage:{machineCadPresent:needed.length-missing.length,
    machineCadRequired:needed.length,missingCad:missing,
    sampledIntervals:intervalsChecked,unresolvedIntervals:unresolved,
+   ramTiltApproximatedIntervals,ramTiltApproximationMaxMm,
    fullOEM:false,fullCNC:false},
   physicalCollisionCertified:false,
   evidence:zMode,events,unknown:unknowns,verified:false,

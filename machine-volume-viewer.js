@@ -17,6 +17,7 @@ import {describeGaugeVisualEvidence} from './machine-gauge-evidence.js';
 import {gaugeSolidStyle} from './machine-solid-gauge-style.js';
 import {visibleVolumeFaces} from './machine-volume-layers.js';
 import {browserRenderBudget,readQuality,saveQuality} from './adaptive-render-budget.js';
+import {canvasRenderSize} from './machine-canvas-memory-r131.js';
 
 const palette=Object.freeze({
  sheet:[73,169,210],punch:[174,197,218],die:[100,137,169],
@@ -206,8 +207,9 @@ function install(){
   return {model,mesh,trails,trailEvidence,
    gauge:describeGaugeVisualEvidence(model.gaugePlacement,model.objects.gauge,model.sheet,
     model.gaugeReferenceOnly?[model.objects.gaugeZ1,model.objects.gaugeZ2]:null)};
- });
+ },{capacity:budget.maxCachedFrames});
  window.PLEGADOX_SOLID_RENDER_STATS=()=>frameCache.stats;
+ window.PLEGADOX_SOLID_CACHE_DETAILS=()=>frameCache.details;
  window.PLEGADOX_GRAPHICS_BUDGET=()=>budget;
  window.PLEGADOX_SOLID_ACTIVE=()=>enabled;
  const setStatus=message=>{if(status)status.textContent=message;};
@@ -220,9 +222,12 @@ function install(){
   if(!state)return;
   const rect=canvas.getBoundingClientRect();
   if(rect.width<2||rect.height<2)return;
-  const w=rect.width,h=rect.height,dpr=budget.dpr;
-  const bw=Math.max(1,Math.round(w*dpr)),bh=Math.max(1,Math.round(h*dpr));
-  if(canvas.width!==bw||canvas.height!==bh){canvas.width=bw;canvas.height=bh;}
+  const w=rect.width,h=rect.height;
+  const bitmap=canvasRenderSize(w,h,budget.dpr,budget.maxCanvasPixels);
+  const {dpr}=bitmap;
+  if(canvas.width!==bitmap.width||canvas.height!==bitmap.height){
+   canvas.width=bitmap.width;canvas.height=bitmap.height;
+  }
   const ctx=canvas.getContext('2d',{alpha:false});
   ctx.setTransform(dpr,0,0,dpr,0,0);
   try{
@@ -231,7 +236,10 @@ function install(){
    const visibleFaces=visibleVolumeFaces(mesh.faces,window.PLEGADOX_MACHINE_VIEW);
    paint(ctx,w,h,visibleFaces,trails,camera,budget.maxFaces,gauge);
    const missing=model.missingCadComponents.join(', ');
-   const message='Sólidos dibujados: '+visibleFaces.length+' de '+mesh.faces.length+' caras · Dedos Z1/Z2: '+model.gaugeFingerReview.status+' · CAD de máquina importado: '+
+   const message='Sólidos dibujados: '+visibleFaces.length+' de '+mesh.faces.length+' caras · Galaxy: '+bitmap.pixelCount.toLocaleString()+
+    ' píxeles'+(bitmap.capped?' (protección memoria)':'')+
+    ' · escenas en RAM: '+frameCache.details.entries+
+    ' · Dedos Z1/Z2: '+model.gaugeFingerReview.status+' · CAD de máquina importado: '+
     (mesh.importedKinds.join(', ')||'ninguno')+'. Faltan: '+(missing||'ninguno')+
     (mesh.omitted.length?'. Omitidos: '+mesh.omitted.join(', '):'')+
     '. Recorridos: '+trailEvidence.reason+
@@ -245,6 +253,7 @@ function install(){
  };
  const refreshBudget=()=>{
   budget=browserRenderBudget(window,mode);
+  frameCache.setCapacity(budget.maxCachedFrames);
   if(chooser)chooser.value=mode;
   document.documentElement.dataset.renderTier=budget.tier;
   if(enabled)render(true);

@@ -14,6 +14,11 @@ on:
       - 'tests/machine-gauge-fingers-r128-browser-smoke.mjs'
       - 'tests/machine-independent-fingers-r129-browser-smoke.mjs'
       - 'tests/machine-axis-evidence-r130-browser-smoke.mjs'
+      - 'machine-canvas-memory-r131.js'
+      - 'machine-ram-tilt-evidence-r131.js'
+      - 'machine-solid-frame-cache.js'
+      - 'adaptive-render-budget.js'
+      - 'tests/machine-ram-galaxy-r131-browser-smoke.mjs'
       - 'machine-axis-evidence.js'
       - 'machine-axis-motion.js'
       - 'volume-trajectory-review.js'
@@ -58,6 +63,8 @@ jobs:
         run: node tests/machine-independent-fingers-r129-browser-smoke.mjs
       - name: Comprobar evidencia física por cuerpo y exportación CNC en Galaxy
         run: node tests/machine-axis-evidence-r130-browser-smoke.mjs
+      - name: Probar protección de memoria y caché de golpes en Galaxy
+        run: node tests/machine-ram-galaxy-r131-browser-smoke.mjs
       - name: Adjuntar capturas
         if: always()
         uses: actions/upload-artifact@v4
@@ -70,5 +77,6 @@ jobs:
             test-results/r128-*.png
             test-results/r129-*.png
             test-results/r130-*.png
+            test-results/r131-*.png
           if-no-files-found: warn
           retention-days: 20
