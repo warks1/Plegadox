@@ -384,12 +384,38 @@ function installer(){
   }
  });
  window.addEventListener('plegadox:machineChanged',refreshMotion);
- window.addEventListener('plegadox:pieceChanged',refreshMotion);
+ // En Galaxy, modificar una cota de pieza NO debe volver a recorrer
+ // automáticamente cientos de pares CAD. Invalidar en O(1) y ofrecer
+ // comprobación explícita (botón de ejes). El visor 3D ya escucha
+ // pieceChanged, así que tampoco se añade un render duplicado aquí.
+ const invalidateCncSnapshot=reason=>{
+  lastAxisReview=null;
+  if(typeof window!=='undefined')
+   window.PLEGADOX_CNC_GAUGE_SNAPSHOT=null;
+  const node=$('machineCncGaugeEvidence');
+  if(node){
+   node.dataset.level='neutral';
+   node.textContent='CNC DEL TOPE · SIN EVIDENCIA CNC SUFICIENTE · '+reason+
+    ' · Vuelve a comprobar ejes/CAD; no supone colisión.';
+  }
+  say('machineAxisStatus',reason+
+   '. Revisa ejes, montaje y datum y pulsa Comprobar. Sin aprobación CNC.');
+ };
+ window.addEventListener('plegadox:pieceChanged',()=>{
+  const p=part();
+  const latest=p?motionPieceKey(p):null;
+  if(window.PLEGADOX_CNC_GAUGE_SNAPSHOT?.pieceKey!==latest)
+   invalidateCncSnapshot('La pieza o el orden han cambiado');
+ });
  window.addEventListener('storage',event=>{
   if(event?.key===null||[
    'plegadox:axis-cad-mapping:v1','plegadox:machine-motion:v1',
    'plegadox:machine-cad:v1','plegadox:piece:v1'
-  ].includes(event.key))refreshMotion();
+  ].includes(event.key)){
+   invalidateCncSnapshot('El registro CAD/CNC cambió en otra pestaña');
+   // Solo el estado textual cambia. No recalcular sin que el usuario
+   // solicite el análisis físico.
+  }
  });
  try{refreshCAD();refreshMotion();refreshGaugeFingerZ();}
  catch(error){say('machineCadStatus','Datos CAD guardados no legibles: '+error.message,true);}
