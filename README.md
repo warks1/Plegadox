@@ -1,5 +1,14 @@
 # Plegadox — control y simulador de plegado
 
+## Estado actual · R129 (v0.9.103) · 17 de noviembre de 2026
+
+- **Cada dedo puede tener su propio CAD:** importar Stop Z1/Z2 o Support Z1/Z2 con sección XY, origen X/Y y fuentes documentales diferentes, o mantener un DXF compartido si son iguales.
+- **Z física vinculada al DXF:** no aplicar las bandas transversales Z cuando cambie cualquiera de los archivos o montajes; no extrapolar posición fuera de la pose de referencia.
+- **Sólidos y barridos:** dos cuerpos CAD individuales participan en la vista 3D, interacción con chapa/útiles/trancha y comprobación geométrica de movimientos Z1 contra Z2. Sin certificación de seguridad CNC.
+- **Build:** PLEGADOX-20261117-R129 · 0.9.103 · informe [R129_CAD_DEDOS_INDEPENDIENTES.md](./R129_CAD_DEDOS_INDEPENDIENTES.md).
+
+
+
 ## Estado actual · R128 (v0.9.102) · 17 de noviembre de 2026
 
 - **Dos dedos físicos:** permite documentar y dibujar Z1 y Z2 por separado con perfil DXF, extremos Z medidos, revisión de máquina y pose de referencia, sin extrapolar cotas faltantes.
