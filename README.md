@@ -1,6 +1,16 @@
 # Plegadox — control y simulador de plegado
 
-## Estado actual · R112 (v0.9.86) · 16 de noviembre de 2026
+## R126 · Rendimiento en tablet y CAD descargados · 17 de noviembre de 2026
+
+Cálculo automático en Worker cancelable, modo gráfico ligero y repintados agrupados. 47 archivos CAD originales descargados con SHA-256 y acceso desde Máquina; cinco contornos leídos directamente y 42 pendientes de selección de capa/circuito. 796 pruebas superadas. Falta ensayo en Samsung y CAD de ensamblaje/recorridos de la unidad. [Detalle y fuentes](./CAD_RESEARCH_R126.md).
+
+## R125 · Opciones de software · 17 de noviembre de 2026
+
+Nuevo apartado SOFTWARE con 11 preferencias persistentes de accesibilidad, controles, inicio y reproducción; exportación e importación JSON de preferencias y vista con límite de 64 KB; restablecimiento de interfaz. Cuatro perspectivas ilustrativas adicionales (panorámica, rasante, elevación pronunciada y profundidad mínima). No modifica piezas, útiles, cálculos ni orden manual. Las vistas siguen siendo 2,5D.
+
+Validación R125: 791 pruebas unitarias superadas. Comprobación visual en PC/tablet/móvil pendiente: Chromium no pudo arrancar en el entorno de ejecución. Se incluyen pruebas de navegador reproducibles para preferencias e importación.
+
+## Estado anterior · R112 (v0.9.86) · 16 de noviembre de 2026
 
 - **Formatos DXF OEM ampliados:** admite un contorno de `BLOCK/INSERT` con transformación 2D (base, traslado, giro y escala uniforme), así como aristas LWPOLYLINE de dos puntos que deben ensamblarse en un único perfil. Se rechazan reflujos, INSERT múltiple, objetos 3D y contornos no inequívocos.
 - **ZIP DXF UKB directamente en el importador:** carga local de archivos `.DXF.ZIP` sin extraerlos previamente. Valida directorio, nombre local, CRC32, límite de 8 MB comprimidos / 1 MB DXF y un único perfil. Deflate requiere compatibilidad del navegador; el operador podrá extraer manualmente si no está disponible.

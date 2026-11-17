@@ -57,6 +57,8 @@ jobs:
               tests/browser-smoke.mjs
               tests/responsive-smoke.mjs
               tests/studio-smoke.mjs
+              tests/software-preferences-r125-browser-smoke.mjs
+              tests/machine-perspective-r124-browser-smoke.mjs
               tests/controls-regression-smoke.mjs
               tests/pwa-version-recovery-smoke.mjs
               tests/pwa-offline-smoke.mjs

@@ -1,8 +1,11 @@
 // PlegadoX · caché offline estática. Se versiona para no arrastrar JS obsoleto.
-const CACHE='plegadox-static-0.9.98-safe-sw-r124';
+const CACHE='plegadox-static-0.10.0-worker-cad-r126';
 const APP_FILES=[
  "./",
  "./app.js",
+ "./planner-worker.js",
+ "./planner-worker-client.js",
+ "./render-budget.js",
  "./cybelec-reference.js",
  "./backgauge-placement.js",
  "./build-info.json",
@@ -64,6 +67,8 @@ const APP_FILES=[
  "./render-enhancements.js",
  "./responsive.js",
  "./software-about.js",
+ "./software-preferences.js",
+ "./preferences-model.js",
  "./software-update-policy.js",
  "./sequence-advisor.js",
  "./integrated-bend-planner.js",

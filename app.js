@@ -1,3 +1,5 @@
+import {createPlannerRunner,plannerStorageSnapshot} from './planner-worker-client.js';
+import {renderBudget} from './render-budget.js';
 import {roundedRectPath} from './canvas-path.js';
 import {MATERIALS,DIES,PUNCHES,EXAMPLE,normalized,profile,bendPreviewPath,bounds,development,estimateAirBendForce,REFERENCE_RM_MPA,stage,stopAtStage,gaugeReference,orientedForMachine,getTooling,selfIntersects,clamp,finite} from './engine.js';
 import {drawIndustrialMachine} from './machine-visual.js';
@@ -25,7 +27,7 @@ import {gaugeReviewTargetTime} from './gauge-sequence-review.js';
 import {buildGaugeMotionDiagnostic} from './gauge-motion-diagnostic.js';
 import {technicalScene} from './technical-section.js';
 import {recommendTooling} from './tooling-advisor.js';
-import {optimizeBendPlan,applyBendPlan} from './integrated-bend-planner.js';
+import {applyBendPlan} from './integrated-bend-planner.js';
 import {installTouchProgrammer} from './touch-programmer.js';
 import {auditForWorkshop} from './workshop-audit.js';
 import {buildProjectBackup,restoreProjectBackup,readStoredToolsForBackup} from './project-backup.js';
@@ -663,8 +665,10 @@ function configure(){
  $('zoomOut').onclick=()=>{camera.zoom=clamp(camera.zoom/1.18,.35,6);paintAll();};
  bindViewport($('sceneCanvas'),'scene');
  bindViewport($('machineCanvas'),'machine');
- window.addEventListener('resize',paintAll);
- if('ResizeObserver' in window)new ResizeObserver(paintAll).observe(document.querySelector('main'));
+ let resizeFrame=null;
+ const scheduleResizePaint=()=>{if(resizeFrame!==null)return;resizeFrame=requestAnimationFrame(()=>{resizeFrame=null;paintAll();});};
+ window.addEventListener('resize',scheduleResizePaint);
+ if('ResizeObserver' in window)new ResizeObserver(scheduleResizePaint).observe(document.querySelector('main'));
  setInterval(()=>$('clock').textContent=new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}),30000);
  $('clock').textContent=new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
  renderEditor();renderSetup();paintAll();renderProjectLibrary();syncPlaybackButtons();requestAnimationFrame(tick);
@@ -817,27 +821,30 @@ function applyIntegratedRecommendation(plan){
   $('integratedPlannerStatus').textContent='No se ha aplicado el plan: '+error.message;
  }
 }
+const plannerRunner=createPlannerRunner();
 function scheduleIntegratedAdvisor(){
  const status=$('integratedPlannerStatus'),options=$('integratedPlannerOptions');
  if(!status||!options)return;
  const epoch=++integratedPlannerEpoch;
+ plannerRunner.cancel();
  clearTimeout(integratedPlannerTimer);
  pendingIntegratedPlan=null;
  $('applyIntegratedPlan').disabled=true;
  options.replaceChildren();
  status.dataset.state='pending';
- status.textContent='Comparando automáticamente útiles, secuencias y orientación de la pieza activa…';
+ status.textContent='Comparando útiles, secuencias y orientación en segundo plano. Puedes seguir trabajando…';
  // No ejecutar el cribado de numerosos perfiles en cada pulsación de teclado.
  // Las piezas de muestra y biblioteca usan este mismo punto de entrada.
- integratedPlannerTimer=setTimeout(()=>{
+ integratedPlannerTimer=setTimeout(async()=>{
   if(epoch!==integratedPlannerEpoch)return;
   try{
    const complex=piece.angles.length>6;
-   const report=optimizeBendPlan(piece,{
+   const report=await plannerRunner.run({piece,dies:DIES,punches:PUNCHES,
+    storage:plannerStorageSnapshot(localStorage),options:{
     machine:getActiveMachineConfig(),maxPairs:complex?4:8,maxOrders:complex?3:8,
     maxFinalists:complex?5:12,toolSamples:complex?2:3,gaugeSamples:8,
     maxVolumeCandidates:complex?3:8,volumeSamples:4
-   });
+   }});
    if(epoch!==integratedPlannerEpoch)return;
    if(!report.best){
     status.dataset.state='none';
@@ -962,6 +969,7 @@ function scheduleIntegratedAdvisor(){
     options.append(original);
    }
   }catch(error){
+   if(epoch!==integratedPlannerEpoch||error?.name==='AbortError')return;
    pendingIntegratedPlan=null;
    status.dataset.state='none';
    status.textContent='No se ha podido completar el cotejo: '+
@@ -1345,9 +1353,13 @@ function pickBendFromDrawing(e){
    drawProfile('finalCanvas',piece.angles.map(()=>1),true);
  }
 }
+function activeRenderBudget(){
+ return renderBudget(document.documentElement.dataset.prefPerformance||'auto',
+  {memory:navigator.deviceMemory,cores:navigator.hardwareConcurrency});
+}
 function canvas2d(id){
  const c=$(id);if(!c||c.offsetParent===null)return null;const r=c.getBoundingClientRect();if(!r.width||!r.height)return null;
- const dpr=Math.min(window.devicePixelRatio||1,2);const w=r.width,h=r.height;
+ const dpr=Math.min(window.devicePixelRatio||1,activeRenderBudget().pixelRatio);const w=r.width,h=r.height;
  if(c.width!==Math.round(w*dpr)||c.height!==Math.round(h*dpr)){c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);}
  const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
  return {ctx,w,h};
@@ -2070,6 +2082,7 @@ function paintAll(){drawProfile('finalCanvas',piece.angles.map(()=>1),true);draw
 let lastMachineFrame=-Infinity,lastSceneFrame=-Infinity,lastStatusFrame=-Infinity;
 function tick(now){
  try{
+ const budget=activeRenderBudget();
  if(sim.playing){
   if(sim.last!=null){
    const dt=Math.min(Math.max(0,(now-sim.last)/1000),
@@ -2089,12 +2102,12 @@ function tick(now){
   if(sim.playing)sim.last=now;
   // Cuadros 2D, 3D y estado a frecuencias independientes para evitar
   // bloquear clics del operador en equipos de rendimiento limitado.
-  if(now-lastMachineFrame>=64){
+  if(now-lastMachineFrame>=budget.machineMs){
    lastMachineFrame=now;drawMachine();
    drawProfile('progressCanvas',stage(piece,sim.time).fractions);
   }
-  if(now-lastSceneFrame>=100){lastSceneFrame=now;drawScene();}
-  if(now-lastStatusFrame>=250){lastStatusFrame=now;renderSimulationText();}
+  if(now-lastSceneFrame>=budget.sceneMs){lastSceneFrame=now;drawScene();}
+  if(now-lastStatusFrame>=budget.statusMs){lastStatusFrame=now;renderSimulationText();}
  }
  }catch(error){
   sim.playing=false;sim.last=null;

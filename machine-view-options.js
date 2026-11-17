@@ -9,6 +9,10 @@ export const VIEW_PRESETS=Object.freeze({
  shallow:Object.freeze({perspective:true,section:false,depth:.6,tilt:.8,label:'Perspectiva suave'}),
  deep:Object.freeze({perspective:true,section:false,depth:1.6,tilt:1,label:'Perspectiva profunda'}),
  elevated:Object.freeze({perspective:true,section:false,depth:1.25,tilt:1.65,label:'Perspectiva elevada 2,5D'}),
+ wide:Object.freeze({perspective:true,section:false,depth:2.1,tilt:.65,label:'Panorámica 2,5D'}),
+ low:Object.freeze({perspective:true,section:false,depth:1.4,tilt:.45,label:'Rasante 2,5D'}),
+ steep:Object.freeze({perspective:true,section:false,depth:.8,tilt:1.9,label:'Elevación pronunciada 2,5D'}),
+ compact:Object.freeze({perspective:true,section:false,depth:.4,tilt:1,label:'Profundidad mínima 2,5D'}),
  section:Object.freeze({perspective:false,section:true,depth:1,tilt:1,label:'Sección técnica mm'})
 });
 export const VIEW_DEFAULTS=Object.freeze({

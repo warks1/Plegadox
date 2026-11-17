@@ -7,7 +7,7 @@ import {gaugePerspectiveContours,drawMachineMetricGuides} from '../machine-visua
 
 test('R124: perfiles, 2.5D, suave, profunda, elevada y sección técnica son configuraciones distintas',()=>{
  assert.deepEqual(Object.keys(VIEW_PRESETS),['profile','nominal','shallow',
-  'deep','elevated','section']);
+  'deep','elevated','wide','low','steep','compact','section']);
  const settings={...VIEW_DEFAULTS};
  for(const name of Object.keys(VIEW_PRESETS)){
   const selected=applyViewPreset(settings,name);
