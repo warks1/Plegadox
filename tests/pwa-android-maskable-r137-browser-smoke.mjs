@@ -54,8 +54,8 @@ try{
    width:result.width,height:result.height,
    corners,bright,blue,
    splashFrame:document.getElementById('pxSplashReference')?.getAttribute('src'),
-   splashSrc:document.getElementById('pxSplashReference')?.contentDocument?
-    .getElementById('photo')?.getAttribute('src'):null,
+   splashSrc:document.getElementById('pxSplashReference')?.contentDocument
+    ?.getElementById('photo')?.getAttribute('src')??null,
    iOSIcon:document.querySelector('link[rel="apple-touch-icon"]')?.getAttribute('href'),
    version:document.querySelector('meta[name="plegadox-build"]')?.content
   };
