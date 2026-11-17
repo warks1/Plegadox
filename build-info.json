@@ -1,9 +1,9 @@
 {
-  "build": "PLEGADOX-20261117-R138",
-  "version": "0.9.112",
+  "build": "PLEGADOX-20261117-R139",
+  "version": "0.9.113",
   "machine": "bystronic-2006-2009-wila-promecam-gauge-conditional",
-  "ui": "android-native-maskable-and-immediate-premium-first-paint",
-  "cache": "plegadox-static-0.9.112-safe-sw-r138",
+  "ui": "splash-photo-and-progress-atomic-frame-with-decoded-iframe",
+  "cache": "plegadox-static-0.9.113-safe-sw-r139",
   "tooling": "wila-promecam-custom-profile-dxf-mm-backup50",
   "renderer": "prismatic-3d-cnc-vs-planar-gauge-dual-evidence"
 }

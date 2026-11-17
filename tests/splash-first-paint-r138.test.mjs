@@ -26,8 +26,8 @@ test('R138: imagen, cache y versiones sincronizadas',()=>{
  const build=JSON.parse(read('build-info.json'));
  const pkg=JSON.parse(read('package.json'));
  const sw=read('sw.js'),html=read('index.html');
- assert.equal(build.build,'PLEGADOX-20261117-R138');
- assert.equal(build.version,'0.9.112');
+ assert.match(build.build,/^PLEGADOX-\d{8}-R\d+$/);
+ assert.ok(Number(build.build.match(/R(\d+)$/)[1])>=138,'Mantener R138 o posterior');
  assert.equal(pkg.version,build.version);
  assert.ok(sw.includes(build.cache));
  assert.ok(html.includes('const BUILD="'+build.build+'"'));

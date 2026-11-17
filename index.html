@@ -9,6 +9,39 @@ html,body{margin:0;background:#060c16}
 #pxSplashImmediate{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:contain}
 #pxSplashReference{position:absolute;inset:0;width:100%;height:100%;border:0;background:#060c16;opacity:0}
 #pxSplashReference.is-ready{opacity:1}
+
+/* R139: foto y barra se revelan en el mismo fotograma, aun con red lenta. */
+#pxSplashImmediate{visibility:hidden}
+#pxSplashEarlyUI{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+ width:min(100vw,177.6833vh);width:min(100vw,177.6833dvh);
+ height:min(100vh,56.2799vw);height:min(100dvh,56.2799vw);
+ aspect-ratio:1672/941;visibility:hidden;color:#fff;font-family:Inter,system-ui,sans-serif;
+ box-sizing:border-box;pointer-events:none}
+#pxTitaniumSplash.is-photo-ready #pxSplashImmediate,
+#pxTitaniumSplash.is-photo-ready #pxSplashEarlyUI{visibility:visible}
+#pxTitaniumSplash.has-original #pxSplashEarlyUI{visibility:hidden}
+#pxSplashEarlyMessage{position:absolute;left:11.3%;top:77.75%;font-weight:750;font-style:italic;
+ font-size:clamp(11px,2.12vw,34px);letter-spacing:.02em;text-shadow:0 2px 7px #000e;
+ max-width:75%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pxSplashEarlyProgress{position:absolute;left:10.76%;top:81.4%;width:78.12%;height:7.2%;
+ display:flex;gap:2%;align-items:center;padding:0 .3%;box-sizing:border-box;border-radius:80px;
+ background:linear-gradient(180deg,#07111b 0%,#050d17 12%,#0b1928 52%,#050b14 94%);
+ box-shadow:0 0 3px #060d16}
+#pxSplashEarlyRail{position:relative;flex:1;height:67%;border:2px solid #9eb9c6;
+ border-radius:80px;box-sizing:border-box;
+ background:linear-gradient(180deg,#2c455a,#041224 42%,#0b2739 85%,#425566);
+ box-shadow:inset 0 1px 4px #9ac9e355;overflow:hidden}
+#pxSplashEarlyFill{height:100%;width:0;transition:width .23s ease-out;border-radius:80px;
+ background:linear-gradient(180deg,#8af8ff,#04e2fc 30%,#0099ef 72%,#0950b7);
+ box-shadow:0 0 13px #06b7fc}
+#pxSplashEarlyFill::before{content:"";display:block;height:100%;
+ background:repeating-linear-gradient(120deg,transparent 0 22px,#e2faff33 23px 25px,transparent 27px 44px)}
+#pxSplashEarlyPercent{min-width:7.5%;font-weight:900;font-size:clamp(10px,2.2vw,34px);
+ font-variant-numeric:tabular-nums;text-align:center;text-shadow:0 3px 5px #000}
+@media(max-width:560px){#pxSplashEarlyRail{border-width:1px}
+ #pxSplashEarlyMessage{font-size:clamp(8px,2.1vw,12px)}
+ #pxSplashEarlyPercent{font-size:clamp(9px,2vw,15px)}}
+@media(prefers-reduced-motion:reduce){#pxSplashEarlyFill{transition:none}}
 </style>
 <link rel="preload" href="./plegadox-premium-selected.png" as="image" fetchpriority="high">
 <title>Plegadox · Control de plegado</title>
@@ -16,19 +49,26 @@ html,body{margin:0;background:#060c16}
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="./icon-premium-180.png">
 <link rel="manifest" href="./manifest.webmanifest">
-<meta name="plegadox-build" content="PLEGADOX-20261117-R138">
+<meta name="plegadox-build" content="PLEGADOX-20261117-R139">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="PlegadoX">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head><body>
 <div id="pxTitaniumSplash" class="px-titanium-splash px-titanium-original" role="status" aria-label="PlegadoX · Pantalla de carga premium seleccionada">
 <img id="pxSplashImmediate" src="./plegadox-premium-selected.png" width="1672" height="941" alt="" aria-hidden="true" fetchpriority="high" decoding="async">
-<iframe id="pxSplashReference" title="PlegadoX · Pantalla premium seleccionada · Boceto 1" src="./splash-foto-premium.html" loading="eager"></iframe>
+<div id="pxSplashEarlyUI" aria-hidden="true">
+  <div id="pxSplashEarlyMessage" aria-live="polite">Preparando programación y simulación…</div>
+  <div id="pxSplashEarlyProgress" role="progressbar" aria-label="Carga real de PlegadoX" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+   <div id="pxSplashEarlyRail"><div id="pxSplashEarlyFill"></div></div>
+   <output id="pxSplashEarlyPercent">0%</output>
+  </div>
+ </div>
+ <iframe id="pxSplashReference" title="PlegadoX · Pantalla premium seleccionada · Boceto 1" src="./splash-foto-premium.html" loading="eager"></iframe>
 <button id="pxSplashRetry" class="px-splash-retry" type="button" onclick="location.reload()">Reintentar inicio</button>
 </div>
 <div id="app">
 <header class="topbar">
-<div class="header-logo"><span class="logo-title">PLEGA<span>DO</span><em>X</em></span><small>PRECISIÓN EN CADA ÁNGULO</small><small id="buildMark" class="px-build-mark" aria-label="Versión instalada de PlegadoX">PLEGADOX-20261117-R138</small></div>
+<div class="header-logo"><span class="logo-title">PLEGA<span>DO</span><em>X</em></span><small>PRECISIÓN EN CADA ÁNGULO</small><small id="buildMark" class="px-build-mark" aria-label="Versión instalada de PlegadoX">PLEGADOX-20261117-R139</small></div>
 <div class="header-project"><span class="h-icon" aria-hidden="true"><svg class="px-icon"><use href="./icons.svg#project"/></svg></span><div class="h-content"><small>PROYECTO ACTUAL</small><strong id="topProject">Omega · ejemplo geométrico</strong></div></div>
 <div class="header-stats"><div><small>Material</small><strong id="topMaterial">Acero S235</strong></div><div><small>Espesor</small><strong id="topThickness">2,00 mm</strong></div><div><small>Ángulo</small><strong id="topAngle">+90°</strong></div><div><small>Apertura V</small><strong id="topV">16 mm</strong></div><div><small>Punzón</small><strong id="topPunch">Recto 88°</strong></div><div><small>Matriz</small><strong id="topDie">V16</strong></div></div>
 <div class="header-right"><div class="header-status"><button id="topPlayBtn" class="led" type="button" aria-label="Reproducir simulación" aria-pressed="false" title="Reproducir / pausar simulación">▶</button><span id="topState">Simulación lista</span></div><span id="clock" aria-label="Hora"></span><button id="forceUpdateBtn" class="header-icon-button px-refresh-button" title="Actualizar PlegadoX sin borrar piezas" aria-label="Actualizar PlegadoX sin borrar piezas"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#refresh"/></svg></button><button id="saveBtn" class="header-icon-button" title="Guardar pieza" aria-label="Guardar pieza"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#save"/></svg></button></div>
@@ -41,7 +81,7 @@ html,body{margin:0;background:#060c16}
 <button class="nav" data-tab="desarrollo"><span class="nav-picto" aria-hidden="true"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#ruler"/></svg></span><span>DESARROLLO</span></button>
 <button class="nav" data-tab="maquina"><span class="nav-picto" aria-hidden="true"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#settings"/></svg></span><span>MÁQUINA</span></button>
 <button class="nav" data-tab="acerca"><span class="nav-picto" aria-hidden="true"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#info"/></svg></span><span>ACERCA DE</span></button>
-<div class="nav-spacer"></div><button class="side-action" id="sideSave" title="Guardar pieza" aria-label="Guardar pieza"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#save"/></svg><span>GUARDAR</span></button><button class="side-action" id="sideImport" title="Importar pieza JSON" aria-label="Importar pieza JSON"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#upload"/></svg><span>IMPORTAR</span></button><div class="nav-version">AMS Tecnologics Services · PLEGADOX v0.9.112</div>
+<div class="nav-spacer"></div><button class="side-action" id="sideSave" title="Guardar pieza" aria-label="Guardar pieza"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#save"/></svg><span>GUARDAR</span></button><button class="side-action" id="sideImport" title="Importar pieza JSON" aria-label="Importar pieza JSON"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#upload"/></svg><span>IMPORTAR</span></button><div class="nav-version">AMS Tecnologics Services · PLEGADOX v0.9.113</div>
 </nav>
 <main>
 <section class="panel" id="tab-programacion">
@@ -435,8 +475,8 @@ CNC DEL TOPE · SIN EVIDENCIA DE TRAYECTORIA APLICABLE · No equivale a naranja 
    <h2>Información de la aplicación</h2>
    <dl class="px-about-facts">
     <div><dt>Nombre comercial</dt><dd>PlegadoX</dd></div>
-    <div><dt>Versión instalada</dt><dd id="softwareInstalledVersion">v0.9.112</dd></div>
-    <div><dt>Compilación</dt><dd id="softwareInstalledBuild">PLEGADOX-20261117-R138</dd></div>
+    <div><dt>Versión instalada</dt><dd id="softwareInstalledVersion">v0.9.113</dd></div>
+    <div><dt>Compilación</dt><dd id="softwareInstalledBuild">PLEGADOX-20261117-R139</dd></div>
     <div><dt>Plataformas</dt><dd>Web, PC, Mac, tablet, iOS y Android mediante aplicación web instalable</dd></div>
     <div><dt>Orientación</dt><dd>Automática según pantalla vertical u horizontal cuando el sistema permite girar</dd></div>
     <div><dt>Almacenamiento</dt><dd>Piezas, herramientas y ajustes almacenados localmente en este navegador</dd></div>
@@ -452,7 +492,7 @@ CNC DEL TOPE · SIN EVIDENCIA DE TRAYECTORIA APLICABLE · No equivale a naranja 
   <article class="card px-about-card px-about-updates">
    <h2>Actualización del software</h2>
    <p>Comprueba la versión publicada e instala las mejoras disponibles desde esta misma aplicación, sin borrar las piezas ni herramientas guardadas.</p>
-   <div class="px-update-version-row"><span>Instalada</span><strong id="softwareCurrentBuild">v0.9.112</strong>
+   <div class="px-update-version-row"><span>Instalada</span><strong id="softwareCurrentBuild">v0.9.113</strong>
     <span>Publicada</span><strong id="softwarePublishedVersion">Sin comprobar</strong></div>
    <div class="inline-actions"><button id="softwareUpdateBtn" class="px-about-update-button" type="button">Buscar e instalar actualizaciones</button></div>
    <p id="softwareUpdateStatus" class="hint" role="status" aria-live="polite">Pulsa el botón para consultar la última versión publicada.</p>
@@ -482,12 +522,31 @@ CNC DEL TOPE · SIN EVIDENCIA DE TRAYECTORIA APLICABLE · No equivale a naranja 
  * PlegadoX anteriores y cargar luego todos los módulos secuencialmente.
  * Nunca se elimina localStorage, IndexedDB ni los proyectos del usuario.
  */
-const BUILD="PLEGADOX-20261117-R138";
+const BUILD="PLEGADOX-20261117-R139";
 const STATUS=document.getElementById('buildMark');
 const KEY='plegadox:verified-loader-build';
 const BASE=new URL('./',document.baseURI);
 const SPLASH=document.getElementById('pxTitaniumSplash');
 const SPLASH_IFRAME=document.getElementById('pxSplashReference');
+const SPLASH_IMAGE=document.getElementById('pxSplashImmediate');
+const SPLASH_BRIDGE=document.getElementById('pxSplashEarlyUI');
+const EARLY_PROGRESS=document.getElementById('pxSplashEarlyProgress');
+const EARLY_FILL=document.getElementById('pxSplashEarlyFill');
+const EARLY_PERCENT=document.getElementById('pxSplashEarlyPercent');
+const EARLY_MESSAGE=document.getElementById('pxSplashEarlyMessage');
+const revealImmediateSplash=async()=>{
+ if(!SPLASH_IMAGE?.complete||!SPLASH_IMAGE.naturalWidth)return;
+ try{
+  // La barra y la foto se muestran juntas, después de decodificar el PNG.
+  if(typeof SPLASH_IMAGE.decode==='function')await SPLASH_IMAGE.decode();
+  if(!SPLASH?.isConnected||SPLASH.classList.contains('is-complete'))return;
+  SPLASH.classList.add('is-photo-ready');
+  SPLASH_BRIDGE?.setAttribute('aria-hidden','false');
+ }catch{SPLASH?.classList.add('is-error');}
+};
+SPLASH_IMAGE?.addEventListener('load',revealImmediateSplash,{once:true});
+SPLASH_IMAGE?.addEventListener('error',()=>SPLASH?.classList.add('is-error'),{once:true});
+revealImmediateSplash();
 let splashProgress=0,splashMessage='Preparando programación y simulación…';
 const getOriginalLoading=()=>{
  try{return SPLASH_IFRAME?.contentWindow?.PlegadoXLoading||null;}
@@ -497,20 +556,37 @@ const splashStep=(percent,label)=>{
  if(!SPLASH)return;
  splashProgress=Math.min(100,Math.max(0,Number(percent)||0));
  splashMessage=label;
+ if(EARLY_FILL)EARLY_FILL.style.width=splashProgress+'%';
+ if(EARLY_PERCENT)EARLY_PERCENT.textContent=Math.round(splashProgress)+'%';
+ if(EARLY_PROGRESS)EARLY_PROGRESS.setAttribute('aria-valuenow',String(Math.round(splashProgress)));
+ if(EARLY_MESSAGE)EARLY_MESSAGE.textContent=splashMessage;
  const original=getOriginalLoading();
  original?.setProgress(splashProgress);
  original?.setStatus(splashMessage);
 };
-const revealOriginalSplash=()=>{
- // No enseñar un iframe vacío: el boceto aprobado permanece debajo.
+const revealOriginalSplash=async()=>{
+ // Nunca enseñar la barra del iframe mientras su imagen todavía no es visible.
+ if(SPLASH_IFRAME?.classList.contains('is-ready'))return;
  const original=getOriginalLoading();
  if(!original)return;
+ let photo;
+ try{photo=SPLASH_IFRAME.contentDocument?.getElementById('photo');}
+ catch{return;}
+ if(!photo)return;
+ if(!photo.complete){
+  photo.addEventListener('load',revealOriginalSplash,{once:true});
+  photo.addEventListener('error',()=>SPLASH?.classList.add('is-error'),{once:true});
+  return;
+ }
+ if(!photo.naturalWidth){SPLASH?.classList.add('is-error');return;}
  try{
-  const photo=SPLASH_IFRAME.contentDocument?.getElementById('photo');
-  if(photo?.complete && !photo.naturalWidth)return;
- }catch{return;}
+  if(typeof photo.decode==='function')await photo.decode();
+ }catch{SPLASH?.classList.add('is-error');return;}
+ if(!SPLASH?.isConnected||SPLASH.hidden||SPLASH.classList.contains('is-complete'))return;
  splashStep(splashProgress,splashMessage);
  SPLASH_IFRAME.classList.add('is-ready');
+ SPLASH.classList.add('has-original');
+ SPLASH_BRIDGE?.setAttribute('aria-hidden','true');
 };
 SPLASH_IFRAME?.addEventListener('load',revealOriginalSplash);
 try{

@@ -1,5 +1,12 @@
 # Plegadox — control y simulador de plegado
 
+## Estado actual · R139 (v0.9.113) · 17 de noviembre de 2026
+
+- **Pantalla de carga unificada:** la imagen premium y la barra real se revelan en el mismo fotograma; no vuelve a aparecer una barra suelta antes de la foto. La barra de primera pintura se actualiza con el progreso de módulos y se releva al iframe solo tras verificar y decodificar su imagen.
+- **Sin cambios** de geometría, colisiones, piezas ni ajustes guardados. Se conserva el boceto 1 aprobado y la experiencia offline.
+- **Build:** PLEGADOX-20261117-R139 · 0.9.113 · [Informe R139](./R139_BARRA_Y_FOTO_SIMULTANEAS.md).
+- La pantalla inicial nativa de Android/WebAPK sigue siendo una etapa del sistema operativo, no dibujable con HTML.
+
 ## Estado actual · R138 (v0.9.112) · 17 de noviembre de 2026
 
 - **Imagen elegida visible antes del visor:** la pantalla premium aparece directamente en la primera pintura del documento, incluso mientras se está abriendo el iframe del cargador.
