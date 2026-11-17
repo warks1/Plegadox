@@ -77,7 +77,7 @@ try{
  assert.equal(state.splashFrame,'./splash-foto-premium.html');
  assert.equal(state.splashSrc,'./plegadox-premium-selected.png');
  assert.equal(state.iOSIcon,'./icon-premium-180.png');
- assert.equal(state.version,'PLEGADOX-20261117-R137');
+ assert.match(state.version,/^PLEGADOX-\d{8}-R\d+$/);
  await page.locator('#r137MaskablePreview').screenshot({
   path:'test-results/r137-galaxy-icono-android-maskable.png'
  });

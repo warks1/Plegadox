@@ -53,7 +53,8 @@ test('R137: Android usa el icono del sistema antes de la pantalla premium HTML, 
  assert.ok(html.includes('icon-premium-180.png'),
   'No cambiar el icono de iPhone');
  assert.match(sw,/"\.\/icon-android-maskable\.svg"/);
- assert.equal(build.version,'0.9.111');
- assert.equal(build.build,'PLEGADOX-20261117-R137');
- assert.ok(build.cache.endsWith('r137'));
+ assert.match(build.version,/^0\.9\.\d+$/);
+ assert.match(build.build,/^PLEGADOX-\d{8}-R\d+$/);
+ assert.ok(build.cache.startsWith('plegadox-static-'));
+ assert.ok(build.cache.includes(build.version));
 });
