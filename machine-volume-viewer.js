@@ -209,6 +209,7 @@ function install(){
     model.gaugeReferenceOnly?[model.objects.gaugeZ1,model.objects.gaugeZ2]:null)};
  },{capacity:budget.maxCachedFrames});
  window.PLEGADOX_SOLID_RENDER_STATS=()=>frameCache.stats;
+ window.PLEGADOX_SOLID_CACHE_DETAILS=()=>frameCache.details;
  window.PLEGADOX_GRAPHICS_BUDGET=()=>budget;
  window.PLEGADOX_SOLID_ACTIVE=()=>enabled;
  const setStatus=message=>{if(status)status.textContent=message;};
@@ -237,7 +238,7 @@ function install(){
    const missing=model.missingCadComponents.join(', ');
    const message='Sólidos dibujados: '+visibleFaces.length+' de '+mesh.faces.length+' caras · Galaxy: '+bitmap.pixelCount.toLocaleString()+
     ' píxeles'+(bitmap.capped?' (protección memoria)':'')+
-    ' · escenas en RAM: '+frameCache.stats.entries+
+    ' · escenas en RAM: '+frameCache.details.entries+
     ' · Dedos Z1/Z2: '+model.gaugeFingerReview.status+' · CAD de máquina importado: '+
     (mesh.importedKinds.join(', ')||'ninguno')+'. Faltan: '+(missing||'ninguno')+
     (mesh.omitted.length?'. Omitidos: '+mesh.omitted.join(', '):'')+
