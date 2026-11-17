@@ -188,9 +188,20 @@ export function buildVolumeScene(scene,{machine=getActiveMachineConfig(),machine
   try{fingersRecord=loadGaugeFingers(localStorage);}
   catch(error){gaugeFingerLoadError=String(error?.message||error);}
  }
+ const independent=fingersRecord?.sameSectionConfirmed===false&&
+  fingersRecord.profileKind===activeKind&&
+  Number.isFinite(scene.sceneTime)&&
+  Math.abs(fingersRecord.referenceSceneTime-scene.sceneTime)<=1e-7;
+ const gaugeProfiles=independent?Object.fromEntries(
+  ['Z1','Z2'].map(axis=>[axis,cadPrism(activeKind+axis,
+   'tope-'+axis+'-DXF',{x:origin.x,y:origin.y})])):{};
+ const profileFingerprints=independent?Object.fromEntries(
+  ['Z1','Z2'].map(axis=>[axis,
+   gaugeSectionFingerprint(records[activeKind+axis])])):{};
  const fingerReview=gaugeFingerSlices(fingersRecord,{
   machineConfigKey:machineConfigurationKey(machine),profileKind:activeKind,
   profileFingerprint:gaugeSectionFingerprint(records[activeKind]),
+  profileFingerprints,gaugeProfiles,
   sceneTime:scene.sceneTime,gauge
  });
  if(gaugeFingerLoadError){
@@ -224,7 +235,11 @@ export function buildVolumeScene(scene,{machine=getActiveMachineConfig(),machine
  // scanVolumeTrajectory agrega luego los componentes usados en todos
  // los golpes: si la pieza requiere Stop y Support, faltarán ambos
  // hasta que sus geometrías hayan sido contrastadas.
- const componentsRequired=['ram','bed',stopNumber===2?'support':'stop',
+ // Un montaje de dos DXF no requiere artificialmente el perfil
+ // compartido de su familia; sí requiere ambos perfiles Z1 y Z2.
+ const gaugeCADKinds=gaugeReferenceOnly&&independent?
+  [activeKind+'Z1',activeKind+'Z2']:[activeKind];
+ const componentsRequired=['ram','bed',...gaugeCADKinds,
   ...Object.keys(extraComponents)];
  return {sheet:segments,objects:{punch:punchPrism,die:diePrism,
    ram,bed,gauge,...gaugePair,...extras},
