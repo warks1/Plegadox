@@ -1766,3 +1766,19 @@ body.px-immersive-open{overflow:hidden!important;touch-action:pan-x pan-y}
  .cp-machine-frame.px-view-immersive .cp-floating-options button{
   min-height:27px;padding:2px 4px;font-size:10px}
 }
+
+
+/* R125 · sólidos orbitales de máquina. Mantener controles y avisos sobre la escena. */
+.cp-machine-frame .px-machine-solid-canvas{
+ position:absolute;inset:0;width:100%;height:100%;display:block;
+ background:#091726;z-index:2;touch-action:none;border:0;
+}
+.cp-machine-frame .px-machine-solid-canvas[hidden]{display:none!important}
+.cp-machine-frame.px-solid-active .cp-machine-floats{display:none!important}
+.cp-machine-frame.px-solid-active .cp-floating-options,
+.cp-machine-frame.px-solid-active .cp-overlay-right{z-index:5!important}
+#machineSolidStatus{display:block;margin-top:8px;line-height:1.5;overflow-wrap:anywhere}
+#machineSolidReset{align-self:end;min-height:42px}
+/* En Galaxy con poca memoria no quitar herramientas ni ocultar controles. */
+:root[data-render-tier=eco] .cp-machine-frame::before{opacity:.08!important}
+:root[data-render-tier=eco] .cp-machine-frame::after{box-shadow:none!important}
