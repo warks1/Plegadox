@@ -21,11 +21,12 @@ try{
   {timeout:25000});
  const initial=await page.evaluate(()=>({
   frame:window.PLEGADOX_SOLID_RENDER_STATS(),
+  details:window.PLEGADOX_SOLID_CACHE_DETAILS(),
   budget:window.PLEGADOX_GRAPHICS_BUDGET()
  }));
  assert.equal(initial.budget.tier,'eco');
  assert.equal(initial.budget.maxCanvasPixels,1200000);
- assert.equal(initial.frame.capacity,2);
+ assert.equal(initial.details.capacity,2);
  const afterSeek=await page.evaluate(()=>{
   window.PLEGADOX_SEEK_PREVIEW({operation:1,fraction:.2});
   const middle=window.PLEGADOX_SOLID_RENDER_STATS();
