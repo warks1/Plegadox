@@ -1,6 +1,7 @@
 import {roundedRectPath} from './canvas-path.js';
 import {MATERIALS,DIES,PUNCHES,EXAMPLE,normalized,profile,bendPreviewPath,bounds,development,estimateAirBendForce,REFERENCE_RM_MPA,stage,stopAtStage,gaugeReference,orientedForMachine,getTooling,selfIntersects,clamp,finite} from './engine.js';
 import {drawIndustrialMachine} from './machine-visual.js';
+import {browserRenderBudget,readQuality} from './adaptive-render-budget.js';
 import {notifyStorageFailure} from './storage-notice.js';
 import {registerCatalogue} from './catalog.js';
 import {analyzeSequence} from './validation.js';
@@ -1345,9 +1346,13 @@ function pickBendFromDrawing(e){
    drawProfile('finalCanvas',piece.angles.map(()=>1),true);
  }
 }
+const initialGraphicsBudget=browserRenderBudget(window,readQuality(window.localStorage));
+function activeGraphicsBudget(){
+ return window.PLEGADOX_GRAPHICS_BUDGET?.()||initialGraphicsBudget;
+}
 function canvas2d(id){
  const c=$(id);if(!c||c.offsetParent===null)return null;const r=c.getBoundingClientRect();if(!r.width||!r.height)return null;
- const dpr=Math.min(window.devicePixelRatio||1,2);const w=r.width,h=r.height;
+ const dpr=activeGraphicsBudget().dpr;const w=r.width,h=r.height;
  if(c.width!==Math.round(w*dpr)||c.height!==Math.round(h*dpr)){c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);}
  const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
  return {ctx,w,h};
@@ -1449,6 +1454,9 @@ function drawProfile(id,fractions,labels=false){
  }
 }
 function drawMachine(){
+ if(window.PLEGADOX_SOLID_ACTIVE?.()){
+  window.PLEGADOX_SOLID_RENDER?.();return;
+ }
  const can=canvas2d('machineCanvas');
  if(!can)return;
  drawIndustrialMachine(can.ctx,can.w,can.h,piece,sim,machineView);
@@ -2070,6 +2078,9 @@ function paintAll(){drawProfile('finalCanvas',piece.angles.map(()=>1),true);draw
 let lastMachineFrame=-Infinity,lastSceneFrame=-Infinity,lastStatusFrame=-Infinity;
 function tick(now){
  try{
+ // Al cambiar de pestaña no adelantar Y1/Y2 por un salto de reloj.
+ if(document.hidden){sim.last=null;return;}
+ const graphics=activeGraphicsBudget();
  if(sim.playing){
   if(sim.last!=null){
    const dt=Math.min(Math.max(0,(now-sim.last)/1000),
@@ -2089,12 +2100,12 @@ function tick(now){
   if(sim.playing)sim.last=now;
   // Cuadros 2D, 3D y estado a frecuencias independientes para evitar
   // bloquear clics del operador en equipos de rendimiento limitado.
-  if(now-lastMachineFrame>=64){
+  if(now-lastMachineFrame>=graphics.machineIntervalMs){
    lastMachineFrame=now;drawMachine();
    drawProfile('progressCanvas',stage(piece,sim.time).fractions);
   }
-  if(now-lastSceneFrame>=100){lastSceneFrame=now;drawScene();}
-  if(now-lastStatusFrame>=250){lastStatusFrame=now;renderSimulationText();}
+  if(now-lastSceneFrame>=graphics.sceneIntervalMs){lastSceneFrame=now;drawScene();}
+  if(now-lastStatusFrame>=graphics.statusIntervalMs){lastStatusFrame=now;renderSimulationText();}
  }
  }catch(error){
   sim.playing=false;sim.last=null;
