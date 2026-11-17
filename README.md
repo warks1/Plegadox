@@ -1,5 +1,14 @@
 # Plegadox — control y simulador de plegado
 
+## Estado actual · R135 (v0.9.109) · 17 de noviembre de 2026
+
+- **Semáforo de interferencias explicable:** el diagnóstico CAD/CNC diferencia una penetración NUEVA creada durante la carrera, una penetración TRANSITORIA entre poses y un solape PREEXISTENTE en el datum. Ninguno se descarta como seguro por su antigüedad.
+- **Filtro sin recalcular en Galaxy:** ver incidencias nuevas/transitorias, preexistentes o inciertas en Máquina → Recorridos físicos de ejes; conserva en el informe JSON las dos poses, las ventanas de R134 y el origen de cada solape.
+- **Montajes no certificados:** un solape inmóvil puede ser un montaje normal o un error CAD, pero requiere cotejar la geometría OEM; los resultados nunca aprueban producción.
+- **Build:** PLEGADOX-20261117-R135 · 0.9.109 · [Informe R135](./R135_SOLAPES_PREEXISTENTES_VS_NUEVOS.md). El motor sigue siendo 2,5D con tramos lineales y CAD OEM incompleto.
+
+
+
 ## Estado actual · R134 (v0.9.108) · 17 de noviembre de 2026
 
 - **Intervalos CNC más informativos:** el barrido 2,5D calcula una ventana aproximada de la **primera penetración modelada** entre dos poses de ejes, sin atribuir el cruce al tramo entero ni inventar un instante de choque físico.
