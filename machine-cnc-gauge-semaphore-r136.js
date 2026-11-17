@@ -69,7 +69,13 @@ export function classifyCncGaugeSemaphore(report){
 /** La información debe corresponder a la pieza, máquina y geometría
  * activas. El render no puede reutilizar resultados de otro trabajo.
  */
-export function boundCncGaugeStatus(snapshot,{pieceKey,machineId,machineConfigKey}={}){
+export function boundCncGaugeStatus(snapshot,{pieceKey,machineId,machineConfigKey,
+ sceneTime=null}={}){
+ if(Number.isFinite(sceneTime)&&Number.isFinite(snapshot?.referenceSceneTime)&&
+    Math.abs(sceneTime-snapshot.referenceSceneTime)>1e-7)
+  return neutral('OTRA_FASE_DE_CHAPA',
+   'Esta evidencia CNC corresponde a chapa inmóvil en otra fase de la '+
+   'secuencia; NO trasladar el color al fotograma actual');
  if(!snapshot||!pieceKey||!machineId||!machineConfigKey||
   snapshot.pieceKey!==pieceKey||snapshot.machineId!==machineId||
   snapshot.machineConfigKey!==machineConfigKey)
