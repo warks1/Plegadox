@@ -8,6 +8,8 @@ import {V85_FACTORY} from '../machine-config.js';
 import {machineConfigurationKey} from '../machine-cad.js';
 import {motionPieceKey} from '../machine-axis-motion.js';
 import {scanAxisCADMovement} from '../machine-axis-geometry.js';
+import {buildVolumeScene} from '../volume-engine.js';
+import {technicalScene} from '../technical-section.js';
 
 const clean=()=>({
  checked:true,intervalsChecked:2,events:[],
@@ -132,6 +134,48 @@ test('R136: snapshot de otra pieza/máquina/CAD/fase no se atribuye al fotograma
  assert.equal(boundCncGaugeStatus(snapshot,{...context,sceneTime:2}).code,
   'OTRA_FASE_DE_CHAPA');
  assert.equal(boundCncGaugeStatus(null,context).code,'INFORME_DESACTUALIZADO');
+});
+test('R136: barrido CNC de dedo con DOS CAD sintéticos detecta penetración nueva sin confundirla con una alerta 2D',()=>{
+ const machine=V85_FACTORY,key=machineConfigurationKey(machine);
+ const stop={kind:'stop',machineConfigKey:key,
+  source:'Contorno de prueba DXF NO OEM',points:[
+   [-5,-5],[5,-5],[5,5],[-5,5]],
+  offsetX:0,offsetY:0,zMin:-15,zMax:15};
+ const base=buildVolumeScene(technicalScene(EXAMPLE,0),{
+  machine,machineCAD:{stop}
+ });
+ const gauge=base.objects.gauge;
+ assert.ok(gauge.valid&&gauge.provenance.startsWith('perfil CAD importado '));
+ const middleX=(Math.min(...gauge.polygon.map(p=>p.x))+
+  Math.max(...gauge.polygon.map(p=>p.x)))/2;
+ const middleY=(Math.min(...gauge.polygon.map(p=>p.y))+
+  Math.max(...gauge.polygon.map(p=>p.y)))/2;
+ const bed={...stop,kind:'bed',offsetX:middleX-30,offsetY:middleY};
+ const axes={Y1:0,Y2:0,X:0,R:0,Z1:0,Z2:0};
+ const limits=Object.fromEntries(['Y1','Y2','X','R','Z1','Z2']
+  .map(axis=>[axis,{min:-3000,max:3000,maxSpeed:1000}]));
+ const motion={unit:'mm',timeUnit:'s',source:'programmed',
+  sourceDescription:'Barrido de tope para ensayo R136, NO CNC real',
+  machineId:'V85',pieceKey:motionPieceKey(EXAMPLE),limits,
+  poses:[{time:0,sceneTime:0,axes},
+   {time:5,sceneTime:0,axes:{...axes,X:-60}}]};
+ const mapping={unit:'mm',version:1,
+  signs:{Y:1,X:1,R:1,Z1:1,Z2:1},
+  activeFinger:'Z1',referenceSceneTime:0,
+  ramTiltTolerance:0,machineConfigKey:key,
+  source:'DATUM ensayado únicamente para prueba de código'};
+ const review=scanAxisCADMovement(EXAMPLE,{
+  machine,machineCAD:{stop,bed},axisMotion:motion,mapping
+ });
+ const hit=review.events.find(e=>
+  e.moving==='gauge'&&e.against==='bed'&&
+  e.createdDuringThisInterval===true);
+ assert.ok(hit,'El barrido del dedo a través del bed debe crear penetración del modelo');
+ assert.equal(hit.evidenceCode,'DOS_PERFILES_CAD');
+ const status=classifyCncGaugeSemaphore(review);
+ assert.equal(status.level,'red');
+ assert.equal(status.code,'TOPE_PENETRACION_NUEVA_CAD');
+ assert.equal(status.canApproveForMachine,false);
 });
 test('R136: app conserva semáforo 2D independiente y CNC separado con caché Galaxy',()=>{
  const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
