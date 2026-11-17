@@ -10,6 +10,8 @@ import {EXAMPLE} from '../engine.js';
 import {buildVolumeScene,inspectVolumeFrame,makePrism,prismOverlap}
  from '../volume-engine.js';
 import {machineVolumeMesh} from '../machine-volume-viewer.js';
+import {scanAxisCADMovement} from '../machine-axis-geometry.js';
+import {motionPieceKey} from '../machine-axis-motion.js';
 import {visibleVolumeFaces} from '../machine-volume-layers.js';
 import {describeGaugeVisualEvidence} from '../machine-gauge-evidence.js';
 
@@ -118,6 +120,31 @@ test('R128: coincidencia Z de cada dedo independiente, con apoyo ausente si ambo
  assert.match(result.message,/Z2 fuera de anchura/);
  assert.match(result.message,/No equivale a trayectoria CNC/);
  assert.equal(prismOverlap(modeled.sheet[0],modeled.objects.gaugeZ1).volume,0);
+});
+test('R128: un barrido Z1/Z2 cruzado detecta colisión entre ambos dedos',()=>{
+ const axes0={Y1:0,Y2:0,X:0,R:0,Z1:0,Z2:0};
+ const axes1={...axes0,Z1:20,Z2:-20};
+ const limits=Object.fromEntries(['Y1','Y2','X','R','Z1','Z2']
+  .map(axis=>[axis,{min:-1000,max:1000,maxSpeed:null}]));
+ const axisMotion={unit:'mm',timeUnit:'s',source:'programmed',
+  sourceDescription:'Trayectoria de prueba artificial, sin máquina real',
+  machineId:'trumpf-v85',pieceKey:motionPieceKey(EXAMPLE),limits,
+  poses:[{time:0,sceneTime:0,axes:axes0},
+   {time:1,sceneTime:0,axes:axes1}]};
+ const mapping={version:1,unit:'mm',
+  signs:{Y:1,X:1,R:1,Z1:1,Z2:1},activeFinger:'Z1',
+  referenceSceneTime:0,ramTiltTolerance:0,
+  source:'Calibración de prueba no real',machineConfigKey:key};
+ const report=scanAxisCADMovement(EXAMPLE,{
+  axisMotion,mapping,machine,machineCAD:{stop:localRecord()},
+  gaugeFingers:sample()
+ });
+ assert.equal(report.bothGaugeFingersModeled,true);
+ assert.deepEqual(report.axisFingerModeled,['Z1','Z2']);
+ assert.equal(report.intervalsChecked,1);
+ assert.ok(report.events.some(e=>e.moving==='gaugeZ1'&&e.against==='gaugeZ2'),
+  'El motor debe detectar choque de dedos intermedio aunque cada uno siga su Z');
+ assert.equal(report.canApproveForMachine,false);
 });
 test('R128: panel, eje CNC, parser y PWA cuentan los dos dedos sin inventar DXF',()=>{
  const ui=readFileSync(new URL('../index.html',import.meta.url),'utf8');
