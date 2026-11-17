@@ -97,6 +97,10 @@ function refreshMotion(){
       ' · parejas pendientes de geometría: '+review.uniquePendingPairs:'')+
      (review.pairIntervalsChecked!=null?
       ' · comprobaciones geométricas: '+review.pairIntervalsChecked:'')+
+     (review.impactWindowsComputed?
+      ' · primeras ventanas modeladas refinadas: '+review.impactWindowsComputed:'')+
+     (review.impactWindowsPending?
+      ' · avisos sin hora refinada: '+review.impactWindowsPending:'')+
      (review.broadphaseRejectedPairs?
       ' · parejas separadas sin triangulación '+review.broadphaseRejectedPairs:'')+
      (review.ramTiltApproximatedIntervals?
@@ -120,10 +124,18 @@ function refreshMotion(){
        'Trancha/amarres superiores: movimiento Y1/Y2 DIFERENCIAL; desplazamiento medio de modelo, desviación de hasta '+
         review.ramTiltApproximationMaxMm.toFixed(3)+
         ' mm, NO certificado ni geometría de viga inclinada']:[]),
-      ...(review.events||[]).slice(0,10).map(hit=>
-       Number(hit.startTime).toFixed(3)+'–'+Number(hit.endTime).toFixed(3)+
-       ' s · '+hit.moving+' / '+hit.against+' · '+
-       (hit.evidenceLabel||'interferencia no clasificada')),
+      ...(review.events||[]).slice(0,10).map(hit=>{
+       const full=Number(hit.startTime).toFixed(3)+'–'+
+        Number(hit.endTime).toFixed(3)+' s';
+       const window=hit.impactWindowSeconds;
+       const detail=Array.isArray(window)?
+        ' · primera penetración MODELADA acotada '+window.map(n=>
+         Number(n).toFixed(3)).join('–')+' s':
+        ' · instante de penetración no localizado ('+
+         (hit.impactWindowStatus||'sin evidencia')+')';
+       return full+' · '+hit.moving+' / '+hit.against+
+        ' · '+(hit.evidenceLabel||'interferencia no clasificada')+detail;
+      }),
       ...(!review.events?.length?[
        'Sin solapes entre poses comprobadas no significa recorrido físico libre de colisiones']:[]),
       ...(review.events?.length>10?['Solo se muestran los primeros 10 avisos; descarga el informe completo']:[])
