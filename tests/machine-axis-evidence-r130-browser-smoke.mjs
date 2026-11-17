@@ -69,7 +69,17 @@ try{
  assert.match(finding,/gaugeZ1/);
  assert.match(finding,/gaugeZ2/);
  assert.match(finding,/Interferencia entre dos perfiles CAD declarados/);
- await page.evaluate(()=>document.getElementById('machineAxisEvidencePanel').open=true);
+ // El diagnóstico está en la pestaña MÁQUINA, cerrada por defecto
+ // cuando la PWA abre su pantalla inicial.
+ await page.evaluate(()=>{
+  document.querySelector('.nav[data-tab="maquina"]').click();
+  document.getElementById('machineAxisEvidencePanel').open=true;
+ });
+ await page.waitForFunction(()=>{
+  const el=document.getElementById('machineAxisEvidencePanel');
+  return el?.getBoundingClientRect().width>100&&
+   getComputedStyle(el).display!=='none';
+ },null,{timeout:12000});
  await page.locator('#machineAxisEvidencePanel')
   .screenshot({path:'test-results/r130-galaxy-evidencia-cad-cnc.png'});
  const [download]=await Promise.all([
