@@ -51,6 +51,8 @@ export function renderCadEvidence(){
   coverage.requiredCount+' categorías de posible interferencia con algún perfil importado. '+
   (coverage.missing.length?'Sin CAD cargado o sin descartar su presencia: '+
    coverage.missing.map(k=>ALL_LABELS[k]||k).join(', ')+'. ':'')+
+  (coverage.statuses.some(row=>row.coveredBy?.length===2)?
+   'Las parejas Stop/Support Z1+Z2 se contabilizan si están ambos DXF, NO como montaje certificado. ':'')+
   count+' descargas directas confirmadas en fabricantes; '+ 
   'NO instaladas automáticamente. Los CAD de familias de máquina no sirven para certificar una unidad.';}
  const fragment=document.createDocumentFragment();
