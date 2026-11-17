@@ -11,7 +11,7 @@ import {getActiveMachineConfig,gaugeOutline} from './machine-config.js';
 import {gaugePlacement} from './backgauge-placement.js';
 import {sheetSolidMesh} from './sheet-solid.js';
 import {loadMachineCad,positionMachineCad,machineConfigurationKey} from './machine-cad.js';
-import {loadGaugeFingers,gaugeFingerSlices} from './machine-gauge-fingers.js';
+import {loadGaugeFingers,gaugeFingerSlices,gaugeSectionFingerprint} from './machine-gauge-fingers.js';
 import {machineRamEnvelope} from './machine-ram-envelope.js';
 const EPS=1e-8;
 const v=(x,y)=>({x,y});
@@ -190,6 +190,7 @@ export function buildVolumeScene(scene,{machine=getActiveMachineConfig(),machine
  }
  const fingerReview=gaugeFingerSlices(fingersRecord,{
   machineConfigKey:machineConfigurationKey(machine),profileKind:activeKind,
+  profileFingerprint:gaugeSectionFingerprint(records[activeKind]),
   sceneTime:scene.sceneTime,gauge
  });
  if(gaugeFingerLoadError){
