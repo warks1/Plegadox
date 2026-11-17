@@ -36,6 +36,10 @@ try{
   const far=sweptBroadphase(a,translatePrism(a,-2,0,0),c,c);
   const crossing=sweptBroadphase(a,b,c,c);
   const confirmed=sweptPrismPair(a,b,c,c);
+  const nonRigid=makePrism('a',rect(100,100),-10,20);
+  const deformation=sweptBroadphase(a,nonRigid,c,c);
+  const touching=makePrism('c',rect(-10,0),-10,10);
+  const tangent=sweptBroadphase(a,a,touching,touching);
   const machine=getActiveMachineConfig();
   const machineId=getActiveMachineProfile().id;
   const key=machineConfigurationKey(machine);
@@ -69,6 +73,8 @@ try{
   return {
    far:far.mayOverlap,crossing:crossing.mayOverlap,
    confirmed:confirmed.intersects,
+   invalidNotPruned:deformation.mayOverlap&&!deformation.known,
+   touchingNotPruned:tangent.mayOverlap,
    status:document.getElementById('machineAxisStatus').textContent,
    die3163:cadSourceFor('die','EUROSTAMP','3163')[0]?.cadUrl,
    die3165:cadSourceFor('die','EUROSTAMP','3165')[0]?.cadUrl
@@ -77,6 +83,8 @@ try{
  assert.equal(probe.far,false);
  assert.equal(probe.crossing,true);
  assert.equal(probe.confirmed,true);
+ assert.equal(probe.invalidNotPruned,true);
+ assert.equal(probe.touchingNotPruned,true);
  assert.match(probe.status,/parejas separadas sin triangulación/);
  assert.match(probe.status,/solapes MODELADOS/);
  assert.equal(probe.die3163,'https://eurostampsrl.it/dxf/3163.dxf');
