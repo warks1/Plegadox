@@ -379,7 +379,7 @@ function installer(){
  window.addEventListener('plegadox:pieceChanged',refreshMotion);
  window.addEventListener('storage',event=>{
   if(event?.key===null||[
-   'plegadox:axis-cad-mapping:v1','plegadox:axis-motion:v1',
+   'plegadox:axis-cad-mapping:v1','plegadox:machine-motion:v1',
    'plegadox:machine-cad:v1','plegadox:piece:v1'
   ].includes(event.key))refreshMotion();
  });
