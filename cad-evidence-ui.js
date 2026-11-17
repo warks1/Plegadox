@@ -7,6 +7,7 @@ import {loadMachineCad,machineConfigurationKey} from './machine-cad.js';
 import {getActiveMachineConfig} from './machine-config.js';
 import {loadImportedTools} from './tool-dxf.js';
 import {getActiveMachineProfile} from './machine-selection.js';
+import {reviewNominalToolMount} from './machine-mount-compatibility-r133.js';
 
 const $=id=>document.getElementById(id);
 const ALL_LABELS={
@@ -69,6 +70,13 @@ export function renderCadEvidence(){
   text.textContent=item.note+
    (item.format==='DXF_ZIP'?
     ' Extraer el archivo .DXF del ZIP antes de importarlo en PlegadoX.':'');
+  const nominalFit=['punch','die'].includes(item.kind)?
+   reviewNominalToolMount(item,getActiveMachineProfile()):null;
+  const mountNotice=document.createElement('p');
+  mountNotice.className='hint';
+  if(nominalFit)
+   mountNotice.textContent='Montaje ('+nominalFit.status+'): '+
+    nominalFit.description+'. NO equivale a compatibilidad física demostrada.';
   const links=document.createElement('div');links.className='px-oem-cad-actions';
   const ficha=document.createElement('a');ficha.href=item.sourceUrl;
   ficha.target='_blank';ficha.rel='noopener noreferrer';
@@ -129,13 +137,16 @@ export function renderCadEvidence(){
      const state=$('toolDxfStatus');
      if(state)state.textContent='Referencia '+item.reference+
       ' preparada. Importa el DXF OEM, revisa H, el montaje y la longitud. '+
-      'Una V reversible requiere elegir la cara efectiva.';
+      'Una V reversible requiere elegir la cara efectiva. '+
+      (nominalFit?nominalFit.description:'');
      $('toolDxfPanel')?.scrollIntoView({behavior:'smooth',block:'start'});
     }
    });
    links.append(prepare);
   }
-  card.append(title,details,text,links);fragment.append(card);
+  card.append(title,details,text);
+  if(nominalFit)card.append(mountNotice);
+  card.append(links);fragment.append(card);
  }
  host.replaceChildren(fragment);
 }
