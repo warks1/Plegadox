@@ -1,5 +1,15 @@
 # Plegadox — control y simulador de plegado
 
+## Estado actual · R125 (v0.9.99) · 17 de noviembre de 2026
+
+- **Samsung Galaxy / Chrome:** resolución y ritmo de dibujo adaptables; selector Automática/Económica/Equilibrada/Alta; eventos ResizeObserver redundantes reducidos.
+- **Sólidos 3D orbitales:** malla de chapa, punzón, matriz, trancha, mesa y tope a partir del motor volumétrico ya disponible, sin sustituir la vista 2,5D.
+- **Trazas de movimiento:** Y1/Y2/X/R/Z1/Z2 sólo si se ha introducido un programa físico y signos calibrados; los trazos son relativos, no una trayectoria CNC absoluta homologada.
+- **Sin homologación:** superficies OEM, datums absolutos, recorridos reales y colisiones de máquina siguen pendientes.
+- **Build:** PLEGADOX-20261117-R125 · 0.9.99. Detalles: [R125_SOLIDOS_3D_GALAXY.md](./R125_SOLIDOS_3D_GALAXY.md).
+
+
+
 ## Estado actual · R112 (v0.9.86) · 16 de noviembre de 2026
 
 - **Formatos DXF OEM ampliados:** admite un contorno de `BLOCK/INSERT` con transformación 2D (base, traslado, giro y escala uniforme), así como aristas LWPOLYLINE de dos puntos que deben ensamblarse en un único perfil. Se rechazan reflujos, INSERT múltiple, objetos 3D y contornos no inequívocos.
