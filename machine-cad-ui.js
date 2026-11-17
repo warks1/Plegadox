@@ -70,6 +70,68 @@ function refreshGaugeFingerZ(){
 function part(){
  return window.PLEGADOX_STATE?.().piece||null;
 }
+// Filtrar la lista sin volver a barrer cientos de prismas sobre Galaxy.
+let lastAxisReview=null;
+function renderAxisFindings(review){
+ const list=$('machineAxisFindings');
+ if(!list||!review)return;
+ const evol=review.contactEvolutionSummary||{};
+ const text=$('machineAxisEvolutionSummary');
+ if(text)text.textContent='ORIGEN TEMPORAL DEL MODELO: '+
+  (evol.newDuringInterval||0)+' penetraciones nuevas/transitorias · '+
+  (evol.preexistingAtStart||0)+' solapes ya presentes al inicio · '+
+  (evol.preexistingWithoutRelativeMotion||0)+
+   ' sin desplazamiento relativo · '+
+  (evol.undetermined||0)+' sin clasificar. '+
+  'Ningún solape previo se considera automáticamente seguro; '+
+  'los datums, amarres y CAD OEM siguen sin certificar.';
+ const choice=$('machineAxisEvolutionFilter')?.value||'all';
+ const visible=(review.events||[]).filter(hit=>
+  choice==='all'||choice==='new'&&hit.createdDuringThisInterval===true||
+  choice==='preexisting'&&hit.preexistingAtStart===true||
+  choice==='uncertain'&&!hit.createdDuringThisInterval&&!hit.preexistingAtStart
+ ).sort((a,b)=>Number(b.createdDuringThisInterval)-Number(a.createdDuringThisInterval));
+ const lines=[
+  'Estado: '+review.status+' · sin validación de choque físico ni certificación CNC',
+  ...(review.missingCad?.length?[
+   'CAD pendiente: '+review.missingCad.join(', ')]:[]),
+  ...(review.uniquePendingPairs?[
+   'COBERTURA INCOMPLETA: '+review.uniquePendingPairs+
+   ' parejas de componentes sin CAD válido o sin modelar; '+
+   review.pairIntervalsMissing+' evaluaciones omitidas. Nunca se interpretan como libres.']:[]),
+  ...(review.missingPairExamples||[]).slice(0,12).map(p=>
+   'Sin comprobar '+p.moving+' / '+p.against+' (intervalo '+
+   p.interval+'): '+p.reason),
+  ...(review.ramTiltApproximatedIntervals?[
+   'Trancha/amarres superiores: movimiento Y1/Y2 DIFERENCIAL; desviación del modelo de hasta '+
+    review.ramTiltApproximationMaxMm.toFixed(3)+
+    ' mm. NO certificado ni geometría de viga inclinada']:[]),
+  ...visible.slice(0,10).map(hit=>{
+   const full=Number(hit.startTime).toFixed(3)+'–'+
+    Number(hit.endTime).toFixed(3)+' s';
+   const window=hit.impactWindowSeconds;
+   const detail=Array.isArray(window)?
+    ' · primera penetración MODELADA acotada '+window.map(n=>
+     Number(n).toFixed(3)).join('–')+' s':
+    ' · instante de penetración no localizado ('+
+     (hit.impactWindowStatus||'sin evidencia')+')';
+   const origin=hit.contactEvolutionLabel||
+    'Origen de la incidencia sin determinar';
+   return full+' · '+hit.moving+' / '+hit.against+
+    ' · '+origin+' · '+
+    (hit.evidenceLabel||'interferencia no clasificada')+detail;
+  }),
+  ...(!review.events?.length?[
+   'Sin solapes entre poses comprobadas no significa recorrido físico libre de colisiones']:[]),
+  ...(review.events?.length&&!visible.length?[
+   'Ningún evento coincide con este filtro; las incidencias de otros tipos y los CAD pendientes siguen registrados.']:[]),
+  ...(visible.length>10?[
+   'Mostrando 10 de '+visible.length+' incidencias del filtro; descarga el JSON para revisar todas.']:[])
+ ];
+ list.replaceChildren(...lines.map(line=>{
+  const li=document.createElement('li');li.textContent=line;return li;
+ }));
+}
 function refreshMotion(){
  const p=part();
  try{
@@ -107,43 +169,8 @@ function refreshMotion(){
       ' · Y1/Y2 no paralelos: '+review.ramTiltApproximationMaxMm.toFixed(3)+
        ' mm de incertidumbre en '+review.ramTiltApproximatedIntervals+
        ' intervalos':'');
-    const list=$('machineAxisFindings');
-    if(list){
-     const lines=[
-      'Estado: '+review.status+' · sin validación de choque físico ni certificación CNC',
-      ...(review.missingCad?.length?[
-       'CAD pendiente: '+review.missingCad.join(', ')]:[]),
-      ...(review.uniquePendingPairs?[
-       'COBERTURA INCOMPLETA: '+review.uniquePendingPairs+
-       ' parejas de componentes sin CAD válido o sin modelar; '+
-       review.pairIntervalsMissing+' evaluaciones omitidas. Nunca se interpretan como libres.']:[]),
-      ...(review.missingPairExamples||[]).slice(0,12).map(p=>
-       'Sin comprobar '+p.moving+' / '+p.against+' (intervalo '+
-       p.interval+'): '+p.reason),
-      ...(review.ramTiltApproximatedIntervals?[
-       'Trancha/amarres superiores: movimiento Y1/Y2 DIFERENCIAL; desplazamiento medio de modelo, desviación de hasta '+
-        review.ramTiltApproximationMaxMm.toFixed(3)+
-        ' mm, NO certificado ni geometría de viga inclinada']:[]),
-      ...(review.events||[]).slice(0,10).map(hit=>{
-       const full=Number(hit.startTime).toFixed(3)+'–'+
-        Number(hit.endTime).toFixed(3)+' s';
-       const window=hit.impactWindowSeconds;
-       const detail=Array.isArray(window)?
-        ' · primera penetración MODELADA acotada '+window.map(n=>
-         Number(n).toFixed(3)).join('–')+' s':
-        ' · instante de penetración no localizado ('+
-         (hit.impactWindowStatus||'sin evidencia')+')';
-       return full+' · '+hit.moving+' / '+hit.against+
-        ' · '+(hit.evidenceLabel||'interferencia no clasificada')+detail;
-      }),
-      ...(!review.events?.length?[
-       'Sin solapes entre poses comprobadas no significa recorrido físico libre de colisiones']:[]),
-      ...(review.events?.length>10?['Solo se muestran los primeros 10 avisos; descarga el informe completo']:[])
-     ];
-     list.replaceChildren(...lines.map(line=>{
-      const li=document.createElement('li');li.textContent=line;return li;
-     }));
-    }
+    lastAxisReview=review;
+    renderAxisFindings(review);
     const mounts=$('machineAxisMountInterfaces');
     if(mounts){
      const items=review.assemblyInterfacesPending||[];
@@ -303,6 +330,9 @@ function installer(){
   event.target.value='';
  });
   $('machineAxisCheck')?.addEventListener('click',refreshMotion);
+ $('machineAxisEvolutionFilter')?.addEventListener('change',()=>{
+  if(lastAxisReview)renderAxisFindings(lastAxisReview);
+ });
  $('machineAxisReportDownload')?.addEventListener('click',()=>{
   try{
    const p=part();
