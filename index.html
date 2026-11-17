@@ -383,6 +383,11 @@
 <summary>Diagnóstico CAD/CNC · cuerpos, intervalos, pruebas y datos pendientes</summary>
 <p class="hint">Diferencia solapes entre dos perfiles DXF declarados, solapes entre DXF y geometría paramétrica, e incidencias sobre envolventes provisionales. El análisis NO permite afirmar que hay un choque físico real o que la trayectoria no presenta colisiones. Solo evalúa intervalos lineales de chapa inmóvil con registros CNC y datum aplicables.</p>
 <ul class="hint" id="machineAxisFindings" aria-label="Interferencias y evidencias por cuerpo"><li>Importa y comprueba un recorrido para ver hallazgos por cuerpo y tiempo.</li></ul>
+<details class="px-tech-details" id="machineAxisMountedInterfacesPanel">
+<summary>Interfaces de montaje excluidas del detector de choque rígido</summary>
+<p class="hint">El contacto entre viga, portaherramientas y punzón, o entre mesa, matriz, adaptador y soportes, puede formar parte del ensamblaje normal. No se muestra como alarma de movimiento; tampoco se considera montado correctamente ni libre de interferencias hasta verificar CAD de amarres, datums y tornillería de la máquina real.</p>
+<ul class="hint" id="machineAxisMountInterfaces" aria-label="Interfaces de montaje que requieren verificación CAD"><li>Importa un recorrido para consultar qué interfaces no pueden certificarse automáticamente.</li></ul>
+</details>
 <div class="inline-actions"><button type="button" id="machineAxisReportDownload">Exportar informe CAD/CNC con evidencias (JSON)</button></div>
 </details>
 </article>
