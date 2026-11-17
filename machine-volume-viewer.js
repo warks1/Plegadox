@@ -18,6 +18,7 @@ import {gaugeSolidStyle} from './machine-solid-gauge-style.js';
 import {visibleVolumeFaces} from './machine-volume-layers.js';
 import {browserRenderBudget,readQuality,saveQuality} from './adaptive-render-budget.js';
 import {canvasRenderSize} from './machine-canvas-memory-r131.js';
+import {boundCncGaugeStatus} from './machine-cnc-gauge-semaphore-r136.js';
 
 const palette=Object.freeze({
  sheet:[73,169,210],punch:[174,197,218],die:[100,137,169],
@@ -99,7 +100,7 @@ export function axisRelativeTrails(motion,mapping,model){
  }
  return result;
 }
-function paint(ctx,w,h,faces,trails,camera,maxFaces,gaugeEvidence){
+function paint(ctx,w,h,faces,trails,camera,maxFaces,gaugeEvidence,cncGaugeStatus=null){
  ctx.fillStyle='#091726';ctx.fillRect(0,0,w,h);
  if(!faces.length){
   ctx.fillStyle='#f0b46d';ctx.font='14px system-ui';
@@ -164,9 +165,20 @@ function paint(ctx,w,h,faces,trails,camera,maxFaces,gaugeEvidence){
  ctx.fillStyle='#d5efe1';
  const color=gaugeStyle.level==='red'?'ROJO':
   gaugeStyle.level==='green'?'VERDE':'NARANJA';
- ctx.fillText('TOPE: '+color+
+ ctx.fillText('TOPE: '+color+' · 2D'+
   (gaugeStyle.provisional?' · Z provisional (línea discontinua)':
    ' · Z de DXF declarada sin certificar'),12,39);
+ const cncColors={red:'#f38f85',amber:'#efc381',green:'#86dbc1',
+  neutral:'#b2c2d4'};
+ const cncLabels={
+  red:'CNC: ROJO · PENETRACIÓN MODELADA (no certificada)',
+  amber:'CNC: NARANJA · RIESGO/CONTORNO A REVISAR',
+  green:'CNC: VERDE · SIN PENETRACIÓN MODELADA (no certificada)',
+  neutral:'CNC: SIN EVIDENCIA APLICABLE (NO es colisión)'
+ };
+ const cncLevel=cncGaugeStatus?.level||'neutral';
+ ctx.fillStyle=cncColors[cncLevel]||cncColors.neutral;
+ ctx.fillText(cncLabels[cncLevel]||cncLabels.neutral,12,57);
  ctx.font='11px system-ui';ctx.fillStyle='#bed3e1';
  ctx.fillText('Orbitar: arrastrar · Zoom: pellizcar o rueda · Ocultar capas NO desactiva avisos',12,h-13);
 }
@@ -175,6 +187,7 @@ function install(){
  const button=document.getElementById('machineSolidToggle');
  const status=document.getElementById('machineSolidStatus');
  const gaugeStatus=document.getElementById('machineGaugeEvidence');
+ const cncGaugeStatusNode=document.getElementById('machineCncGaugeEvidence');
  const chooser=document.getElementById('machineRenderQuality');
  if(!canvas||!button)return;
  let enabled=false;
@@ -234,7 +247,14 @@ function install(){
    const frame=frameCache.get(state.piece,state.sim.time,budget.maxFaces);
    const {model,mesh,trails,trailEvidence,gauge}=frame;
    const visibleFaces=visibleVolumeFaces(mesh.faces,window.PLEGADOX_MACHINE_VIEW);
-   paint(ctx,w,h,visibleFaces,trails,camera,budget.maxFaces,gauge);
+   const cncGauge=boundCncGaugeStatus(
+    window.PLEGADOX_CNC_GAUGE_SNAPSHOT,{
+     pieceKey:motionPieceKey(state.piece),
+     machineId:getActiveMachineProfile().id,
+     machineConfigKey:machineConfigurationKey(getActiveMachineConfig()),
+     sceneTime:state.sim.time
+    });
+   paint(ctx,w,h,visibleFaces,trails,camera,budget.maxFaces,gauge,cncGauge);
    const missing=model.missingCadComponents.join(', ');
    const message='Sólidos dibujados: '+visibleFaces.length+' de '+mesh.faces.length+' caras · Galaxy: '+bitmap.pixelCount.toLocaleString()+
     ' píxeles'+(bitmap.capped?' (protección memoria)':'')+
@@ -247,6 +267,13 @@ function install(){
    if(status&&status.textContent!==message)setStatus(message);
    if(gaugeStatus&&gaugeStatus.textContent!==gauge.message)
     gaugeStatus.textContent=gauge.message;
+   if(cncGaugeStatusNode){
+    cncGaugeStatusNode.dataset.level=cncGauge.level;
+    const note='CNC DEL TOPE · '+cncGauge.headline+' · '+cncGauge.reason+
+     ' · Traza SIN sincronizar con un fotograma real de CNC ni certificar.';
+    if(cncGaugeStatusNode.textContent!==note)
+     cncGaugeStatusNode.textContent=note;
+   }
   }catch(error){
    setStatus('No se pudo dibujar el sólido: '+String(error?.message||error));
   }
@@ -308,6 +335,7 @@ function install(){
  window.addEventListener('resize',refreshBudget,{passive:true});
  window.addEventListener('plegadox:viewportChanged',refreshBudget);
  window.addEventListener('plegadox:machineChanged',()=>{frameCache.invalidate();render(true);});
+ window.addEventListener('plegadox:cncGaugeReview',()=>render(true));
  window.addEventListener('plegadox:pieceChanged',()=>{frameCache.invalidate();render(true);});
  window.PLEGADOX_SOLID_RENDER=()=>render(false);
  window.PLEGADOX_SOLID_RENDER_FORCE=()=>render(true);

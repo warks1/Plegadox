@@ -1,5 +1,15 @@
 # Plegadox — control y simulador de plegado
 
+## Estado actual · R136 (v0.9.110) · 17 de noviembre de 2026
+
+- **Semáforos separados para el tope:** la pose 2D sigue teniendo su diagnóstico propio y el recorrido CNC tiene una segunda leyenda 3D: rojo sólo para interferencias nuevas modeladas entre DOS DXF, naranja para riesgo provisional o solape previo, neutro para ausencia de datos o trazas obsoletas y verde exclusivamente para un modelo completo sin penetración.
+- **No más naranja por falta de CNC:** el dato desconocido figura en gris, con explicación; nunca se interpreta como contacto detectado ni como aprobación.
+- **Vinculación obligatoria:** la señal del recorrido CNC exige la misma pieza, configuración CAD/máquina y fase inmóvil de chapa. No se utiliza para repintar un fotograma 3D no sincronizado.
+- **Galaxy:** el aviso se actualiza sin reconstruir los sólidos al orbitar; caché R131 protegida.
+- **Build:** PLEGADOX-20261117-R136 · 0.9.110 · [Informe R136](./R136_SEMAFOROS_INDEPENDIENTES_TOPE_CNC.md). Sin certificación de CAD OEM, contacto físico ni recorridos CNC.
+
+
+
 ## Estado actual · R135 (v0.9.109) · 17 de noviembre de 2026
 
 - **Semáforo de interferencias explicable:** el diagnóstico CAD/CNC diferencia una penetración NUEVA creada durante la carrera, una penetración TRANSITORIA entre poses y un solape PREEXISTENTE en el datum. Ninguno se descarta como seguro por su antigüedad.

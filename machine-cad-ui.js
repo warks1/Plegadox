@@ -6,6 +6,7 @@ import {getActiveMachineProfile} from './machine-selection.js';
 import {MOTION_AXES,normalizeAxisMotion,motionPieceKey,
  assessAxisMotion,saveAxisMotion,loadAxisMotion} from './machine-axis-motion.js';
 import {loadAxisMapping,saveAxisMapping,scanAxisCADMovement} from './machine-axis-geometry.js';
+import {classifyCncGaugeSemaphore} from './machine-cnc-gauge-semaphore-r136.js';
 import {loadGaugeFingers,saveGaugeFingers,clearGaugeFingers,gaugeSectionFingerprint} from './machine-gauge-fingers.js';
 import './cad-evidence-ui.js';
 
@@ -134,6 +135,31 @@ function renderAxisFindings(review){
 }
 function refreshMotion(){
  const p=part();
+ // Los resultados anteriores quedan inmediatamente obsoletos cuando
+ // cambia la pieza, la selección de máquina o el montaje CAD.
+ const publish=report=>{
+  const snapshot={
+   pieceKey:p?motionPieceKey(p):null,
+   machineId:getActiveMachineProfile().id,
+   machineConfigKey:machineConfigurationKey(getActiveMachineConfig()),
+   referenceSceneTime:report?.checked===true?
+    loadAxisMapping(localStorage)?.referenceSceneTime:null,
+   status:classifyCncGaugeSemaphore(report)
+  };
+  const node=$('machineCncGaugeEvidence');
+  if(node){
+   node.dataset.level=snapshot.status.level;
+   node.textContent='CNC DEL TOPE · '+snapshot.status.headline+
+    ' · '+snapshot.status.reason+
+    ' · Diagnóstico de traza, NO pose actual ni certificación física.';
+  }
+  if(typeof window!=='undefined'){
+   window.PLEGADOX_CNC_GAUGE_SNAPSHOT=snapshot;
+   window.dispatchEvent(new CustomEvent('plegadox:cncGaugeReview',{
+    detail:snapshot
+   }));
+  }
+ };
  try{
   const program=loadAxisMotion(localStorage);
   const status=program&&p&&program.pieceKey!==motionPieceKey(p)?
@@ -171,6 +197,7 @@ function refreshMotion(){
        ' intervalos':'');
     lastAxisReview=review;
     renderAxisFindings(review);
+    publish(review);
     const mounts=$('machineAxisMountInterfaces');
     if(mounts){
      const items=review.assemblyInterfacesPending||[];
@@ -182,13 +209,16 @@ function refreshMotion(){
      }));
     }
    }
-  }catch(error){extra=' · calibración inválida: '+error.message;}
+  }catch(error){extra=' · calibración inválida: '+error.message;
+   publish(null);
+  }
   say('machineAxisStatus',
    'Trazas Y1/Y2/X/R/Z1/Z2: '+status.status+
    (status.checked?' · '+status.posesChecked+' posiciones · '+
     status.violations.length+' infracciones':' · sin comprobación de ejes aplicable')+
    extra+'. No constituye validación de colisiones ni certificación industrial.');
- }catch(error){say('machineAxisStatus','Error al leer registro de ejes: '+error.message,true);}
+ }catch(error){publish(null);
+  say('machineAxisStatus','Error al leer registro de ejes: '+error.message,true);}
 }
 function download(filename,content){
  const blob=new Blob([content],{type:'application/json'});
@@ -354,6 +384,39 @@ function installer(){
   }
  });
  window.addEventListener('plegadox:machineChanged',refreshMotion);
+ // En Galaxy, modificar una cota de pieza NO debe volver a recorrer
+ // automáticamente cientos de pares CAD. Invalidar en O(1) y ofrecer
+ // comprobación explícita (botón de ejes). El visor 3D ya escucha
+ // pieceChanged, así que tampoco se añade un render duplicado aquí.
+ const invalidateCncSnapshot=reason=>{
+  lastAxisReview=null;
+  if(typeof window!=='undefined')
+   window.PLEGADOX_CNC_GAUGE_SNAPSHOT=null;
+  const node=$('machineCncGaugeEvidence');
+  if(node){
+   node.dataset.level='neutral';
+   node.textContent='CNC DEL TOPE · SIN EVIDENCIA CNC SUFICIENTE · '+reason+
+    ' · Vuelve a comprobar ejes/CAD; no supone colisión.';
+  }
+  say('machineAxisStatus',reason+
+   '. Revisa ejes, montaje y datum y pulsa Comprobar. Sin aprobación CNC.');
+ };
+ window.addEventListener('plegadox:pieceChanged',()=>{
+  const p=part();
+  const latest=p?motionPieceKey(p):null;
+  if(window.PLEGADOX_CNC_GAUGE_SNAPSHOT?.pieceKey!==latest)
+   invalidateCncSnapshot('La pieza o el orden han cambiado');
+ });
+ window.addEventListener('storage',event=>{
+  if(event?.key===null||[
+   'plegadox:axis-cad-mapping:v1','plegadox:machine-motion:v1',
+   'plegadox:machine-cad:v1','plegadox:piece:v1'
+  ].includes(event.key)){
+   invalidateCncSnapshot('El registro CAD/CNC cambió en otra pestaña');
+   // Solo el estado textual cambia. No recalcular sin que el usuario
+   // solicite el análisis físico.
+  }
+ });
  try{refreshCAD();refreshMotion();refreshGaugeFingerZ();}
  catch(error){say('machineCadStatus','Datos CAD guardados no legibles: '+error.message,true);}
 }

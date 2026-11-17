@@ -1782,3 +1782,11 @@ body.px-immersive-open{overflow:hidden!important;touch-action:pan-x pan-y}
 /* En Galaxy con poca memoria no quitar herramientas ni ocultar controles. */
 :root[data-render-tier=eco] .cp-machine-frame::before{opacity:.08!important}
 :root[data-render-tier=eco] .cp-machine-frame::after{box-shadow:none!important}
+
+/* R136: CNC y vista 2D tienen evidencias distintas. Neutro NO es naranja
+   ni ausencia certificada de colisiones. Colorear texto, no un resumen. */
+.px-cnc-gauge-status{display:block;color:#465c70;line-height:1.5;font-weight:700;}
+.px-cnc-gauge-status[data-level="red"]{color:#a32930;}
+.px-cnc-gauge-status[data-level="amber"]{color:#87520b;}
+.px-cnc-gauge-status[data-level="green"]{color:#176443;}
+.px-cnc-gauge-status[data-level="neutral"]{color:#465c70;}
