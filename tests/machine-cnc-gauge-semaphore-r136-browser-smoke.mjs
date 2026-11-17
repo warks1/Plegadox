@@ -103,6 +103,8 @@ try{
  assert.match(state.text,/ROJO · PENETRACIÓN NUEVA MODELADA DEL TOPE/);
  assert.match(state.text,/SIN sincronizar/);
  assert.match(state.planar,/diagnóstico de sección 2D/);
+ await page.locator('#machineCncGaugeEvidence').screenshot({
+  path:'test-results/r136-galaxy-cnc-tope-dual-status.png'});
  // El nuevo semáforo no invalida triángulos en cada movimiento del ratón.
  const before=state.stats;
  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('plegadox:cncGaugeReview',{
@@ -134,8 +136,6 @@ try{
  assert.equal(exported.certified,false);
  assert.ok(exported.report.events.some(e=>
   e.moving==='gauge'&&e.against==='bed'&&e.createdDuringThisInterval));
- await page.locator('#machineCncGaugeEvidence').screenshot({
-  path:'test-results/r136-galaxy-cnc-tope-dual-status.png'});
  assert.deepEqual(errors,[]);
  console.log('R136_GALAXY_DUAL_GAUGE_STATUS_NO_FALSE_ORANGE_AND_CACHE_OK');
  await context.close();
