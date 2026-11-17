@@ -90,13 +90,21 @@ function refreshMotion(){
      (e?' (2 DXF: '+e.cadPairCount+
       ', mixtos: '+e.mixedCount+
       ', provisionales: '+e.provisionalCount+')':'')+
-     ' · intervalos sin resolver '+review.unresolved;
+     ' · intervalos sin resolver '+review.unresolved+
+     (review.ramTiltApproximatedIntervals?
+      ' · Y1/Y2 no paralelos: '+review.ramTiltApproximationMaxMm.toFixed(3)+
+       ' mm de incertidumbre en '+review.ramTiltApproximatedIntervals+
+       ' intervalos':'');
     const list=$('machineAxisFindings');
     if(list){
      const lines=[
       'Estado: '+review.status+' · sin validación de choque físico ni certificación CNC',
       ...(review.missingCad?.length?[
        'CAD pendiente: '+review.missingCad.join(', ')]:[]),
+      ...(review.ramTiltApproximatedIntervals?[
+       'Trancha/amarres superiores: movimiento Y1/Y2 DIFERENCIAL; desplazamiento medio de modelo, desviación de hasta '+
+        review.ramTiltApproximationMaxMm.toFixed(3)+
+        ' mm, NO certificado ni geometría de viga inclinada']:[]),
       ...(review.events||[]).slice(0,10).map(hit=>
        Number(hit.startTime).toFixed(3)+'–'+Number(hit.endTime).toFixed(3)+
        ' s · '+hit.moving+' / '+hit.against+' · '+
