@@ -55,6 +55,7 @@ jobs:
               tests/titanium-selected-splash-r32-smoke.mjs
               tests/splash-viewport-r35-smoke.mjs
               tests/splash-delay-r140-browser-smoke.mjs
+              tests/splash-cache-r141-browser-smoke.mjs
               tests/browser-smoke.mjs
               tests/responsive-smoke.mjs
               tests/studio-smoke.mjs

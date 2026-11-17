@@ -1,5 +1,12 @@
 # Plegadox — control y simulador de plegado
 
+## Estado actual · R141 (v0.9.115) · 17 de noviembre de 2026
+
+- **Arranque premium más estable con caché instalada:** la imagen del Boceto 1 y su documento HTML se obtienen primero de la caché de esta revisión para evitar esperas de red repetidas en Galaxy, iPhone y tablet.
+- HTML principal y módulos CAD siguen buscando la versión nueva en red y usando la copia local sólo cuando no hay conexión.
+- **Build:** PLEGADOX-20261117-R141 · 0.9.115 · [Informe R141](./R141_SPLASH_CACHE_INSTALADA.md).
+- Pruebas nuevas de caché versionada y arranque sin conexión; sin modificaciones de piezas ni datos CAD.
+
 ## Estado actual · R140 (v0.9.114) · 17 de noviembre de 2026
 
 - El cierre espera a que cargue y se decodifique la imagen premium, incluso si los módulos terminan primero. Espera máxima de seguridad de 6 segundos ante imagen inaccesible, para no bloquear el modo offline.

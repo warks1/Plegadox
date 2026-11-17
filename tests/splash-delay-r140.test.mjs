@@ -17,8 +17,9 @@ test('R140: la app no se destapa antes de que aparezca la fotografía de carga',
 test('R140: versión y caché correctas sin borrar datos',()=>{
  const b=JSON.parse(read('build-info.json')),pkg=JSON.parse(read('package.json'));
  const h=read('index.html'),sw=read('sw.js'),about=read('software-about.js');
- assert.equal(b.build,'PLEGADOX-20261117-R140');
- assert.equal(b.version,'0.9.114');
+ assert.match(b.build,/^PLEGADOX-\d{8}-R\d+$/);
+ assert.ok(Number(b.build.match(/R(\d+)$/)?.[1])>=140);
+ assert.match(b.version,/^0\.9\.\d+$/);
  assert.equal(pkg.version,b.version);
  assert.ok(h.includes('const BUILD="'+b.build+'"'));
  assert.ok(sw.includes(b.cache));

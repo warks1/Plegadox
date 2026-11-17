@@ -1,5 +1,11 @@
 // PlegadoX · caché offline estática. Se versiona para no arrastrar JS obsoleto.
-const CACHE='plegadox-static-0.9.114-safe-sw-r140';
+const CACHE='plegadox-static-0.9.115-safe-sw-r141';
+// Sólo el arte aprobado del splash usa la copia versionada local primero.
+// Evita volver a descargar el PNG grande en cada arranque de Galaxy.
+const SPLASH_ASSETS=new Set([
+ new URL('./plegadox-premium-selected.png',self.registration.scope).pathname,
+ new URL('./splash-foto-premium.html',self.registration.scope).pathname
+]);
 const APP_FILES=[
  "./",
  "./app.js",
@@ -139,6 +145,20 @@ self.addEventListener('fetch',event=>{
    try{return await fetch(request);}
    catch{return (await caches.match(request))||
       (await caches.match('./index.html'))||Response.error();}
+  })());
+  return;
+ }
+ if(SPLASH_ASSETS.has(new URL(request.url).pathname)){
+  event.respondWith((async()=>{
+   const cache=await caches.open(CACHE);
+   const cached=await cache.match(request);
+   if(cached)return cached;
+   // Instalación nueva: descargar y conservar el arte, sin duplicar peticiones.
+   try{
+    const response=await fetch(request);
+    if(response.ok)await cache.put(request,response.clone());
+    return response;
+   }catch{return Response.error();}
   })());
   return;
  }
