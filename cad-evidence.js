@@ -697,7 +697,7 @@ export function cadCoverage(machineId,imports={}){
  if(!required)throw Error('Plegadora sin inventario CAD disponible');
  const local=imports&&typeof imports==='object'?imports:{};
  const has=kind=>Array.isArray(local[kind]?.points)&&
-  local[kind].points.length>=3;
+  local[kind].points.length>0;
  const sources=kind=>{
   if(has(kind))return [kind];
   if(['stop','support'].includes(kind)&&has(kind+'Z1')&&has(kind+'Z2'))
