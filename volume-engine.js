@@ -10,7 +10,8 @@ import {normalized,getTooling} from './engine.js';
 import {getActiveMachineConfig,gaugeOutline} from './machine-config.js';
 import {gaugePlacement} from './backgauge-placement.js';
 import {sheetSolidMesh} from './sheet-solid.js';
-import {loadMachineCad,positionMachineCad} from './machine-cad.js';
+import {loadMachineCad,positionMachineCad,machineConfigurationKey} from './machine-cad.js';
+import {loadGaugeFingers,gaugeFingerSlices} from './machine-gauge-fingers.js';
 import {machineRamEnvelope} from './machine-ram-envelope.js';
 const EPS=1e-8;
 const v=(x,y)=>({x,y});
@@ -106,7 +107,7 @@ function strip(a,b,t){
  return [v(a.x+nx,a.y+ny),v(b.x+nx,b.y+ny),
   v(b.x-nx,b.y-ny),v(a.x-nx,a.y-ny)];
 }
-export function buildVolumeScene(scene,{machine=getActiveMachineConfig(),machineCAD=null}={}){
+export function buildVolumeScene(scene,{machine=getActiveMachineConfig(),machineCAD=null,gaugeFingers=null}={}){
  const p=normalized(scene.piece);
  // Los perfiles DXF sólo se usan si el fichero y su colocación están
  // explícitamente dados. Las cotas L* no se convierten en CAD inventado.
@@ -173,10 +174,35 @@ export function buildVolumeScene(scene,{machine=getActiveMachineConfig(),machine
   .map(q=>v(q.x+origin.x,q.y+origin.y));
  // Se desconoce el ancho y la posición Z del dedo real; adoptar el ancho
  // de pieza es una ENVOLVENTE CONSERVADORA de posible contacto, no su volumen.
- const gauge=cadPrism(stopNumber===2?'support':'stop',
-  'tope-CAD-'+stopNumber,origin)||
+ const activeKind=stopNumber===2?'support':'stop';
+ const gauge=cadPrism(activeKind,'tope-CAD-'+stopNumber,origin)||
   makePrism('tope-'+stopNumber,gaugePolygon,-half,half,
    'Z-del-dedo-desconocida-envolvente-conservadora');
+ // Dos dedos FÍSICOS, Z1 y Z2, sólo si se importó su mismo perfil DXF
+ // y el operario declaró intervalos Z con cero y pose de referencia.
+ // La antigua envolvente ancha se conserva como marcador para 2D y
+ // para versiones previas, pero no participa en colisiones ni dibujo
+ // si ambos dedos han sido modelados en la pose exacta.
+ let fingersRecord=gaugeFingers,gaugeFingerLoadError=null;
+ if(fingersRecord===null&&typeof localStorage!=='undefined'){
+  try{fingersRecord=loadGaugeFingers(localStorage);}
+  catch(error){gaugeFingerLoadError=String(error?.message||error);}
+ }
+ const fingerReview=gaugeFingerSlices(fingersRecord,{
+  machineConfigKey:machineConfigurationKey(machine),profileKind:activeKind,
+  sceneTime:scene.sceneTime,gauge
+ });
+ if(gaugeFingerLoadError){
+  fingerReview.status='COTAS_Z_NO_LEGIBLES';
+  fingerReview.reason=gaugeFingerLoadError;
+ }
+ const gaugePair=fingerReview.modeled?
+  Object.fromEntries(fingerReview.slices.map(slice=>[
+   'gauge'+slice.axis,makePrism(slice.id,slice.polygon,
+    slice.zMin,slice.zMax,slice.provenance)
+  ])):{};
+ const gaugeReferenceOnly=fingerReview.modeled&&
+  Object.values(gaugePair).every(s=>s.valid);
  // R109: los amarres, adaptadores y apoyos delanteros sólo se añaden
  // si existe su perfil CAD y un datum X/Y/Z declarado. NUNCA sustituir
  // un adaptador WILA por el contorno de otro sistema como si fuera OEM.
@@ -200,7 +226,8 @@ export function buildVolumeScene(scene,{machine=getActiveMachineConfig(),machine
  const componentsRequired=['ram','bed',stopNumber===2?'support':'stop',
   ...Object.keys(extraComponents)];
  return {sheet:segments,objects:{punch:punchPrism,die:diePrism,
-   ram,bed,gauge,...extras},
+   ram,bed,gauge,...gaugePair,...extras},
+  gaugeReferenceOnly,gaugeFingerReview:fingerReview,
   gaugePlacement:placement,
   cadProfilesUsed:usedCAD,cadImportError:cadError,
   missingCadComponents:componentsRequired
@@ -231,6 +258,7 @@ export function inspectVolumeFrame(scene,options={}){
  const model=buildVolumeScene(scene,options);
  const issues=[];
  for(const [kind,solid] of Object.entries(model.objects)){
+  if(kind==='gauge'&&model.gaugeReferenceOnly)continue;
   let maxVolume=0,segment=null,unknown=false;
   for(let i=0;i<model.sheet.length;i++){
    const overlap=prismOverlap(model.sheet[i],solid);
