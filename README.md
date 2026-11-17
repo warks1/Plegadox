@@ -1,5 +1,15 @@
 # Plegadox — control y simulador de plegado
 
+## Estado actual · R137 (v0.9.111) · 17 de noviembre de 2026
+
+- **Arranque nativo Android:** corrige la declaración `any maskable` del PNG premium transparente. Nuevo icono adaptable SVG con fondo azul-negro opaco y la P cromada dentro de la zona segura, sin cuadro blanco añadido por una máscara defectuosa.
+- **PlegadoX en la pantalla del sistema:** nombre corto y `background_color` unificados con el splash HTML premium elegido, que **no se altera**; iconos iPhone y escritorio intactos.
+- **Caché PWA:** instala el icono nuevo sin borrar piezas. El icono de una PWA ya instalada puede necesitar que Chrome actualice su WebAPK o, tras respaldo de piezas, una reinstalación.
+- **Pruebas:** validación de manifiesto, SVG sin transparencia en esquinas y navegación Chrome Galaxy emulada; no sustituye una prueba visual con Android físico.
+- **Build:** PLEGADOX-20261117-R137 · 0.9.111 · [Informe R137](./R137_ANDROID_SPLASH_MASKABLE.md).
+
+
+
 ## Estado actual · R136 (v0.9.110) · 17 de noviembre de 2026
 
 - **Semáforos separados para el tope:** la pose 2D sigue teniendo su diagnóstico propio y el recorrido CNC tiene una segunda leyenda 3D: rojo sólo para interferencias nuevas modeladas entre DOS DXF, naranja para riesgo provisional o solape previo, neutro para ausencia de datos o trazas obsoletas y verde exclusivamente para un modelo completo sin penetración.
