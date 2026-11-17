@@ -1,5 +1,5 @@
 // PlegadoX · caché offline estática. Se versiona para no arrastrar JS obsoleto.
-const CACHE='plegadox-static-0.9.110-safe-sw-r136';
+const CACHE='plegadox-static-0.9.111-safe-sw-r137';
 const APP_FILES=[
  "./",
  "./app.js",
@@ -21,6 +21,7 @@ const APP_FILES=[
  "./dxf-export.js",
  "./engine.js",
  "./favicon.svg",
+ "./icon-android-maskable.svg",
  "./icon-180.png",
  "./icon-192.png",
  "./icon-512.png",

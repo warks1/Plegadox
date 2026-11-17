@@ -1,13 +1,13 @@
 {
-  "name": "PlegadoX · Taller de plegado",
+  "name": "PlegadoX",
   "short_name": "PlegadoX",
   "description": "Programación, geometría y simulación orientativa de plegado de chapa",
   "lang": "es",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#030d18",
-  "theme_color": "#081927",
+  "background_color": "#060c16",
+  "theme_color": "#060c16",
   "icons": [
     {
       "src": "./icon-premium-192.png",
@@ -19,13 +19,19 @@
       "src": "./icon-premium-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "./favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
+    },
+    {
+      "src": "./icon-android-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
     }
   ]
 }
