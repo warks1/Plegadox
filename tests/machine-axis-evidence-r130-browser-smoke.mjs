@@ -61,8 +61,8 @@ try{
   document.getElementById('machineAxisCheck').click();
   return {piece,trace,mapping,machineId};
  });
- await page.waitForFunction(()=>document.getElementById('machineAxisStatus')?
-  .textContent.includes('2 DXF:'),null,{timeout:20000});
+ await page.waitForFunction(()=>document.getElementById('machineAxisStatus')?.
+  textContent.includes('2 DXF:'),null,{timeout:20000});
  const status=await page.locator('#machineAxisStatus').textContent();
  assert.match(status,/solapes MODELADOS/);
  const finding=await page.locator('#machineAxisFindings').textContent();
