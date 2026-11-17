@@ -12,7 +12,7 @@ Fecha: 17/11/2026 · Versión: 0.9.100
 - Se ha corregido una expresión regular con doble barra invertida que rechazaba **todos** los nombres de archivos locales `.dxf` y `.zip`. El importador ya reconoce los ficheros DXF ASCII y ZIP admitidos.
 - Un DXF declarado en pulgadas deja de presentar una opción ambigua de selección de contorno: permanece bloqueado con el motivo real de unidades no milimétricas. La geometría fuera del plano XY también sigue rechazada.
 - Prueba con Chromium sobre archivo punzón/matriz válido, persistencia y rechazo de pulgadas/no plano: `tests/tool-dxf-browser-smoke.mjs`.
-- Enlaces oficiales nuevos: [Eurostamp 1015 pata de cabra 88° R3 H88,5](https://eurostampsrl.it/en/10556/punches-88/1015-punch-88) y [Eurostamp 1063 recto 88° R0,8 H104,65](https://eurostampsrl.it/en/9775/punches-88-amada/1063-punches-88), con los DXF públicos `1015.dxf` y `1063.dxf` catalogados **como pendientes de descargar, revisar y colocar**. No son sólidos de máquina montados ni pruebas de amarre.
+- Enlaces oficiales revisados (1015 ya catalogado, 1063 incorporado): [Eurostamp 1015 pata de cabra 88° R3 H88,5](https://eurostampsrl.it/en/10556/punches-88/1015-punch-88) y [Eurostamp 1063 recto 88° R0,8 H104,65](https://eurostampsrl.it/en/9775/punches-88-amada/1063-punches-88), con los DXF públicos `1015.dxf` y `1063.dxf` catalogados **como pendientes de descargar, revisar y colocar**. No son sólidos de máquina montados ni pruebas de amarre.
 
 ## Validación
 - `tests/machine-solids-r126.test.mjs`: caché, invalidación, procedencia de ejes y semáforo.
