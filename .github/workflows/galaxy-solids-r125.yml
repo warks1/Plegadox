@@ -22,6 +22,10 @@ on:
       - 'machine-swept-broadphase-r132.js'
       - 'tests/machine-swept-broadphase-r132-browser-smoke.mjs'
       - 'machine-interference-pairs-r133.js'
+      - 'machine-mount-compatibility-r133.js'
+      - 'tests/machine-interference-matrix-r133-browser-smoke.mjs'
+      - 'cad-evidence-ui.js'
+      - 'machine-interference-pairs-r133.js'
       - 'tests/machine-interference-matrix-r133-browser-smoke.mjs'
       - 'cad-evidence-ui.js'
       - 'cad-evidence.js'
@@ -73,6 +77,8 @@ jobs:
         run: node tests/machine-ram-galaxy-r131-browser-smoke.mjs
       - name: Verificar descartes 3D sin falsos negativos y nuevas matrices OEM en Galaxy
         run: node tests/machine-swept-broadphase-r132-browser-smoke.mjs
+      - name: Auditar montajes OEM y parejas de interferencia sin CAD en Galaxy
+        run: node tests/machine-interference-matrix-r133-browser-smoke.mjs
       - name: Auditar parejas CAD y montajes sin falsos libres de colisiones en Galaxy
         run: node tests/machine-interference-matrix-r133-browser-smoke.mjs
       - name: Adjuntar capturas
@@ -89,6 +95,7 @@ jobs:
             test-results/r130-*.png
             test-results/r131-*.png
             test-results/r132-*.png
+            test-results/r133-*.png
             test-results/r133-*.png
           if-no-files-found: warn
           retention-days: 20
