@@ -11,7 +11,7 @@ export function assessGaugeDepth(sheet,gauge){
   overlapMm:null,verified:false};
  if(!gauge?.valid||!Number.isFinite(gauge.zMin)||
     !Number.isFinite(gauge.zMax)||gauge.zMax<=gauge.zMin)
-  return {kind:'cad-dedo-invalido',knownZ:false,contactAvailable:null,
+  return {kind:'cad-dedo-invalido',knownZ:true,contactAvailable:null,
    overlapMm:null,verified:false};
  if(!Array.isArray(sheet)||!sheet.length||
   sheet.some(s=>!s?.valid||!Number.isFinite(s.zMin)||
