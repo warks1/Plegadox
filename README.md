@@ -3,7 +3,7 @@
 ## Estado actual · R134 (v0.9.108) · 17 de noviembre de 2026
 
 - **Intervalos CNC más informativos:** el barrido 2,5D calcula una ventana aproximada de la **primera penetración modelada** entre dos poses de ejes, sin atribuir el cruce al tramo entero ni inventar un instante de choque físico.
-- **Sin perder incidencias por rendimiento:** hasta 12 ventanas refinadas por informe (máximo ocho subdivisiones cada una); el resto de los eventos conservan la advertencia con la marca temporal pendiente. Se permiten límites configurables.
+- **Sin perder incidencias por rendimiento:** hasta 12 ventanas refinadas por informe (máximo diez subdivisiones cada una); el resto de los eventos conservan la advertencia con la marca temporal pendiente. Se permiten límites configurables.
 - **En Galaxy y PC:** Máquina → Recorridos físicos de ejes → Diagnóstico CAD/CNC muestra los intervalos del modelo y permite exportar JSON con la incertidumbre explícita.
 - **Build:** PLEGADOX-20261117-R134 · 0.9.108 · [Informe R134](./R134_INICIO_PENETRACION_CNC.md). No certifica OEM/CNC, colisiones físicas ni primer contacto.
 
