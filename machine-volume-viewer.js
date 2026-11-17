@@ -14,6 +14,8 @@ import {getActiveMachineProfile} from './machine-selection.js';
 import {createSolidFrameCache} from './machine-solid-frame-cache.js';
 import {assessTrailEvidence} from './machine-axis-trail-evidence.js';
 import {describeGaugeVisualEvidence} from './machine-gauge-evidence.js';
+import {gaugeSolidStyle} from './machine-solid-gauge-style.js';
+import {visibleVolumeFaces} from './machine-volume-layers.js';
 import {browserRenderBudget,readQuality,saveQuality} from './adaptive-render-budget.js';
 
 const palette=Object.freeze({
@@ -90,7 +92,7 @@ export function axisRelativeTrails(motion,mapping,model){
  }
  return result;
 }
-function paint(ctx,w,h,faces,trails,camera,maxFaces){
+function paint(ctx,w,h,faces,trails,camera,maxFaces,gaugeEvidence){
  ctx.fillStyle='#091726';ctx.fillRect(0,0,w,h);
  if(!faces.length){
   ctx.fillStyle='#f0b46d';ctx.font='14px system-ui';
@@ -114,8 +116,10 @@ function paint(ctx,w,h,faces,trails,camera,maxFaces){
  const project=p=>({x:w/2+(p.x-centerX)*sc+camera.panX,
   y:h/2-(p.y-centerY)*sc+camera.panY});
  prepared.sort((a,b)=>a.depth-b.depth);
+ const gaugeStyle=gaugeSolidStyle(gaugeEvidence);
  for(const face of prepared){
-  const base=palette[face.kind]||[120,145,155];
+  const special=face.kind==='gauge';
+  const base=special?gaugeStyle.color:(palette[face.kind]||[120,145,155]);
   const span=face.vertices;
   const dx=span[1].x-span[0].x,dy=span[1].y-span[0].y;
   const light=face.surface==='side'?.86:face.surface==='front'?1.08:.68;
@@ -123,9 +127,17 @@ function paint(ctx,w,h,faces,trails,camera,maxFaces){
   ctx.beginPath();
   span.forEach((p,i)=>{const v=project(p);if(i===0)ctx.moveTo(v.x,v.y);else ctx.lineTo(v.x,v.y);});
   ctx.closePath();
-  ctx.fillStyle='rgb('+base.map(v=>Math.round(clamp(v*shade,0,255))).join(',')+')';
+  const rgb=base.map(v=>Math.round(clamp(v*shade,0,255))).join(',');
+  const provisional=special&&gaugeStyle.provisional;
+  ctx.fillStyle=provisional?'rgba('+rgb+','+gaugeStyle.fillAlpha+')':
+   'rgb('+rgb+')';
   ctx.fill();
-  ctx.strokeStyle='rgba(223,243,255,.21)';ctx.lineWidth=.65;ctx.stroke();
+  ctx.save();
+  ctx.strokeStyle=provisional?'rgba(255,231,171,.8)':'rgba(223,243,255,.21)';
+  ctx.lineWidth=provisional?1.1:.65;
+  if(provisional)ctx.setLineDash([4,3]);
+  ctx.stroke();
+  ctx.restore();
  }
  ctx.save();ctx.strokeStyle='#edc58a';ctx.lineWidth=1.5;
  ctx.setLineDash([5,4]);
@@ -141,8 +153,15 @@ function paint(ctx,w,h,faces,trails,camera,maxFaces){
  ctx.restore();
  ctx.fillStyle='#eef6fd';ctx.font='700 12px system-ui';
  ctx.fillText('MALLA VOLUMÉTRICA 3D · SIN CERTIFICACIÓN OEM/CNC',12,21);
+ ctx.font='700 11px system-ui';
+ ctx.fillStyle='#d5efe1';
+ const color=gaugeStyle.level==='red'?'ROJO':
+  gaugeStyle.level==='green'?'VERDE':'NARANJA';
+ ctx.fillText('TOPE: '+color+
+  (gaugeStyle.provisional?' · Z provisional (línea discontinua)':
+   ' · Z de DXF declarada sin certificar'),12,39);
  ctx.font='11px system-ui';ctx.fillStyle='#bed3e1';
- ctx.fillText('Orbitar: arrastrar · Zoom: pellizcar o rueda · Ejes: traza relativa declarada',12,h-13);
+ ctx.fillText('Orbitar: arrastrar · Zoom: pellizcar o rueda · Ocultar capas NO desactiva avisos',12,h-13);
 }
 function install(){
  const canvas=document.getElementById('machineSolidCanvas');
@@ -179,7 +198,7 @@ function install(){
     reason:'Error de validación de ejes: '+String(error?.message||error)};
   }
   return {model,mesh,trails,trailEvidence,
-   gauge:describeGaugeVisualEvidence(model.gaugePlacement,model.objects.gauge)};
+   gauge:describeGaugeVisualEvidence(model.gaugePlacement,model.objects.gauge,model.sheet)};
  });
  window.PLEGADOX_SOLID_RENDER_STATS=()=>frameCache.stats;
  window.PLEGADOX_GRAPHICS_BUDGET=()=>budget;
@@ -202,9 +221,10 @@ function install(){
   try{
    const frame=frameCache.get(state.piece,state.sim.time,budget.maxFaces);
    const {model,mesh,trails,trailEvidence,gauge}=frame;
-   paint(ctx,w,h,mesh.faces,trails,camera,budget.maxFaces);
+   const visibleFaces=visibleVolumeFaces(mesh.faces,window.PLEGADOX_MACHINE_VIEW);
+   paint(ctx,w,h,visibleFaces,trails,camera,budget.maxFaces,gauge);
    const missing=model.missingCadComponents.join(', ');
-   const message='Sólidos dibujados: '+mesh.faces.length+' caras · CAD de máquina importado: '+
+   const message='Sólidos dibujados: '+visibleFaces.length+' de '+mesh.faces.length+' caras · CAD de máquina importado: '+
     (mesh.importedKinds.join(', ')||'ninguno')+'. Faltan: '+(missing||'ninguno')+
     (mesh.omitted.length?'. Omitidos: '+mesh.omitted.join(', '):'')+
     '. Recorridos: '+trailEvidence.reason+
@@ -274,6 +294,8 @@ function install(){
  window.addEventListener('plegadox:machineChanged',()=>{frameCache.invalidate();render(true);});
  window.addEventListener('plegadox:pieceChanged',()=>{frameCache.invalidate();render(true);});
  window.PLEGADOX_SOLID_RENDER=()=>render(false);
+ window.PLEGADOX_SOLID_RENDER_FORCE=()=>render(true);
+ window.addEventListener('plegadox:visualChanged',()=>render(true));
  refreshBudget();
 }
 if(typeof document!=='undefined')install();
