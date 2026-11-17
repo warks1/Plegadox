@@ -24,7 +24,7 @@ export function describeGaugeVisualEvidence(placement,gauge,sheet=null){
   'Perfil CAD con intervalos Z solapados '+depth.overlapMm.toFixed(2)+
    ' mm; geometría y montaje SIN validación CNC.':
   depth.knownZ?
-  'Geometría longitudinal incompleta: no puede comprobarse la coincidencia Z.':
+  'Existe perfil CAD DXF importado con Z incompleta; el montaje sigue sin verificar físicamente y no puede comprobarse la coincidencia transversal.':
   'Z real del dedo no documentada: el visor usa una envolvente provisional de toda la anchura; el solape aparente no demuestra colisión 3D.';
  return {level,code:outside?'tope-fuera-de-z':planar.code||'sin-incidencia-2d',
   knownZ:depth.knownZ,depth,planarLevel:planar.level,
