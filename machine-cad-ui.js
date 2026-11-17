@@ -42,14 +42,26 @@ function refreshGaugeFingerZ(){
    say('machineGaugeZStatus','Cotas Z de otra revisión de máquina: quedan conservadas pero BLOQUEADAS. Vuelve a medir y registrar.',true);
    return;
   }
-  const activeCad=loadMachineCad(localStorage)[saved.profileKind];
-  if(gaugeSectionFingerprint(activeCad)!==saved.profileFingerprint){
-   say('machineGaugeZStatus',
-    'CAD del dedo '+saved.profileKind+' cambiado o ausente: cotas Z1/Z2 BLOQUEADAS hasta volver a comprobar el perfil y montaje.',true);
-   return;
+  const library=loadMachineCad(localStorage);
+  if(saved.sameSectionConfirmed){
+   if(gaugeSectionFingerprint(library[saved.profileKind])!==saved.profileFingerprint){
+    say('machineGaugeZStatus',
+     'DXF común de '+saved.profileKind+' cambiado o ausente: cotas Z1/Z2 BLOQUEADAS.',true);
+    return;
+   }
+  }else{
+   const changed=['Z1','Z2'].filter(axis=>
+    gaugeSectionFingerprint(library[saved.profileKind+axis])!==
+     saved.profileFingerprints?.[axis]);
+   if(changed.length){
+    say('machineGaugeZStatus','CAD individual de '+changed.join(' y ')+
+     ' cambiado o ausente. Bloqueadas cotas Z1/Z2 hasta volver a verificarlas.',true);
+    return;
+   }
   }
   const format=key=>key+' '+saved.fingers[key].zMin+'…'+saved.fingers[key].zMax+' mm';
   say('machineGaugeZStatus','Z1 y Z2 declarados para '+saved.profileKind+
+   (saved.sameSectionConfirmed?' · perfil DXF compartido':' · dos DXF individuales')+
    ' · '+format('Z1')+' · '+format('Z2')+
    ' · solo pose '+saved.referenceSceneTime+' · '+saved.source+
    '. NO certifica recorridos, montaje, colisiones ni seguridad CNC.');
@@ -93,16 +105,27 @@ function installer(){
   try{
    const source=$('machineGaugeZSource').value.trim();
    const profileKind=$('machineGaugeZKind').value;
-   const sourceCAD=loadMachineCad(localStorage)[profileKind];
-   const profileFingerprint=gaugeSectionFingerprint(sourceCAD);
-   if(!profileFingerprint)
-    throw Error('Importa primero el DXF real del dedo '+profileKind+
-     ' en el panel CAD y comprueba su montaje.');
+   const shared=$('machineGaugeZIdentical').checked;
+   const rows=loadMachineCad(localStorage);
+   let profileFingerprint=null,profileFingerprints=null;
+   if(shared){
+    profileFingerprint=gaugeSectionFingerprint(rows[profileKind]);
+    if(!profileFingerprint)
+     throw Error('Importa primero el DXF común del dedo '+profileKind+
+      ' en el panel CAD y comprueba su montaje.');
+   }else{
+    profileFingerprints=Object.fromEntries(['Z1','Z2'].map(axis=>[
+     axis,gaugeSectionFingerprint(rows[profileKind+axis])]));
+    const missing=['Z1','Z2'].filter(axis=>!profileFingerprints[axis]);
+    if(missing.length)throw Error('Falta CAD propio de '+missing.join(', ')+
+     ': importa DXF '+missing.map(axis=>profileKind+axis).join(' y ')+
+     ' antes de registrar ambas cotas.');
+   }
    const row=saveGaugeFingers(localStorage,{
     version:1,unit:'mm',
     machineConfigKey:machineConfigurationKey(getActiveMachineConfig()),
-    profileKind,profileFingerprint,
-    sameSectionConfirmed:$('machineGaugeZIdentical').checked,
+    profileKind,profileFingerprint,profileFingerprints,
+    sameSectionConfirmed:shared,
     source,referenceSceneTime:$('machineGaugeZTime').value,
     fingers:{
      Z1:{zMin:$('machineGaugeZ1Min').value,zMax:$('machineGaugeZ1Max').value},
