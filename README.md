@@ -1,5 +1,14 @@
 # Plegadox — control y simulador de plegado
 
+## Estado actual · R142 (v0.9.116) · 17 de noviembre de 2026
+
+- **Candidato de distribución:** Windows 10/11 de 64 bits admite instalador desde USB y programa portátil sin instalación, ambos compilados desde los mismos archivos y probados en GitHub Actions. [Guía de instalación](./DISTRIBUCION_INSTALACION.md).
+- **Copias fuera del programa instalado:** en el USB siguen en `MIS_PROYECTOS`, y con el instalador en `%LOCALAPPDATA%\\PlegadoX\\MIS_PROYECTOS`. El servidor localhost comprueba Host también para HTML/JS, sin abrir puertos públicos.
+- **Instalador:** Inno Setup, icono, menú Inicio, acceso directo opcional, desinstalador, prueba real de instalación y desinstalación, hashes SHA256; los ejecutables aún no están firmados digitalmente.
+- **iPhone/iPad y Android:** versión PWA instalable desde Safari/Chrome; no se han publicado IPA/AAB firmados en App Store o Google Play. [Plan multiplataforma](./R142_DISTRIBUCION_WINDOWS_IOS_ANDROID.md).
+- **Límite industrial:** siguen pendientes CAD OEM completo, recorridos CNC medidos, validación física de colisiones y ensayos en dispositivos reales. Esto es una **release candidate funcional**, no una versión certificada para autorizar programas de máquina.
+- **Build:** PLEGADOX-20261117-R142 · 0.9.116. [Lista de preparación final](./FINAL_RELEASE_CHECKLIST.md).
+
 ## Estado actual · R141 (v0.9.115) · 17 de noviembre de 2026
 
 - **Arranque premium más estable con caché instalada:** la imagen del Boceto 1 y su documento HTML se obtienen primero de la caché de esta revisión para evitar esperas de red repetidas en Galaxy, iPhone y tablet.

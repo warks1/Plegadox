@@ -22,8 +22,9 @@ test('R141: recursos de carga premium usan caché de revisión antes de red',()=
 test('R141: versiones coherentes y datos de plegado preservados',()=>{
  const b=JSON.parse(read('build-info.json')),pkg=JSON.parse(read('package.json'));
  const h=read('index.html'),about=read('software-about.js'),sw=read('sw.js');
- assert.equal(b.version,'0.9.115');
- assert.equal(b.build,'PLEGADOX-20261117-R141');
+ assert.match(b.version,/^0\.9\.\d+$/);
+ assert.match(b.build,/^PLEGADOX-\d{8}-R\d+$/);
+ assert.ok(Number(b.build.match(/R(\d+)$/)?.[1])>=141);
  assert.equal(pkg.version,b.version);
  assert.ok(h.includes('const BUILD="'+b.build+'"'));
  assert.ok(about.includes("const BUILD='"+b.build+"'"));

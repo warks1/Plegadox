@@ -23,7 +23,7 @@ try{
    photo:!!(await store.match('./plegadox-premium-selected.png')),
    html:!!(await store.match('./splash-foto-premium.html'))};
  });
- assert.equal(cache.build,'PLEGADOX-20261117-R141');
+ assert.match(cache.build,/^PLEGADOX-\d{8}-R\d+$/);
  assert.equal(cache.photo,true,'PNG premium precargado');
  assert.equal(cache.html,true,'HTML premium precargado');
  await context.setOffline(true);
