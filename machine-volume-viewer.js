@@ -303,6 +303,7 @@ function install(){
  window.PLEGADOX_SOLID_RENDER=()=>render(false);
  window.PLEGADOX_SOLID_RENDER_FORCE=()=>render(true);
  window.addEventListener('plegadox:visualChanged',()=>render(true));
+ window.addEventListener('plegadox:simulationSeek',()=>render(true));
  refreshBudget();
 }
 if(typeof document!=='undefined')install();
