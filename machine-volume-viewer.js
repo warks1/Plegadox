@@ -198,6 +198,7 @@ function install(){
  };
  button.addEventListener('click',()=>{
   enabled=!enabled;canvas.hidden=!enabled;
+  canvas.closest('.cp-machine-frame')?.classList.toggle('px-solid-active',enabled);
   button.setAttribute('aria-pressed',String(enabled));
   button.textContent=enabled?'◈ Volver 2,5D':'◈ Sólidos 3D';
   setStatus(enabled?'Vista volumétrica activa; geometría sin certificar':
