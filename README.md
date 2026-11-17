@@ -1,5 +1,15 @@
 # Plegadox — control y simulador de plegado
 
+## Estado actual · R132 (v0.9.106) · 17 de noviembre de 2026
+
+- **Revisión 3D más eficiente y conservadora:** un filtro AABB temporal descarta parejas completamente separadas, reduciendo triangulaciones sin suprimir las colisiones que pueden ocurrir **entre** poses del CNC.
+- **Sin ocultar incertidumbre:** los cuerpos inválidos pasan al motor detallado; un AABB que se cruza no se presenta como choque. El panel de ejes muestra las parejas descartadas de forma segura.
+- **Más referencias OEM:** matrices Eurostamp 3163 V16/88° y 3165 V25/88° con ficha y DXF oficial enlazado; archivos aún **no importados ni verificados**. No duplicar el 1015 ya existente.
+- **Build:** PLEGADOX-20261117-R132 · 0.9.106 · [Informe técnico R132](./R132_BARRIDOS_CAD_FILTRO_EUROSTAMP.md).
+- **Seguridad:** continúa siendo simulación paramétrica sin certificación OEM/CNC completa, sin celdas 3D en maniobras de giro/deformación.
+
+
+
 ## Estado actual · R131 (v0.9.105) · 17 de noviembre de 2026
 
 - **Galaxy Chrome:** límite de resolución para evitar bitmaps 3D demasiado grandes en pantallas UHD, incluso en calidad alta. Eco: máximo 1,2 millones de píxeles; caché LRU de escenas y golpes recientes sin recalcular CAD al volver atrás.
