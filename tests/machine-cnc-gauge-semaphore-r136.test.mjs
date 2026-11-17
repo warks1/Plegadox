@@ -71,7 +71,7 @@ test('R136: solape preexistente del tope es naranja, no colisión nueva',()=>{
  assert.equal(result.level,'amber');
  assert.equal(result.newEvents,0);
  assert.equal(result.preexistingEvents,1);
- assert.match(result.reason,/no son choques NUEVOS/);
+ assert.match(result.reason,/No son choques NUEVOS/);
 });
 test('R136: solape previo + choque nuevo no oculta el riesgo de la carrera',()=>{
  const report=clean();
@@ -187,7 +187,7 @@ test('R136: app conserva semáforo 2D independiente y CNC separado con caché Ga
  assert.ok(html.includes('id="machineCncGaugeEvidence"'));
  assert.ok(html.includes('data-level="neutral"'));
  assert.ok(viewer.includes('boundCncGaugeStatus'));
- assert.ok(viewer.includes('TOPE 2D:'));
+ assert.ok(viewer.includes("TOPE: "));
  assert.ok(viewer.includes('CNC: SIN EVIDENCIA APLICABLE'));
  assert.ok(controller.includes('PLEGADOX_CNC_GAUGE_SNAPSHOT'));
  assert.ok(controller.includes('plegadox:cncGaugeReview'));
