@@ -16,6 +16,7 @@ import {technicalScene} from './technical-section.js';
 import {buildVolumeScene} from './volume-engine.js';
 import {sweptPrismPair,translatePrism} from './swept-volume.js';
 import {sweptBroadphase} from './machine-swept-broadphase-r132.js';
+import {planMachineInterferencePairs,pairGeometryAvailability} from './machine-interference-pairs-r133.js';
 import {normalizeAxisMotion,motionPieceKey} from './machine-axis-motion.js';
 import {machineConfigurationKey} from './machine-cad.js';
 import {getActiveMachineProfile} from './machine-selection.js';
@@ -144,33 +145,28 @@ export function scanAxisCADMovement(input,options={}){
  let broadphaseRejectedPairs=0,narrowphasePairsChecked=0,indeterminateBroadphasePairs=0;
  const zMode=options.machineCAD===undefined?'biblioteca local':
   'CAD de máquina facilitado';
- const pairs=[
-  ['ram','bed'],['ram','die'],['ram','gauge'],
-  ['punch','bed'],['punch','die'],['punch','gauge'],
-  ['gauge','die'],['gauge','bed'],
-  ['upperClamp','bed'],['upperClamp','die'],
-  ['upperClamp','gauge'],['upperClamp','lowerClamp'],
-  ['upperClamp','lowerAdapter'],['upperAdapter','die'],
-  ['upperAdapter','lowerClamp'],['upperAdapter','lowerAdapter'],
-  ['gauge','upperClamp'],['gauge','upperAdapter'],
-  ['gauge','lowerClamp'],['gauge','lowerAdapter'],
-  ['gauge','frontSupport'],['punch','lowerClamp'],
-  ['punch','lowerAdapter'],['ram','frontSupport']
- ];
- // Cuando la pose dispone de dos dedos CAD, no barrer el viejo prisma
- // de ancho total; examinar cada dedo junto a su propio Z1/Z2.
+ // Matriz integral de conjuntos: todas las combinaciones superior-
+ // inferior y topes, SIN doble inspección al invertir el orden.
+ // Montajes del mismo conjunto no se tratan como choques accidentales:
+ // quedan expresamente pendientes de cotejo de interfaces OEM.
+ const interferencePlan=planMachineInterferencePairs(twoFingers);
+ const reviewedPairs=interferencePlan.pairs;
  const fingerNames=twoFingers?['gaugeZ1','gaugeZ2']:['gauge'];
- const reviewedPairs=pairs.flatMap(([moving,against])=>{
-  const aa=moving==='gauge'?fingerNames:[moving];
-  const bb=against==='gauge'?fingerNames:[against];
-  return aa.flatMap(a=>bb.map(b=>[a,b]));
- });
- // El barrido propio de Z1 y Z2 también debe comprobar si los dos
- // dedos se encuentran entre sí, no sólo contra chapa o herramientas.
- if(twoFingers)reviewedPairs.push(['gaugeZ1','gaugeZ2']);
+ let pairIntervalsChecked=0,pairIntervalsMissing=0;
+ let cadCadPairIntervals=0,partlyProvisionalPairIntervals=0;
+ let sheetPairIntervalsMissing=0,suppressedEvents=0;
+ const pendingPairNames=new Set(),missingPairExamples=[];
+ const reportMissing=(moving,against,reason,interval)=>{
+  pairIntervalsMissing++;
+  const key=moving+' / '+against;
+  pendingPairNames.add(key);
+  if(missingPairExamples.length<24)missingPairExamples.push({
+   moving,against,interval,reason,certified:false
+  });
+ };
  const upperKinds=new Set(['ram','punch','upperClamp','upperAdapter']);
  const recordEvent=(sweep,kind,object,from,to,tiltApproximationMm=0)=>{
-  if(events.length>=120)return;
+  if(events.length>=120){suppressedEvents++;return;}
   const sourceMoving=base.objects[kind]?.provenance||'chapa de modelo';
   const sourceAgainst=base.objects[object]?.provenance||
    (object.startsWith('chapa-')?'malla-chapa-compartida':'envolvente provisional');
@@ -213,8 +209,14 @@ export function scanAxisCADMovement(input,options={}){
   catch(error){unresolved++;unknowns.push(String(error.message||error));continue;}
   intervalsChecked++;framesChecked+=2;
   for(const [moving,against] of reviewedPairs){
-   if(!a[moving]?.valid||!b[moving]?.valid||
-    !a[against]?.valid||!b[against]?.valid)continue;
+   const availability=pairGeometryAvailability(a,b,moving,against);
+   if(!availability.checkable){
+    reportMissing(moving,against,availability.missing.join(', '),i);
+    continue;
+   }
+   pairIntervalsChecked++;
+   if(availability.imported)cadCadPairIntervals++;
+   else partlyProvisionalPairIntervals++;
    const broad=sweptBroadphase(a[moving],b[moving],a[against],b[against]);
    if(!broad.mayOverlap){broadphaseRejectedPairs++;continue;}
    if(!broad.known)indeterminateBroadphasePairs++;
@@ -224,10 +226,20 @@ export function scanAxisCADMovement(input,options={}){
     tilt.meanApproximationErrorMm);
    else if(sweep.unknown)unresolved++;
   }
-  for(const moving of ['ram',...fingerNames,'upperClamp','upperAdapter',
-   'lowerClamp','lowerAdapter','frontSupport']){
-   if(!a[moving]?.valid||!b[moving]?.valid)continue;
+  for(const moving of interferencePlan.sheetSweptBodies){
    for(let n=0;n<a.sheet.length;n++){
+    const availability=pairGeometryAvailability(
+     {movingBody:a[moving],sheetBody:a.sheet[n]},
+     {movingBody:b[moving],sheetBody:b.sheet[n]},
+     'movingBody','sheetBody');
+    if(!availability.checkable){
+     sheetPairIntervalsMissing++;
+     reportMissing(moving,'chapa-'+(n+1),
+      availability.missing.join(', '),i);
+     continue;
+    }
+    pairIntervalsChecked++;
+    partlyProvisionalPairIntervals++;
     const broad=sweptBroadphase(a[moving],b[moving],a.sheet[n],b.sheet[n]);
     if(!broad.mayOverlap){broadphaseRejectedPairs++;continue;}
     if(!broad.known)indeterminateBroadphasePairs++;
@@ -251,6 +263,15 @@ export function scanAxisCADMovement(input,options={}){
   'upperClamp','lowerClamp','upperAdapter','lowerAdapter','frontSupport'];
  const missing=needed.filter(k=>!base.cadProfilesUsed.includes(k));
  if(missing.length)unknowns.push('CAD de máquina sin perfil referenciado: '+missing.join(', '));
+ if(pendingPairNames.size)unknowns.push(
+  'Parejas de interferencia NO evaluadas por falta de CAD/contorno válido: '+
+  [...pendingPairNames].slice(0,14).join(', ')+
+  (pendingPairNames.size>14?' y otras '+(pendingPairNames.size-14):'')+
+  '. Estos huecos no significan ausencia de colisión.');
+ unknowns.push('Interfaces de montaje del mismo conjunto NO certificadas: '+
+  interferencePlan.excludedAssemblyInterfaces.length+
+  ' uniones entre viga/amarres/útiles o mesa/matriz/soportes. '+
+  'No son pares de choque durante movimiento rígido; comprobar planos de montaje.');
  if(program.poses.length-1>intervalsChecked)unknowns.push(
   'Hay fases sin chapa inmóvil o sin correspondencia con la animación');
  if(ramTiltApproximatedIntervals)unknowns.push(
@@ -268,10 +289,14 @@ export function scanAxisCADMovement(input,options={}){
   unknowns.push('Perfil de matriz no acreditado con CAD OEM');
  if(genericV85)unknowns.push(
   'Identificación CNC histórica solo como V85; placa/número de serie sin verificar');
+ if(suppressedEvents)unknowns.push(
+  'La lista visual de incidencias alcanzó 120 eventos: se omitieron '+
+   suppressedEvents+' observaciones adicionales. El resultado NO es exhaustivo.');
  const evidenceSummary=summarizeAxisContacts(events);
  const riskStatus=events.length?
   evidenceSummary.status:
-  unresolved||missing.length||ramTiltApproximatedIntervals?
+  unresolved||missing.length||pairIntervalsMissing||
+   ramTiltApproximatedIntervals?
    'REVISION_CAD_CNC_INCOMPLETA':
   'INTERVALOS_LINEALES_REVISADOS_SIN_CERTIFICAR';
  return {status:riskStatus,evidenceSummary,
@@ -279,6 +304,12 @@ export function scanAxisCADMovement(input,options={}){
   unresolved,tiltUnresolved,
   ramTiltApproximatedIntervals,ramTiltApproximationMaxMm,
   broadphaseRejectedPairs,narrowphasePairsChecked,indeterminateBroadphasePairs,
+  pairIntervalsChecked,pairIntervalsMissing,uniquePendingPairs:pendingPairNames.size,
+  cadCadPairIntervals,partlyProvisionalPairIntervals,sheetPairIntervalsMissing,
+  excludedAssemblyInterfaceCount:interferencePlan.excludedAssemblyInterfaces.length,
+  collisionPairPlanCount:reviewedPairs.length,
+  missingPairExamples,assemblyInterfacesPending:interferencePlan.excludedAssemblyInterfaces,
+  suppressedEvents,
   ramIndependentYGeometryModeled:false,
   cadProfilesUsed:base.cadProfilesUsed,missingCad:missing,
   axisFingerModeled:twoFingers?['Z1','Z2']:mapping.activeFinger,
@@ -292,6 +323,12 @@ export function scanAxisCADMovement(input,options={}){
    sampledIntervals:intervalsChecked,unresolvedIntervals:unresolved,
    ramTiltApproximatedIntervals,ramTiltApproximationMaxMm,
    broadphaseRejectedPairs,narrowphasePairsChecked,indeterminateBroadphasePairs,
+   pairIntervalsChecked,pairIntervalsMissing,uniquePendingPairs:pendingPairNames.size,
+   cadCadPairIntervals,partlyProvisionalPairIntervals,
+   sheetPairIntervalsMissing,
+   excludedAssemblyInterfaceCount:interferencePlan.excludedAssemblyInterfaces.length,
+   collisionPairPlanCount:reviewedPairs.length,
+   suppressedEvents,
    fullOEM:false,fullCNC:false},
   physicalCollisionCertified:false,
   evidence:zMode,events,unknown:unknowns,verified:false,
