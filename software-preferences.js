@@ -11,7 +11,7 @@ for(const [key,field] of Object.entries(PREFERENCE_FIELDS)){
  label.textContent=field.label;select.id='pref-'+key;
  for(const [value,text] of Object.entries(field.values))select.add(new Option(text,value));
  label.append(select);$('softwareFields').append(label);
- select.addEventListener('change',()=>{preferences[key]=select.value;apply(key==='speed');save();});
+ select.addEventListener('change',()=>{preferences[key]=select.value;apply(key==='speed');save();if(key==='performance')window.PLEGADOX_REDRAW?.();});
 }
 function apply(updateSpeed=true){
  for(const key of Object.keys(PREFERENCE_FIELDS)){

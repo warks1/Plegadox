@@ -1,5 +1,9 @@
 # Plegadox — control y simulador de plegado
 
+## R126 · Rendimiento en tablet y CAD descargados · 17 de noviembre de 2026
+
+Cálculo automático en Worker cancelable, modo gráfico ligero y repintados agrupados. 47 archivos CAD originales descargados con SHA-256 y acceso desde Máquina; cinco contornos leídos directamente y 42 pendientes de selección de capa/circuito. 796 pruebas superadas. Falta ensayo en Samsung y CAD de ensamblaje/recorridos de la unidad. [Detalle y fuentes](./CAD_RESEARCH_R126.md).
+
 ## R125 · Opciones de software · 17 de noviembre de 2026
 
 Nuevo apartado SOFTWARE con 11 preferencias persistentes de accesibilidad, controles, inicio y reproducción; exportación e importación JSON de preferencias y vista con límite de 64 KB; restablecimiento de interfaz. Cuatro perspectivas ilustrativas adicionales (panorámica, rasante, elevación pronunciada y profundidad mínima). No modifica piezas, útiles, cálculos ni orden manual. Las vistas siguen siendo 2,5D.

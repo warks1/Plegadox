@@ -1779,3 +1779,5 @@ html[data-pref-numbers=tabular] :is(input,select,output,.stat){font-variant-nume
 html[data-pref-scroll=smooth]{scroll-behavior:smooth}
 html[data-pref-motion=reduce] *,html[data-pref-motion=reduce] *::before,html[data-pref-motion=reduce] *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
 @media(prefers-reduced-motion:reduce){html[data-pref-motion=system] *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+.px-cad-download-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:12px;margin-top:16px}.px-cad-download-grid>div{padding:12px;border:1px solid #688ba5;border-radius:8px;overflow-wrap:anywhere}.px-cad-download-grid small{display:block;margin-top:6px}

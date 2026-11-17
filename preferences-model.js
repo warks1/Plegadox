@@ -1,4 +1,5 @@
 export const PREFERENCE_FIELDS=Object.freeze({
+ performance:{label:'Rendimiento gráfico',values:{auto:'Automático',light:'Ligero · tablet',quality:'Calidad máxima'},default:'auto'},
  textSize:{label:'Texto en controles',values:{standard:'Estándar',large:'Grande',extra:'Muy grande'},default:'standard'},
  density:{label:'Tamaño de botones',values:{standard:'Estándar',touch:'Táctil amplio'},default:'standard'},
  contrast:{label:'Bordes y foco',values:{standard:'Estándar',strong:'Reforzados'},default:'standard'},

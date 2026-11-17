@@ -1,0 +1,844 @@
+[
+  {
+    "id": "eurostamp-1017",
+    "cadUrl": "https://eurostampsrl.it/dxf/1017.dxf",
+    "sourceUrl": "https://eurostampsrl.it/en/10582/punches-88-amada/1017-punches-88",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "status": "downloaded",
+    "path": "cad-downloads/eurostamp-1017.dxf",
+    "bytes": 165395,
+    "sha256": "b08b405191fa340be8bae3ced3ecf03f694a39822507003b8a732583fedf58d0",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "eurostamp-1031",
+    "cadUrl": "https://eurostampsrl.it/dxf/1031.dxf",
+    "sourceUrl": "https://eurostampsrl.it/en/25415/punches-88/1031-punch-88",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "status": "downloaded",
+    "path": "cad-downloads/eurostamp-1031.dxf",
+    "bytes": 165462,
+    "sha256": "ddb1ceddfdec0989d37506ae60d0ec36ee7a2a762d0c968af6ac05f7f1aedb35",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-11850",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/11850.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/11850.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "11850.DXF",
+      "__MACOSX/._11850.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-11850.zip",
+    "bytes": 10043,
+    "sha256": "ce3b972e45b39d2f11a619aad1d3d545248382d3ee69eb12409e9a204d2d0df0",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-11849",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/11849.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/11849.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "11849.DXF",
+      "__MACOSX/._11849.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-11849.zip",
+    "bytes": 9895,
+    "sha256": "912c74ca76e0ec251076c6d2443d2249f19acc3777fe1609a31096c4f942f905",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-11831",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/11831.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/11831.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "11831.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-11831.zip",
+    "bytes": 8922,
+    "sha256": "39a066555d6588d4ac19208849068fc65dfe6f9e92d701dbe9c43f19abc65b42",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-11670",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/11670.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/11670.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "11670.DXF",
+      "__MACOSX/._11670.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-11670.zip",
+    "bytes": 9885,
+    "sha256": "677bbdada21c222d3e76bc8a3a04f4b5cf8daf69d170aee7d5ec4f523b7ae614",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-11835",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/11835.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/11835.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "11835.DXF",
+      "__MACOSX/._11835.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-11835.zip",
+    "bytes": 9990,
+    "sha256": "0e38d7c8c4bd8ce0c7881ed9057a5000c80094e124e8bd8f25d4ca7f0c24a7c4",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-11800",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/11800.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/11800.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "11800.DXF",
+      "__MACOSX/._11800.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-11800.zip",
+    "bytes": 9884,
+    "sha256": "67de5e634fa1e347d44791618457e63c77937cd9b700704f04402d06f1ea9f76",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-11840",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/11840.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/11840.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "11840.DXF",
+      "__MACOSX/._11840.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-11840.zip",
+    "bytes": 9925,
+    "sha256": "44d6e5456cfd0ca544043ba5d7b4b378ced4c325674ef2adb455bbebb211a6df",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-11232",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/11232.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/11232.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "11232.DXF",
+      "__MACOSX/._11232.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-11232.zip",
+    "bytes": 9834,
+    "sha256": "d910b702da284765d28838cbb22ea869166cb966d357459b662c2b686ae36147",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-25203",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/25203.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/25203.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "25203.DXF",
+      "__MACOSX/._25203.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-25203.zip",
+    "bytes": 9706,
+    "sha256": "4b3d7e9364a7b12ac4b472a05f79f876e7f642f4f6bcbf269997ee52417c2d32",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-25304",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/25304.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/25304.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "25304.DXF",
+      "__MACOSX/._25304.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-25304.zip",
+    "bytes": 9790,
+    "sha256": "8fcf1298d4f78337b681cb0b41aa5c9bec78ade6d00745fbea3f981a787bb317",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-25205",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/25205.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/25205.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "25205.DXF",
+      "__MACOSX/._25205.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-25205.zip",
+    "bytes": 9675,
+    "sha256": "21b2f0762dd489381b7d98277e64f3ca3693eca49b0b7d64a6aab4326fe5b50d",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-11780",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/11780.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/11780.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "11780.DXF",
+      "__MACOSX/._11780.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-11780.zip",
+    "bytes": 9935,
+    "sha256": "d72ca4d2a838609a5ad6f103dc2d1eff5e85e1c3e4552b7f66541ad83eb0497f",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-11880",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/11880.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/11880.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "11880.DXF",
+      "__MACOSX/._11880.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-11880.zip",
+    "bytes": 9836,
+    "sha256": "b60f320ab6371421fb2dddcf3e7aa41de9b380058539717b98629e0900d18cbe",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-11810",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/11810.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/11810.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "11810.DXF",
+      "__MACOSX/._11810.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-11810.zip",
+    "bytes": 9838,
+    "sha256": "668c0eed159e6f4555706e9ac7252c047ce3f75111700974dfbb86c351bbd08e",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-14153",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/14153.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/14153.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "14153.DXF",
+      "__MACOSX/._14153.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-14153.zip",
+    "bytes": 10031,
+    "sha256": "5b81e463a60c7a6b3c1b99c0126816b58bb19c8fdec011fcc07332db988bf746",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-14169",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/14169.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/14169.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "14169.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-14169.zip",
+    "bytes": 8992,
+    "sha256": "7d4489d5c7f09a3ee4bd115207ae4a76f9027926154720201d0cae8a6a517a03",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-25502",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/25502.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/25502.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "25502.DXF",
+      "__MACOSX/._25502.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-25502.zip",
+    "bytes": 9710,
+    "sha256": "13b7aa31c10e5de33f26a46969f129951b745b17cc5bb45cba47e7ad7b93f726",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-25403",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/25403.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/25403.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "25403.DXF",
+      "__MACOSX/._25403.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-25403.zip",
+    "bytes": 9674,
+    "sha256": "1aa69223e90c11f285f3b8f798e508715bdfce781f573b1bc6f126db866b5df0",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-25504",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/25504.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/25504.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "25504.DXF",
+      "__MACOSX/._25504.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-25504.zip",
+    "bytes": 9847,
+    "sha256": "83bcac7e1452996e47fb042262db0b39229e0497567a2475f9d0694967b66fa4",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-25405",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/25405.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/25405.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "25405.DXF",
+      "__MACOSX/._25405.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-25405.zip",
+    "bytes": 9691,
+    "sha256": "7d1bb129d1494468564d87b8d83d47a68b43f8fc505a67fee6083ed16473837a",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-25407",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/25407.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/25407.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "25407.DXF",
+      "__MACOSX/._25407.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-25407.zip",
+    "bytes": 9690,
+    "sha256": "e06bc49a293d7d2a51f6dc12de2f3748ab1a102e4f53741b3dc194547e53ab8b",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-25408",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/25408.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/25408.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "25408.DXF",
+      "__MACOSX/._25408.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-25408.zip",
+    "bytes": 9698,
+    "sha256": "b8fad8b93cecf79fec6aedc77ca5d9bcf3dbe965f88ec51200473a6258bfbd0b",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-24035",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/24035.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/24035.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "24035.DXF",
+      "__MACOSX/._24035.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-24035.zip",
+    "bytes": 9706,
+    "sha256": "743fb46f0f61dd6ef33ea4929e201208e7bcf6f2be086919d2f508487439702d",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "eurostamp-1015",
+    "cadUrl": "https://eurostampsrl.it/dxf/1015.dxf",
+    "sourceUrl": "https://eurostampsrl.it/en/10556/punches-88/1015-punch-88",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "status": "downloaded",
+    "path": "cad-downloads/eurostamp-1015.dxf",
+    "bytes": 167438,
+    "sha256": "4643f0c87f061b5587b47ac666249642b742896040ff8d9d5bbc85941b9e1fbf",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "eurostamp-1322",
+    "cadUrl": "https://eurostampsrl.it/dxf/1322.dxf",
+    "sourceUrl": "https://eurostampsrl.it/en/10651/punches-85/1322-punches-85",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "status": "downloaded",
+    "path": "cad-downloads/eurostamp-1322.dxf",
+    "bytes": 165391,
+    "sha256": "93efcb18befd5edbb2e7e45c4b65e492c6c46ab9f9f8d9b849518e48385aee0b",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "eurostamp-3041",
+    "cadUrl": "https://eurostampsrl.it/dxf/3041.dxf",
+    "sourceUrl": "https://eurostampsrl.it/en/13588/amadapromecam-dies/3041-flattening-hemming-tools-30",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "status": "downloaded",
+    "path": "cad-downloads/eurostamp-3041.dxf",
+    "bytes": 38166,
+    "sha256": "6344a3e71595331b06ffe3ad224246fd1944abdd1f8166a2a669d99a2425a696",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-22316",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/22316.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/22316.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "22316.DXF",
+      "__MACOSX/._22316.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-22316.zip",
+    "bytes": 9643,
+    "sha256": "027a48e705df645544509329972d1843fd634dc29a884063988f0146dbbf88cd",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-26221",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/26221.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/26221.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "26221.DXF",
+      "__MACOSX/._26221.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-26221.zip",
+    "bytes": 9743,
+    "sha256": "86dedc4b3e2fa85ba615a45a8259cde866fc6f361b6cf56df0583a00b18f0a5d",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "mate-bts-010153",
+    "cadUrl": "https://www.mate.com/downloads/PBT_DXF/BTS/010.153FA.dxf",
+    "sourceUrl": "https://www.mate.com/technical-resources/press-brake-tooling/press-brake-files/bts-punches/",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "status": "downloaded",
+    "path": "cad-downloads/mate-bts-010153.dxf",
+    "bytes": 51859,
+    "sha256": "92f7758311cb4e44fd4b56ddf3e89ba67d0437fc14c3c1c99458ada5bf6f36f4",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "soclam-2012-88",
+    "cadUrl": "https://www.soclam.com/wp-content/uploads/2026/05/2012_88.dxf",
+    "sourceUrl": "https://www.soclam.com/produit/matrice-amada-a-2-ves-a-88/",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "status": "failed",
+    "error": "HTTP Error 403: Forbidden",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "soclam-2015-88",
+    "cadUrl": "https://www.soclam.com/wp-content/uploads/2026/05/2015_88.dxf",
+    "sourceUrl": "https://www.soclam.com/produit/matrice-amada-a-2-ves-a-88/",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "status": "failed",
+    "error": "HTTP Error 403: Forbidden",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-22010",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/22010.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/22010.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "22010.DXF",
+      "__MACOSX/._22010.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-22010.zip",
+    "bytes": 9826,
+    "sha256": "49f39a12edcc9e9e9154b33c91ec6f15098cc360b82b6dfd1d83b0379bfd6ded",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-50430",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/50430.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/50430.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "50430.DXF",
+      "__MACOSX/._50430.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-50430.zip",
+    "bytes": 9973,
+    "sha256": "8e555737176a24881a8ff0582beb32cf04860dc53aacecb6b6750914ddef4eed",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-22308",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/22308.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/22308.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "22308.DXF",
+      "__MACOSX/._22308.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-22308.zip",
+    "bytes": 9711,
+    "sha256": "182c4b3104b4d29c6778dafffbc0a308888413743042aac8e1e4bc8fe06a6ded",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-11151",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/11151.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/11151.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "11151.DXF",
+      "__MACOSX/._11151.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-11151.zip",
+    "bytes": 9946,
+    "sha256": "69ded716897e89eb97d04468cd7c0caec9a78b94b2c5ced47147212b972326c3",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-11200",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/11200.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/11200.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "11200.DXF",
+      "__MACOSX/._11200.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-11200.zip",
+    "bytes": 9828,
+    "sha256": "e8cac53a9c477594f7589f42a9e9644d21dee9957044e2bce971f507fac3f2ad",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-10170",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/10170.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/10170.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "10170.DXF",
+      "__MACOSX/._10170.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-10170.zip",
+    "bytes": 9872,
+    "sha256": "12b146184ec60bb2cc4474db1718ccebacb8770c351bea0fc2a72e73690236f0",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-25406",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/25406.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/25406.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "25406.DXF",
+      "__MACOSX/._25406.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-25406.zip",
+    "bytes": 9702,
+    "sha256": "c5a72301cb626cde83edd07fcf0b387c81143681db67fb5582eb0d15fad94376",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-29351",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/29351.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/29351.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "29351.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-29351.zip",
+    "bytes": 8776,
+    "sha256": "4745bbfee842a7fcb30c33cd8f0518b3a5d08d0e9474c0af29e4efa21c8ffdb5",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-29353",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/29353.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/29353.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "29353.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-29353.zip",
+    "bytes": 8738,
+    "sha256": "d46dffd173240b9a2d43ece4615d45d8728a0e44d793dfc9ae3677137cba3aeb",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-25501",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/25501.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/25501.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "25501.DXF",
+      "__MACOSX/._25501.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-25501.zip",
+    "bytes": 9841,
+    "sha256": "07e86ab4405fe7c9b7a63fa22729b8e6779f1c39c0ce33ab7a2f8f7b82102d2f",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-29552",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/29552.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/29552.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "29552.DXF",
+      "__MACOSX/._29552.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-29552.zip",
+    "bytes": 9976,
+    "sha256": "0e34500e3f115c89339a37f90c72087f5eb21c94fccedb00e38247a0366c6d45",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-25500",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/25500.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/25500.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "25500.DXF",
+      "__MACOSX/._25500.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-25500.zip",
+    "bytes": 9818,
+    "sha256": "23c32446be8e96ff6469c462184684d1121928687f6a2e5acaa01ca9efb2402d",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-25202",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/25202.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/25202.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "25202.DXF",
+      "__MACOSX/._25202.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-25202.zip",
+    "bytes": 9792,
+    "sha256": "9d915e6522dd6d8ab5a9cc4e7ef709f2f49557b60cf14df26f477c8fc8650d94",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-25621",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/25621.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/25621.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "25621.DXF",
+      "__MACOSX/._25621.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-25621.zip",
+    "bytes": 9678,
+    "sha256": "4b57b848d1373510c65225462d0e113f38aa9fb7a2dedd284a5c9508105cd58e",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-14164",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/14164.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/14164.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "14164.DXF",
+      "__MACOSX/._14164.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-14164.zip",
+    "bytes": 10015,
+    "sha256": "e2a09602492c3b99b1d0059d01d8a7a212192b358111f837051974d3af03cfb4",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  },
+  {
+    "id": "ukb-60920",
+    "cadUrl": "https://daten.ukb-gmbh.de/dxf/zip/60920.DXF.zip",
+    "sourceUrl": "https://www.ukb-gmbh.de/en/60920.html",
+    "mounted": false,
+    "verifiedPhysical": false,
+    "entries": [
+      "60920.DXF",
+      "__MACOSX/._60920.DXF"
+    ],
+    "status": "downloaded",
+    "path": "cad-downloads/ukb-60920.zip",
+    "bytes": 9530,
+    "sha256": "29e37046d75c4945f2f7545a1bd32d36d38ea0c09fb6bce3d7a19008d4733637",
+    "checkedAt": "2026-11-17",
+    "geometryType": "DXF_SECTION_2D",
+    "installed": false
+  }
+]
