@@ -18,6 +18,7 @@ import {sweptPrismPair,translatePrism} from './swept-volume.js';
 import {sweptBroadphase} from './machine-swept-broadphase-r132.js';
 import {planMachineInterferencePairs,pairGeometryAvailability} from './machine-interference-pairs-r133.js';
 import {locateFirstModeledPenetration} from './machine-first-penetration-r134.js';
+import {classifySweptContactEvolution,summarizeContactEvolution} from './machine-contact-evolution-r135.js';
 import {normalizeAxisMotion,motionPieceKey} from './machine-axis-motion.js';
 import {machineConfigurationKey} from './machine-cad.js';
 import {getActiveMachineProfile} from './machine-selection.js';
@@ -185,6 +186,7 @@ export function scanAxisCADMovement(input,options={}){
   }else{
    impactWindowsPending++;
   }
+  const evolution=solids?classifySweptContactEvolution(...solids):null;
   const sourceMoving=base.objects[kind]?.provenance||'chapa de modelo';
   const sourceAgainst=base.objects[object]?.provenance||
    (object.startsWith('chapa-')?'malla-chapa-compartida':'envolvente provisional');
@@ -196,6 +198,13 @@ export function scanAxisCADMovement(input,options={}){
    startTime:from.time,endTime:to.time,
    modeledReason:sweep.reason,evidenceCode:evidence.code,
    evidenceLabel:evidence.label,
+   contactEvolutionCode:evolution?.code||'NO_CLASIFICADO',
+   contactEvolutionLabel:evolution?.label||'Causa temporal sin clasificar',
+   preexistingAtStart:evolution?.baselineAlreadyPresent===true,
+   createdDuringThisInterval:evolution?.createdDuringThisInterval===true,
+   initialOverlapMm3:evolution?.initialOverlapMm3??null,
+   finalOverlapMm3:evolution?.finalOverlapMm3??null,
+   relativeTranslationMm:evolution?.relativeTranslationMm??null,
    impactWindowSeconds:impact?.windowSeconds||null,
    impactWindowStatus:impact?.status||'PENDIENTE_PRESUPUESTO',
    impactWindowResolutionSeconds:impact?.widthSeconds??null,
@@ -325,13 +334,14 @@ export function scanAxisCADMovement(input,options={}){
   'No fue posible acotar '+impactWindowsUnresolved+
   ' ventanas del modelo por incertidumbre del barrido; el aviso se conserva.');
  const evidenceSummary=summarizeAxisContacts(events);
+ const contactEvolutionSummary=summarizeContactEvolution(events);
  const riskStatus=events.length?
   evidenceSummary.status:
   unresolved||missing.length||pairIntervalsMissing||
    ramTiltApproximatedIntervals?
    'REVISION_CAD_CNC_INCOMPLETA':
   'INTERVALOS_LINEALES_REVISADOS_SIN_CERTIFICAR';
- return {status:riskStatus,evidenceSummary,
+ return {status:riskStatus,evidenceSummary,contactEvolutionSummary,
   checked:intervalsChecked>0,intervalsChecked,framesChecked,
   unresolved,tiltUnresolved,
   ramTiltApproximatedIntervals,ramTiltApproximationMaxMm,
@@ -353,6 +363,7 @@ export function scanAxisCADMovement(input,options={}){
   machineIdentityGeneric:genericV85,
   gaugeCadKindsRequired:gaugeKinds,
   coverage:{machineCadPresent:needed.length-missing.length,
+   contactEvolution:contactEvolutionSummary,
    machineCadRequired:needed.length,missingCad:missing,
    sampledIntervals:intervalsChecked,unresolvedIntervals:unresolved,
    ramTiltApproximatedIntervals,ramTiltApproximationMaxMm,
