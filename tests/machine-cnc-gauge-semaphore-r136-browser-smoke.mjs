@@ -103,7 +103,7 @@ try{
  assert.match(state.text,/ROJO · PENETRACIÓN NUEVA MODELADA DEL TOPE/);
  assert.match(state.text,/SIN sincronizar/);
  assert.match(state.planar,/diagnóstico de sección 2D/);
- await page.locator('#machineCncGaugeEvidence').screenshot({
+ await page.locator('#machineSolidCanvas').screenshot({
   path:'test-results/r136-galaxy-cnc-tope-dual-status.png'});
  // El nuevo semáforo no invalida triángulos en cada movimiento del ratón.
  const before=state.stats;
