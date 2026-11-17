@@ -71,16 +71,16 @@ export function classifyCncGaugeSemaphore(report){
  */
 export function boundCncGaugeStatus(snapshot,{pieceKey,machineId,machineConfigKey,
  sceneTime=null}={}){
- if(Number.isFinite(sceneTime)&&Number.isFinite(snapshot?.referenceSceneTime)&&
-    Math.abs(sceneTime-snapshot.referenceSceneTime)>1e-7)
-  return neutral('OTRA_FASE_DE_CHAPA',
-   'Esta evidencia CNC corresponde a chapa inmóvil en otra fase de la '+
-   'secuencia; NO trasladar el color al fotograma actual');
  if(!snapshot||!pieceKey||!machineId||!machineConfigKey||
   snapshot.pieceKey!==pieceKey||snapshot.machineId!==machineId||
   snapshot.machineConfigKey!==machineConfigKey)
   return neutral('INFORME_DESACTUALIZADO',
    'El diagnóstico CNC mostrado pertenece a otra pieza, máquina o configuración');
+ if(Number.isFinite(sceneTime)&&Number.isFinite(snapshot.referenceSceneTime)&&
+    Math.abs(sceneTime-snapshot.referenceSceneTime)>1e-7)
+  return neutral('OTRA_FASE_DE_CHAPA',
+   'Esta evidencia CNC corresponde a chapa inmóvil en otra fase de la '+
+   'secuencia; NO trasladar el color al fotograma actual');
  return snapshot.status||neutral('SIN_EVIDENCIA_CNC',
   'No hay diagnóstico aplicable al tope');
 }
