@@ -116,6 +116,13 @@ try{
  assert.match(findings,/Sin comprobar/);
  assert.match(findings,/primera penetración MODELADA acotada/);
  assert.match(findings,/ram \/ bed/);
+ // Playwright sólo interactúa con controles de una pestaña VISIBLE.
+ await page.evaluate(()=>{
+  document.querySelector('.nav[data-tab="maquina"]').click();
+  document.getElementById('machineAxisEvidencePanel').open=true;
+ });
+ await page.waitForFunction(()=>document.getElementById('machineAxisEvolutionFilter')?.
+  getBoundingClientRect().width>80,null,{timeout:15000});
  const summary=await page.locator('#machineAxisEvolutionSummary').textContent();
  assert.match(summary,/penetraciones nuevas\/transitorias/);
  assert.match(summary,/solapes ya presentes al inicio/);
