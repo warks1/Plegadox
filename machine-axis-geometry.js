@@ -17,6 +17,7 @@ import {buildVolumeScene} from './volume-engine.js';
 import {sweptPrismPair,translatePrism} from './swept-volume.js';
 import {sweptBroadphase} from './machine-swept-broadphase-r132.js';
 import {planMachineInterferencePairs,pairGeometryAvailability} from './machine-interference-pairs-r133.js';
+import {locateFirstModeledPenetration} from './machine-first-penetration-r134.js';
 import {normalizeAxisMotion,motionPieceKey} from './machine-axis-motion.js';
 import {machineConfigurationKey} from './machine-cad.js';
 import {getActiveMachineProfile} from './machine-selection.js';
@@ -155,6 +156,11 @@ export function scanAxisCADMovement(input,options={}){
  let pairIntervalsChecked=0,pairIntervalsMissing=0;
  let cadCadPairIntervals=0,partlyProvisionalPairIntervals=0;
  let sheetPairIntervalsMissing=0,suppressedEvents=0;
+ // En una tablet no refinamos cientos de eventos: sólo un máximo
+ // acotado por informe. Los restantes conservan el aviso pero sin hora.
+ const maxTimedEvents=Math.max(0,Math.min(24,
+  Number.isInteger(options.maxTimedEvents)?options.maxTimedEvents:12));
+ let impactWindowsComputed=0,impactWindowsPending=0,impactWindowsUnresolved=0;
  const pendingPairNames=new Set(),missingPairExamples=[];
  const reportMissing=(moving,against,reason,interval)=>{
   pairIntervalsMissing++;
@@ -165,8 +171,20 @@ export function scanAxisCADMovement(input,options={}){
   });
  };
  const upperKinds=new Set(['ram','punch','upperClamp','upperAdapter']);
- const recordEvent=(sweep,kind,object,from,to,tiltApproximationMm=0)=>{
+ const recordEvent=(sweep,kind,object,from,to,tiltApproximationMm=0,
+   solids=null)=>{
   if(events.length>=120){suppressedEvents++;return;}
+  // Se localiza el PRIMER intervalo del modelo por subdivisión
+  // continua, no extrapolando un fotograma ni invocando el CNC.
+  let impact=null;
+  if(impactWindowsComputed<maxTimedEvents&&solids){
+   impactWindowsComputed++;
+   impact=locateFirstModeledPenetration(...solids,
+    from.time,to.time,{maxSteps:8,targetWindowSeconds:.02});
+   if(!impact.windowSeconds)impactWindowsUnresolved++;
+  }else{
+   impactWindowsPending++;
+  }
   const sourceMoving=base.objects[kind]?.provenance||'chapa de modelo';
   const sourceAgainst=base.objects[object]?.provenance||
    (object.startsWith('chapa-')?'malla-chapa-compartida':'envolvente provisional');
@@ -178,6 +196,12 @@ export function scanAxisCADMovement(input,options={}){
    startTime:from.time,endTime:to.time,
    modeledReason:sweep.reason,evidenceCode:evidence.code,
    evidenceLabel:evidence.label,
+   impactWindowSeconds:impact?.windowSeconds||null,
+   impactWindowStatus:impact?.status||'PENDIENTE_PRESUPUESTO',
+   impactWindowResolutionSeconds:impact?.widthSeconds??null,
+   impactWindowMethod:impact?.windowSeconds?
+    'bisección de barrido continuo lineal entre poses CNC declaradas':null,
+   firstPhysicalContactVerified:false,
    upperAssemblyTiltUnmodeled:evidence.upperAssemblyTiltUnmodeled===true,
    upperAssemblyYApproximationMm:upperAssemblyInvolved?tiltApproximationMm:0,
    sourceMoving,sourceAgainst,verified:false,
@@ -223,7 +247,8 @@ export function scanAxisCADMovement(input,options={}){
    narrowphasePairsChecked++;
    const sweep=sweptPrismPair(a[moving],b[moving],a[against],b[against]);
    if(sweep.intersects)recordEvent(sweep,moving,against,before,after,
-    tilt.meanApproximationErrorMm);
+    tilt.meanApproximationErrorMm,
+    [a[moving],b[moving],a[against],b[against]]);
    else if(sweep.unknown)unresolved++;
   }
   for(const moving of interferencePlan.sheetSweptBodies){
@@ -246,7 +271,8 @@ export function scanAxisCADMovement(input,options={}){
     narrowphasePairsChecked++;
     const sweep=sweptPrismPair(a[moving],b[moving],a.sheet[n],b.sheet[n]);
     if(sweep.intersects)recordEvent(sweep,moving,'chapa-'+(n+1),before,after,
-     tilt.meanApproximationErrorMm);
+     tilt.meanApproximationErrorMm,
+     [a[moving],b[moving],a.sheet[n],b.sheet[n]]);
     else if(sweep.unknown)unresolved++;
    }
   }
@@ -292,6 +318,12 @@ export function scanAxisCADMovement(input,options={}){
  if(suppressedEvents)unknowns.push(
   'La lista visual de incidencias alcanzó 120 eventos: se omitieron '+
    suppressedEvents+' observaciones adicionales. El resultado NO es exhaustivo.');
+ if(impactWindowsPending)unknowns.push(
+  'Localización temporal limitada en la tablet: '+impactWindowsPending+
+  ' avisos conservados sin intervalo refinado; revisar JSON y barrido completo.');
+ if(impactWindowsUnresolved)unknowns.push(
+  'No fue posible acotar '+impactWindowsUnresolved+
+  ' ventanas del modelo por incertidumbre del barrido; el aviso se conserva.');
  const evidenceSummary=summarizeAxisContacts(events);
  const riskStatus=events.length?
   evidenceSummary.status:
@@ -310,6 +342,8 @@ export function scanAxisCADMovement(input,options={}){
   collisionPairPlanCount:reviewedPairs.length,
   missingPairExamples,assemblyInterfacesPending:interferencePlan.excludedAssemblyInterfaces,
   suppressedEvents,
+  impactWindowsComputed,impactWindowsPending,impactWindowsUnresolved,
+  firstPhysicalContactVerified:false,
   ramIndependentYGeometryModeled:false,
   cadProfilesUsed:base.cadProfilesUsed,missingCad:missing,
   axisFingerModeled:twoFingers?['Z1','Z2']:mapping.activeFinger,
@@ -329,6 +363,8 @@ export function scanAxisCADMovement(input,options={}){
    excludedAssemblyInterfaceCount:interferencePlan.excludedAssemblyInterfaces.length,
    collisionPairPlanCount:reviewedPairs.length,
    suppressedEvents,
+   impactWindowsComputed,impactWindowsPending,impactWindowsUnresolved,
+   firstPhysicalContactVerified:false,
    fullOEM:false,fullCNC:false},
   physicalCollisionCertified:false,
   evidence:zMode,events,unknown:unknowns,verified:false,
