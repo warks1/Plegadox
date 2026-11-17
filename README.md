@@ -1,5 +1,14 @@
 # Plegadox — control y simulador de plegado
 
+## Estado actual · R133 (v0.9.107) · 17 de noviembre de 2026
+
+- **Matriz de interferencias física sin duplicados:** comprueba el conjunto superior contra todo el inferior, más cada dedo Stop/Support, con 29 combinaciones de dedo común o 39 para Z1/Z2 independientes. Los amarres montados sobre el mismo conjunto requieren comprobación estática distinta.
+- **Huecos visibles:** si falta un DXF o un perfil montado, el diagnóstico identifica qué pareja no puede comprobar y no interpreta esa ausencia como «sin colisiones».
+- **Amarres WILA/Promecam:** el catálogo advierte si se necesitaría adaptador superior, regleta inferior o geometría de amarre aún no contrastada. No propone equivalencias físicas por marca.
+- **Inventario de dedos:** Z1+Z2 separados cubren Stop/Support sin requerir un perfil común ficticio, pero no acreditan montaje OEM.
+- **Build:** PLEGADOX-20261117-R133 · 0.9.107 · [Informe R133](./R133_MATRIZ_INTERFERENCIAS_MONTAJES_CAD.md). Sin certificación industrial ni seguridad CNC.
+
+
 ## Estado actual · R132 (v0.9.106) · 17 de noviembre de 2026
 
 - **Revisión 3D más eficiente y conservadora:** un filtro AABB temporal descarta parejas completamente separadas, reduciendo triangulaciones sin suprimir las colisiones que pueden ocurrir **entre** poses del CNC.

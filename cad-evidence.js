@@ -696,10 +696,21 @@ export function cadCoverage(machineId,imports={}){
  const required=CAD_REQUIREMENTS[machineId];
  if(!required)throw Error('Plegadora sin inventario CAD disponible');
  const local=imports&&typeof imports==='object'?imports:{};
- const statuses=required.map(kind=>({kind,
-  imported:!!local[kind]?.points?.length,
-  verified:false,status:local[kind]?.points?.length?
-   'CONTORNO_IMPORTADO_MONTAJE_NO_VERIFICADO':'CAD_PENDIENTE'}));
+ const has=kind=>Array.isArray(local[kind]?.points)&&
+  local[kind].points.length>0;
+ const sources=kind=>{
+  if(has(kind))return [kind];
+  if(['stop','support'].includes(kind)&&has(kind+'Z1')&&has(kind+'Z2'))
+   return [kind+'Z1',kind+'Z2'];
+  return [];
+ };
+ // R133: dos DXF Z1+Z2 sustituye la sección genérica del dedo
+ // en el inventario, pero UN SOLO dedo nunca cubre la pareja.
+ const statuses=required.map(kind=>{
+  const coveredBy=sources(kind),imported=coveredBy.length>0;
+  return {kind,imported,coveredBy,verified:false,
+   status:imported?'CONTORNO_IMPORTADO_MONTAJE_NO_VERIFICADO':'CAD_PENDIENTE'};
+ });
  return {machineId,requiredCount:statuses.length,
   importedCount:statuses.filter(x=>x.imported).length,
   missing:statuses.filter(x=>!x.imported).map(x=>x.kind),
