@@ -70,9 +70,20 @@ for(const query of ['(pointer:coarse)','(hover:none)','(orientation:portrait)'])
  m.addEventListener?.('change',refresh);
 }
 if('ResizeObserver' in window){
+ // Chrome Android puede informar varios ResizeObserver idénticos por cuadro.
+ // Evitar que cada notificación fuerce repintar el CAD y todos los canvases.
+ const measured=new WeakMap();
  const ro=new ResizeObserver(entries=>{
-  if(entries.length)refresh();
-  schedulePaint();
+  let changed=false;
+  for(const entry of entries){
+   const width=Math.round(entry.contentRect.width*2)/2;
+   const height=Math.round(entry.contentRect.height*2)/2;
+   const key=width+'×'+height;
+   if(measured.get(entry.target)!==key){
+    measured.set(entry.target,key);changed=true;
+   }
+  }
+  if(changed){refresh();schedulePaint();}
  });
  for(const selector of watched){
   const el=document.querySelector(selector);
