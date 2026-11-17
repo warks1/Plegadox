@@ -1,0 +1,26 @@
+name: PlegadoX · importación DXF navegador
+on:
+  pull_request:
+    paths:
+      - 'tests/tool-dxf-browser-smoke.mjs'
+      - 'tool-import-ui.js'
+      - 'tool-dxf.js'
+      - '.github/workflows/dxf-browser-ci.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  dxf-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Preparar Chromium
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Validar importación DXF local
+        run: node tests/tool-dxf-browser-smoke.mjs

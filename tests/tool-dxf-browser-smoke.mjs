@@ -23,7 +23,18 @@ try{
  const file=page.locator('#toolDxfFile');
  await file.setInputFiles({name:'Pata-cabra-DXF.dxf',mimeType:'application/dxf',
   buffer:Buffer.from(dxf())});
- await page.waitForFunction(()=>!document.querySelector('#toolDxfCommit').disabled);
+ await page.waitForFunction(()=>!document.querySelector('#toolDxfCommit').disabled,
+   null,{timeout:12000}).catch(async e=>{
+   const report=await page.evaluate(()=>({
+    message:document.querySelector('#toolDxfStatus')?.textContent,
+    selected:document.querySelector('#toolDxfFile')?.files?.[0]?.name,
+    commitDisabled:document.querySelector('#toolDxfCommit')?.disabled,
+    layerVisible:!document.querySelector('.px-oem-layer-choice')?.hidden,
+    contourVisible:!document.querySelector('.px-oem-contour-choice')?.hidden
+   }));
+   throw Error('DXF no habilitado: '+JSON.stringify(report)+
+    '; errores navegador: '+errors.join(' | ')+'; '+e.message);
+  });
  assert.equal(await page.locator('#toolDxfCanvas').isVisible(),true);
  await page.locator('#toolDxfName').fill('Punzón pata de cabra DXF');
  await page.locator('#toolDxfCommit').click();

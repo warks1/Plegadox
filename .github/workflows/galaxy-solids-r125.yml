@@ -4,6 +4,10 @@ on:
     paths:
       - 'adaptive-render-budget.js'
       - 'machine-volume-viewer.js'
+      - 'machine-solid-frame-cache.js'
+      - 'machine-axis-trail-evidence.js'
+      - 'machine-gauge-evidence.js'
+      - 'tests/machine-volume-r126-browser-smoke.mjs'
       - 'app.js'
       - 'index.html'
       - 'styles.css'
@@ -28,11 +32,15 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Comprobar malla y respuesta Galaxy/PC
         run: node tests/machine-volume-r125-browser-smoke.mjs
+      - name: Comprobar caché orbital y causas del semáforo en Galaxy
+        run: node tests/machine-volume-r126-browser-smoke.mjs
       - name: Adjuntar capturas
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: plegadox-r125-galaxy-3d
-          path: test-results/r125-solids-*.png
+          path: |
+            test-results/r125-solids-*.png
+            test-results/r126-galaxy-*.png
           if-no-files-found: warn
           retention-days: 20

@@ -1,5 +1,15 @@
 # Plegadox — control y simulador de plegado
 
+## Estado actual · R126 (v0.9.100) · 17 de noviembre de 2026
+
+- **Samsung Galaxy Chrome:** caché de geometría para que orbitar/zoom no regenere cada sólido; invalida al cambiar pieza, golpe, máquina o CAD.
+- **Ejes coherentes:** bloquea visualización de trazas relativas procedentes de otra pieza, máquina o datum; los recorridos CNC siguen sin estar certificados.
+- **Tope y semáforo:** muestra el motivo preciso del color 2D y aclara que sin Z real del dedo un solape volumétrico provisional no demuestra colisión.
+- **Importación CAD:** reparado el reconocimiento de .dxf/.zip locales y el bloqueo explicativo de DXF en pulgadas. Ficha Eurostamp 1015 cotejada y 1063 añadida con enlaces DXF; ambos archivos siguen pendientes de importar y verificar.
+- **Build:** PLEGADOX-20261117-R126 · 0.9.100. Informe: [R126_GALAXY_CACHE_TOPE_CNC.md](./R126_GALAXY_CACHE_TOPE_CNC.md).
+
+
+
 ## Estado actual · R125 (v0.9.99) · 17 de noviembre de 2026
 
 - **Samsung Galaxy / Chrome:** resolución y ritmo de dibujo adaptables; selector Automática/Económica/Equilibrada/Alta; eventos ResizeObserver redundantes reducidos.

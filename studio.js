@@ -51,7 +51,7 @@ function syncControls(){
   view.section?'SECCIÓN MM':view.perspective?'PERSPECTIVA':'VISTA LATERAL';
  if($('machineGraphicMode'))$('machineGraphicMode').textContent=desc;
  if($('machineModeNote'))$('machineModeNote').textContent=
-  view.section?'Sección 2D métrica. Los avisos se calculan independientemente de las capas.':
+  view.section?'Sección 2D métrica con escala común en mm. Los avisos se calculan independientemente de las capas.':
   view.perspective?'Perspectiva 2,5D ilustrativa · '+label+
    ' · NO es cámara CAD 3D ni trayectoria CNC.':
    'Perfil lateral 2D · Chapa, útiles y topes con geometría nominal.';

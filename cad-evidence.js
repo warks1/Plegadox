@@ -6,7 +6,7 @@
  * fabricantes distintos sólo son EQUIVALENCIAS COMERCIALES y NO aportan
  * cotas que puedan soldarse a otra herramienta sin identidad exacta.
  *
- * Fecha de consulta de fuentes: 2026-11-16.
+ * Fecha de consulta de fuentes: 2026-11-17.
  */
 export const CAD_REQUIREMENTS=Object.freeze({
  'trumpf-v85':[
@@ -23,6 +23,17 @@ export const CAD_REQUIREMENTS=Object.freeze({
 const freezeEntry=x=>Object.freeze({...x,
  dimensions:Object.freeze({...x.dimensions})});
 export const CAD_EVIDENCE_SOURCES=Object.freeze([
+ freezeEntry({
+  id:'eurostamp-1063',kind:'punch',maker:'EUROSTAMP',reference:'1063',
+  variant:'STRAIGHT-88',mount:'Desconocido',datum:'OEM_REFERENCE_UNCONFIRMED',
+  title:'EUROSTAMP 1063 · punzón recto 88° R0.8 H104.65',
+  sourceUrl:'https://eurostampsrl.it/en/9775/punches-88-amada/1063-punches-88',
+  cadUrl:'https://eurostampsrl.it/dxf/1063.dxf',
+  format:'DXF',access:'PUBLIC_DIRECT_DXF',status:'ENLACE_CONFIRMADO_NO_IMPORTADO',
+  dimensions:{heightMm:104.65,angleDeg:88,tipRadiusMm:0.8,
+   maxTonnesPerMetre:100},
+  note:'DXF enlazado directamente en la ficha oficial Eurostamp. Confirmar amarre, punta y dimensiones sobre el fichero real. Enlace confirmado no equivale a perfil importado/certificado.'
+ }),
  freezeEntry({
   id:'eurostamp-1017',kind:'punch',maker:'EUROSTAMP',reference:'1017',
   variant:'GOOSENECK-88',mount:'Amada/Promecam',datum:'OEM_REFERENCE_UNCONFIRMED',

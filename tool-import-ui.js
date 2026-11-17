@@ -229,7 +229,7 @@ export function setupToolDxfImporter({add}){
  const acceptCad=(model,cad,fileName)=>{
   parsed=model;
   if(!name.value.trim())
-   name.value=fileName.replace(/(?:\\.dxf)?\\.(?:dxf|zip)$/i,'').slice(0,65);
+   name.value=fileName.replace(/(?:\.dxf)?\.(?:dxf|zip)$/i,'').slice(0,65);
   preview.hidden=false;
   drawPreview(preview,model,axisReview(model),axisInput?.value||null);
   const audit=axisReview(model);
@@ -288,6 +288,10 @@ export function setupToolDxfImporter({add}){
   try{
    acceptCad(parseToolDxf(content),cad,fileName);
   }catch(error){
+   // Unidades ajenas a mm o geometría no plana son errores duros.
+   // NO ofrecer elegir capa/contorno que aparentaría saltarse el bloqueo.
+   if(/unidades no milimétricas|no plano|fuera del plano|extrusión OCS|inserción 3D/i
+    .test(String(error?.message||error)))throw error;
    // Un DXF OEM puede tener perfiles y DIMENSIONES en capas separadas.
    // El usuario debe elegir su capa: no se escoge la de mayor área
    // ni se fusionan líneas de referencia con el contorno material.
@@ -347,9 +351,9 @@ export function setupToolDxfImporter({add}){
   const file=input.files?.[0];
   if(!file){say('Selecciona un .DXF ASCII o .DXF.ZIP del fabricante.');return;}
   try{
-   if(!/\\.(dxf|zip)$/i.test(file.name))
+   if(!/\.(dxf|zip)$/i.test(file.name))
     throw Error('Selecciona un archivo .DXF o .DXF.ZIP');
-   const zipped=/\\.zip$/i.test(file.name);
+   const zipped=/\.zip$/i.test(file.name);
    if(file.size>(zipped?8:1)*1024*1024)
     throw Error('DXF o ZIP fuera de tamaño permitido');
    if(!zipped){
