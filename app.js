@@ -2152,5 +2152,9 @@ window.PLEGADOX_SEEK_PREVIEW=({operation=null,fraction=0}={})=>{
  pausePlayback();sim.blocked=null;sim.error=null;
  sim.time=5*(step+sub);
  paintAll();
+ // Un salto manual debe invalidar inmediatamente la escena 3D aun si
+ // la cámara acaba de renderizar y el limitador Galaxy está activo.
+ window.dispatchEvent(new CustomEvent('plegadox:simulationSeek',
+  {detail:{time:sim.time,operation:step,fraction:sub}}));
  return {time:sim.time,operation:step,fraction:sub};
 };
