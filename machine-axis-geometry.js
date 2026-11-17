@@ -147,6 +147,9 @@ export function scanAxisCADMovement(input,options={}){
   const bb=against==='gauge'?fingerNames:[against];
   return aa.flatMap(a=>bb.map(b=>[a,b]));
  });
+ // El barrido propio de Z1 y Z2 también debe comprobar si los dos
+ // dedos se encuentran entre sí, no sólo contra chapa o herramientas.
+ if(twoFingers)reviewedPairs.push(['gaugeZ1','gaugeZ2']);
  const recordEvent=(sweep,kind,object,from,to)=>{
   if(events.length>=120)return;
   events.push({kind:'contacto-cad-trayectoria',moving:kind,against:object,
