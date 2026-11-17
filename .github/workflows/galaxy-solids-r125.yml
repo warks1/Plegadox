@@ -30,6 +30,9 @@ on:
       - 'tests/machine-contact-evolution-r135-browser-smoke.mjs'
       - 'machine-cnc-gauge-semaphore-r136.js'
       - 'tests/machine-cnc-gauge-semaphore-r136-browser-smoke.mjs'
+      - 'icon-android-maskable.svg'
+      - 'manifest.webmanifest'
+      - 'tests/pwa-android-maskable-r137-browser-smoke.mjs'
       - 'cad-evidence-ui.js'
       - 'cad-evidence-ui.js'
       - 'cad-evidence.js'
@@ -89,6 +92,8 @@ jobs:
         run: node tests/machine-contact-evolution-r135-browser-smoke.mjs
       - name: Probar semáforo separado del tope 2D y del CNC en Chrome Galaxy
         run: node tests/machine-cnc-gauge-semaphore-r136-browser-smoke.mjs
+      - name: Verificar icono Android maskable y transición premium en Galaxy
+        run: node tests/pwa-android-maskable-r137-browser-smoke.mjs
       - name: Adjuntar capturas
         if: always()
         uses: actions/upload-artifact@v4
@@ -107,5 +112,6 @@ jobs:
             test-results/r134-*.png
             test-results/r135-*.png
             test-results/r136-*.png
+            test-results/r137-*.png
           if-no-files-found: warn
           retention-days: 20
