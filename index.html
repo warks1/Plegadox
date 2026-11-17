@@ -7,7 +7,7 @@
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="./icon-premium-180.png">
 <link rel="manifest" href="./manifest.webmanifest">
-<meta name="plegadox-build" content="PLEGADOX-20261117-R128">
+<meta name="plegadox-build" content="PLEGADOX-20261117-R129">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="PlegadoX">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -31,7 +31,7 @@
 <button class="nav" data-tab="desarrollo"><span class="nav-picto" aria-hidden="true"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#ruler"/></svg></span><span>DESARROLLO</span></button>
 <button class="nav" data-tab="maquina"><span class="nav-picto" aria-hidden="true"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#settings"/></svg></span><span>MÁQUINA</span></button>
 <button class="nav" data-tab="acerca"><span class="nav-picto" aria-hidden="true"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#info"/></svg></span><span>ACERCA DE</span></button>
-<div class="nav-spacer"></div><button class="side-action" id="sideSave" title="Guardar pieza" aria-label="Guardar pieza"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#save"/></svg><span>GUARDAR</span></button><button class="side-action" id="sideImport" title="Importar pieza JSON" aria-label="Importar pieza JSON"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#upload"/></svg><span>IMPORTAR</span></button><div class="nav-version">AMS Tecnologics Services · PLEGADOX v0.9.102</div>
+<div class="nav-spacer"></div><button class="side-action" id="sideSave" title="Guardar pieza" aria-label="Guardar pieza"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#save"/></svg><span>GUARDAR</span></button><button class="side-action" id="sideImport" title="Importar pieza JSON" aria-label="Importar pieza JSON"><svg class="px-icon" aria-hidden="true"><use href="./icons.svg#upload"/></svg><span>IMPORTAR</span></button><div class="nav-version">AMS Tecnologics Services · PLEGADOX v0.9.103</div>
 </nav>
 <main>
 <section class="panel" id="tab-programacion">
@@ -338,7 +338,7 @@
 <p class="warn">Los enlaces de descarga no significan que los archivos estén instalados. Un DXF sólo pasa al cálculo de colisiones cuando se importa, se comprueban unidades, referencia exacta, amarre, ejes y cotas Z. La validación industrial seguirá pendiente.</p>
 </details>
 <div class="formgrid">
-<label>Componente<select id="machineCadKind"><option value="ram">Trancha/portapunzón</option><option value="bed">Mesa/portamatriz</option><option value="stop">Dedo tope Stop 1</option><option value="support">Dedo tope Support 2</option><option value="upperClamp">Mordaza / amarre superior</option><option value="lowerClamp">Mordaza / amarre inferior</option><option value="upperAdapter">Adaptador superior</option><option value="lowerAdapter">Adaptador inferior / regleta Promecam</option><option value="frontSupport">Soporte delantero de chapa</option></select></label>
+<label>Componente<select id="machineCadKind"><option value="ram">Trancha/portapunzón</option><option value="bed">Mesa/portamatriz</option><option value="stop">Dedo tope Stop 1</option><option value="support">Dedo tope Support 2</option><option value="stopZ1">Stop · DXF propio Z1</option><option value="stopZ2">Stop · DXF propio Z2</option><option value="supportZ1">Support · DXF propio Z1</option><option value="supportZ2">Support · DXF propio Z2</option><option value="upperClamp">Mordaza / amarre superior</option><option value="lowerClamp">Mordaza / amarre inferior</option><option value="upperAdapter">Adaptador superior</option><option value="lowerAdapter">Adaptador inferior / regleta Promecam</option><option value="frontSupport">Soporte delantero de chapa</option></select></label>
 <label>Perfil DXF cerrado en mm<input type="file" id="machineCadFile" accept=".dxf" aria-label="Archivo DXF ASCII de contorno de máquina"></label>
 <label>Desplazamiento X (mm)<input id="machineCadOffsetX" type="number" step=".001" placeholder="Origen documentado"></label>
 <label>Desplazamiento Y (mm)<input id="machineCadOffsetY" type="number" step=".001" placeholder="Origen documentado"></label>
@@ -350,17 +350,18 @@
 <p class="hint" id="machineCadStatus" role="status" aria-live="polite">Comprobando perfiles CAD de máquina guardados.</p>
 <details class="px-tech-details" id="machineGaugeZPanel">
 <summary>Dos dedos reales Z1 y Z2 · anchura transversal y pose documentada</summary>
-<p class="hint">No confundir «Stop 1 / Support 2» (tipos de perfil) con Z1 y Z2 (los DOS dedos físicos). Solo se mostrarán como sólidos independientes si has importado el perfil DXF seleccionado, has medido ambas bandas Z respecto al mismo cero transversal y confirmas que los dos dedos usan exactamente el mismo contorno. Las medidas NO pueden inferirse del ancho de chapa o de la longitud de la V85. La ubicación declarada vale para una sola pose de referencia, no para todos los desplazamientos CNC.</p>
+<p class="hint">No confundir «Stop 1 / Support 2» (tipos de perfil) con Z1 y Z2 (los DOS dedos físicos). Solo se mostrarán como sólidos independientes con perfil DXF y bandas Z declaradas frente al mismo cero transversal. Puedes elegir un DXF compartido para ambos o dos DXF individuales (StopZ1/StopZ2, SupportZ1/SupportZ2) cuando los dedos tengan formas diferentes. Las medidas NO pueden inferirse del ancho de chapa o de la longitud de la V85. La ubicación declarada vale para una sola pose de referencia, no para todos los desplazamientos CNC.</p>
 <div class="formgrid">
-<label>Perfil idéntico en ambos dedos<select id="machineGaugeZKind"><option value="stop">Stop · contorno del dedo</option><option value="support">Support · contorno del dedo</option></select></label>
+<label>Tipo de dedo / familia de contorno<select id="machineGaugeZKind"><option value="stop">Stop · contorno del dedo</option><option value="support">Support · contorno del dedo</option></select></label>
 <label>Tiempo de pose de referencia (animación, 0…N×5)<input id="machineGaugeZTime" type="number" min="0" step=".001" placeholder="Indicar pose real, p. ej. 0"></label>
 <label>Z1 · extremo mínimo (mm)<input id="machineGaugeZ1Min" type="number" step=".001" placeholder="Cota con cero documentado"></label>
 <label>Z1 · extremo máximo (mm)<input id="machineGaugeZ1Max" type="number" step=".001" placeholder="Cota con cero documentado"></label>
 <label>Z2 · extremo mínimo (mm)<input id="machineGaugeZ2Min" type="number" step=".001" placeholder="Cota con cero documentado"></label>
 <label>Z2 · extremo máximo (mm)<input id="machineGaugeZ2Max" type="number" step=".001" placeholder="Cota con cero documentado"></label>
 <label>Origen de las cuatro cotas<input id="machineGaugeZSource" maxlength="160" placeholder="Plano, control CNC, revisión y datum transversal"></label>
-<label><input type="checkbox" id="machineGaugeZIdentical"> Confirmo que Z1 y Z2 tienen la MISMA sección DXF en esta máquina</label>
+<label><input type="checkbox" id="machineGaugeZIdentical"> Z1 y Z2 utilizan la misma sección DXF importada (si no, desmarcar y proporcionar ambos perfiles independientes)</label>
 </div>
+<p class="hint">Si los dedos son distintos, importa antes sus perfiles DXF independientes desde «Componente», eligiendo Stop Z1 y Stop Z2 (o Support Z1 y Support Z2). Los desplazamientos X/Y declarados pueden ser distintos. La posición transversal final procede de las cuatro cotas Z1/Z2 de este panel. Los datos se bloquean cuando cambia cualquiera de los dos DXF o la revisión de máquina.</p>
 <div class="inline-actions">
 <button type="button" id="machineGaugeZSave">Registrar Z1 y Z2</button>
 <button type="button" id="machineGaugeZDelete">Retirar cotas Z declaradas</button>
