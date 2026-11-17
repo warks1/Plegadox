@@ -35,6 +35,60 @@ jobs:
             throw "El ejecutable portátil falla al servir su HTML y build-info.json: código $($process.ExitCode)"
           }
           Write-Host "PLEGADOX_EXE_WINDOWS_OK"
+      - name: Instalar Inno Setup para compilar instalador Windows
+        shell: pwsh
+        run: choco install innosetup --yes --no-progress
+      - name: Compilar instalador Windows desde los mismos recursos USB
+        shell: pwsh
+        run: |
+          $version = (Get-Content build-info.json -Raw | ConvertFrom-Json).version
+          $iscc = @(
+            "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
+            "$env:ProgramFiles\Inno Setup 6\ISCC.exe",
+            "${env:ProgramFiles(x86)}\Inno Setup 7\ISCC.exe",
+            "$env:ProgramFiles\Inno Setup 7\ISCC.exe"
+          ) | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (!$iscc) { throw "Falta compilador Inno Setup" }
+          & $iscc "/DMyAppVersion=$version" "portable/plegadox-installer.iss"
+          if ($LASTEXITCODE -ne 0) { throw "Error de Inno Setup" }
+          if (!(Test-Path 'dist/installer/PlegadoX-Instalador-Windows.exe')) {
+            throw "Falta instalador"
+          }
+      - name: Probar instalación real, ejecución y desinstalación en Windows
+        shell: pwsh
+        run: |
+          $setup = (Resolve-Path 'dist/installer/PlegadoX-Instalador-Windows.exe').Path
+          $process = Start-Process -FilePath $setup -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/SP-' -Wait -PassThru
+          if ($process.ExitCode -ne 0) { throw "Instalación falla: $($process.ExitCode)" }
+          $folder = Join-Path $env:LOCALAPPDATA 'Programs\PlegadoX'
+          $exe = Join-Path $folder 'PlegadoX.exe'
+          if (!(Test-Path $exe) -or !(Test-Path (Join-Path $folder 'installed-mode.marker'))) {
+            throw "Archivos instalados incompletos"
+          }
+          $test = Start-Process -FilePath $exe -ArgumentList '--self-test' -Wait -PassThru
+          if ($test.ExitCode -ne 0) { throw "Programa instalado falla --self-test" }
+          $uninstaller = Join-Path $folder 'unins000.exe'
+          if (!(Test-Path $uninstaller)) { throw "No existe desinstalador" }
+          $uninstall = Start-Process -FilePath $uninstaller -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART' -Wait -PassThru
+          if ($uninstall.ExitCode -ne 0) { throw "Desinstalación falla" }
+          Write-Host "PLEGADOX_INSTALLER_WINDOWS_OK"
+      - name: Calcular hashes SHA256 de los dos archivos de distribución
+        shell: pwsh
+        run: |
+          @('dist/PlegadoX-USB-Windows.zip','dist/installer/PlegadoX-Instalador-Windows.exe') |
+            ForEach-Object {
+              $h = Get-FileHash -Algorithm SHA256 -Path $_
+              "$($h.Hash.ToLower())  $(Split-Path $_ -Leaf)"
+            } | Out-File 'dist/SHA256SUMS.txt' -Encoding ascii
+      - name: Guardar instalador ejecutable y hashes
+        uses: actions/upload-artifact@v4
+        with:
+          name: PlegadoX-Instalador-Windows
+          path: |
+            dist/installer/PlegadoX-Instalador-Windows.exe
+            dist/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 30
       - name: Guardar ZIP listo para copiar al USB
         uses: actions/upload-artifact@v4
         with:

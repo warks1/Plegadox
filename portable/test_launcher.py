@@ -5,13 +5,26 @@ import threading
 import unittest
 from pathlib import Path
 from urllib.request import urlopen
-from launcher import HOST, PORT, serve
+from launcher import HOST, PORT, serve, backup_directory
+from unittest.mock import patch
 
 
 class PortableTests(unittest.TestCase):
     def test_private_bind_and_fixed_origin(self):
         self.assertEqual(HOST, "127.0.0.1")
         self.assertEqual(PORT, 8765)
+
+    def test_installed_backups_survive_separate_program_directory(self):
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            app = base / "Programs" / "PlegadoX" / "app"
+            app.mkdir(parents=True)
+            (app.parent / "installed-mode.marker").write_text("installed", encoding="utf-8")
+            local = base / "LocalAppData"
+            with patch.dict("os.environ", {"LOCALAPPDATA": str(local)}):
+                self.assertEqual(backup_directory(app), local / "PlegadoX" / "MIS_PROYECTOS")
+            (app.parent / "installed-mode.marker").unlink()
+            self.assertEqual(backup_directory(app), app.parent / "MIS_PROYECTOS")
 
     def test_no_missing_assets_are_accepted(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -32,6 +45,11 @@ class PortableTests(unittest.TestCase):
                     self.assertEqual(response.headers.get("Cache-Control"), "no-store")
                 with urlopen(url + "build-info.json", timeout=4) as response:
                     self.assertEqual(json.load(response)["version"], "x")
+                from urllib.request import Request
+                from urllib.error import HTTPError
+                with self.assertRaises(HTTPError) as denied:
+                    urlopen(Request(url, headers={"Host": "other.example"}), timeout=4)
+                self.assertEqual(denied.exception.code, 403)
             finally:
                 server.shutdown()
                 server.server_close()

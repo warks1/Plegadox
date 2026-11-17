@@ -27,6 +27,16 @@ USB_API = "/__plegadox_usb__/"
 MAX_BACKUP_BYTES = 4 * 1024 * 1024
 
 
+def backup_directory(directory: pathlib.Path) -> pathlib.Path:
+    """USB guarda junto al EXE; Windows instalado guarda fuera del desinstalador."""
+    root = directory.parent
+    if (root / "installed-mode.marker").is_file():
+        value = os.environ.get("LOCALAPPDATA")
+        local = pathlib.Path(value) if value else pathlib.Path.home() / "AppData" / "Local"
+        return local / "PlegadoX" / "MIS_PROYECTOS"
+    return root / "MIS_PROYECTOS"
+
+
 def handler_for(directory: pathlib.Path, token: str, backup_dir: pathlib.Path):
     class AppHandler(http.server.SimpleHTTPRequestHandler):
         def __init__(self, *args, **kwargs):
@@ -55,9 +65,10 @@ def handler_for(directory: pathlib.Path, token: str, backup_dir: pathlib.Path):
             return self.headers.get("Host") == f"{HOST}:{self.server.server_port}"
 
         def do_GET(self):
+            # Comprobar Host también para HTML/JS, no sólo para la API de copias.
+            if not self._valid_host():
+                return self._json(403, {"error": "Host no autorizado"})
             if self.path.split("?", 1)[0] == USB_API + "status":
-                if not self._valid_host():
-                    return self._json(403, {"error": "Host no autorizado"})
                 return self._json(200, {
                     "mode": "usb", "available": True, "token": token,
                     "folder": "MIS_PROYECTOS", "maxBytes": MAX_BACKUP_BYTES
@@ -129,7 +140,7 @@ def serve(directory: pathlib.Path, port: int = PORT):
         raise FileNotFoundError("Falta la carpeta app con PlegadoX completo junto al ejecutable.")
     token = secrets.token_urlsafe(24)
     return http.server.ThreadingHTTPServer(
-        (HOST, port), handler_for(directory, token, directory.parent / "MIS_PROYECTOS")
+        (HOST, port), handler_for(directory, token, backup_directory(directory))
     )
 
 

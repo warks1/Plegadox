@@ -49,6 +49,7 @@ def build():
         "El puerto 8765 debe estar libre; sólo escucha en 127.0.0.1 (tu propio PC).\n"
         "No se ejecuta automáticamente al conectar el USB.\n"
         "Los datos del navegador quedan en ese PC: usa Guardar copia en USB y restaura en otro PC.\n"
+        "Para INSTALAR en Windows, usa el instalador PlegadoX-Instalador-Windows.exe separado.\n"
         "La validación 2D/3D sigue siendo provisional; no autoriza trabajo CNC real.\n",
         encoding="utf-8-sig")
     archive = DIST / "PlegadoX-USB-Windows.zip"
