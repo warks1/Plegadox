@@ -234,7 +234,7 @@ export function scanAxisCADMovement(input,options={}){
     narrowphasePairsChecked++;
     const sweep=sweptPrismPair(a[moving],b[moving],a.sheet[n],b.sheet[n]);
     if(sweep.intersects)recordEvent(sweep,moving,'chapa-'+(n+1),before,after,
-     tilt.meanApproximationMm??tilt.meanApproximationErrorMm);
+     tilt.meanApproximationErrorMm);
     else if(sweep.unknown)unresolved++;
    }
   }
