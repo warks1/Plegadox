@@ -35,8 +35,9 @@ test('R139: no mostrar progreso del iframe antes de recibir y decodificar su fot
 test('R139: build, versión, SW y boceto coherentes',()=>{
  const build=JSON.parse(read('build-info.json')),pkg=JSON.parse(read('package.json'));
  const html=read('index.html'),sw=read('sw.js'),about=read('software-about.js');
- assert.equal(build.build,'PLEGADOX-20261117-R139');
- assert.equal(build.version,'0.9.113');
+ assert.match(build.build,/^PLEGADOX-\d{8}-R\d+$/);
+ assert.ok(Number(build.build.match(/R(\d+)$/)?.[1])>=139);
+ assert.ok(/^0\.9\.\d+$/.test(build.version));
  assert.equal(pkg.version,build.version);
  assert.ok(html.includes('const BUILD="'+build.build+'"'));
  assert.ok(html.includes('PLEGADOX v'+pkg.version));

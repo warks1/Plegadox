@@ -1,5 +1,12 @@
 # Plegadox — control y simulador de plegado
 
+## Estado actual · R140 (v0.9.114) · 17 de noviembre de 2026
+
+- El cierre espera a que cargue y se decodifique la imagen premium, incluso si los módulos terminan primero. Espera máxima de seguridad de 6 segundos ante imagen inaccesible, para no bloquear el modo offline.
+- Regresión nueva de arranque lento de Galaxy, iPhone y tablet con capturas de navegador.
+- **Build:** PLEGADOX-20261117-R140 · 0.9.114 · [Informe R140](./R140_ARRANQUE_LENTO_SIN_BARRA_SUELTA.md).
+- No cambia CAD, simulación, piezas guardadas ni pantalla premium seleccionada; el splash nativo de Android sigue fuera del HTML.
+
 ## Estado actual · R139 (v0.9.113) · 17 de noviembre de 2026
 
 - **Pantalla de carga unificada:** la imagen premium y la barra real se revelan en el mismo fotograma; no vuelve a aparecer una barra suelta antes de la foto. La barra de primera pintura se actualiza con el progreso de módulos y se releva al iframe solo tras verificar y decodificar su imagen.
