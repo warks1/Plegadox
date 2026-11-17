@@ -45,14 +45,24 @@ try{
   canvas.style.width='2300px';canvas.style.height='1250px';
   window.PLEGADOX_SOLID_RENDER_FORCE();
  });
- const pixels=await page.evaluate(()=>{
+ const pixels=await page.evaluate(async()=>{
   const canvas=document.getElementById('machineSolidCanvas');
+  const {canvasRenderSize}=await import('/machine-canvas-memory-r131.js');
+  const budget=window.PLEGADOX_GRAPHICS_BUDGET();
+  const rect=canvas.getBoundingClientRect();
+  const expectedCapped=rect.width*rect.height*
+   budget.dpr*budget.dpr>budget.maxCanvasPixels;
+  const UHD=canvasRenderSize(3840,2160,2,budget.maxCanvasPixels);
   return {pixels:canvas.width*canvas.height,
-   max:window.PLEGADOX_GRAPHICS_BUDGET().maxCanvasPixels,
+   max:budget.maxCanvasPixels,expectedCapped,
+   syntheticCap:UHD.capped,syntheticPixels:UHD.pixelCount,
    text:document.getElementById('machineSolidStatus').textContent};
  });
  assert.ok(pixels.pixels<=pixels.max,'Canvas UHD supera el presupuesto de memoria');
- assert.match(pixels.text,/protección memoria/);
+ assert.equal(pixels.syntheticCap,true,'La protección también cubre una pantalla 4K real');
+ assert.ok(pixels.syntheticPixels<=pixels.max);
+ assert.equal(pixels.text.includes('protección memoria'),pixels.expectedCapped,
+  'El indicador debe coincidir con los píxeles CSS efectivos, no con un tamaño inline recortado por el layout');
  await page.evaluate(()=>{
   const canvas=document.getElementById('machineSolidCanvas');
   canvas.style.width='';canvas.style.height='';
