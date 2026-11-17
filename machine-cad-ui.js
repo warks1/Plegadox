@@ -142,8 +142,17 @@ function refreshMotion(){
    pieceKey:p?motionPieceKey(p):null,
    machineId:getActiveMachineProfile().id,
    machineConfigKey:machineConfigurationKey(getActiveMachineConfig()),
+   referenceSceneTime:report?.checked===true?
+    loadAxisMapping(localStorage)?.referenceSceneTime:null,
    status:classifyCncGaugeSemaphore(report)
   };
+  const node=$('machineCncGaugeEvidence');
+  if(node){
+   node.dataset.level=snapshot.status.level;
+   node.textContent='CNC DEL TOPE · '+snapshot.status.headline+
+    ' · '+snapshot.status.reason+
+    ' · Diagnóstico de traza, NO pose actual ni certificación física.';
+  }
   if(typeof window!=='undefined'){
    window.PLEGADOX_CNC_GAUGE_SNAPSHOT=snapshot;
    window.dispatchEvent(new CustomEvent('plegadox:cncGaugeReview',{
@@ -151,7 +160,6 @@ function refreshMotion(){
    }));
   }
  };
- publish(null);
  try{
   const program=loadAxisMotion(localStorage);
   const status=program&&p&&program.pieceKey!==motionPieceKey(p)?
