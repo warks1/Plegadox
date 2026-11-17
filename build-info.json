@@ -1,9 +1,9 @@
 {
-  "build": "PLEGADOX-20261117-R126",
-  "version": "0.9.100",
+  "build": "PLEGADOX-20261117-R127",
+  "version": "0.9.101",
   "machine": "bystronic-2006-2009-wila-promecam-gauge-conditional",
   "ui": "safe-service-worker-update-without-reloading-in-progress-work",
-  "cache": "plegadox-static-0.9.100-safe-sw-r126",
+  "cache": "plegadox-static-0.9.101-safe-sw-r127",
   "tooling": "wila-promecam-custom-profile-dxf-mm-backup50",
-  "renderer": "prismatic-orbital-3d-cached-axis-trail-evidence"
+  "renderer": "prismatic-orbital-3d-cached-gauge-z-risk-layers"
 }
