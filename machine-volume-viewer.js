@@ -231,9 +231,11 @@ function install(){
    if(previousPinch>0)camera.zoom=clamp(camera.zoom*d/previousPinch,.35,6);
    previousPinch=d;
   }
-  render(true);
+  // Coalescer el giro táctil: en Galaxy el pointermove puede superar 100 Hz.
+  // Acumular la cámara pero no triangulamos/renderizamos por cada evento.
+  render(false);
  });
- const end=event=>{pointers.delete(event.pointerId);previousPinch=0;};
+ const end=event=>{pointers.delete(event.pointerId);previousPinch=0;render(true);};
  canvas.addEventListener('pointerup',end);
  canvas.addEventListener('pointercancel',end);
  canvas.addEventListener('wheel',event=>{
