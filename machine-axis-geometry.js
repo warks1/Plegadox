@@ -180,7 +180,7 @@ export function scanAxisCADMovement(input,options={}){
   if(impactWindowsComputed<maxTimedEvents&&solids){
    impactWindowsComputed++;
    impact=locateFirstModeledPenetration(...solids,
-    from.time,to.time,{maxSteps:8,targetWindowSeconds:.02});
+    from.time,to.time,{maxSteps:10,targetWindowSeconds:.02});
    if(!impact.windowSeconds)impactWindowsUnresolved++;
   }else{
    impactWindowsPending++;
