@@ -1,0 +1,3 @@
+PlegadoX R144 · v0.9.118
+La compilación Windows se publica automáticamente en GitHub Releases cuando finaliza correctamente el workflow de instalador.
+Artefactos: PlegadoX-Instalador-Windows.exe, PlegadoX-USB-Windows.zip y SHA256SUMS.txt.
