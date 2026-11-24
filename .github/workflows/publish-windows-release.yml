@@ -31,11 +31,15 @@ jobs:
           TAG: v0.9.118
           TARGET_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
-          gh release create "$TAG" \
-            dist/installer/PlegadoX-Instalador-Windows.exe \
-            dist/usb/PlegadoX-USB-Windows.zip \
-            dist/SHA256SUMS.txt \
-            --repo "${{ github.repository }}" \
-            --target "$TARGET_SHA" \
-            --title "PlegadoX 0.9.118 · R144 · Windows" \
-            --notes "Versión R144 (0.9.118). Instalador Windows x64 (.exe), paquete portátil para USB (.zip) y hashes SHA-256. El instalador ha superado la prueba automatizada de instalación, arranque y desinstalación en Windows. Comprueba los requisitos del sistema y conserva una copia de seguridad de tus proyectos antes de actualizar."
+          if gh release view "$TAG" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            gh release upload "$TAG" dist/installer/PlegadoX-Instalador-Windows.exe dist/usb/PlegadoX-USB-Windows.zip dist/SHA256SUMS.txt --repo "${{ github.repository }}" --clobber
+          else
+            gh release create "$TAG" \
+              dist/installer/PlegadoX-Instalador-Windows.exe \
+              dist/usb/PlegadoX-USB-Windows.zip \
+              dist/SHA256SUMS.txt \
+              --repo "${{ github.repository }}" \
+              --target "$TARGET_SHA" \
+              --title "PlegadoX 0.9.118 · R144 · Windows" \
+              --notes "Versión R144 (0.9.118). Instalador Windows x64 (.exe), paquete portátil para USB (.zip) y hashes SHA-256. El instalador ha superado la prueba automatizada de instalación, arranque y desinstalación en Windows. Comprueba los requisitos del sistema y conserva una copia de seguridad de tus proyectos antes de actualizar."
+          fi
