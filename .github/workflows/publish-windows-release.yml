@@ -19,10 +19,15 @@ jobs:
           mkdir -p dist/installer dist/usb
           gh run download "$RUN_ID" --repo "${{ github.repository }}" --name PlegadoX-Instalador-Windows --dir dist/installer
           gh run download "$RUN_ID" --repo "${{ github.repository }}" --name PlegadoX-USB-Windows --dir dist/usb
-          test -s dist/installer/PlegadoX-Instalador-Windows.exe
-          test -s dist/installer/SHA256SUMS.txt
-          test -s dist/usb/PlegadoX-USB-Windows.zip
-          cp dist/installer/SHA256SUMS.txt dist/SHA256SUMS.txt
+          installer_file="$(find dist/installer -type f -name 'PlegadoX-Instalador-Windows.exe' -print -quit)"
+          checksum_file="$(find dist/installer -type f -name 'SHA256SUMS.txt' -print -quit)"
+          usb_file="$(find dist/usb -type f -name 'PlegadoX-USB-Windows.zip' -print -quit)"
+          test -n "$installer_file" && test -s "$installer_file"
+          test -n "$checksum_file" && test -s "$checksum_file"
+          test -n "$usb_file" && test -s "$usb_file"
+          cp "$installer_file" dist/installer/PlegadoX-Instalador-Windows.exe
+          cp "$usb_file" dist/usb/PlegadoX-USB-Windows.zip
+          cp "$checksum_file" dist/SHA256SUMS.txt
           cat dist/SHA256SUMS.txt
       - name: Publicar instalador y paquete USB en GitHub Releases
         env:
